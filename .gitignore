@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment variables (chứa Firebase keys - KHÔNG commit)
+.env
+.env.local
+.env.production
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Vite cache
+.vite/
+
+# Firebase deployment cache
+.firebase/
+
+# Test coverage
+coverage/
+.vitest/
+
+# Backup folders từ patch scripts
+_backups_*/
+
+# Patch/utility scripts (chạy 1 lần)
+*.sh
+phase_*.py
+missing-handlers.js
+
+# CSS backup files
+*.bak
+*.bak.*
+*.bak-*
+
+# OS misc
+*.swp
+*.swo
+.DS_Store
