@@ -1033,3 +1033,52 @@ body.viewer-mode .sidebar-item[data-tip="Quản lý tài khoản"],
 body.viewer-mode .sidebar-item[data-tip="Lịch sử chỉnh sửa"] {
   display: none !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE — Sidebar drawer (≤768px)
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Show hamburger button (mặc định ẩn ở desktop) */
+  #mobile-menu-btn {
+    display: flex !important;
+  }
+  
+  /* Sidebar: ẩn ngoài viewport, slide vào khi mở */
+  nav.site-sidebar.sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    height: 100vh !important;
+    width: 240px !important;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    z-index: 110 !important;
+    box-shadow: 4px 0 16px rgba(0,0,0,0.15);
+  }
+  
+  /* Khi mở: slide vào */
+  nav.site-sidebar.sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  
+  /* Disable hover-to-expand trên mobile (đã fixed width 240px) */
+  nav.site-sidebar.sidebar:hover {
+    width: 240px !important;
+  }
+  
+  /* Site main không cần margin cho sidebar (sidebar đã fixed) */
+  .site-main {
+    padding: 14px !important;
+  }
+  
+  /* Header padding tránh hamburger button */
+  header.site-header {
+    padding-left: 64px !important;
+  }
+  
+  /* Floating topbar (search + bell) — giữ nguyên top, dịch trái khỏi cạnh phải */
+  #floating-topbar {
+    top: 14px !important;
+    right: 14px !important;
+  }
+}
