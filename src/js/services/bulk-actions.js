@@ -10,6 +10,7 @@
  */
 
 import { db, ref, update, remove } from '../firebase.js'
+import { printBulkLabels } from './qr-labels.js'
 
 (function setupBulkActions() {
   'use strict';
@@ -296,6 +297,10 @@ import { db, ref, update, remove } from '../firebase.js'
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         Xuất Excel
       </button>
+      <button id="bulk-qr-label" type="button" class="bulk-action-btn" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.4);color:white;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;display:none;align-items:center;gap:6px;transition:all 0.15s">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="2" height="2"/><rect x="19" y="14" width="2" height="2"/><rect x="14" y="19" width="2" height="2"/><rect x="19" y="19" width="2" height="2"/></svg>
+        In nhãn QR
+      </button>
       <button id="bulk-lock" type="button" class="bulk-action-btn" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.4);color:white;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;display:none;align-items:center;gap:6px;transition:all 0.15s">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         Khóa
@@ -324,6 +329,7 @@ import { db, ref, update, remove } from '../firebase.js'
 
     bar.querySelector('#bulk-clear').addEventListener('click', clearAll);
     bar.querySelector('#bulk-export').addEventListener('click', () => doAction('export'));
+    bar.querySelector('#bulk-qr-label').addEventListener('click', () => doAction('qrlabel'));
     bar.querySelector('#bulk-lock').addEventListener('click', () => doAction('lock'));
     bar.querySelector('#bulk-unlock').addEventListener('click', () => doAction('unlock'));
     bar.querySelector('#bulk-delete').addEventListener('click', () => doAction('delete'));
@@ -352,6 +358,9 @@ import { db, ref, update, remove } from '../firebase.js'
     bar.querySelector('#bulk-count').textContent = `Đã chọn ${count} ${cfg.label}`;
     bar.querySelector('#bulk-lock').style.display   = (cfg.canLock && isAdmin()) ? 'flex' : 'none';
     bar.querySelector('#bulk-unlock').style.display = (cfg.canLock && isAdmin()) ? 'flex' : 'none';
+    // QR label: hiện cho chemicals + equipment, mọi role đều dùng được
+    const isQrTable = tbodyId === 'chemicals-tbody' || tbodyId === 'equipment-tbody';
+    bar.querySelector('#bulk-qr-label').style.display = isQrTable ? 'flex' : 'none';
     bar.querySelector('#bulk-delete').style.display = isAdmin() ? 'flex' : 'none';
     bar.style.display = 'flex';
     updateBarPositionOnce();
@@ -459,6 +468,28 @@ import { db, ref, update, remove } from '../firebase.js'
 
     if (type === 'export') {
       exportToExcel(tbodyId, cfg, keys);
+      return;
+    }
+
+    if (type === 'qrlabel') {
+      // Map tbodyId → type (chem|equip) cho qr-labels
+      const qrType = tbodyId === 'chemicals-tbody' ? 'chem' :
+                     tbodyId === 'equipment-tbody' ? 'equip' : null;
+      if (!qrType) return;
+
+      // Hỏi user chọn cách: in trực tiếp hay PDF
+      const choice = window.prompt(
+        `Bạn muốn xử lý ${keys.length} nhãn QR như thế nào?\n\n` +
+        `1 = In trực tiếp (mở tab mới + Ctrl+P)\n` +
+        `2 = Tải PDF về máy\n\n` +
+        `Nhập 1 hoặc 2:`,
+        '1'
+      );
+      if (choice === '1') {
+        await printBulkLabels(keys, qrType, 'print');
+      } else if (choice === '2') {
+        await printBulkLabels(keys, qrType, 'pdf');
+      }
       return;
     }
 
