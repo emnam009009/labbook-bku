@@ -1,5 +1,5 @@
 // services/excel-export.js — Export data ra Excel với style
-// Dùng SheetJS (window.XLSX từ CDN)
+// Dùng SheetJS (lazy import từ npm — tránh render-blocking ~270KB)
 //
 // Logic:
 //  - Lấy data từ window.cache theo trang
@@ -10,14 +10,14 @@
 
 import { vals, fuzzy } from '../utils/format.js'
 
-/**
- * Lấy XLSX từ window (CDN load trước)
- */
-function getXLSX() {
-  if (typeof window.XLSX === 'undefined') {
-    throw new Error('SheetJS chưa load. Kiểm tra script CDN trong index.html.');
+// ─── Lazy load SheetJS (~270KB) ──────────────────────────────────
+// Chỉ load khi user thực sự bấm "Export Excel" — tránh render-blocking
+let _xlsxPromise = null
+function loadXLSX() {
+  if (!_xlsxPromise) {
+    _xlsxPromise = import('xlsx')
   }
-  return window.XLSX;
+  return _xlsxPromise
 }
 
 /**
@@ -53,8 +53,8 @@ function applyFilter(rows, page, fields) {
 /**
  * Tạo workbook với 1 sheet styled
  */
-function createWorkbook(rows, headers, sheetName) {
-  const XLSX = getXLSX();
+async function createWorkbook(rows, headers, sheetName) {
+  const XLSX = await loadXLSX();
   
   // Convert rows (array of arrays) to sheet
   const aoa = [headers, ...rows];
@@ -109,8 +109,8 @@ function todayStr() {
 /**
  * Save workbook ra file
  */
-function saveFile(wb, filename) {
-  const XLSX = getXLSX();
+async function saveFile(wb, filename) {
+  const XLSX = await loadXLSX();
   XLSX.writeFile(wb, filename);
 }
 
@@ -118,7 +118,7 @@ function saveFile(wb, filename) {
 // EXPORT FUNCTIONS — 1 hàm cho mỗi trang
 // ═════════════════════════════════════════════════
 
-window.exportHydroExcel = function() {
+window.exportHydroExcel = async function() {
   try {
     const cache = window.cache;
     if (!cache?.hydro) { window.showToast?.('Chưa có dữ liệu', 'danger'); return; }
@@ -142,8 +142,8 @@ window.exportHydroExcel = function() {
       r.note || '',
     ]);
     
-    const wb = createWorkbook(data, headers, 'Thí nghiệm thủy nhiệt');
-    saveFile(wb, `hydrothermal_${todayStr()}.xlsx`);
+    const wb = await createWorkbook(data, headers, 'Thí nghiệm thủy nhiệt');
+    await saveFile(wb, `hydrothermal_${todayStr()}.xlsx`);
     window.showToast?.(`Đã xuất ${rows.length} dòng`, 'success');
   } catch (e) {
     console.error('exportHydroExcel error:', e);
@@ -151,7 +151,7 @@ window.exportHydroExcel = function() {
   }
 };
 
-window.exportElectrodeExcel = function() {
+window.exportElectrodeExcel = async function() {
   try {
     const cache = window.cache;
     if (!cache?.electrode) { window.showToast?.('Chưa có dữ liệu', 'danger'); return; }
@@ -176,8 +176,8 @@ window.exportElectrodeExcel = function() {
       r.status || '',
     ]);
     
-    const wb = createWorkbook(data, headers, 'Điện cực');
-    saveFile(wb, `electrode_${todayStr()}.xlsx`);
+    const wb = await createWorkbook(data, headers, 'Điện cực');
+    await saveFile(wb, `electrode_${todayStr()}.xlsx`);
     window.showToast?.(`Đã xuất ${rows.length} dòng`, 'success');
   } catch (e) {
     console.error('exportElectrodeExcel error:', e);
@@ -185,7 +185,7 @@ window.exportElectrodeExcel = function() {
   }
 };
 
-window.exportElectrochemExcel = function() {
+window.exportElectrochemExcel = async function() {
   try {
     const cache = window.cache;
     if (!cache?.electrochem) { window.showToast?.('Chưa có dữ liệu', 'danger'); return; }
@@ -210,8 +210,8 @@ window.exportElectrochemExcel = function() {
       r.status || '',
     ]);
     
-    const wb = createWorkbook(data, headers, 'Điện hóa');
-    saveFile(wb, `electrochem_${todayStr()}.xlsx`);
+    const wb = await createWorkbook(data, headers, 'Điện hóa');
+    await saveFile(wb, `electrochem_${todayStr()}.xlsx`);
     window.showToast?.(`Đã xuất ${rows.length} dòng`, 'success');
   } catch (e) {
     console.error('exportElectrochemExcel error:', e);
@@ -219,7 +219,7 @@ window.exportElectrochemExcel = function() {
   }
 };
 
-window.exportChemicalsExcel = function() {
+window.exportChemicalsExcel = async function() {
   try {
     const cache = window.cache;
     if (!cache?.chemicals) { window.showToast?.('Chưa có dữ liệu', 'danger'); return; }
@@ -254,8 +254,8 @@ window.exportChemicalsExcel = function() {
       r.createdAt || '',
     ]);
     
-    const wb = createWorkbook(data, headers, 'Hóa chất');
-    saveFile(wb, `chemicals_${todayStr()}.xlsx`);
+    const wb = await createWorkbook(data, headers, 'Hóa chất');
+    await saveFile(wb, `chemicals_${todayStr()}.xlsx`);
     window.showToast?.(`Đã xuất ${rows.length} dòng`, 'success');
   } catch (e) {
     console.error('exportChemicalsExcel error:', e);
@@ -263,7 +263,7 @@ window.exportChemicalsExcel = function() {
   }
 };
 
-window.exportEquipmentExcel = function() {
+window.exportEquipmentExcel = async function() {
   try {
     const cache = window.cache;
     if (!cache?.equipment) { window.showToast?.('Chưa có dữ liệu', 'danger'); return; }
@@ -292,8 +292,8 @@ window.exportEquipmentExcel = function() {
       r.status || '',
     ]);
     
-    const wb = createWorkbook(data, headers, 'Thiết bị');
-    saveFile(wb, `equipment_${todayStr()}.xlsx`);
+    const wb = await createWorkbook(data, headers, 'Thiết bị');
+    await saveFile(wb, `equipment_${todayStr()}.xlsx`);
     window.showToast?.(`Đã xuất ${rows.length} dòng`, 'success');
   } catch (e) {
     console.error('exportEquipmentExcel error:', e);
@@ -302,7 +302,7 @@ window.exportEquipmentExcel = function() {
 };
 
 
-window.exportBookingsExcel = function() {
+window.exportBookingsExcel = async function() {
   try {
     const cache = window.cache;
     if (!cache?.bookings) { window.showToast?.('Chưa có dữ liệu', 'danger'); return; }
@@ -359,8 +359,8 @@ window.exportBookingsExcel = function() {
       formatDateTimeVN(r.checkOutAt),
     ]);
     
-    const wb = createWorkbook(data, headers, 'Đăng ký thiết bị');
-    saveFile(wb, `bookings_${todayStr()}.xlsx`);
+    const wb = await createWorkbook(data, headers, 'Đăng ký thiết bị');
+    await saveFile(wb, `bookings_${todayStr()}.xlsx`);
     window.showToast?.(`Đã xuất ${rows.length} dòng`, 'success');
   } catch (e) {
     console.error('exportBookingsExcel error:', e);
