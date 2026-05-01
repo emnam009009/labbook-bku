@@ -53,6 +53,8 @@ import { renderHistory } from './pages/history.js'
 import { renderUsers } from './pages/users.js'
 import { toggleAvatarMenu, changeAvatar, resetAvatar, updateAvatarUI } from './services/avatar.js'
 
+import { printSingleLabel, printBulkLabels, showLabelChoiceDialog } from './services/qr-labels.js'
+import { initUrlRouter } from './services/url-router.js'
 // ── Import save handlers (Phần 7a) ───────────────────────
 import {
   saveHydro, saveElectrode, saveElectrochem, saveMember,
@@ -447,6 +449,23 @@ document.getElementById('btn-add-member').addEventListener('click', () => openMo
 
 // ── Custom select cho modal dropdowns (dynamic options) ──────────────────
 
+
+// QR Labels handlers (expose ra window cho HTML inline onclick)
+window.showLabelChoiceForChem = function(key) {
+  const cache = window.cache
+  const record = cache?.chemicals?.[key]
+  if (!record) return
+  showLabelChoiceDialog([{ ...record, _key: key }], 'chem')
+}
+window.showLabelChoiceForEquip = function(key) {
+  const cache = window.cache
+  const record = cache?.equipment?.[key]
+  if (!record) return
+  showLabelChoiceDialog([{ ...record, _key: key }], 'equip')
+}
+window.printSingleLabel = printSingleLabel
+window.printBulkLabels = printBulkLabels
+
 document.addEventListener('DOMContentLoaded', () => {
   document.body.style.visibility = 'visible'
   initCustomFilters()
@@ -500,6 +519,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       _syncAuthStateLocal()
       startListeners()
+      initUrlRouter()
       document.getElementById('skeleton-loader').style.display = 'none'
       document.getElementById('login-screen').style.display = 'none'
       document.getElementById('login-screen').style.visibility = 'hidden'
