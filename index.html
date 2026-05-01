@@ -787,6 +787,7 @@
           <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Đăng ký mới
         </button>
+            
       </div>
       <!-- View toggle (List / Calendar) -->
       <div style="display:flex;gap:8px;margin-top:36px;margin-bottom:12px;align-items:center;flex-wrap:wrap">
@@ -796,6 +797,7 @@
         </div>
         <input  aria-label="Tìm theo thiết bị, người đặt, mục đích" type="text" id="booking-search" placeholder="Tìm theo thiết bị, người đặt, mục đích..." class="search-input" style="flex:1;min-width:240px">
         <button class="btn admin-only" onclick="exportBookingsExcel()" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
+        <button class="btn" onclick="window.openPdfReportModal()" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất báo cáo PDF"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h6M9 17h6"/></svg> PDF</button>
         <select id="booking-equipment-filter" class="search-input" onchange="window.renderBooking?.()">
           <option value="">Tất cả thiết bị</option>
         </select>

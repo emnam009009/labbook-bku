@@ -2412,3 +2412,27 @@ html.dark body tr.row-flash > td {
     border-left: 4px solid var(--teal) !important;
   }
 }
+
+/* ━━━ Booking table: căn lề trái cho text content ━━━ */
+html body #booking-tbody td,
+html body #booking-tbody th {
+  text-align: left !important;
+  vertical-align: middle !important;
+}
+/* Trừ td chứa badge (trạng thái) và td chứa action buttons - căn giữa hoặc phải */
+html body #booking-tbody td:has(.badge),
+html body #booking-tbody td:has(span[style*="border-radius:999px"]) {
+  text-align: center !important;
+}
+html body #booking-tbody td.action-cell,
+html body #booking-tbody td:last-child {
+  text-align: right !important;
+}
+/* Header tương tự: trái, trừ status (giữa) và action (phải) */
+html body table thead th {
+  text-align: left !important;
+}
+html body table thead th:nth-last-child(1),
+html body table thead th:nth-last-child(2) {
+  text-align: center !important;
+}

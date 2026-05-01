@@ -312,7 +312,9 @@
     if (!excelBtn) return false;
 
     const wrap = createFilterUI(page);
-    excelBtn.parentElement.insertBefore(wrap, excelBtn.nextSibling);
+    const pdfBtn = pageEl.querySelector('button[onclick*="openPdfReportModal"]');
+    const anchor = pdfBtn || excelBtn;
+    anchor.parentElement.insertBefore(wrap, anchor.nextSibling);
 
     applyFilter(page);
     return true;

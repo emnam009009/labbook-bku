@@ -56,6 +56,7 @@ import { toggleAvatarMenu, changeAvatar, resetAvatar, updateAvatarUI } from './s
 import { printSingleLabel, printBulkLabels, showLabelChoiceDialog } from './services/qr-labels.js'
 import { initUrlRouter } from './services/url-router.js'
 import { initBookingSuggestions } from './services/booking-suggestions.js'
+import { initPdfReport } from './services/pdf-report.js'
 // ── Import save handlers (Phần 7a) ───────────────────────
 import {
   saveHydro, saveElectrode, saveElectrochem, saveMember,
@@ -522,6 +523,7 @@ document.addEventListener('DOMContentLoaded', () => {
       startListeners()
       initUrlRouter()
       initBookingSuggestions()
+      initPdfReport()
       document.getElementById('skeleton-loader').style.display = 'none'
       document.getElementById('login-screen').style.display = 'none'
       document.getElementById('login-screen').style.visibility = 'hidden'
