@@ -143,14 +143,14 @@
 
   <!-- ══ HEADER ══ -->
 <!-- Round 19: Floating topbar (search + bell) replaces full-width header -->
-  <div id="floating-topbar" style="position:fixed;top:14px;right:24px;z-index:50;display:flex;align-items:center;gap:10px">
+  <div id="floating-topbar" style="position:fixed;top:14px;right:32px;z-index:50;display:flex;align-items:center;gap:10px">
 <div id="header-search-wrap" style="position:relative;display:flex;align-items:center">
         <div id="header-search-box" onmouseenter="clearTimeout(window._srchTimer);const i=document.getElementById('header-search-input');const b=this;b.style.width='240px';b.style.borderColor='var(--teal)';b.style.borderRadius='20px';i.style.width='180px';i.style.padding='0 8px 0 0';i.focus()" onmouseleave="window._srchTimer=setTimeout(()=>{const i=document.getElementById('header-search-input');if(!i.value){i.blur();const b=document.getElementById('header-search-box');b.style.width='40px';b.style.borderColor='#e2e8f0';b.style.borderRadius='50%';i.style.width='0';i.style.padding='0';}},400)" style="display:flex;align-items:center;overflow:hidden;width:40px;height:40px;border:1.5px solid #e2e8f0;border-radius:50%;background:white;transition:width 0.3s cubic-bezier(.4,0,.2,1),border-color 0.2s,border-radius 0.3s"
              onmouseenter="this.style.borderColor='var(--teal)'"
              onmouseleave="if(!document.getElementById('header-search-input').matches(':focus'))this.style.borderColor='#e2e8f0'">
           <button type="button" aria-label="Tìm kiếm" onclick="document.getElementById('header-search-input').focus()"
-                  style="width:34px;height:34px;min-width:34px;flex-shrink:0;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--teal-2));border:2px solid white;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-left:3px">
-            <svg aria-hidden="true" width="15" height="15" viewBox="1 1 22 22" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+                  style="width:34px;height:34px;min-width:34px;flex-shrink:0;border-radius:50%;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-left:3px">
+            <svg aria-hidden="true" width="15" height="15" viewBox="1 1 22 22" fill="none" stroke="#475569" stroke-width="2.5" stroke-linecap="round">
               <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
             </svg>
           </button>

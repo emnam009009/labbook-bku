@@ -623,27 +623,27 @@ h2.section-title { font-size: 15px; font-weight: 600; color: #0f172a; }
   overflow: hidden;
 }
 .searchButton {
-  color: white;
+  color: var(--text-2);
   width: 32px;
   height: 32px;
   min-width: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--teal), var(--teal-2));
-  border: 2px solid white;
+  background: transparent;
+  border: 1px solid var(--border);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   margin: 3px;
   flex-shrink: 0;
-  transition: all 300ms cubic-bezier(.23, 1, 0.32, 1);
+  transition: all 200ms ease;
 }
 .searchButton:hover {
-  background: linear-gradient(135deg, #0f766e, var(--teal));
-  box-shadow: rgba(var(--teal-rgb), 0.3) 0 4px 12px;
-  transform: translateY(-1px);
+  background: var(--surface-3);
+  border-color: var(--text-3);
+  color: var(--text);
 }
-.searchButton:active { box-shadow: none; transform: translateY(0); }
+.searchButton:active { transform: scale(0.95); }
 .searchInput {
   border: none;
   background: none;
@@ -2621,6 +2621,7 @@ html.glass nav.site-sidebar {
 html.glass .site-main { background: transparent !important; position: relative; z-index: 1; }
 html.glass .card,
 html.glass .stat-card,
+html.glass .recent-card,
 html.glass .form-section,
 html.glass .table-wrap,
 html.glass .modal {
@@ -2701,6 +2702,7 @@ html.neuro nav.site-sidebar {
 html.neuro .site-main { background: #e0e5ec !important; }
 html.neuro .card,
 html.neuro .stat-card,
+html.neuro .recent-card,
 html.neuro .form-section,
 html.neuro .table-wrap,
 html.neuro .modal {
@@ -2932,6 +2934,7 @@ html.glass.dark nav.site-sidebar {
 html.glass .site-main { background: transparent !important; position: relative; z-index: 1; }
 html.glass .card,
 html.glass .stat-card,
+html.glass .recent-card,
 html.glass .form-section,
 html.glass .table-wrap,
 html.glass .modal {
@@ -2943,6 +2946,7 @@ html.glass .modal {
 }
 html.glass.dark .card,
 html.glass.dark .stat-card,
+html.glass.dark .recent-card,
 html.glass.dark .form-section,
 html.glass.dark .table-wrap,
 html.glass.dark .modal {
@@ -3010,6 +3014,7 @@ html.neuro nav.site-sidebar {
 html.neuro .site-main { background: var(--neuro-bg) !important; }
 html.neuro .card,
 html.neuro .stat-card,
+html.neuro .recent-card,
 html.neuro .form-section,
 html.neuro .table-wrap,
 html.neuro .modal {

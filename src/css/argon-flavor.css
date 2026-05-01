@@ -513,7 +513,7 @@ body nav.site-sidebar.sidebar:hover .sidebar-footer #avatar-wrapper {
 /* Round 22: floating topbar không đè content + add padding-top cho main */
 #floating-topbar {
   top: 16px !important;
-  right: 24px !important;
+  right: 32px !important;
   z-index: 60 !important;
 }
 .site-main {
