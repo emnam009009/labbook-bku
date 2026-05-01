@@ -45,3 +45,4 @@ missing-handlers.js
 *.swp
 *.swo
 .DS_Store
+up.sh
