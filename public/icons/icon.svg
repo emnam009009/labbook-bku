@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#14b8a6"/>
+      <stop offset="100%" stop-color="#0d9488"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background rounded square -->
+  <rect width="512" height="512" rx="100" fill="url(#bg)"/>
+  
+  <!-- Atom orbits (3 ellipses rotated) -->
+  <g transform="translate(256, 256)" stroke="white" stroke-width="7" fill="none" opacity="0.85">
+    <ellipse rx="180" ry="65"/>
+    <ellipse rx="180" ry="65" transform="rotate(60)"/>
+    <ellipse rx="180" ry="65" transform="rotate(120)"/>
+  </g>
+  
+  <!-- Electrons (3 yellow dots) -->
+  <circle cx="436" cy="256" r="11" fill="#fbbf24"/>
+  <circle cx="166" cy="105" r="11" fill="#fbbf24"/>
+  <circle cx="166" cy="407" r="11" fill="#fbbf24"/>
+  
+  <!-- "L" letter at center -->
+  <text x="256" y="298" 
+        text-anchor="middle" 
+        font-size="140" 
+        font-weight="700" 
+        fill="white" 
+        font-family="Inter, system-ui, sans-serif">L</text>
+</svg>

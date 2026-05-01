@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0d9488">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="LabBook">
   <style>body{visibility:hidden}</style>
   <title>LabBook — Lab Vật liệu BKU</title>
   <!--
@@ -40,10 +46,8 @@
     <div style="position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(circle at 50% 0%,rgba(56,193,182,0.45) 0%,transparent 65%);filter:blur(40px)"></div>
     <div style="width:min(396px,90vw);position:fixed;top:120px;left:50%;transform:translateX(-50%);z-index:1;text-align:center">
       <div style="text-align:center;margin-bottom:0">
-        <div style="display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:18px;background:rgba(var(--teal-rgb), 0.12);border:1.5px solid rgba(var(--teal-rgb), 0.2);margin-bottom:16px">
-          <svg aria-hidden="true" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.8" stroke-linecap="round">
-            <path d="M9 3v11.5a3.5 3.5 0 007 0V3"/><line x1="6" y1="3" x2="18" y2="3"/>
-          </svg>
+        <div style="margin-bottom:16px">
+          <img src="/icons/icon.svg" alt="LabBook logo" width="112" height="112" style="border-radius:26px;box-shadow:0 12px 36px rgba(13,148,136,0.3);display:block;margin:0 auto">
         </div>
         <div style="font-family:'Inter',sans-serif;font-size:34px;font-weight:700;color:#0f172a;letter-spacing:-0.5px;line-height:1">LabBook</div>
         <div style="color:#64748b;font-size:13px;margin-top:6px">Lab Vật liệu — ĐH Bách Khoa HCM</div>
@@ -215,9 +219,7 @@
       <!-- Round 16: Brand at top of sidebar -->
       <div class="sidebar-brand">
         <div class="sidebar-brand-icon">
-          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
-            <path d="M9 3v11.5a3.5 3.5 0 007 0V3"/><line x1="6" y1="3" x2="18" y2="3"/>
-          </svg>
+          <img src="/icons/icon-mark.svg" alt="LabBook" width="28" height="28">
         </div>
         <div class="sidebar-brand-text">
           <div class="brand-title" id="lab-title" onclick="editLabTitle()" title="Click để đổi tên (Admin)">LabBook</div>
@@ -1891,6 +1893,22 @@ document.addEventListener('click', function(e) {
 });
 window.toggleMobileSidebar = toggleMobileSidebar;
 window.closeMobileSidebar = closeMobileSidebar;
+</script>
+
+
+<!-- PWA: Register Service Worker -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js')
+      .then(function(registration) {
+        console.log('[PWA] Service Worker registered, scope:', registration.scope);
+      })
+      .catch(function(error) {
+        console.log('[PWA] Service Worker registration failed:', error);
+      });
+  });
+}
 </script>
 
 </body>
