@@ -32,6 +32,8 @@ import { renderDash } from './pages/dashboard.js'
 // ── Theme picker ──────────────────────────────────────────
 import { initTheme } from './services/theme.js'
 import './services/theme-picker-ui.js'
+import { initStyle } from './services/theme-manager.js'
+import './pages/settings.js'
 import { initMemberFilter } from './services/member-filter.js'
 
 // ── Import experiment pages (Phần 4) ─────────────────────
@@ -764,6 +766,7 @@ window.toggleDarkMode = function(on) {
 
 // ── Init theme picker (apply saved theme từ localStorage) ──
 initTheme();
+  initStyle();
 
 // Restore
 ;(function(){

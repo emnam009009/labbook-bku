@@ -2436,3 +2436,626 @@ html body table thead th:nth-last-child(1),
 html body table thead th:nth-last-child(2) {
   text-align: center !important;
 }
+
+/* ─────────────────────────────────────────────────────────────────
+   THEME SYSTEM v2 — Light + Dark + Glass + Neuro
+   ───────────────────────────────────────────────────────────────── */
+
+/* ─── Fix hardcoded colors trong dark mode ─── */
+html.dark .page-title,
+html.dark h1,
+html.dark h2.section-title,
+html.dark h2,
+html.dark .table-wrap th,
+html.dark th { color: var(--text) !important; }
+html.dark .page-subtitle { color: var(--text-2) !important; }
+html.dark .recent-grid-head,
+html.dark .recent-grid-head > div,
+html.dark .recent-empty,
+html.dark .recent-card-header p { color: var(--text-2) !important; }
+html.dark .stat-label { color: var(--text-2) !important; }
+html.dark .searchInput { color: var(--text) !important; }
+html.dark .searchInput::placeholder { color: var(--text-3) !important; }
+html.dark .gs-item-title { color: var(--text) !important; }
+html.dark .gs-item-sub { color: var(--text-2) !important; }
+html.dark .gs-empty { color: var(--text-2) !important; }
+html.dark .gs-empty strong { color: var(--text) !important; }
+
+/* Charts trong dark mode - không chỉ filter brightness */
+html.dark canvas { filter: none; }
+
+/* ─── Settings Page UI ─── */
+.theme-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+.theme-card {
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--surface);
+  overflow: hidden;
+  position: relative;
+}
+.theme-card:hover {
+  border-color: var(--teal);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(13,148,136,0.12);
+}
+.theme-card.active {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(13,148,136,0.15);
+}
+.theme-preview {
+  height: 120px;
+  position: relative;
+  overflow: hidden;
+}
+.theme-preview-header {
+  height: 24px;
+  border-bottom: 1px solid;
+}
+.theme-preview-body {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.theme-preview-card {
+  height: 18px;
+  border-radius: 4px;
+}
+
+/* Light preview */
+.theme-preview-light { background: #f8fafc; }
+.theme-preview-light .theme-preview-header { background: #fff; border-color: #e2e8f0; }
+.theme-preview-light .theme-preview-card { background: #fff; border: 1px solid #e2e8f0; }
+
+/* Dark preview */
+.theme-preview-dark { background: #0f172a; }
+.theme-preview-dark .theme-preview-header { background: #1e293b; border-color: #334155; }
+.theme-preview-dark .theme-preview-card { background: #1e293b; border: 1px solid #334155; }
+
+/* Glass preview */
+.theme-preview-glass {
+  background: linear-gradient(135deg, #0d9488 0%, #3b82f6 50%, #8b5cf6 100%);
+}
+.theme-preview-glass .theme-preview-header {
+  background: rgba(255,255,255,0.25);
+  backdrop-filter: blur(10px);
+  border-color: rgba(255,255,255,0.18);
+}
+.theme-preview-glass .theme-preview-card {
+  background: rgba(255,255,255,0.4);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.18);
+}
+
+/* Neuro preview */
+.theme-preview-neuro { background: #e0e5ec; }
+.theme-preview-neuro .theme-preview-header {
+  background: #e0e5ec;
+  border: none;
+  box-shadow: inset 2px 2px 4px #c8cdd4, inset -2px -2px 4px #f8fdff;
+}
+.theme-preview-neuro .theme-preview-card {
+  background: #e0e5ec;
+  box-shadow: 3px 3px 6px #c8cdd4, -3px -3px 6px #f8fdff;
+}
+
+.theme-card-info {
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+}
+.theme-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+.theme-card-desc {
+  font-size: 11.5px;
+  color: var(--text-2);
+  line-height: 1.4;
+}
+.theme-active-badge {
+  font-size: 10px;
+  padding: 2px 7px;
+  background: var(--teal-light);
+  color: var(--teal);
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+/* Dark mode for theme cards */
+html.dark .theme-card { background: var(--surface); border-color: var(--border); }
+html.dark .theme-card-name { color: var(--text); }
+html.dark .theme-card-desc { color: var(--text-2); }
+html.dark .theme-card-info { border-color: var(--border); }
+
+/* ─────────────────────────────────────────────────────────────────
+   GLASSMORPHISM THEME
+   ───────────────────────────────────────────────────────────────── */
+html.glass {
+  --teal:        #14b8a6;
+  --teal-2:      #2dd4bf;
+  --teal-3:      #5eead4;
+  --teal-light:  rgba(20,184,166,0.18);
+  --surface:     rgba(255,255,255,0.65);
+  --surface-2:   rgba(255,255,255,0.4);
+  --surface-3:   rgba(255,255,255,0.55);
+  --border:      rgba(255,255,255,0.25);
+  --border-2:    rgba(255,255,255,0.4);
+  --text:        #0f172a;
+  --text-2:      #334155;
+  --text-3:      #475569;
+}
+
+html.glass body {
+  background: linear-gradient(135deg, #5eead4 0%, #93c5fd 50%, #c4b5fd 100%) !important;
+  background-attachment: fixed !important;
+  min-height: 100vh;
+}
+html.glass body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 20% 30%, rgba(13,148,136,0.3) 0%, transparent 50%),
+              radial-gradient(circle at 80% 70%, rgba(139,92,246,0.3) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+html.glass header.site-header,
+html.glass nav.site-sidebar {
+  background: rgba(255,255,255,0.4) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border-color: rgba(255,255,255,0.25) !important;
+}
+html.glass .site-main { background: transparent !important; position: relative; z-index: 1; }
+html.glass .card,
+html.glass .stat-card,
+html.glass .form-section,
+html.glass .table-wrap,
+html.glass .modal {
+  background: rgba(255,255,255,0.65) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255,255,255,0.3) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.08) !important;
+}
+html.glass .modal-overlay { background: rgba(0,0,0,0.3) !important; backdrop-filter: blur(8px) !important; }
+html.glass .sidebar-item {
+  background: rgba(255,255,255,0.5) !important;
+  border-color: rgba(255,255,255,0.3) !important;
+  backdrop-filter: blur(10px) !important;
+}
+html.glass .sidebar-item:hover {
+  background: rgba(255,255,255,0.7) !important;
+  border-color: var(--teal) !important;
+}
+html.glass .sidebar-item.active {
+  background: rgba(13,148,136,0.85) !important;
+  color: white !important;
+}
+html.glass .table-wrap thead { background: rgba(255,255,255,0.45) !important; }
+html.glass .table-wrap tbody tr:nth-child(even) td { background: rgba(255,255,255,0.25) !important; }
+html.glass .table-wrap tbody tr:hover td { background: rgba(20,184,166,0.15) !important; }
+html.glass .form-group input,
+html.glass .form-group select,
+html.glass .form-group textarea,
+html.glass .search-input,
+html.glass .searchInput,
+html.glass .searchBox {
+  background: rgba(255,255,255,0.5) !important;
+  backdrop-filter: blur(10px) !important;
+  border-color: rgba(255,255,255,0.4) !important;
+}
+html.glass .btn {
+  background: rgba(255,255,255,0.6) !important;
+  backdrop-filter: blur(10px) !important;
+  border-color: rgba(255,255,255,0.4) !important;
+}
+html.glass .btn-primary {
+  background: linear-gradient(135deg, rgba(20,184,166,0.9), rgba(45,212,191,0.9)) !important;
+  border: none !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   NEUMORPHISM THEME
+   ───────────────────────────────────────────────────────────────── */
+html.neuro {
+  --teal:        #0d9488;
+  --teal-2:      #14b8a6;
+  --teal-3:      #2dd4bf;
+  --teal-light:  rgba(13,148,136,0.1);
+  --surface:     #e0e5ec;
+  --surface-2:   #d8dde4;
+  --surface-3:   #c8cdd4;
+  --border:      transparent;
+  --border-2:    transparent;
+  --text:        #2d3e50;
+  --text-2:      #5a6e80;
+  --text-3:      #8294a5;
+  --shadow-light: #f8fdff;
+  --shadow-dark:  #b8bdc4;
+}
+
+html.neuro body { background: #e0e5ec !important; }
+html.neuro header.site-header {
+  background: #e0e5ec !important;
+  border: none !important;
+  box-shadow: 0 4px 8px var(--shadow-dark), 0 -4px 8px var(--shadow-light) !important;
+}
+html.neuro nav.site-sidebar {
+  background: #e0e5ec !important;
+  border: none !important;
+  box-shadow: 4px 0 8px var(--shadow-dark) !important;
+}
+html.neuro .site-main { background: #e0e5ec !important; }
+html.neuro .card,
+html.neuro .stat-card,
+html.neuro .form-section,
+html.neuro .table-wrap,
+html.neuro .modal {
+  background: #e0e5ec !important;
+  border: none !important;
+  box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light) !important;
+}
+html.neuro .sidebar-item {
+  background: #e0e5ec !important;
+  border: none !important;
+  box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light) !important;
+  color: var(--text-2) !important;
+}
+html.neuro .sidebar-item:hover {
+  box-shadow: inset 2px 2px 4px var(--shadow-dark), inset -2px -2px 4px var(--shadow-light) !important;
+  color: var(--teal) !important;
+}
+html.neuro .sidebar-item.active {
+  background: var(--teal) !important;
+  color: white !important;
+  box-shadow: inset 4px 4px 8px rgba(0,0,0,0.2), inset -4px -4px 8px rgba(255,255,255,0.1) !important;
+}
+html.neuro .form-group input,
+html.neuro .form-group select,
+html.neuro .form-group textarea,
+html.neuro .search-input,
+html.neuro .searchInput {
+  background: #e0e5ec !important;
+  border: none !important;
+  box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light) !important;
+  color: var(--text) !important;
+}
+html.neuro .searchBox {
+  background: #e0e5ec !important;
+  border: none !important;
+  box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light) !important;
+}
+html.neuro .btn {
+  background: #e0e5ec !important;
+  border: none !important;
+  box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light) !important;
+  color: var(--text) !important;
+}
+html.neuro .btn:hover {
+  box-shadow: 2px 2px 4px var(--shadow-dark), -2px -2px 4px var(--shadow-light) !important;
+}
+html.neuro .btn:active {
+  box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light) !important;
+}
+html.neuro .btn-primary {
+  background: linear-gradient(135deg, var(--teal), var(--teal-2)) !important;
+  color: white !important;
+}
+html.neuro .table-wrap thead { background: #d8dde4 !important; }
+html.neuro .table-wrap tbody tr:nth-child(even) td { background: #d8dde4 !important; }
+html.neuro .table-wrap tbody tr:hover td { background: rgba(13,148,136,0.08) !important; }
+html.neuro .badge {
+  box-shadow: 2px 2px 4px var(--shadow-dark), -2px -2px 4px var(--shadow-light) !important;
+}
+html.neuro .modal-overlay { background: rgba(45,62,80,0.3) !important; backdrop-filter: blur(4px) !important; }
+
+/* Theme card preview labels (cho 2 themes mới) */
+html.glass .theme-card,
+html.neuro .theme-card { backdrop-filter: blur(10px); }
+
+/* ─────────────────────────────────────────────────────────────────
+   SETTINGS PAGE - Style Picker UI
+   ───────────────────────────────────────────────────────────────── */
+.style-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+.style-card {
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--surface);
+  overflow: hidden;
+}
+.style-card:hover {
+  border-color: var(--teal);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(13,148,136,0.12);
+}
+.style-card.active {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(13,148,136,0.15);
+}
+.style-preview {
+  height: 130px;
+  position: relative;
+  overflow: hidden;
+}
+.style-preview-header {
+  height: 26px;
+  border-bottom: 1px solid;
+}
+.style-preview-body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.style-preview-card {
+  height: 22px;
+  border-radius: 6px;
+}
+
+/* Default preview */
+.style-preview-default { background: #f8fafc; }
+.style-preview-default .style-preview-header { background: #fff; border-color: #e2e8f0; }
+.style-preview-default .style-preview-card { background: #fff; border: 1px solid #e2e8f0; }
+
+/* Glass preview */
+.style-preview-glass {
+  background: linear-gradient(135deg, #5eead4 0%, #93c5fd 50%, #c4b5fd 100%);
+}
+.style-preview-glass .style-preview-header {
+  background: rgba(255,255,255,0.35);
+  backdrop-filter: blur(10px);
+  border-color: rgba(255,255,255,0.3);
+}
+.style-preview-glass .style-preview-card {
+  background: rgba(255,255,255,0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+/* Neuro preview */
+.style-preview-neuro { background: #e0e5ec; }
+.style-preview-neuro .style-preview-header {
+  background: #e0e5ec;
+  border: none;
+  box-shadow: inset 2px 2px 4px #c8cdd4, inset -2px -2px 4px #f8fdff;
+}
+.style-preview-neuro .style-preview-card {
+  background: #e0e5ec;
+  box-shadow: 4px 4px 8px #c8cdd4, -4px -4px 8px #f8fdff;
+}
+
+.style-card-info {
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
+}
+.style-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.style-card-desc {
+  font-size: 12px;
+  color: var(--text-2);
+  line-height: 1.45;
+}
+.style-active-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  background: var(--teal-light);
+  color: var(--teal);
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+/* Dark mode style cards */
+html.dark .style-card { background: var(--surface); border-color: var(--border); }
+html.dark .style-card-name { color: var(--text); }
+html.dark .style-card-desc { color: var(--text-2); }
+html.dark .style-card-info { border-color: var(--border); }
+
+/* ─────────────────────────────────────────────────────────────────
+   FIX DARK MODE - Hardcoded colors
+   ───────────────────────────────────────────────────────────────── */
+html.dark .page-title,
+html.dark h1,
+html.dark h2.section-title,
+html.dark h2,
+html.dark .table-wrap th,
+html.dark th { color: var(--text) !important; }
+html.dark .page-subtitle { color: var(--text-2) !important; }
+html.dark .recent-grid-head,
+html.dark .recent-grid-head > div,
+html.dark .recent-empty,
+html.dark .recent-card-header p { color: var(--text-2) !important; }
+html.dark .stat-label { color: var(--text-2) !important; }
+html.dark .searchInput { color: var(--text) !important; }
+html.dark .searchInput::placeholder { color: var(--text-3) !important; }
+html.dark .gs-item-title { color: var(--text) !important; }
+html.dark .gs-item-sub { color: var(--text-2) !important; }
+html.dark .gs-empty { color: var(--text-2) !important; }
+html.dark .gs-empty strong { color: var(--text) !important; }
+html.dark canvas { filter: none; }
+
+/* Avatar menu trong dark mode */
+html.dark #avatar-menu { background: var(--surface) !important; border-color: var(--border) !important; }
+html.dark #menu-name,
+html.dark #avatar-menu button,
+html.dark #avatar-menu label { color: var(--text) !important; }
+html.dark #menu-email { color: var(--text-2) !important; }
+html.dark .avatar-menu-btn:hover { background: var(--surface-3) !important; }
+
+/* ─────────────────────────────────────────────────────────────────
+   GLASSMORPHISM STYLE — Layer trên cả color + dark mode
+   ───────────────────────────────────────────────────────────────── */
+html.glass body {
+  background: #a3b18a !important;
+  background-attachment: fixed !important;
+}
+html.glass.dark body {
+  background: #4a5239 !important;
+}
+/* glass body::before removed for sage minimal style */
+html.glass header.site-header,
+html.glass nav.site-sidebar {
+  background: rgba(255,255,255,0.45) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border-color: rgba(255,255,255,0.25) !important;
+}
+html.glass.dark header.site-header,
+html.glass.dark nav.site-sidebar {
+  background: rgba(15,23,42,0.55) !important;
+}
+html.glass .site-main { background: transparent !important; position: relative; z-index: 1; }
+html.glass .card,
+html.glass .stat-card,
+html.glass .form-section,
+html.glass .table-wrap,
+html.glass .modal {
+  background: rgba(255,255,255,0.7) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255,255,255,0.3) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.08) !important;
+}
+html.glass.dark .card,
+html.glass.dark .stat-card,
+html.glass.dark .form-section,
+html.glass.dark .table-wrap,
+html.glass.dark .modal {
+  background: rgba(30,41,59,0.7) !important;
+  border-color: rgba(255,255,255,0.1) !important;
+}
+html.glass .modal-overlay { background: rgba(0,0,0,0.3) !important; backdrop-filter: blur(8px) !important; }
+html.glass .sidebar-item {
+  background: rgba(255,255,255,0.55) !important;
+  border-color: rgba(255,255,255,0.3) !important;
+  backdrop-filter: blur(10px) !important;
+}
+html.glass .sidebar-item:hover {
+  background: rgba(255,255,255,0.75) !important;
+  border-color: var(--teal) !important;
+}
+html.glass.dark .sidebar-item {
+  background: rgba(30,41,59,0.6) !important;
+  border-color: rgba(255,255,255,0.1) !important;
+}
+html.glass .table-wrap thead { background: rgba(255,255,255,0.45) !important; }
+html.glass .table-wrap tbody tr:nth-child(even) td { background: rgba(255,255,255,0.25) !important; }
+html.glass .table-wrap tbody tr:hover td { background: rgba(20,184,166,0.18) !important; }
+html.glass.dark .table-wrap thead { background: rgba(15,23,42,0.6) !important; }
+html.glass.dark .table-wrap tbody tr:nth-child(even) td { background: rgba(15,23,42,0.4) !important; }
+html.glass .form-group input,
+html.glass .form-group select,
+html.glass .form-group textarea,
+html.glass .search-input,
+html.glass .searchInput {
+  background: rgba(255,255,255,0.55) !important;
+  backdrop-filter: blur(10px) !important;
+  border-color: rgba(255,255,255,0.4) !important;
+}
+html.glass .btn {
+  background: rgba(255,255,255,0.65) !important;
+  backdrop-filter: blur(10px) !important;
+  border-color: rgba(255,255,255,0.4) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   NEUMORPHISM STYLE — Layer trên cả color + dark mode
+   ───────────────────────────────────────────────────────────────── */
+html.neuro {
+  --neuro-bg: #e0e5ec;
+  --neuro-shadow-light: #f8fdff;
+  --neuro-shadow-dark: #b8bdc4;
+}
+html.neuro.dark {
+  --neuro-bg: #2a3142;
+  --neuro-shadow-light: #353e54;
+  --neuro-shadow-dark: #1e2330;
+}
+html.neuro body { background: var(--neuro-bg) !important; }
+html.neuro header.site-header {
+  background: var(--neuro-bg) !important;
+  border: none !important;
+  box-shadow: 0 4px 8px var(--neuro-shadow-dark), 0 -4px 8px var(--neuro-shadow-light) !important;
+}
+html.neuro nav.site-sidebar {
+  background: var(--neuro-bg) !important;
+  border: none !important;
+  box-shadow: 4px 0 8px var(--neuro-shadow-dark) !important;
+}
+html.neuro .site-main { background: var(--neuro-bg) !important; }
+html.neuro .card,
+html.neuro .stat-card,
+html.neuro .form-section,
+html.neuro .table-wrap,
+html.neuro .modal {
+  background: var(--neuro-bg) !important;
+  border: none !important;
+  box-shadow: 8px 8px 16px var(--neuro-shadow-dark), -8px -8px 16px var(--neuro-shadow-light) !important;
+}
+html.neuro .sidebar-item {
+  background: var(--neuro-bg) !important;
+  border: none !important;
+  box-shadow: 4px 4px 8px var(--neuro-shadow-dark), -4px -4px 8px var(--neuro-shadow-light) !important;
+}
+html.neuro .sidebar-item:hover {
+  box-shadow: inset 2px 2px 4px var(--neuro-shadow-dark), inset -2px -2px 4px var(--neuro-shadow-light) !important;
+}
+html.neuro .sidebar-item.active {
+  box-shadow: inset 4px 4px 8px rgba(0,0,0,0.2), inset -4px -4px 8px rgba(255,255,255,0.05) !important;
+}
+html.neuro .form-group input,
+html.neuro .form-group select,
+html.neuro .form-group textarea,
+html.neuro .search-input,
+html.neuro .searchInput {
+  background: var(--neuro-bg) !important;
+  border: none !important;
+  box-shadow: inset 4px 4px 8px var(--neuro-shadow-dark), inset -4px -4px 8px var(--neuro-shadow-light) !important;
+}
+html.neuro .searchBox {
+  background: var(--neuro-bg) !important;
+  border: none !important;
+  box-shadow: inset 4px 4px 8px var(--neuro-shadow-dark), inset -4px -4px 8px var(--neuro-shadow-light) !important;
+}
+html.neuro .btn {
+  background: var(--neuro-bg) !important;
+  border: none !important;
+  box-shadow: 4px 4px 8px var(--neuro-shadow-dark), -4px -4px 8px var(--neuro-shadow-light) !important;
+}
+html.neuro .btn:hover {
+  box-shadow: 2px 2px 4px var(--neuro-shadow-dark), -2px -2px 4px var(--neuro-shadow-light) !important;
+}
+html.neuro .btn:active {
+  box-shadow: inset 4px 4px 8px var(--neuro-shadow-dark), inset -4px -4px 8px var(--neuro-shadow-light) !important;
+}
+html.neuro .table-wrap thead { background: var(--neuro-bg) !important; box-shadow: inset 0 -2px 4px var(--neuro-shadow-dark) !important; }
+html.neuro .table-wrap tbody tr:hover td { background: rgba(13,148,136,0.08) !important; }
+html.neuro .badge {
+  box-shadow: 2px 2px 4px var(--neuro-shadow-dark), -2px -2px 4px var(--neuro-shadow-light) !important;
+}
+html.neuro .modal-overlay { background: rgba(45,62,80,0.4) !important; backdrop-filter: blur(4px) !important; }

@@ -257,6 +257,17 @@
         </div>
       </div>
       <!-- Round 16: Avatar at bottom of sidebar -->
+      
+      <!-- Settings Button (visual style picker) -->
+      <div style="width:32px;height:1px;background:rgba(255,255,255,0.08);margin:6px auto"></div>
+      <div class="sidebar-item" onclick="showPage('settings',this)" data-tip="Cài đặt" role="button" tabindex="0" aria-label="Cài đặt">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+        <span data-label>Cài đặt</span>
+      </div>
+
       <div class="sidebar-footer">
 
       <div style="position:relative" id="avatar-wrapper" onmouseenter="clearTimeout(window._avatarTimer);document.getElementById('avatar-menu').style.display='block'" onmouseleave="window._avatarTimer=setTimeout(()=>document.getElementById('avatar-menu').style.display='none',200)">
@@ -318,8 +329,7 @@
           </div>
         </div>
       </div>
-      </div>
-    </nav>
+      </div></nav>
 
     <!-- ── MAIN CONTENT ── -->
     <main class="site-main" id="main-content" tabindex="-1">
@@ -999,6 +1009,27 @@
           </div>
         </div>
       </div>
+    
+    <!-- Settings Page -->
+    <div class="page" id="page-settings">
+      <div style="max-width:1000px;margin:0 auto">
+        <div style="margin-bottom:24px">
+          <h1 class="page-title">Cài đặt</h1>
+          <p class="page-subtitle">Tùy chỉnh giao diện và tùy chọn hiển thị</p>
+        </div>
+        
+        <!-- Theme Picker Section -->
+        <div class="card" style="padding:24px">
+          <div style="margin-bottom:16px">
+            <h2 class="section-title" style="font-size:16px;margin:0 0 4px">Giao diện</h2>
+            <p style="font-size:12.5px;color:var(--text-2);margin:0">Chọn theme phù hợp với phong cách của bạn</p>
+          </div>
+          <div id="theme-picker" class="theme-picker-grid"></div>
+        </div>
+        
+        <!-- Future settings sections can be added here -->
+      </div>
+    </div>
     </main>
   </div>
 
