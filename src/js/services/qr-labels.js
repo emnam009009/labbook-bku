@@ -157,7 +157,7 @@ export async function printLabels(records, type) {
     win.document.close()
 
     win.onload = () => setTimeout(() => win.print(), 300)
-    if (window.showToast) window.showToast('✓ Đã mở trang in', 'success')
+    if (window.showToast) window.showToast('Đã mở trang in', 'success')
   } catch (err) {
     console.error('[qr-labels] printLabels failed', err)
     if (window.showToast) window.showToast('Lỗi tạo nhãn: ' + err.message, 'danger')
@@ -205,7 +205,7 @@ export async function downloadLabelsPDF(records, type) {
     const filename = `nhan-qr-${type === 'chem' ? 'hoachat' : 'thietbi'}-${new Date().toISOString().slice(0,10)}.pdf`
     doc.save(filename)
 
-    if (window.showToast) window.showToast(`✓ Đã tải ${filename}`, 'success')
+    if (window.showToast) window.showToast(`Đã tải ${filename}`, 'success')
   } catch (err) {
     console.error('[qr-labels] downloadLabelsPDF failed', err)
     if (window.showToast) window.showToast('Lỗi tạo PDF: ' + err.message, 'danger')
