@@ -1,0 +1,1035 @@
+
+* { font-family: 'Inter', sans-serif; }
+/* ═══════════════════════════════════════════════════════════════
+   ARGON FLAVOR — LabBook BKU (Round 16)
+   Stronger selectors to win against .site-sidebar
+═══════════════════════════════════════════════════════════════ */
+
+:root {
+  --gradient-primary: linear-gradient(135deg, var(--teal) 0%, var(--teal-3) 100%);
+  --gradient-info:    linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+  --gradient-success: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  --gradient-warn:    linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  --gradient-danger:  linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+
+  --shadow:      0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md:   0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg:   0 12px 24px -4px rgba(0, 0, 0, 0.08), 0 4px 8px -4px rgba(0, 0, 0, 0.04);
+  --shadow-soft: 0 0 1px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.05), 0 8px 24px rgba(0,0,0,.04);
+  --shadow-teal: 0 4px 12px rgba(var(--teal-rgb), 0.25), 0 2px 4px rgba(var(--teal-rgb), 0.15);
+
+  --sidebar-w-collapsed: 64px;
+  --sidebar-w-expanded:  240px;
+  --sidebar-trans:       0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body { background: #f8fafc; }
+
+/* ═══════════════════════════════════════════════════════════════
+   SIDEBAR — Hover expand (use double class for specificity)
+═══════════════════════════════════════════════════════════════ */
+nav.site-sidebar.sidebar {
+  width: var(--sidebar-w-collapsed) !important;
+  transition: width var(--sidebar-trans) !important;
+  overflow: hidden !important;
+  background: white !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 14px 8px !important;
+}
+nav.site-sidebar.sidebar:hover {
+  width: var(--sidebar-w-expanded) !important;
+  box-shadow: 8px 0 24px -8px rgba(0,0,0,0.06) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SIDEBAR BRAND (top)
+═══════════════════════════════════════════════════════════════ */
+nav.site-sidebar .sidebar-brand {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px 16px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #f1f5f9;
+  flex-shrink: 0;
+  height: 64px;
+}
+nav.site-sidebar .sidebar-brand-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: var(--gradient-primary);
+  box-shadow: var(--shadow-teal);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+nav.site-sidebar .sidebar-brand-text {
+  display: flex; flex-direction: column;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1) 0.05s,
+              transform 0.2s cubic-bezier(0.16, 1, 0.3, 1) 0.05s;
+}
+nav.site-sidebar:hover .sidebar-brand-text {
+  opacity: 1;
+  transform: translateX(0);
+}
+nav.site-sidebar .sidebar-brand-text .brand-title {
+  font-size: 15px; font-weight: 700;
+  color: #344767; letter-spacing: -0.01em;
+  cursor: pointer;
+  line-height: 1.1;
+}
+nav.site-sidebar .sidebar-brand-text .brand-subtitle {
+  font-size: 9px; font-weight: 600;
+  color: #475569; letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NAV LABELS — fade in/out
+═══════════════════════════════════════════════════════════════ */
+nav.site-sidebar .nav-label {
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1) 0.05s,
+              transform 0.2s cubic-bezier(0.16, 1, 0.3, 1) 0.05s;
+  pointer-events: none;
+}
+nav.site-sidebar:hover .nav-label {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SIDEBAR ITEMS — gradient active state
+═══════════════════════════════════════════════════════════════ */
+nav.site-sidebar .sidebar-item {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 10px !important;
+  margin: 2px 0 !important;
+  border-radius: 10px !important;
+  font-size: 13px; font-weight: 500;
+  color: #67748e !important;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  white-space: nowrap;
+  text-decoration: none;
+  border: none !important;
+  background: transparent !important;
+  width: auto !important;
+  min-height: 40px;
+}
+nav.site-sidebar .sidebar-item > svg {
+  width: 18px; height: 18px;
+  flex-shrink: 0;
+  stroke-width: 2;
+  color: #67748e;
+  transition: color 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+nav.site-sidebar .sidebar-item:hover {
+  background: var(--teal-light) !important;
+  color: var(--teal) !important;
+}
+nav.site-sidebar .sidebar-item:hover > svg {
+  color: var(--teal);
+}
+nav.site-sidebar .sidebar-item.active {
+  background: var(--gradient-primary) !important;
+  color: white !important;
+  box-shadow: var(--shadow-teal) !important;
+}
+nav.site-sidebar .sidebar-item.active > svg {
+  color: white !important;
+  stroke: white !important;
+}
+
+/* Hide tooltip on collapsed mode (was data-tip — we now show via expand) */
+nav.site-sidebar .sidebar-item::after { display: none !important; }
+
+/* ═══════════════════════════════════════════════════════════════
+   SIDEBAR FOOTER (avatar at bottom)
+═══════════════════════════════════════════════════════════════ */
+nav.site-sidebar .sidebar-footer {
+  margin-top: auto !important;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+  flex-shrink: 0;
+}
+nav.site-sidebar .sidebar-footer #avatar-wrapper {
+  width: 100%;
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+}
+nav.site-sidebar .sidebar-footer #avatar-btn {
+  width: 36px !important;
+  height: 36px !important;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   HEADER — remove brand area, justify-content right
+═══════════════════════════════════════════════════════════════ */
+.site-header {
+  justify-content: flex-end !important;
+  padding-right: 24px !important;
+}
+.site-header > .flex {
+  margin-left: auto !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STAT CARDS, CARDS — Argon polish
+═══════════════════════════════════════════════════════════════ */
+.stat-card,
+[class*="stat-card"] {
+  background: white;
+  border-radius: 14px !important;
+  box-shadow: var(--shadow-soft) !important;
+  border: none !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg) !important;
+}
+.card {
+  border-radius: 14px !important;
+  box-shadow: var(--shadow-soft) !important;
+  border: none !important;
+  background: white !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════════════════════ */
+.btn-primary {
+  background: var(--gradient-primary) !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: var(--shadow-teal) !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.btn-primary:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 14px rgba(var(--teal-rgb), 0.4) !important;
+}
+.btn-secondary {
+  background: white !important;
+  color: #344767 !important;
+  border: 1px solid #e9ecef !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: var(--shadow);
+}
+.btn-secondary:hover {
+  border-color: var(--teal) !important;
+  color: var(--teal) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FORM INPUTS
+═══════════════════════════════════════════════════════════════ */
+.form-group input,
+.form-group select,
+.form-group textarea {
+  border-radius: 10px !important;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--teal) !important;
+  box-shadow: 0 0 0 3px rgba(var(--teal-rgb), 0.12) !important;
+  outline: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PAGE TITLE
+═══════════════════════════════════════════════════════════════ */
+.page-title {
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  color: #344767 !important;
+  letter-spacing: -0.02em !important;
+}
+.subtitle {
+  color: #67748e !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TABLE
+═══════════════════════════════════════════════════════════════ */
+table thead th {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  color: #475569 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  background: #f8fafc !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+table tbody tr {
+  transition: background 0.12s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+table tbody tr:hover {
+  background: var(--teal-light) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ENTRANCE ANIMATION
+═══════════════════════════════════════════════════════════════ */
+@keyframes argonFadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page.active .stat-card,
+.page.active .card {
+  animation: argonFadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.page.active .stat-card:nth-child(2) { animation-delay: 60ms; }
+.page.active .stat-card:nth-child(3) { animation-delay: 120ms; }
+.page.active .stat-card:nth-child(4) { animation-delay: 180ms; }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   ROUND 17 — Specificity overrides
+   These selectors are stronger than main.css rules to win regardless
+   of stylesheet load order.
+═══════════════════════════════════════════════════════════════ */
+
+/* ──── Sidebar width: hover-expand ──────────────────────── */
+body nav.site-sidebar.sidebar {
+  width: 64px !important;
+  overflow: visible !important;
+  align-items: stretch !important;
+  padding: 14px 8px !important;
+  gap: 4px !important;
+}
+body nav.site-sidebar.sidebar:hover {
+  width: 240px !important;
+}
+
+/* Sidebar items align flex-start when expanded (override align-items:center on parent) */
+body nav.site-sidebar.sidebar .sidebar-item {
+  justify-content: flex-start !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 9px 10px !important;
+  width: auto !important;
+}
+
+/* ──── Show nav-label when hovered (override main.css hide-all-spans) ──── */
+body nav.site-sidebar.sidebar .sidebar-item > span.nav-label,
+body nav.site-sidebar.sidebar .sidebar-brand-text {
+  display: inline-flex !important;
+  flex-direction: column;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1) 0.05s,
+              transform 0.2s cubic-bezier(0.16, 1, 0.3, 1) 0.05s;
+  pointer-events: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: inherit;
+}
+body nav.site-sidebar.sidebar:hover .sidebar-item > span.nav-label,
+body nav.site-sidebar.sidebar:hover .sidebar-brand-text {
+  opacity: 1 !important;
+  transform: translateX(0) !important;
+  pointer-events: auto !important;
+}
+
+/* Active item: white text */
+body nav.site-sidebar.sidebar .sidebar-item.active > span.nav-label {
+  color: white !important;
+}
+
+/* ──── Header transparent ───────────────────────────────── */
+body header.site-header {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  height: auto !important;
+  padding: 14px 24px !important;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+/* Search box & bell — keep their own white background */
+body header.site-header > * {
+  background: transparent;
+}
+body header.site-header #header-search-box {
+  background: white !important;
+}
+body header.site-header > div > button {
+  background: white !important;
+}
+
+/* ──── Sidebar tooltip suppression (data-tip) when expanded ──── */
+/* Existing main.css uses #sidebar-tooltip with JS - it conflicts with hover-expand.
+   Hide tooltip when sidebar is hovered (since label is now visible inside). */
+body nav.site-sidebar.sidebar:hover ~ #sidebar-tooltip,
+body:has(nav.site-sidebar.sidebar:hover) #sidebar-tooltip {
+  display: none !important;
+}
+
+/* ──── Fix sidebar overflow when label fades in ──── */
+body nav.site-sidebar.sidebar .sidebar-item {
+  overflow: hidden;
+  position: relative !important;
+}
+
+/* ──── Sidebar brand visibility ──── */
+body nav.site-sidebar.sidebar .sidebar-brand {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 6px 16px !important;
+  margin-bottom: 4px;
+  border-bottom: 1px solid #f1f5f9;
+  flex-shrink: 0;
+  height: 64px;
+  overflow: hidden;
+}
+body nav.site-sidebar.sidebar .sidebar-brand-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: var(--gradient-primary);
+  box-shadow: var(--shadow-teal);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ──── Sidebar footer (avatar) visible at bottom ──── */
+body nav.site-sidebar.sidebar .sidebar-footer {
+  margin-top: auto !important;
+  padding-top: 12px !important;
+  border-top: 1px solid #f1f5f9;
+  flex-shrink: 0;
+}
+body nav.site-sidebar.sidebar .sidebar-footer #avatar-wrapper {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px;
+}
+
+/* Round 19: header removed, fix site-main top spacing */
+.site-main {
+  padding-top: 24px !important;
+  background: #f8fafc !important;
+}
+.site-layout {
+  display: flex !important;
+}
+nav.site-sidebar.sidebar {
+  top: 0 !important;
+  height: 100vh !important;
+}
+
+/* Round 20: giảm sidebar collapsed từ 64px → 56px */
+body nav.site-sidebar.sidebar {
+  width: 56px !important;
+}
+
+/* Round 21: Fix brand icon center alignment + force nav-label visible */
+
+/* Brand area: căn giữa icon khi collapsed, căn trái khi expanded */
+body nav.site-sidebar.sidebar .sidebar-brand {
+  justify-content: center !important;
+  padding: 12px 6px 16px !important;
+  height: auto !important;
+  min-height: 64px !important;
+}
+body nav.site-sidebar.sidebar:hover .sidebar-brand {
+  justify-content: flex-start !important;
+  padding: 12px 10px 16px !important;
+}
+body nav.site-sidebar.sidebar .sidebar-brand-icon {
+  margin: 0 !important;
+}
+
+/* Sidebar items: căn giữa icon khi collapsed */
+body nav.site-sidebar.sidebar .sidebar-item {
+  justify-content: center !important;
+  padding: 9px 0 !important;
+}
+body nav.site-sidebar.sidebar:hover .sidebar-item {
+  justify-content: flex-start !important;
+  padding: 9px 14px !important;
+}
+
+/* Force show nav-label - ULTRA-HIGH specificity to beat .sidebar-item span { display:none !important } */
+html body nav.site-sidebar.sidebar:hover .sidebar-item > span.nav-label {
+  display: inline-block !important;
+  opacity: 1 !important;
+  transform: none !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  margin-left: 12px;
+  font-size: 13px;
+  font-weight: 500;
+}
+html body nav.site-sidebar.sidebar:not(:hover) .sidebar-item > span.nav-label {
+  display: none !important;
+}
+
+/* Brand text fade */
+html body nav.site-sidebar.sidebar:hover .sidebar-brand-text {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+html body nav.site-sidebar.sidebar:not(:hover) .sidebar-brand-text {
+  display: none !important;
+}
+
+/* Avatar wrapper căn giữa khi collapsed */
+body nav.site-sidebar.sidebar .sidebar-footer #avatar-wrapper {
+  justify-content: center !important;
+  padding: 6px 0 !important;
+}
+body nav.site-sidebar.sidebar:hover .sidebar-footer #avatar-wrapper {
+  justify-content: flex-start !important;
+  padding: 6px 10px !important;
+}
+
+/* Round 22: floating topbar không đè content + add padding-top cho main */
+#floating-topbar {
+  top: 16px !important;
+  right: 24px !important;
+  z-index: 60 !important;
+}
+.site-main {
+  padding-top: 60px !important;  /* chừa chỗ cho topbar floating */
+}
+@media (max-width: 768px) {
+  #floating-topbar {
+    top: 8px !important;
+    right: 8px !important;
+  }
+}
+
+/* Round 24: Tab size 211.33×52 khi expanded */
+body nav.site-sidebar.sidebar:hover .sidebar-item {
+  width: 211.33px !important;
+  height: 52px !important;
+  padding: 0 14px !important;
+}
+body nav.site-sidebar.sidebar:not(:hover) .sidebar-item {
+  width: 40px !important;
+  height: 40px !important;
+}
+
+/* Round 24-final: tab dimensions */
+body nav.site-sidebar.sidebar:not(:hover) .sidebar-item {
+  width: 40px !important;
+  height: 40px !important;
+  padding: 0 !important;
+  justify-content: center !important;
+  margin: 4px auto !important;
+}
+body nav.site-sidebar.sidebar:hover .sidebar-item {
+  width: 211.33px !important;
+  height: 52px !important;
+  padding: 0 14px !important;
+  justify-content: flex-start !important;
+  margin: 4px auto !important;
+}
+
+/* Round 25: Topbar (search+bell) chỉ hiện ở dashboard */
+body:not(.page-dashboard) #floating-topbar {
+  display: none !important;
+}
+
+/* Round 26: tăng nút tròn fill bên trong search box từ 30 → 32px */
+#header-search-box button {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+}
+
+/* Round 27: giảm FAB từ 55 → 48px */
+#chat-fab.chatBtn {
+  width: 48px !important;
+  height: 48px !important;
+}
+#chat-fab.chatBtn svg {
+  height: 1.4em !important;
+}
+
+/* Round 28: padding cho main 24px 32px 32px (override Round 22) */
+.site-main {
+  padding: 24px 32px 32px !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   ROUND 29 — Stat cards polish + table polish + badge role pill
+═══════════════════════════════════════════════════════════════ */
+
+/* Stat cards: shadow soft + hover lift */
+.stat-card {
+  border: none !important;
+  box-shadow: 0 0 1px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.05), 0 8px 24px rgba(0,0,0,.04) !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -4px rgba(0,0,0,0.08), 0 4px 8px -4px rgba(0,0,0,0.04) !important;
+}
+
+/* Convert flat icon backgrounds to gradient (card 1, 2, 4 still use flat colors in inline style) */
+.stat-card div[style*="background:var(--teal-light)"] {
+  background: linear-gradient(135deg, var(--teal) 0%, var(--teal-3) 100%) !important;
+  box-shadow: 0 4px 12px rgba(var(--teal-rgb), 0.3) !important;
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 10px !important;
+}
+.stat-card div[style*="background:var(--teal-light)"] svg {
+  stroke: white !important;
+  width: 20px !important;
+  height: 20px !important;
+}
+.stat-card div[style*="background:rgba(245,158,11"] {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%) !important;
+  box-shadow: 0 4px 12px rgba(245,158,11,0.3) !important;
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 10px !important;
+}
+.stat-card div[style*="background:rgba(245,158,11"] svg {
+  stroke: white !important;
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* ═══════════ Table Argon-style header ═══════════ */
+.table-wrap thead th,
+table thead th {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  color: #475569 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  background: #f8fafc !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  padding: 12px 16px !important;
+}
+.table-wrap tbody td,
+table tbody td {
+  padding: 14px 16px !important;
+  vertical-align: middle !important;
+}
+.table-wrap tbody tr:hover,
+table tbody tr:hover {
+  background: var(--teal-light) !important;
+}
+.table-wrap tbody tr:last-child td,
+table tbody tr:last-child td {
+  border-bottom: none !important;
+}
+
+/* ═══════════ Badge role pill 999px ═══════════ */
+.badge,
+.role-badge,
+[class*="role-"] {
+  border-radius: 999px !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* Avatar role badges in user management — keep gradient cam for superadmin already from R10 */
+#avatar-menu .badge,
+.member-row .badge {
+  border-radius: 999px !important;
+}
+
+/* Round 30: bo full pill 999px cho TẤT CẢ badge trong quản lý tài khoản */
+#page-users .badge,
+#page-users [class*="badge"],
+#page-users [class*="role"],
+#page-members .badge,
+#page-members [class*="badge"],
+#page-members [class*="role"],
+.member-row .badge,
+.user-row .badge,
+table .badge,
+[id*="users"] .badge,
+[id*="members"] .badge {
+  border-radius: 999px !important;
+  padding: 4px 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* Cụ thể cho các trạng thái role */
+.badge-member, .role-member,
+.badge-admin, .role-admin,
+.badge-viewer, .role-viewer,
+.badge-rejected, .role-rejected,
+.badge-pending, .role-pending {
+  border-radius: 999px !important;
+  padding: 4px 12px !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   ROUND 30B — Dashboard 4 stat cards
+═══════════════════════════════════════════════════════════════ */
+
+.stat-card.stat-card-r30 {
+  background: white;
+  border-radius: 14px;
+  padding: 22px 24px;
+  box-shadow: 0 0 1px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.05), 0 8px 24px rgba(0,0,0,.04);
+  border: none !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.stat-card.stat-card-r30:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -4px rgba(0,0,0,0.08), 0 4px 8px -4px rgba(0,0,0,0.04);
+}
+.stat-card.stat-card-r30 .stat-card-body {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.stat-card.stat-card-r30 .stat-info { flex: 1; min-width: 0; }
+.stat-card.stat-card-r30 .stat-label {
+  font-size: 11px; font-weight: 700; color: #475569;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.stat-card.stat-card-r30 .stat-value {
+  font-size: 32px; font-weight: 700; color: #344767;
+  line-height: 1.1; letter-spacing: -0.02em;
+}
+.stat-card.stat-card-r30 .stat-icon {
+  width: 44px; height: 44px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.stat-card.stat-card-r30 .stat-icon svg { width: 20px; height: 20px; }
+
+.stat-icon-teal    { background: linear-gradient(135deg, var(--teal) 0%, var(--teal-3) 100%); box-shadow: 0 4px 12px rgba(var(--teal-rgb), 0.3); }
+.stat-icon-info    { background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%); box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
+.stat-icon-success { background: linear-gradient(135deg, #10b981 0%, #34d399 100%); box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
+.stat-icon-warn    { background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); box-shadow: 0 4px 12px rgba(245,158,11,0.3); }
+
+.stat-card.stat-card-r30 .stat-trend {
+  font-size: 12px; display: flex; align-items: center;
+  gap: 6px; flex-wrap: wrap;
+}
+
+/* Round 30D: Xoá gạch xanh trên + dưới stat-card */
+.stat-card.stat-card-r30,
+.stat-card.stat-card-r30::before,
+.stat-card.stat-card-r30::after {
+  border-top: none !important;
+  background-image: none !important;
+}
+.stat-card.stat-card-r30::before,
+.stat-card.stat-card-r30::after {
+  display: none !important;
+  content: none !important;
+}
+.stat-card.stat-card-r30 .stat-value,
+.stat-card.stat-card-r30 .stat-value::before,
+.stat-card.stat-card-r30 .stat-value::after {
+  border: none !important;
+  border-bottom: none !important;
+  background: none !important;
+  text-decoration: none !important;
+}
+.stat-card.stat-card-r30 .stat-value::before,
+.stat-card.stat-card-r30 .stat-value::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Round 30E: Xóa các ô vuông shadow lạ bên cạnh icon trong stat cards */
+/* Reset shadow trên TẤT CẢ direct children của stat-card-r30, NGOẠI TRỪ stat-icon */
+.stat-card.stat-card-r30 > *:not(.stat-icon),
+.stat-card.stat-card-r30 .stat-card-body > *:not(.stat-icon),
+.stat-card.stat-card-r30 .stat-info,
+.stat-card.stat-card-r30 .stat-info > * {
+  box-shadow: none !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Đảm bảo stat-icon (icon gradient) GIỮ shadow của nó */
+.stat-card.stat-card-r30 .stat-icon {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+}
+.stat-card.stat-card-r30 .stat-icon.stat-icon-teal    { box-shadow: 0 4px 12px rgba(var(--teal-rgb), 0.3) !important; }
+.stat-card.stat-card-r30 .stat-icon.stat-icon-info    { box-shadow: 0 4px 12px rgba(59,130,246,0.3) !important; }
+.stat-card.stat-card-r30 .stat-icon.stat-icon-success { box-shadow: 0 4px 12px rgba(16,185,129,0.3) !important; }
+.stat-card.stat-card-r30 .stat-icon.stat-icon-warn    { box-shadow: 0 4px 12px rgba(245,158,11,0.3) !important; }
+
+/* ═══════════════════════════════════════════════════════════════
+   ROUND 32 — Card "Thí nghiệm gần đây" Argon polish (giống 4 stat cards)
+═══════════════════════════════════════════════════════════════ */
+
+/* Card "Thí nghiệm gần đây" — match style của stat-card */
+.page-dashboard #dash-tbody,
+.page-dashboard h2 {
+  /* placeholder để có scope */
+}
+
+/* Target card chứa "Thí nghiệm gần đây" và "Tình trạng hóa chất" */
+#dash-tbody {
+  background: white;
+}
+
+/* Dùng selector parent của #dash-tbody để style card */
+.card,
+.page .card,
+[id="page-dashboard"] > .grid > div,
+.site-main > .page > div > div > div[style*="border-radius:12px"] {
+  border-radius: 14px !important;
+  box-shadow: 0 0 1px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.05), 0 8px 24px rgba(0,0,0,.04) !important;
+  border: none !important;
+}
+
+/* Bỏ thanh xanh teal bên trái table-wrap */
+.table-wrap {
+  box-shadow: none !important;
+  border: none !important;
+  border-left: none !important;
+  border-radius: 0 !important;
+}
+.table-wrap table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  width: 100% !important;
+}
+
+/* Header bảng dash-tbody — uppercase nhỏ nhạt giống Argon */
+#dash-tbody {
+  background: white !important;
+}
+
+/* Target tất cả th trong page dashboard */
+.page#page-dashboard table thead th,
+[id="page-dashboard"] table thead th {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  color: #475569 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  background: #f8fafc !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  border-top: none !important;
+  padding: 14px 18px !important;
+  text-align: left !important;
+}
+
+/* Bỏ stick xanh teal đầu thead */
+.table-wrap thead tr,
+.table-wrap thead {
+  border-left: none !important;
+  border-top: none !important;
+}
+.table-wrap thead th:first-child,
+.table-wrap tbody td:first-child {
+  border-left: none !important;
+}
+
+/* Status badge pill 999px - kiểu "Hoàn thành" / "Đang thực hiện" / "Chờ phân tích" */
+#dash-tbody .badge,
+#dash-tbody [class*="status"],
+#dash-tbody td > span[style*="background"] {
+  border-radius: 999px !important;
+  padding: 5px 14px !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+  display: inline-block !important;
+  border: none !important;
+}
+
+/* Status colors cụ thể */
+#dash-tbody span[style*="background:#dcfce7"],
+#dash-tbody span[style*="background:#d1fae5"],
+#dash-tbody span[style*="color:#10b981"],
+#dash-tbody span[style*="color:#047857"] {
+  background: rgba(16,185,129,0.15) !important;
+  color: #047857 !important;
+}
+#dash-tbody span[style*="background:#fef3c7"],
+#dash-tbody span[style*="background:#fffbeb"],
+#dash-tbody span[style*="color:#f59e0b"],
+#dash-tbody span[style*="color:#d97706"] {
+  background: rgba(245,158,11,0.15) !important;
+  color: #b45309 !important;
+}
+#dash-tbody span[style*="background:#dbeafe"],
+#dash-tbody span[style*="background:#eff6ff"],
+#dash-tbody span[style*="color:#3b82f6"],
+#dash-tbody span[style*="color:#1e40af"] {
+  background: rgba(59,130,246,0.15) !important;
+  color: #1e40af !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   ROUND 33 — Recent experiments card (grid div, no table)
+═══════════════════════════════════════════════════════════════ */
+
+.recent-card {
+  background: white !important;
+  border-radius: 14px !important;
+  box-shadow: 0 0 1px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.05), 0 8px 24px rgba(0,0,0,.04) !important;
+  border: none !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.recent-card-header {
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.recent-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.2fr 0.8fr 1fr;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 24px;
+}
+
+.recent-grid-head {
+  background: #f8fafc;
+  border-bottom: 1px solid #f1f5f9;
+}
+.recent-grid-head > div {
+  font-size: 10px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.recent-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.recent-row {
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.recent-row:hover {
+  background: #f8fafc;
+}
+.recent-row:last-child {
+  border-bottom: none;
+}
+
+.recent-empty {
+  padding: 32px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Responsive: collapse columns trên màn hình hẹp */
+@media (max-width: 1280px) {
+  .recent-grid {
+    grid-template-columns: 1.5fr 1fr 1fr 0.7fr 1fr;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+}
+
+/* Round 35: tô header row của bảng + avatar 32px */
+.recent-card .recent-grid-head {
+  background: #f8fafc !important;
+}
+.recent-card .recent-card-header {
+  background: white !important;
+}
+/* Avatar trong recent-row → 32px (selector chính xác hơn) */
+.recent-row > div:first-child > div > div[style*="border-radius:50%"] {
+  width: 32px !important;
+  height: 32px !important;
+  font-size: 11px !important;
+}
+
+/* Round 36: force header row background xám + border-bottom mảnh */
+html body .recent-card .recent-grid.recent-grid-head {
+  background: #f8fafc !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  padding: 14px 24px !important;
+}
+html body .recent-card .recent-grid.recent-grid-head > div {
+  background: transparent !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  color: #475569 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+}
+
+/* Round 37: Icon search center với border ngoài */
+#header-search-box {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  padding: 0 !important;
+}
+#header-search-box button {
+  margin: 0 0 0 2px !important;
+  flex-shrink: 0 !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   ROUND 37 — Search icon center + hide sidebar items by role
+═══════════════════════════════════════════════════════════════ */
+
+/* Task 1: Search icon đồng tâm với border ngoài */
+#header-search-box {
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 !important;
+}
+#header-search-box > button {
+  margin: 0 !important;
+  margin-left: 1px !important;
+  flex-shrink: 0 !important;
+}
+
+/* Task 2: Hide 'Quản lý tài khoản' và 'Lịch sử chỉnh sửa' với member/viewer */
+body.member-mode .sidebar-item[data-tip="Quản lý tài khoản"],
+body.member-mode .sidebar-item[data-tip="Lịch sử chỉnh sửa"],
+body.viewer-mode .sidebar-item[data-tip="Quản lý tài khoản"],
+body.viewer-mode .sidebar-item[data-tip="Lịch sử chỉnh sửa"] {
+  display: none !important;
+}
