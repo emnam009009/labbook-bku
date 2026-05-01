@@ -1082,3 +1082,89 @@ body.viewer-mode .sidebar-item[data-tip="Lịch sử chỉnh sửa"] {
     right: 14px !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE — Touch targets + typography (≤768px)
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  html { font-size: 15px !important; }
+  
+  .table-wrap .btn-xs,
+  .table-wrap button {
+    min-height: 36px !important;
+    padding: 6px 12px !important;
+    font-size: 13px !important;
+  }
+  
+  .del-btn,
+  .qr-btn {
+    width: 36px !important;
+    height: 36px !important;
+  }
+  .del-btn svg,
+  .qr-btn svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+  
+  .lock-track {
+    width: 56px !important;
+    height: 32px !important;
+  }
+  .lock-thumb {
+    width: 26px !important;
+    height: 26px !important;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 10px 12px !important;
+    font-size: 14px !important;
+    min-height: 40px !important;
+  }
+  
+  .page-title,
+  .page h1 {
+    font-size: 20px !important;
+  }
+  .page-subtitle {
+    font-size: 13px !important;
+  }
+  
+  .table-wrap th,
+  .table-wrap td {
+    padding: 10px 8px !important;
+    font-size: 13px !important;
+  }
+  
+  .card,
+  .stat-card,
+  .form-section {
+    padding: 16px !important;
+  }
+  
+  .grid.lg\:grid-cols-4,
+  [class*="stat-grid"] {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  
+  .modal {
+    width: 96vw !important;
+    max-height: 92vh !important;
+    padding: 20px !important;
+  }
+  
+  .modal-footer {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .modal-footer .btn {
+    width: 100% !important;
+  }
+}
