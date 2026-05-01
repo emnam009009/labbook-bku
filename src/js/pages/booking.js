@@ -608,41 +608,73 @@ async function autoCancelOverdueBookings() {
   console.log('[autoCancel] isAdmin:', window.currentAuth?.isAdmin);
   // Chỉ admin mới chạy auto-cancel để tránh nhiều client cùng update
   if (!window.currentAuth?.isAdmin) { console.log('[autoCancel] Not admin, skip'); return; }
-  
+
   const now = new Date();
   const bookings = vals(cache.bookings);
-  
+  let cancelledCount = 0;
+
   for (const b of bookings) {
-    // Cancel cả pending (chưa duyệt) và approved (chưa check-in) quá giờ
+    // Chỉ xử lý pending + approved
     if (b.status !== 'pending' && b.status !== 'approved') continue;
-    if (!b.date || !b.endTime) continue;
-    
-    // Build datetime kết thúc + 1 phút
+    if (!b.date || !b.startTime || !b.endTime) continue;
+
+    const startDateTime = new Date(b.date + 'T' + b.startTime + ':00');
     const endDateTime = new Date(b.date + 'T' + b.endTime + ':00');
-    if (isNaN(endDateTime.getTime())) continue;
-    const overdueAt = new Date(endDateTime.getTime() + 1 * 60 * 1000);
-    
-    if (now > overdueAt) {
+    if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) continue;
+
+    let shouldCancel = false;
+    let reason = '';
+
+    if (b.status === 'pending') {
+      // Pending: hủy nếu qua giờ bắt đầu 15 phút mà admin chưa duyệt
+      const overdueAt = new Date(startDateTime.getTime() + 15 * 60 * 1000);
+      if (now > overdueAt) {
+        shouldCancel = true;
+        reason = 'Quá 15 phút sau giờ bắt đầu mà chưa được duyệt';
+      }
+    } else if (b.status === 'approved') {
+      // Approved: hủy khi hết giờ kết thúc mà chưa check-in (status vẫn là approved, không phải in-use)
+      if (now > endDateTime) {
+        shouldCancel = true;
+        reason = 'Quá giờ kết thúc mà không check-in';
+      }
+    }
+
+    if (shouldCancel) {
       try {
-        const reason = b.status === 'pending' 
-          ? 'Quá giờ chưa được duyệt'
-          : 'Quá giờ không check-in';
         await update(ref(db, `bookings/${b._key}`), {
           status: 'cancelled',
           cancelledAt: new Date().toISOString(),
-          cancelReason: reason,
+          cancelledBy: 'system',
+          rejectedReason: reason,  // dùng rejectedReason để UI tooltip hiện được
         });
-        console.log(`[auto-cancel] ${b.code} (${b.userName}) - ${reason}`);
+        cancelledCount++;
+        console.log(`[autoCancel] ${b.code} (${b.userName}) - ${reason}`);
+
+        // Gửi notification cho user
+        if (b.userId && typeof window.createNotification === 'function') {
+          window.createNotification(
+            'booking_rejected',
+            b._key,
+            b.userId,
+            'Đăng ký bị tự hủy',
+            `${b.equipmentName} - ${formatDate(b.date)} ${b.startTime}-${b.endTime} | Lý do: ${reason}`
+          );
+        }
       } catch (e) {
         console.error('auto-cancel error:', e);
       }
     }
   }
+
+  if (cancelledCount > 0) {
+    console.log(`[autoCancel] Cancelled ${cancelledCount} booking(s)`);
+  }
 }
 
 window.autoCancelOverdueBookings = autoCancelOverdueBookings;
-// Chạy auto-cancel mỗi 5 phút
-setInterval(autoCancelOverdueBookings, 30 * 1000);
+// Chạy auto-cancel mỗi 2 phút (giảm tải Firebase, tránh race condition)
+setInterval(autoCancelOverdueBookings, 2 * 60 * 1000);
 // Chạy 1 lần khi load (sau 10s để cache load xong)
 setTimeout(autoCancelOverdueBookings, 10000);
 
