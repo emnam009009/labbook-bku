@@ -1,0 +1,7 @@
+echo "🧪 Running tests..."
+npm test || {
+  echo ""
+  echo "❌ Tests failed. Fix tests trước khi commit."
+  echo "   Hoặc skip 1 lần: git commit --no-verify"
+  exit 1
+}
