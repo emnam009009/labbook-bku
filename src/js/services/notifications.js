@@ -303,16 +303,76 @@ function highlightBookingRow(bookingKey) {
   if (!bookingKey) return;
   const cache = window.cache;
   const code = cache?.bookings?.[bookingKey]?.code;
+  window._pendingFlashBookingKey = bookingKey;
+  window._pendingFlashCode = code;
+  console.log('[row-flash] highlightBookingRow:', { bookingKey, code });
+  // Multi-attempt: chờ tbody render
+  const attempts = [0, 150, 300, 600, 1000, 1500, 2000, 3000];
+  attempts.forEach(delay => {
+    setTimeout(() => applyFlashByBookingKey(bookingKey, code), delay);
+  });
+  setTimeout(() => {
+    window._pendingFlashBookingKey = null;
+    window._pendingFlashCode = null;
+  }, 5500);
+}
+
+function applyFlashByBookingKey(bookingKey, code) {
+  if (!bookingKey && !code) return;
+  
   const rows = document.querySelectorAll('#booking-tbody tr');
-  for (const row of rows) {
-    const codeEl = row.querySelector('td:first-child');
-    if (code && codeEl?.textContent?.trim() === code) {
-      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      row.classList.add('row-flash');
-      setTimeout(() => row.classList.remove('row-flash'), 3500);
-      break;
+  if (rows.length === 0) {
+    console.log('[row-flash] No rows yet');
+    return;
+  }
+  
+  // Skip empty-state row (colspan > 1)
+  const dataRows = [...rows].filter(r => {
+    const firstTd = r.querySelector('td:first-child');
+    return firstTd && firstTd.colSpan <= 1;
+  });
+  
+  if (dataRows.length === 0) {
+    console.log('[row-flash] Only empty-state rows');
+    return;
+  }
+  
+  let target = null;
+  
+  // Match 1: outerHTML chứa bookingKey
+  if (bookingKey) {
+    for (const row of dataRows) {
+      if (row.outerHTML.indexOf(bookingKey) !== -1) {
+        target = row;
+        console.log('[row-flash] Matched by bookingKey');
+        break;
+      }
     }
   }
+  
+  // Match 2: row text chứa code
+  if (!target && code) {
+    for (const row of dataRows) {
+      if ((row.textContent || '').indexOf(code) !== -1) {
+        target = row;
+        console.log('[row-flash] Matched by code');
+        break;
+      }
+    }
+  }
+  
+  if (!target) {
+    console.log('[row-flash] No match. Code:', code);
+    return;
+  }
+  
+  if (target.classList.contains('row-flash')) return;
+  
+  target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  void target.offsetWidth;
+  target.classList.add('row-flash');
+  console.log('[row-flash] ✓ Class added');
+  setTimeout(() => target.classList.remove('row-flash'), 2500);
 }
 
 function highlightMemberRow(memberKey) {

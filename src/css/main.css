@@ -2355,190 +2355,60 @@ html.dark .gs-item mark { background: #fbbf24; color: #1e293b; }
 /* Row flash dark mode override (đúng cú pháp) */
 
 /* ── Row flash — phiên bản đậm/dễ thấy hơn (FIXED build error) ───── */
-@keyframes row-flash-anim {
-  0% {
-    background: rgba(13, 148, 136, 0.45);
-    box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 3px rgba(13, 148, 136, 0.4);
-    transform: scale(1.005);
-  }
-  15% {
-    background: rgba(13, 148, 136, 0.45);
-    box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 3px rgba(13, 148, 136, 0.4);
-  }
-  30% {
-    background: rgba(13, 148, 136, 0.10);
-    box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 0 transparent;
-  }
-  45% {
-    background: rgba(13, 148, 136, 0.40);
-    box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 3px rgba(13, 148, 136, 0.3);
-  }
-  60% {
-    background: rgba(13, 148, 136, 0.10);
-    box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 0 transparent;
-  }
-  75% {
-    background: rgba(13, 148, 136, 0.30);
-    box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 0 transparent;
-  }
-  100% {
-    background: rgba(13, 148, 136, 0.10);
-    box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 0 transparent;
-    transform: scale(1);
-  }
+
+/* ━━━ Row flash animation v3 — 3 nháy rõ ràng ━━━ */
+@keyframes lb-row-flash {
+  /* Nháy 1: 0% → 16% on, 16% → 33% off */
+  0%   { background: rgba(13,148,136,0.55); box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 4px rgba(13,148,136,0.5); transform: scale(1.008); }
+  16%  { background: rgba(13,148,136,0.55); box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 4px rgba(13,148,136,0.5); transform: scale(1.008); }
+  17%  { background: transparent; box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 0 transparent; transform: scale(1); }
+  33%  { background: transparent; box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 0 transparent; transform: scale(1); }
+  /* Nháy 2: 33% → 50% on, 50% → 66% off */
+  34%  { background: rgba(13,148,136,0.55); box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 4px rgba(13,148,136,0.5); transform: scale(1.008); }
+  50%  { background: rgba(13,148,136,0.55); box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 4px rgba(13,148,136,0.5); transform: scale(1.008); }
+  51%  { background: transparent; box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 0 transparent; transform: scale(1); }
+  66%  { background: transparent; box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 0 transparent; transform: scale(1); }
+  /* Nháy 3: 66% → 83% on, 83% → 100% off */
+  67%  { background: rgba(13,148,136,0.55); box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 4px rgba(13,148,136,0.5); transform: scale(1.008); }
+  83%  { background: rgba(13,148,136,0.55); box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 4px rgba(13,148,136,0.5); transform: scale(1.008); }
+  100% { background: rgba(13,148,136,0.18); box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 0 transparent; transform: scale(1); }
 }
 
-.row-flash {
-  animation: row-flash-anim 3.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
+@keyframes lb-row-flash-dark {
+  0%   { background: rgba(45,212,191,0.45); box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 4px rgba(45,212,191,0.5); }
+  16%  { background: rgba(45,212,191,0.45); box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 4px rgba(45,212,191,0.5); }
+  17%  { background: transparent; box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 0 transparent; }
+  33%  { background: transparent; box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 0 transparent; }
+  34%  { background: rgba(45,212,191,0.45); box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 4px rgba(45,212,191,0.5); }
+  50%  { background: rgba(45,212,191,0.45); box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 4px rgba(45,212,191,0.5); }
+  51%  { background: transparent; box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 0 transparent; }
+  66%  { background: transparent; box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 0 transparent; }
+  67%  { background: rgba(45,212,191,0.45); box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 4px rgba(45,212,191,0.5); }
+  83%  { background: rgba(45,212,191,0.45); box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 4px rgba(45,212,191,0.5); }
+  100% { background: rgba(45,212,191,0.15); box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 0 transparent; }
+}
+
+html body table tbody tr.row-flash,
+html body tr.row-flash {
+  animation: lb-row-flash 2.1s cubic-bezier(0.4, 0, 0.6, 1) !important;
   position: relative !important;
   z-index: 5 !important;
   border-left: 4px solid var(--teal) !important;
-}
-
-/* Dark mode — tách @keyframes riêng, apply qua selector */
-
-/* Reduced motion: tắt animation nhưng giữ highlight tĩnh */
-@media (prefers-reduced-motion: reduce) {
-  
-  
-}
-
-/* ── Row flash — phiên bản đậm/dễ thấy hơn (FIXED build error) ───── */
-
-/* Dark mode — tách @keyframes riêng, apply qua selector */
-
-/* Reduced motion: tắt animation nhưng giữ highlight tĩnh */
-
-/* ── Row flash — phiên bản đậm/dễ thấy hơn (FIXED build error) ───── */
-@keyframes row-flash-anim {
-  0% {
-    background: rgba(13, 148, 136, 0.45);
-    box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 3px rgba(13, 148, 136, 0.4);
-    transform: scale(1.005);
-  }
-  15% {
-    background: rgba(13, 148, 136, 0.45);
-    box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 3px rgba(13, 148, 136, 0.4);
-  }
-  30% {
-    background: rgba(13, 148, 136, 0.10);
-    box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 0 transparent;
-  }
-  45% {
-    background: rgba(13, 148, 136, 0.40);
-    box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 3px rgba(13, 148, 136, 0.3);
-  }
-  60% {
-    background: rgba(13, 148, 136, 0.10);
-    box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 0 transparent;
-  }
-  75% {
-    background: rgba(13, 148, 136, 0.30);
-    box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 0 transparent;
-  }
-  100% {
-    background: rgba(13, 148, 136, 0.10);
-    box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 0 transparent;
-    transform: scale(1);
-  }
-}
-
-.row-flash {
-  animation: row-flash-anim 3.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  position: relative !important;
-  z-index: 5 !important;
-  border-left: 4px solid var(--teal) !important;
-}
-.row-flash > td {
-  animation: row-flash-anim 3.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
   font-weight: 600 !important;
 }
-.row-flash > td:first-child {
-  border-left: 4px solid var(--teal) !important;
+html body tr.row-flash > td {
+  animation: lb-row-flash 2.1s cubic-bezier(0.4, 0, 0.6, 1) !important;
+}
+html.dark body tr.row-flash,
+html.dark body tr.row-flash > td {
+  animation-name: lb-row-flash-dark !important;
 }
 
-/* Dark mode — tách @keyframes riêng, apply qua selector */
-@keyframes row-flash-anim-dark {
-  0%, 15% {
-    background: rgba(45, 212, 191, 0.40);
-    box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 3px rgba(45, 212, 191, 0.4);
-  }
-  30% {
-    background: rgba(45, 212, 191, 0.15);
-    box-shadow: inset 4px 0 0 0 var(--teal);
-  }
-  45% {
-    background: rgba(45, 212, 191, 0.35);
-    box-shadow: inset 4px 0 0 0 var(--teal), 0 0 0 3px rgba(45, 212, 191, 0.3);
-  }
-  60% {
-    background: rgba(45, 212, 191, 0.15);
-    box-shadow: inset 4px 0 0 0 var(--teal);
-  }
-  75% { background: rgba(45, 212, 191, 0.30); }
-  100% {
-    background: rgba(45, 212, 191, 0.15);
-    transform: scale(1);
-  }
-}
-
-html.dark .row-flash,
-html.dark .row-flash > td {
-  animation-name: row-flash-anim-dark !important;
-}
-
-/* Reduced motion: tắt animation nhưng giữ highlight tĩnh */
 @media (prefers-reduced-motion: reduce) {
-  .row-flash {
+  html body tr.row-flash,
+  html body tr.row-flash > td {
     animation: none !important;
-    background: rgba(13, 148, 136, 0.20) !important;
+    background: rgba(13,148,136,0.20) !important;
     border-left: 4px solid var(--teal) !important;
   }
-  .row-flash > td {
-    animation: none !important;
-    background: rgba(13, 148, 136, 0.20) !important;
-  }
 }
-
-/* ── HARDEST override: Beat specificity 0,0,4,0 of legacy rule ─── */
-html body .recent-card .recent-grid.recent-grid-head > div,
-html body div.recent-grid.recent-grid-head > div,
-html body .recent-grid-head > div[style] {
-  color: #475569 !important;
-  font-weight: 600 !important;
-}
-
-
-
-/* ── QR label button: parallel .del-btn nhưng màu teal ── */
-.qr-btn {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  width: 26px;
-  height: 26px;
-  cursor: pointer;
-  border-radius: 6px;
-  border: none;
-  background: var(--teal);
-  box-shadow: none;
-  transition: all 0.3s;
-  flex-shrink: 0;
-  vertical-align: middle;
-  padding: 0;
-  color: white;
-}
-.qr-btn:hover {
-  background: #0f766e;
-  transform: scale(1.05);
-}
-.qr-btn svg {
-  width: 14px;
-  height: 14px;
-  stroke: white;
-  fill: none;
-  stroke-width: 2;
-}
-
-/* QR button bị ẩn ở viewer mode (giống các action buttons khác) */
-body.viewer-mode .qr-btn { display: none !important; }
