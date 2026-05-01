@@ -1,0 +1,54 @@
+#!/bin/bash
+# ═══════════════════════════════════════════════════════════════════
+# up.sh - Quick push to GitHub
+#
+# Cách dùng:
+#   bash up.sh                        → "chore: update"
+#   bash up.sh fix sua bug presence   → "fix: sua bug presence"
+#   bash up.sh feat them filter       → "feat: them filter"
+#   bash up.sh chore update css       → "chore: update css"
+# ═══════════════════════════════════════════════════════════════════
+
+set -e
+
+# Type cho phép
+TYPE="${1:-chore}"
+shift 2>/dev/null || true
+MSG="${*:-update}"
+
+# Validate type
+case "$TYPE" in
+  feat|fix|docs|style|refactor|perf|test|chore|ci) ;;
+  *)
+    echo "❌ Type không hợp lệ: $TYPE"
+    echo "   Cho phép: feat, fix, docs, style, refactor, perf, test, chore, ci"
+    echo ""
+    echo "   Cách dùng:"
+    echo "     bash up.sh                         (mặc định: chore: update)"
+    echo "     bash up.sh fix mo ta ngan"
+    echo "     bash up.sh feat them tinh nang"
+    exit 1
+    ;;
+esac
+
+# Check có thay đổi không
+if [[ -z "$(git status --porcelain)" ]]; then
+  echo "✓ Không có gì để commit (working tree clean)"
+  exit 0
+fi
+
+echo "📝 Thay đổi:"
+git status --short
+echo ""
+
+echo "💾 Stage + commit: $TYPE: $MSG"
+git add -A
+git commit -m "$TYPE: $MSG"
+
+echo ""
+echo "🚀 Push lên GitHub..."
+git push origin main
+
+echo ""
+echo "✅ Done! Auto deploy sẽ chạy ~2 phút."
+echo "   Theo dõi: https://github.com/emnam009009/labbook-bku/actions"
