@@ -3064,3 +3064,34 @@ html.neuro .badge {
   box-shadow: 2px 2px 4px var(--neuro-shadow-dark), -2px -2px 4px var(--neuro-shadow-light) !important;
 }
 html.neuro .modal-overlay { background: rgba(45,62,80,0.4) !important; backdrop-filter: blur(4px) !important; }
+
+/* ── QR label button: parallel .del-btn nhưng màu teal ── */
+.qr-btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+  border-radius: 6px;
+  border: none;
+  background: var(--teal);
+  box-shadow: none;
+  transition: all 0.3s;
+  flex-shrink: 0;
+  vertical-align: middle;
+  padding: 0;
+  color: white;
+}
+.qr-btn:hover {
+  background: #0f766e;
+  transform: scale(1.05);
+}
+.qr-btn svg {
+  width: 14px;
+  height: 14px;
+  stroke: white;
+  fill: none;
+  stroke-width: 2;
+}
+body.viewer-mode .qr-btn { display: none !important; }
