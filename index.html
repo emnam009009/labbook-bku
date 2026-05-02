@@ -16,14 +16,9 @@
     Trong dev mode (`npm run dev`), Vite tự inject qua HMR
   -->
   <style>body{visibility:hidden;background:#f8fafc}</style>
-  <script src="https://unpkg.com/@popperjs/core@2/dist/umd/popper.min.js"></script>
-  <script src="https://unpkg.com/tippy.js@6/dist/tippy-bundle.umd.min.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin>
   <link rel="stylesheet" href="/src/css/argon-flavor.css">
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body class="min-h-screen">
   <a href="#main-content" class="skip-link">Bỏ qua đến nội dung chính</a>
@@ -422,7 +417,7 @@
   </div>
 
   <!-- HÀNG 2: Chart cột (1fr) | Pie (0.5fr) | Top members (1fr) | Lịch booking (1.5fr) -->
-  <div style="display:grid;grid-template-columns:1fr 0.5fr 1fr 1.5fr;gap:20px;margin-bottom:20px;align-items:stretch">
+  <div style="display:grid;grid-template-columns:1fr 0.5fr 1fr 1.5fr;gap:20px;margin-bottom:20px;align-items:stretch;min-height:400px">
 
     <div class="stat-card stat-card-r30" id="dash-chart-monthly" style="padding:20px;display:flex;flex-direction:column">
       <div class="loading"><div class="spinner"></div></div>
@@ -442,7 +437,7 @@
   </div>
 
   <!-- HÀNG 3: Recent experiments (3fr) | Chemicals (1fr) — chiều cao 500px -->
-  <div style="display:grid;grid-template-columns:3fr 1fr;gap:20px;margin-bottom:20px;align-items:stretch;max-height:500px">
+  <div style="display:grid;grid-template-columns:3fr 1fr;gap:20px;margin-bottom:20px;align-items:stretch;height:500px">
 
     <!-- Recent experiments — flex column để header cố định, list scroll -->
     <div class="stat-card stat-card-r30 recent-card" style="padding:24px;display:flex;flex-direction:column;min-height:0;overflow:hidden">

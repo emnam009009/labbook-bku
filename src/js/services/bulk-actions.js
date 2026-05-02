@@ -467,7 +467,7 @@ import { printBulkLabels } from './qr-labels.js'
     }
 
     if (type === 'export') {
-      exportToExcel(tbodyId, cfg, keys);
+      await exportToExcel(tbodyId, cfg, keys);
       return;
     }
 
@@ -556,11 +556,14 @@ import { printBulkLabels } from './qr-labels.js'
     }
   }
 
-  function exportToExcel(tbodyId, cfg, keys) {
-    if (typeof window.XLSX === 'undefined') {
-      window.showToast?.('Thư viện Excel chưa sẵn sàng', 'danger');
-      return;
-    }
+  // Lazy load SheetJS — chỉ khi user thực sự bấm export
+  let _xlsxPromise = null;
+  function loadXLSX() {
+    if (!_xlsxPromise) _xlsxPromise = import('xlsx');
+    return _xlsxPromise;
+  }
+
+  async function exportToExcel(tbodyId, cfg, keys) {
     const cache = window.cache || {};
     const colData = cache[cfg.col] || {};
     const rows = keys.map(k => colData[k]).filter(Boolean);
@@ -571,11 +574,12 @@ import { printBulkLabels } from './qr-labels.js'
     const headers = cfg.excelHeaders;
     const data = [headers, ...rows.map(r => headers.map(h => formatCell(r[h])))];
     try {
-      const ws = window.XLSX.utils.aoa_to_sheet(data);
-      const wb = window.XLSX.utils.book_new();
-      window.XLSX.utils.book_append_sheet(wb, ws, cfg.label.substring(0, 30));
+      const XLSX = await loadXLSX();
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, cfg.label.substring(0, 30));
       const fname = `${cfg.col}_export_${new Date().toISOString().split('T')[0]}.xlsx`;
-      window.XLSX.writeFile(wb, fname);
+      XLSX.writeFile(wb, fname);
       window.showToast?.(`Đã xuất ${rows.length} ${cfg.label}`, 'success');
     } catch (e) {
       console.error('[bulk-export]', e);
