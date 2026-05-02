@@ -78,7 +78,9 @@ import {
 import {
   cleanupChat, initChat, chatSend, chatInput, chatKeydown,
   chatPickImage, chatClearImage, insertMention,
-  showReactionPicker, toggleReaction, toggleChatWidget, _updateChatWidgetRole
+  showReactionPicker, toggleReaction, toggleChatWidget, _updateChatWidgetRole,
+  showRecallMenu, recallMessageEveryone, recallMessageSelf,
+  clearAllChatMessages, showClearAllConfirm
 } from './pages/chat.js'
 
 // ── Import edit handlers (Phần 7d) ───────────────────────
@@ -241,6 +243,11 @@ window.insertMention = insertMention;
 window.showReactionPicker = showReactionPicker;
 window.toggleReaction = toggleReaction;
 window.toggleChatWidget = toggleChatWidget;
+window.showRecallMenu = showRecallMenu;
+window.recallMessageEveryone = recallMessageEveryone;
+window.recallMessageSelf = recallMessageSelf;
+window.clearAllChatMessages = clearAllChatMessages;
+window.showClearAllConfirm = showClearAllConfirm;
 window._updateChatWidgetRole = _updateChatWidgetRole;
 
 // Expose edit handlers lên window (Phần 7d)

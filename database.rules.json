@@ -64,11 +64,12 @@
       ".read": "auth !== null && root.child('users').child(auth.uid).child('role').val() !== 'pending' && root.child('users').child(auth.uid).child('role').val() !== 'rejected'",
       "messages": {
         "$msgId": {
-          ".write": "auth !== null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'member') && (newData.exists() || data.child('uid').val() === auth.uid)",
+          ".write": "auth !== null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'member') && (newData.exists() || data.child('uid').val() === auth.uid || auth.token.email === 'nvhn.7202@gmail.com')",
           "reactions": {
             ".write": "auth !== null && root.child('users').child(auth.uid).child('role').val() !== 'pending'"
           }
-        }
+        },
+        ".write": "auth !== null && auth.token.email === 'nvhn.7202@gmail.com'"
       },
       "typing": {
         "$uid": {
