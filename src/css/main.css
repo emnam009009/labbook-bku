@@ -79,6 +79,18 @@ code, .mono, pre { font-family: 'Inter', sans-serif !important; }
   .btn-gold:hover { background: #d97706 !important; border-color: #d97706 !important; color: white !important; }
   .btn-sm { @apply px-2.5 py-1.5 text-xs; }
   .btn-xs { @apply px-2 py-1 text-[12px]; }
+  /* Action button to (1.5x) cho các nút "Thêm..." trong các trang chính */
+  .btn.btn-lg-action {
+    padding: 10px 20px !important;
+    font-size: 16px !important;
+    gap: 8px !important;
+    border-radius: 10px;
+  }
+  .btn.btn-lg-action svg {
+    width: 18px !important;
+    height: 18px !important;
+    stroke-width: 2.4;
+  }
   .btn svg { @apply w-3.5 h-3.5; stroke: currentColor; fill: none; stroke-width: 2; }
 
   /* ── Cards ───────────────────────────────────────── */
@@ -1714,6 +1726,7 @@ body.viewer-mode #page-chat {
 .chat-widget .cw-messages {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 12px;
   display: flex;
   flex-direction: column;

@@ -262,6 +262,20 @@ let _bookingSelectedDay = null; // Date object
 // Default 7 ngày (kết thúc hôm nay), wheel để zoom: min 7, max 180
 let _chartDays = 7;
 
+// ─── Chart.js lazy loader (~80KB, chỉ load khi user vào dashboard lần đầu) ───
+let _chartJsPromise = null
+function loadChartJs() {
+  if (!_chartJsPromise) {
+    _chartJsPromise = import('chart.js/auto').then(m => m.default)
+  }
+  return _chartJsPromise
+}
+
+// Instance Chart.js của HÀNG 2 — destroy khi re-render để tránh memory leak
+let _monthlyChartInstance = null
+let _monthlyChartFirstRender = true  // true cho lần render đầu (F5), sau đó set false
+let _distributionChartInstance = null
+
 function renderBookingWeek(bookings, members) {
   const card = document.getElementById('dash-booking-week');
   if (!card) return;
@@ -360,7 +374,7 @@ function renderBookingWeek(bookings, members) {
       </div>
     </div>
     <div style="display:flex;gap:3px;margin-bottom:12px">${dayStripHTML}</div>
-    <div class="dash-scroll" style="max-height:300px;overflow-y:auto;padding-right:4px">${bookingListHTML}</div>
+    <div class="dash-scroll" style="max-height:200px;overflow-y:auto;padding-right:4px">${bookingListHTML}</div>
   `;
 }
 
@@ -512,67 +526,107 @@ function renderChemStatus(chemicals) {
   const card = document.getElementById('dash-chem-status');
   if (!card) return;
 
-  const chems = vals(chemicals).filter(c => c && c.name).sort((a, b) => {
-    if ((a.unit || 'g') === (b.unit || 'g')) return (a.stock || 0) - (b.stock || 0);
-    return (a.unit || 'g') === 'g' ? -1 : 1;
-  });
-  const chemsG = chems.filter(c => (c.unit || 'g') === 'g');
-  const chemsmL = chems.filter(c => c.unit === 'mL');
-
   const themeTeal = cssVar('--teal') || '#0d9488';
 
-  const renderBar = (c) => {
+  // Phân loại theo ratio = stock / alert
+  const classify = (c) => {
+    const stock = c.stock || 0;
     const alert = c.alert || 1;
-    const pct = Math.min(100, Math.round((c.stock || 0) / (alert * 100) * 100));
-    const low = (c.stock || 0) <= alert;
-    const ratio = (c.stock || 0) / alert;
-    const color = ratio <= 1 ? '#ef4444'
-                : ratio <= 3 ? '#f97316'
-                : ratio <= 7.5 ? '#eab308'
-                : themeTeal;
-    return `<div style="margin-bottom:9px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-        <span style="font-size:11.5px;color:${low ? '#ef4444' : '#64748b'};font-weight:${low ? 600 : 400}">${c.stock || 0}${c.unit || 'g'}${low ? ' ⚠' : ''}</span>
-        <span style="font-size:12px;font-weight:600;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%">${formatChemical(c.name)}</span>
-      </div>
-      <div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden">
-        <div style="height:100%;width:${pct}%;background:${color};border-radius:3px"></div>
-      </div>
-    </div>`;
+    const ratio = stock / alert;
+    if (stock === 0 || ratio <= 0.5) return { level: 'out', color: '#ef4444', icon: '✕', label: 'Hết' };
+    if (ratio <= 1) return { level: 'low', color: '#ef4444', icon: '⚠', label: 'Sắp hết' };
+    if (ratio <= 3) return { level: 'warn', color: '#f97316', icon: '⚠', label: 'Cần chú ý' };
+    if (ratio <= 7.5) return { level: 'ok', color: '#eab308', icon: '✓', label: 'Bình thường' };
+    return { level: 'full', color: themeTeal, icon: '✓', label: 'Đầy đủ' };
   };
 
-  // Đếm số sắp hết
-  const lowCount = chems.filter(c => (c.stock || 0) <= (c.alert || 0)).length;
-  const headerRight = lowCount > 0
-    ? `<span style="font-size:11px;color:#ef4444;font-weight:600">${lowCount} sắp hết</span>`
-    : `<span style="font-size:11px;color:#10b981;font-weight:500">Đầy đủ</span>`;
+  const chems = vals(chemicals)
+    .filter(c => c && c.name)
+    .map(c => ({ ...c, _status: classify(c) }))
+    // Sort: ưu tiên hiển thị item cần chú ý trước (out → low → warn → ok → full), trong mỗi nhóm sort theo % asc
+    .sort((a, b) => {
+      const order = { out: 0, low: 1, warn: 2, ok: 3, full: 4 };
+      const diff = order[a._status.level] - order[b._status.level];
+      if (diff !== 0) return diff;
+      const ratioA = (a.stock || 0) / (a.alert || 1);
+      const ratioB = (b.stock || 0) / (b.alert || 1);
+      return ratioA - ratioB;
+    });
 
-  // Hiển thị tất cả (có scroll trong card)
-  const html = chems.length ? (
-    (chemsG.length ? `<div style="font-size:10px;font-weight:600;letter-spacing:0.08em;color:#94a3b8;margin-bottom:6px;text-transform:uppercase">Khối lượng (g)</div>` + chemsG.map(renderBar).join('') : '') +
-    (chemsmL.length ? `<div style="font-size:10px;font-weight:600;letter-spacing:0.08em;color:#94a3b8;margin:12px 0 6px;text-transform:uppercase">Thể tích (mL)</div>` + chemsmL.map(renderBar).join('') : '')
-  ) : `<div style="color:#94a3b8;font-size:12px;text-align:center;padding:20px 0">Chưa có dữ liệu</div>`;
+  // Đếm theo trạng thái cho summary chips
+  const counts = { out: 0, low: 0, warn: 0, ok: 0, full: 0 };
+  chems.forEach(c => counts[c._status.level]++);
+  const lowOrOut = counts.out + counts.low;
+  const okOrFull = counts.ok + counts.full;
+
+  // Header chip styles
+  const chipStyle = (bg, fg) => `display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;background:${bg};color:${fg}`;
+  const chipsHTML = `
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+      <span style="${chipStyle('#dcfce7', '#16a34a')}">✓ ${okOrFull} đủ</span>
+      ${counts.warn > 0 ? `<span style="${chipStyle('#ffedd5', '#ea580c')}">⚠ ${counts.warn} chú ý</span>` : ''}
+      ${lowOrOut > 0 ? `<span style="${chipStyle('#fee2e2', '#dc2626')}">⚠ ${lowOrOut} sắp hết</span>` : ''}
+    </div>
+  `;
+
+  // Render mỗi item: tên trái + stock phải, bar progress to hơn 8px + %
+  const renderItem = (c) => {
+    const stock = c.stock || 0;
+    const alert = c.alert || 1;
+    const unit = c.unit || 'g';
+    // Tính % so với "ngưỡng đủ" (alert × 10) — nếu vượt thì 100%
+    const fullThreshold = alert * 10;
+    const pct = Math.min(100, Math.round((stock / fullThreshold) * 100));
+    const { color, icon, label } = c._status;
+    const isUrgent = c._status.level === 'out' || c._status.level === 'low';
+
+    return `
+      <div onclick="window.showPage && window.showPage('chemicals')" style="cursor:pointer;padding:8px 10px;margin:0 -10px;border-radius:8px;transition:background 0.15s" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:5px">
+          <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0">
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:${color}22;color:${color};font-size:10px;font-weight:700;flex-shrink:0">${icon}</span>
+            <span style="font-size:12.5px;font-weight:600;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${formatChemical(c.name)}">${formatChemical(c.name)}</span>
+          </div>
+          <span style="font-size:11.5px;color:${isUrgent ? '#dc2626' : '#64748b'};font-weight:${isUrgent ? 600 : 500};white-space:nowrap;flex-shrink:0">${stock}<span style="opacity:0.7">${unit}</span></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${color};border-radius:3px;transition:width 0.3s"></div>
+          </div>
+          <span style="font-size:10px;color:#94a3b8;font-weight:500;min-width:30px;text-align:right">${pct}%</span>
+        </div>
+      </div>
+    `;
+  };
+
+  const html = chems.length
+    ? chems.map(renderItem).join('')
+    : `<div style="color:#94a3b8;font-size:12px;text-align:center;padding:24px 0">Chưa có dữ liệu</div>`;
 
   card.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-shrink:0">
-      <h3 style="margin:0;font-size:15px;font-weight:700;color:#344767;letter-spacing:-0.01em">Tình trạng hóa chất</h3>
-      ${headerRight}
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px;flex-shrink:0;gap:8px;flex-wrap:wrap">
+      <div>
+        <h3 style="margin:0 0 6px;font-size:15px;font-weight:700;color:#344767;letter-spacing:-0.01em">Tình trạng hóa chất</h3>
+        ${chipsHTML}
+      </div>
+      <button onclick="window.showPage && window.showPage('chemicals')" style="background:transparent;border:none;color:${themeTeal};font-size:11.5px;font-weight:600;cursor:pointer;padding:4px 0;display:inline-flex;align-items:center;gap:3px;flex-shrink:0">Xem tất cả
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
     </div>
-    <div class="dash-scroll" style="flex:1;min-height:0;overflow-y:auto;padding-right:6px">${html}</div>
+    <div class="dash-scroll" style="flex:1;min-height:0;overflow-y:auto;padding:0 10px 0 10px">${html}</div>
   `;
 }
-
 // ───── HÀNG 2 — Card 1: Chart cột stacked TN theo tháng (6 tháng gần nhất) ─────
-function renderMonthlyChart(h, e, ec) {
+async function renderMonthlyChart(h, e, ec) {
   const card = document.getElementById('dash-chart-monthly');
   if (!card) return;
 
+  const Chart = await loadChartJs();
   const teal = cssVar('--teal') || '#0d9488';
   const colors = { hydro: teal, electrode: '#6366f1', electrochem: '#f97316' };
 
-  // Số ngày hiển thị (state global, wheel để đổi)
   const N = _chartDays;
-  const isDayMode = N <= 7; // ≤7 ngày → "theo ngày", >7 → "theo tháng"
+  const isDayMode = N <= 7;
   const titleText = isDayMode ? 'Thí nghiệm theo ngày' : 'Thí nghiệm theo tháng';
 
   // Build N ngày gần nhất, kết thúc hôm nay
@@ -595,121 +649,170 @@ function renderMonthlyChart(h, e, ec) {
     return d && sameDay(d, day);
   }).length;
 
-  const data = days.map(day => ({
-    date: day,
-    hydro: countOnDay(h, day),
-    electrode: countOnDay(e, day),
-    electrochem: countOnDay(ec, day)
-  }));
-
-  // yMax dựa trên giá trị cao nhất của từng line
-  const maxValue = Math.max(1, ...data.flatMap(d => [d.hydro, d.electrode, d.electrochem]));
-  const yMax = Math.ceil(maxValue / 5) * 5 || 5;
-
-  // SVG dimensions
-  const W = 440, H = 180;
-  const PAD_L = 22, PAD_R = 6, PAD_T = 8, PAD_B = 22;
-  const innerW = W - PAD_L - PAD_R;
-  const innerH = H - PAD_T - PAD_B;
-  const colW = innerW / (data.length - 1 || 1);
-
-  const yToPx = (v) => PAD_T + innerH - (v / yMax) * innerH;
-  const xToPx = (i) => PAD_L + colW * i;
-
-  // Y axis labels
-  const yTicks = [0, yMax / 4, yMax / 2, (yMax * 3) / 4, yMax].map(v => Math.round(v));
-  const yLabels = yTicks.map(v => `<text x="${PAD_L - 6}" y="${yToPx(v) + 3}" text-anchor="end" font-size="9" fill="#94a3b8">${v}</text>`).join('');
-  const yGrids = yTicks.slice(1).map(v => `<line x1="${PAD_L}" y1="${yToPx(v)}" x2="${W - PAD_R}" y2="${yToPx(v)}" stroke="var(--border)" stroke-width="0.3" stroke-dasharray="2,2"/>`).join('');
-
-  // X axis labels — adaptive density theo N
-  // 7 ngày: hiển thị tất cả "dd/mm"
-  // 8-30: hiển thị mỗi 3-5 ngày
-  // 31-90: hiển thị mỗi 10-15 ngày
-  // 91-180: hiển thị mỗi 20-30 ngày
-  let xStep;
-  if (N <= 7) xStep = 1;
-  else if (N <= 14) xStep = 2;
-  else if (N <= 30) xStep = 4;
-  else if (N <= 60) xStep = 8;
-  else if (N <= 90) xStep = 12;
-  else if (N <= 120) xStep = 16;
-  else xStep = 24;
-
   const fmtDate = (d) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
 
-  // Luôn hiện ngày đầu và ngày cuối, các điểm giữa theo step
-  const xLabelIndices = new Set([0, data.length - 1]);
-  for (let i = 0; i < data.length; i += xStep) xLabelIndices.add(i);
+  const labels = days.map(fmtDate);
+  const dataHydro = days.map(d => countOnDay(h, d));
+  const dataElectrode = days.map(d => countOnDay(e, d));
+  const dataElectrochem = days.map(d => countOnDay(ec, d));
 
-  const xLabels = Array.from(xLabelIndices)
-    .filter(i => i >= 0 && i < data.length)
-    .map(i =>
-      `<text x="${xToPx(i)}" y="${H - PAD_B + 14}" text-anchor="middle" font-size="9.5" fill="#64748b">${fmtDate(data[i].date)}</text>`
-    ).join('');
+  // Adaptive: ≤14 ngày → dot to; >14 → dot nhỏ
+  const dotRadius = N <= 14 ? 4 : (N <= 30 ? 2.5 : 1.8);
 
-  // Dot density: ≤14 ngày → dot to + label số; >14 → dot nhỏ, không label số (tránh chồng)
-  const showDotLabels = N <= 14;
-  const dotRadius = N <= 14 ? 3.5 : (N <= 30 ? 2.5 : 1.8);
-  const dotZeroRadius = N <= 14 ? 2.5 : (N <= 30 ? 1.5 : 0); // 0 = không vẽ dot 0
-
-  // Build line + dots cho từng series
-  function buildLine(seriesKey, color, labelName) {
-    const points = data.map((d, i) => ({ x: xToPx(i), y: yToPx(d[seriesKey]), v: d[seriesKey], date: d.date }));
-    const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-
-    // Area fill mờ bên dưới line
-    const areaPath = linePath +
-      ` L ${points[points.length - 1].x} ${PAD_T + innerH}` +
-      ` L ${points[0].x} ${PAD_T + innerH} Z`;
-
-    const dotsHTML = points.map(p => {
-      const tooltipText = `${labelName} ${fmtDate(p.date)}: ${p.v}`;
-      if (p.v > 0) {
-        const labelEl = showDotLabels
-          ? `<text x="${p.x}" y="${p.y - 7}" text-anchor="middle" font-size="9" fill="${color}" font-weight="600">${p.v}</text>`
-          : '';
-        return `<circle cx="${p.x}" cy="${p.y}" r="${dotRadius}" fill="${color}" stroke="white" stroke-width="1.5"><title>${tooltipText}</title></circle>${labelEl}`;
-      }
-      // Dot tại điểm = 0 (chỉ vẽ khi N nhỏ)
-      if (dotZeroRadius > 0) {
-        return `<circle cx="${p.x}" cy="${p.y}" r="${dotZeroRadius}" fill="white" stroke="${color}" stroke-width="1.5"><title>${tooltipText}</title></circle>`;
-      }
-      return '';
-    }).join('');
-
-    return `
-      <path d="${areaPath}" fill="${color}" fill-opacity="0.08"/>
-      <path d="${linePath}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      ${dotsHTML}
-    `;
-  }
-
-  const linesHTML =
-    buildLine('hydro', colors.hydro, 'Hydro') +
-    buildLine('electrode', colors.electrode, 'Điện cực') +
-    buildLine('electrochem', colors.electrochem, 'Điện hóa');
-
+  // Build card HTML: header + canvas wrapper (canvas auto fill wrapper)
   card.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;flex-shrink:0">
       <h3 style="margin:0;font-size:15px;font-weight:700;color:#344767;letter-spacing:-0.01em">${titleText}</h3>
-      <div style="display:flex;align-items:center;gap:10px;font-size:10.5px;color:#64748b">
-        <span style="color:#94a3b8;font-size:10px;font-weight:500">${N} ngày</span>
-        <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:2px;background:${colors.hydro};border-radius:2px"></span>Hydro</span>
-        <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:2px;background:${colors.electrode};border-radius:2px"></span>Điện cực</span>
-        <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:2px;background:${colors.electrochem};border-radius:2px"></span>Điện hóa</span>
-      </div>
+      <span style="color:#94a3b8;font-size:10.5px;font-weight:500">${N} ngày</span>
     </div>
-    <svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;height:180px">
-      <line x1="${PAD_L}" y1="${PAD_T}" x2="${PAD_L}" y2="${PAD_T + innerH}" stroke="var(--border)" stroke-width="0.5"/>
-      <line x1="${PAD_L}" y1="${PAD_T + innerH}" x2="${W - PAD_R}" y2="${PAD_T + innerH}" stroke="var(--border)" stroke-width="0.5"/>
-      ${yGrids}
-      ${yLabels}
-      ${xLabels}
-      ${linesHTML}
-    </svg>
+    <div style="flex:1;position:relative;min-height:0">
+      <canvas></canvas>
+    </div>
   `;
 
-  // Attach wheel handler — debounce nhẹ để wheel mượt
+  const canvas = card.querySelector('canvas');
+
+  // Destroy old instance trước khi tạo mới (tránh memory leak)
+  if (_monthlyChartInstance) {
+    _monthlyChartInstance.destroy();
+    _monthlyChartInstance = null;
+  }
+
+  // Mark sau lần render đầu để các lần re-render sau (wheel) dùng animation ngắn
+  const isFirstRender = _monthlyChartFirstRender;
+  if (isFirstRender) _monthlyChartFirstRender = false;
+
+  _monthlyChartInstance = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Hydro',
+          data: dataHydro,
+          borderColor: colors.hydro,
+          backgroundColor: colors.hydro + '15',
+          fill: true,
+          tension: 0.3,
+          pointRadius: dotRadius,
+          pointHoverRadius: dotRadius + 2,
+          pointBackgroundColor: colors.hydro,
+          pointBorderColor: '#fff',
+          pointBorderWidth: 1.5,
+          borderWidth: 2,
+        },
+        {
+          label: 'Điện cực',
+          data: dataElectrode,
+          borderColor: colors.electrode,
+          backgroundColor: colors.electrode + '15',
+          fill: true,
+          tension: 0.3,
+          pointRadius: dotRadius,
+          pointHoverRadius: dotRadius + 2,
+          pointBackgroundColor: colors.electrode,
+          pointBorderColor: '#fff',
+          pointBorderWidth: 1.5,
+          borderWidth: 2,
+        },
+        {
+          label: 'Điện hóa',
+          data: dataElectrochem,
+          borderColor: colors.electrochem,
+          backgroundColor: colors.electrochem + '15',
+          fill: true,
+          tension: 0.3,
+          pointRadius: dotRadius,
+          pointHoverRadius: dotRadius + 2,
+          pointBackgroundColor: colors.electrochem,
+          pointBorderColor: '#fff',
+          pointBorderWidth: 1.5,
+          borderWidth: 2,
+        },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false, // KEY: cho phép fill container 100%
+      // Animation: lần đầu (F5) chạy line từ trái sang phải, các lần sau (wheel) chỉ fade nhanh
+      animation: isFirstRender ? {
+        x: {
+          type: 'number',
+          easing: 'easeOutQuart',
+          duration: 1800,
+          from: NaN,
+          delay(ctx) {
+            if (ctx.type !== 'data' || ctx.xStarted) return 0;
+            ctx.xStarted = true;
+            return ctx.index * (1800 / Math.max(labels.length, 1));
+          }
+        },
+        y: {
+          type: 'number',
+          easing: 'easeOutQuart',
+          duration: 1800,
+          from: (ctx) => {
+            if (ctx.type !== 'data' || ctx.yStarted) return ctx.chart.scales.y.getPixelForValue(0);
+            ctx.yStarted = true;
+            const prev = ctx.chart.getDatasetMeta(ctx.datasetIndex).data[ctx.index - 1]?.y;
+            return prev != null ? prev : ctx.chart.scales.y.getPixelForValue(0);
+          },
+          delay(ctx) {
+            if (ctx.type !== 'data' || ctx.yStarted) return 0;
+            ctx.yStarted = true;
+            return ctx.index * (1800 / Math.max(labels.length, 1));
+          }
+        }
+      } : { duration: 200 },  // Wheel re-render: chỉ animation 200ms cho mượt mà không nháy
+      plugins: {
+        legend: {
+          position: 'top',
+          align: 'end',
+          labels: {
+            font: { size: 11 },
+            boxWidth: 14,
+            boxHeight: 2,
+            padding: 12,
+            color: '#64748b',
+          }
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          backgroundColor: 'rgba(15,23,42,0.95)',
+          padding: 10,
+          cornerRadius: 6,
+          titleFont: { size: 12, weight: '600' },
+          bodyFont: { size: 11 },
+          boxPadding: 4,
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: {
+            font: { size: 10 },
+            color: '#64748b',
+            maxRotation: 0,
+            autoSkip: true,
+            autoSkipPadding: 12,
+          }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            font: { size: 10 },
+            color: '#94a3b8',
+            precision: 0,
+            stepSize: 1,
+          },
+          grid: { color: '#e2e8f0', lineWidth: 0.5, drawTicks: false }
+        }
+      },
+      interaction: { mode: 'nearest', axis: 'x', intersect: false },
+    }
+  });
+
   attachChartWheel(card, h, e, ec);
 }
 
@@ -749,11 +852,13 @@ function attachChartWheel(card, h, e, ec) {
 }
 
 // ───── HÀNG 2 — Card 2: Pie/donut phân bổ loại TN ─────
-function renderDistributionPie(h, e, ec, ink) {
+async function renderDistributionPie(h, e, ec, ink) {
   const card = document.getElementById('dash-chart-distribution');
   if (!card) return;
 
+  const Chart = await loadChartJs();
   const teal = cssVar('--teal') || '#0d9488';
+
   const segments = [
     { label: 'Thủy nhiệt', value: h.length, color: teal },
     { label: 'Điện cực', value: e.length, color: '#6366f1' },
@@ -763,64 +868,134 @@ function renderDistributionPie(h, e, ec, ink) {
 
   const total = segments.reduce((s, x) => s + x.value, 0);
 
-  // Build donut paths
-  const cx = 50, cy = 50, r = 38, ir = 22;
+  // Build legend HTML (dùng legend custom thay vì Chart.js legend mặc định)
+  const legendHTML = segments.length ? segments.map(s => {
+    const pct = total > 0 ? ((s.value / total) * 100).toFixed(0) : 0;
+    return `
+      <div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:11.5px">
+        <span style="width:8px;height:8px;border-radius:2px;background:${s.color};flex-shrink:0"></span>
+        <span style="flex:1;color:#475569">${s.label}</span>
+        <span style="font-weight:600;color:#0f172a">${s.value}</span>
+        <span style="color:#94a3b8;font-size:10.5px;min-width:32px;text-align:right">${pct}%</span>
+      </div>`;
+  }).join('') : `<div style="color:#94a3b8;font-size:11px;text-align:center;padding:8px 0">Chưa có dữ liệu</div>`;
 
-  let pathsHTML = '';
-  if (total > 0) {
-    // Special case: 1 segment chiếm 100% → vẽ donut full bằng 2 circle thay vì path
-    // (SVG arc không vẽ được khi start point == end point)
-    if (segments.length === 1) {
-      const seg = segments[0];
-      pathsHTML = `
-        <circle cx="${cx}" cy="${cy}" r="${r}" fill="${seg.color}"><title>${seg.label}: ${seg.value}</title></circle>
-        <circle cx="${cx}" cy="${cy}" r="${ir}" fill="white"/>
-      `;
-    } else {
-      let startAngle = -Math.PI / 2; // start from top
-      segments.forEach(seg => {
-        const angle = (seg.value / total) * Math.PI * 2;
-        const endAngle = startAngle + angle;
-        const x1 = cx + r * Math.cos(startAngle);
-        const y1 = cy + r * Math.sin(startAngle);
-        const x2 = cx + r * Math.cos(endAngle);
-        const y2 = cy + r * Math.sin(endAngle);
-        const largeArc = angle > Math.PI ? 1 : 0;
-
-        // Outer arc
-        const ix1 = cx + ir * Math.cos(endAngle);
-        const iy1 = cy + ir * Math.sin(endAngle);
-        const ix2 = cx + ir * Math.cos(startAngle);
-        const iy2 = cy + ir * Math.sin(startAngle);
-
-        pathsHTML += `<path d="M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} L ${ix1} ${iy1} A ${ir} ${ir} 0 ${largeArc} 0 ${ix2} ${iy2} Z" fill="${seg.color}"><title>${seg.label}: ${seg.value}</title></path>`;
-        startAngle = endAngle;
-      });
-    }
-  } else {
-    pathsHTML = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#f1f5f9"/><circle cx="${cx}" cy="${cy}" r="${ir}" fill="white"/>`;
-  }
-
-  const legendHTML = segments.length ? segments.map(s => `
-    <div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:11.5px">
-      <span style="width:8px;height:8px;border-radius:2px;background:${s.color};flex-shrink:0"></span>
-      <span style="flex:1;color:#475569">${s.label}</span>
-      <span style="font-weight:600;color:#0f172a">${s.value}</span>
-    </div>`).join('') : `<div style="color:#94a3b8;font-size:11px;text-align:center;padding:8px 0">Chưa có dữ liệu</div>`;
-
+  // Card layout: header + canvas wrapper (flex:1) + legend
   card.innerHTML = `
-    <h3 style="margin:0 0 12px;font-size:15px;font-weight:700;color:#344767;letter-spacing:-0.01em">Phân bổ loại TN</h3>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
-      <svg viewBox="0 0 100 100" width="120" height="120" style="flex-shrink:0;max-width:100%">
-        ${pathsHTML}
-        <text x="${cx}" y="${cy - 1}" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">${total}</text>
-        <text x="${cx}" y="${cy + 10}" text-anchor="middle" font-size="7" fill="#64748b">tổng TN</text>
-      </svg>
-      <div style="width:100%;min-width:0">${legendHTML}</div>
+    <h3 style="margin:0 0 12px;font-size:15px;font-weight:700;color:#344767;letter-spacing:-0.01em;flex-shrink:0">Phân bổ loại TN</h3>
+    <div style="flex:1;position:relative;min-height:0;display:flex;flex-direction:column;align-items:center;gap:10px">
+      <div style="flex:1;position:relative;min-height:0;width:100%;display:flex;align-items:center;justify-content:center">
+        <div style="position:relative;width:100%;max-width:180px;aspect-ratio:1">
+          <canvas></canvas>
+        </div>
+      </div>
+      <div style="width:100%;flex-shrink:0">${legendHTML}</div>
     </div>
   `;
-}
 
+  // Empty state - skip Chart.js render
+  if (total === 0) {
+    return;
+  }
+
+  const canvas = card.querySelector('canvas');
+
+  // Destroy old instance trước khi tạo mới
+  if (_distributionChartInstance) {
+    _distributionChartInstance.destroy();
+    _distributionChartInstance = null;
+  }
+
+  // Plugin custom: vẽ text "tổng TN" + total ở giữa donut
+  const centerTextPlugin = {
+    id: 'centerText',
+    afterDatasetsDraw(chart) {
+      const { ctx, chartArea } = chart;
+      const cx = (chartArea.left + chartArea.right) / 2;
+      const cy = (chartArea.top + chartArea.bottom) / 2;
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      // Total number
+      ctx.font = 'bold 22px Inter, sans-serif';
+      ctx.fillStyle = '#0f172a';
+      ctx.fillText(String(total), cx, cy - 6);
+      // Label
+      ctx.font = '500 10px Inter, sans-serif';
+      ctx.fillStyle = '#64748b';
+      ctx.fillText('tổng TN', cx, cy + 12);
+      ctx.restore();
+    }
+  };
+
+  _distributionChartInstance = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: segments.map(s => s.label),
+      datasets: [{
+        data: segments.map(s => s.value),
+        backgroundColor: segments.map(s => s.color),
+        borderColor: '#fff',
+        borderWidth: 2,
+        hoverOffset: 8,
+        hoverBorderWidth: 3,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '62%',  // Tỉ lệ donut hole (62% giống ir=22/r=38 cũ)
+      animation: { duration: 400, animateRotate: true, animateScale: false },
+      plugins: {
+        legend: { display: false },  // Dùng legend custom HTML bên dưới
+        tooltip: {
+          backgroundColor: 'rgba(15,23,42,0.95)',
+          padding: 10,
+          cornerRadius: 6,
+          titleFont: { size: 12, weight: '600' },
+          bodyFont: { size: 11 },
+          callbacks: {
+            label: (ctx) => {
+              const value = ctx.raw;
+              const pct = ((value / total) * 100).toFixed(1);
+              return ` ${ctx.label}: ${value} (${pct}%)`;
+            }
+          }
+        }
+      },
+      // Click vào segment → navigate đến trang loại TN tương ứng
+      onClick: (event, elements) => {
+        if (elements.length === 0) return;
+        const idx = elements[0].index;
+        const label = segments[idx].label;
+        const pageMap = {
+          'Thủy nhiệt': 'hydrothermal',
+          'Điện cực': 'electrode',
+          'Điện hóa': 'electrochemistry'
+          // 'Mực': không navigate
+        };
+        const target = pageMap[label];
+        if (target && typeof window.showPage === 'function') {
+          window.showPage(target);
+        }
+      },
+      // Hover → đổi cursor thành pointer trên segment có thể click
+      onHover: (event, elements) => {
+        const canvas = event.native?.target;
+        if (!canvas) return;
+        if (elements.length > 0) {
+          const idx = elements[0].index;
+          const label = segments[idx].label;
+          const clickable = ['Thủy nhiệt', 'Điện cực', 'Điện hóa'].includes(label);
+          canvas.style.cursor = clickable ? 'pointer' : 'default';
+        } else {
+          canvas.style.cursor = 'default';
+        }
+      }
+    },
+    plugins: [centerTextPlugin]
+  });
+}
 // ───── HÀNG 2 — Card 3: Top thành viên TN nhiều ─────
 function renderTopMembers(h, e, ec) {
   const card = document.getElementById('dash-top-members');
@@ -913,7 +1088,7 @@ function renderRecentTable(h, e, ec, members) {
   }
 
   tbody.innerHTML = sorted.length ? sorted.map(r => `
-    <div class="recent-row recent-grid">
+    <div class="recent-row recent-grid" data-exp-key="${escapeHtml(r._key)}" data-exp-type="${r._type}" onclick="window._dashGoToExp('${escapeHtml(r._key)}', '${r._type}')" style="cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'" title="Xem chi tiết">
       <div>${personCell(r.person)}</div>
       <div><strong style="font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:700;color:#344767">${escapeHtml(r.code || '')}</strong></div>
       <div style="font-size:13px;color:#344767">${formatChemical(r.material || '—')}</div>
@@ -921,6 +1096,35 @@ function renderRecentTable(h, e, ec, members) {
       <div>${statusPill(r.status)}</div>
     </div>
   `).join('') : '<div class="recent-empty">Chưa có thí nghiệm nào</div>';
+}
+
+// ───── Click handler cho recent row → navigate + flash ─────
+if (typeof window !== 'undefined') {
+  window._dashGoToExp = function(key, type) {
+    const pageMap = {
+      hydro: 'hydrothermal',
+      electrode: 'electrode',
+      electrochem: 'electrochemistry'
+    };
+    const targetPage = pageMap[type];
+    if (!targetPage || !window.showPage) return;
+
+    window.showPage(targetPage);
+
+    // Đợi page render + table render xong, rồi flash row
+    // 2 lần thử với delay khác nhau (do data load có thể async)
+    const tryFlash = (delay) => {
+      setTimeout(() => {
+        const tr = document.querySelector(`#page-${targetPage} tr[onclick*="${key}"]`);
+        if (tr) {
+          tr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          if (window.flashRow) window.flashRow(tr);
+        }
+      }, delay);
+    };
+    tryFlash(300);
+    tryFlash(800); // backup nếu lần đầu chưa render kịp
+  };
 }
 
 // ───── Public API ─────
@@ -941,7 +1145,7 @@ export function renderDash() {
   renderChemStatus(cache.chemicals);
   renderMonthlyChart(h, e, ec);
   renderDistributionPie(h, e, ec, ink);
-  renderTopMembers(h, e, ec);
+  // renderTopMembers(h, e, ec); // Disabled: card removed from dashboard HÀNG 2
   renderRecentTable(h, e, ec, cache.members);
 }
 
