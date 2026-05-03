@@ -5,11 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:emu": "VITE_USE_EMULATOR=true vite",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "emulators": "firebase emulators:start --import=./emulator-data --export-on-exit",
+    "deploy:rules": "firebase deploy --only database",
+    "deploy:hosting": "npm run build && firebase deploy --only hosting",
+    "deploy:all": "npm run build && firebase deploy --only hosting,database"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.5.3",
