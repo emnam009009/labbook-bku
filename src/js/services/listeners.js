@@ -2,60 +2,111 @@
  * services/listeners.js
  * Firebase realtime listeners cho 9 collections + users + settings
  *
- * Thiết kế:
+ * Phase 2A — Commit 1 changes:
+ *  - Bỏ hardcoded SUPER_ADMIN_EMAIL (giờ check qua role 'superadmin' trong /users)
+ *  - history listener CHỈ start cho admin/superadmin (member/viewer skip → tránh
+ *    permission_denied loop)
+ *  - users listener vẫn start cho mọi role (để hiển thị tên người gửi message,
+ *    member name, ...) NHƯNG dùng fbGet một lần cho non-admin (không live update)
+ *
+ * Thiết kế cũ (giữ lại):
  *  - cache: object dùng chung (truyền vào từ main.js qua window.cache)
  *  - currentAuth: đọc qua window.currentAuth (auth.js gắn lúc runtime)
  *  - renderAll, renderUsers, renderMembers, updateGroupSelects: gọi qua
- *    window.* runtime để tránh circular import (các module này chưa được tách)
+ *    window.* runtime để tránh circular import
  *
  * State module-level:
  *  - _listenersStarted: flag tránh đăng ký 2 lần
- *  - _unsubs[]: lưu unsubscribe functions của 9 collections
- *  - _usersUnsub: tách riêng vì cần re-register khi auth role thay đổi
+ *  - _unsubs[]: lưu unsubscribe functions
+ *  - _usersUnsub, _historyUnsub: tách riêng vì bật/tắt theo role
  */
 
-import { fbListen } from '../firebase.js'
+import { fbListen, fbGet, auth } from '../firebase.js'
 import { startPresence } from './presence.js'
-import { auth } from '../firebase.js'
-
-const SUPER_ADMIN_EMAIL = 'nvhn.7202@gmail.com';
 
 let _listenersStarted = false;
 let _unsubs = [];
 let _usersUnsub = null;
+let _historyUnsub = null;
+
+// ── Helper: kiểm tra role qua window.currentAuth ────────
+// Tránh import từ auth.js để giữ pattern tránh circular imports
+function _isAdminLike() {
+  const a = window.currentAuth;
+  return !!(a && (a.isAdmin || a.role === 'admin' || a.role === 'superadmin'));
+}
+
+function _isSuperAdmin() {
+  const a = window.currentAuth;
+  return !!(a && (a.isSuperAdmin || a.role === 'superadmin'));
+}
 
 // ── Đăng ký listeners cho tất cả collections ────────────
 // Gọi sau khi user đã login thành công (initAuth onLogin callback)
 export function startListeners() {
-  // (Re)register users listener — unsub cái cũ trước để tránh leak khi onLogin trigger lại
+  // ── USERS LISTENER ──
+  // Cleanup cũ nếu có
   if (_usersUnsub) {
     try { _usersUnsub(); } catch (e) {}
     _usersUnsub = null;
   }
-  _usersUnsub = fbListen('users', function(users) {
-    if (!users) return;
-    Object.entries(users).forEach(([uid, u]) => {
-      if (u.email === SUPER_ADMIN_EMAIL) {
-        window.__superAdminUid = uid;
+
+  if (_isAdminLike()) {
+    // Admin: subscribe live để thấy user mới register, role changes
+    _usersUnsub = fbListen('users', function(users) {
+      if (!users) return;
+      // Tìm super admin uid để các module khác (notifications, ...) ref được
+      Object.entries(users).forEach(([uid, u]) => {
+        if (u && u.role === 'superadmin') {
+          window.__superAdminUid = uid;
+        }
+      });
+      if (window.cache) window.cache._users = users;
+      if (typeof window.renderUsers === 'function') {
+        window.renderUsers();
+        if (typeof window.populateMemberFilters === 'function') window.populateMemberFilters();
       }
     });
-    if (window.cache) window.cache._users = users;
-    if (window.currentAuth?.isAdmin && typeof window.renderUsers === 'function') {
-      window.renderUsers();
-      if (typeof window.populateMemberFilters === 'function') window.populateMemberFilters();
-    }
-  });
+  } else {
+    // Non-admin: chỉ cần map uid → email/name 1 lần (cho chat, members display, ...)
+    // Không subscribe live vì rules có thể chỉ cho phép đọc users/$uid của chính mình.
+    // Dùng fbGet thay vì listener để tránh spam permission_denied.
+    fbGet('users').then(users => {
+      if (!users) return;
+      Object.entries(users).forEach(([uid, u]) => {
+        if (u && u.role === 'superadmin') {
+          window.__superAdminUid = uid;
+        }
+      });
+      if (window.cache) window.cache._users = users;
+    }).catch(err => {
+      // Member không có quyền đọc /users (rule .read root level cho admin only)
+      // → fallback đọc users/{auth.uid} của chính mình
+      if (auth.currentUser) {
+        fbGet('users/' + auth.currentUser.uid).then(self => {
+          if (self && window.cache) {
+            window.cache._users = { [auth.currentUser.uid]: self };
+          }
+        }).catch(() => { /* silent */ });
+      }
+    });
+  }
 
+  // ── PRESENCE ──
   // Start presence cho user hiện tại (đăng ký onDisconnect)
   if (auth.currentUser) {
     startPresence(auth.currentUser.uid);
   }
 
+  // ── Tránh đăng ký 2 lần các collection chính ──
   if (_listenersStarted) return;
   _listenersStarted = true;
 
+  // Collections subscribed cho mọi authenticated user (active role)
+  // KHÔNG bao gồm 'history' vì rule .read chỉ cho admin
   const cols = ['hydro', 'electrode', 'electrochem', 'chemicals',
-                'members', 'history', 'ink', 'equipment', 'groups', 'bookings', 'notifications', 'presence'];
+                'members', 'ink', 'equipment', 'groups', 'bookings',
+                'notifications', 'presence'];
 
   cols.forEach(function(col) {
     _unsubs.push(fbListen(col, function(data) {
@@ -72,6 +123,21 @@ export function startListeners() {
       }
     }));
   });
+
+  // ── HISTORY LISTENER (admin only) ──
+  // Member/viewer KHÔNG subscribe vì rule .read chỉ cho admin/superadmin
+  // → Tránh permission_denied error loop trong console
+  if (_isAdminLike()) {
+    _historyUnsub = fbListen('history', function(data) {
+      if (window.cache) window.cache.history = data || {};
+      window.dispatchEvent(new CustomEvent('cache-update', { detail: { col: 'history' } }));
+      if (typeof window.renderHistory === 'function') window.renderHistory();
+    });
+  } else {
+    // Non-admin: cache.history vẫn cần tồn tại (initialized rỗng) cho các code
+    // legacy không null-check
+    if (window.cache && !window.cache.history) window.cache.history = {};
+  }
 
   // Settings: subtitle hiển thị dưới tên lab (Lab Manager BKU)
   _unsubs.push(fbListen('settings/subtitle', function(data) {
@@ -91,6 +157,10 @@ export function stopListeners() {
   if (_usersUnsub) {
     try { _usersUnsub(); } catch (e) {}
     _usersUnsub = null;
+  }
+  if (_historyUnsub) {
+    try { _historyUnsub(); } catch (e) {}
+    _historyUnsub = null;
   }
   _listenersStarted = false;
 }
