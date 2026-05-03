@@ -269,11 +269,14 @@ function closeDropdown() {
     input.blur();
     const box = document.getElementById('header-search-box');
     if (box) {
-      box.style.width = '40px';
-      box.style.borderColor = '#e2e8f0';
-      box.style.borderRadius = '50%';
-      input.style.width = '0';
-      input.style.padding = '0';
+      // fix-search-stuck-v2: dùng removeProperty để CSS :hover/:focus-within
+      // lại kiểm soát width/border. Nếu set inline style, sẽ override CSS
+      // và search box bị stuck ở trạng thái collapsed dù chuột hover.
+      box.style.removeProperty('width');
+      box.style.removeProperty('border-color');
+      box.style.removeProperty('border-radius');
+      input.style.removeProperty('width');
+      input.style.removeProperty('padding');
     }
   }
 }
