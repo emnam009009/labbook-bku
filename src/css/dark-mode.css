@@ -1,0 +1,763 @@
+/* ═══════════════════════════════════════════════════════════════
+   DARK-MODE.CSS — Dark mode cho các class mới (đợt 1-3 + mobile-ux)
+   Mục đích: bổ sung dark variant cho login, avatar, bell, search,
+   alerts, chips và các pattern còn hardcode #fff hoặc #0f172a.
+
+   Tải SAU components.css và mobile-ux.css để override.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════
+   [1] LOGIN / AUTH SCREEN
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Wrapper login screen — đã có rule cũ, chỉ thêm border subtle */
+html.dark .login-screen {
+  background: #0f172a !important;
+}
+
+/* Glow effect — giảm opacity để không quá chói trong dark */
+html.dark .login-glow {
+  background: radial-gradient(
+    circle at 50% 0%,
+    rgba(45, 212, 191, 0.18) 0%,
+    transparent 65%
+  ) !important;
+}
+
+/* Login title (đen → trắng) */
+html.dark .login-title {
+  color: #f1f5f9 !important;
+}
+html.dark .login-tagline {
+  color: #94a3b8 !important;
+}
+
+/* Login card — trắng → surface tối, border subtle */
+html.dark .login-card {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Auth tabs container */
+html.dark .auth-tabs {
+  background: #0f172a !important;
+}
+html.dark .auth-tab-btn {
+  color: #94a3b8 !important;
+  background: transparent !important;
+}
+html.dark .auth-tab-btn.active {
+  background: var(--teal) !important;
+  color: white !important;
+}
+
+/* Auth label — text đậm trên nền tối */
+html.dark .auth-label {
+  color: #cbd5e1 !important;
+}
+
+/* Auth input — đảo background + text */
+html.dark .auth-input,
+html.dark .auth-input--password {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+html.dark .auth-input:focus,
+html.dark .auth-input--password:focus {
+  border-color: var(--teal) !important;
+  background: #1e293b !important;
+}
+html.dark .auth-input::placeholder,
+html.dark .auth-input--password::placeholder {
+  color: #64748b !important;
+}
+
+/* Password eye toggle */
+html.dark .auth-pw-toggle {
+  color: #94a3b8 !important;
+}
+html.dark .auth-pw-toggle:hover {
+  color: #cbd5e1 !important;
+}
+
+/* Auth alerts — error & success */
+html.dark .auth-alert--error {
+  background: rgba(239, 68, 68, 0.12) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  color: #fca5a5 !important;
+}
+html.dark .auth-alert--success {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  color: #86efac !important;
+}
+
+/* Auth submit button — giữ teal nhưng hover sáng hơn cho dark */
+html.dark .auth-submit-btn {
+  background: var(--teal) !important;
+  color: white !important;
+}
+html.dark .auth-submit-btn:hover {
+  background: #14b8a6 !important;
+}
+
+/* Helper text + footer */
+html.dark .auth-helper-text,
+html.dark .auth-footer {
+  color: #94a3b8 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [2] AVATAR DROPDOWN MENU
+   ═══════════════════════════════════════════════════════════════ */
+/* Đã có rule cho #avatar-menu trong main.css; bổ sung các phần thiếu: */
+
+html.dark .avatar-btn {
+  border-color: #334155 !important;
+}
+html.dark .avatar-btn:hover {
+  border-color: var(--teal) !important;
+}
+
+html.dark .avatar-menu-header {
+  border-bottom-color: #334155 !important;
+}
+html.dark .avatar-menu-name {
+  color: #f1f5f9 !important;
+}
+html.dark .avatar-menu-email {
+  color: #94a3b8 !important;
+}
+
+html.dark .avatar-menu-divider {
+  background: #334155 !important;
+}
+
+html.dark .avatar-menu-file-label {
+  color: #f1f5f9 !important;
+}
+html.dark .avatar-menu-file-label:hover {
+  background: var(--teal) !important;
+  color: white !important;
+}
+
+html.dark .avatar-menu-btn {
+  color: #f1f5f9 !important;
+}
+html.dark .avatar-menu-btn:hover {
+  background: var(--teal) !important;
+  color: white !important;
+}
+
+/* Logout button — giữ đỏ */
+html.dark .avatar-menu-btn--logout {
+  color: #fca5a5 !important;
+}
+html.dark .avatar-menu-btn--logout:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #fca5a5 !important;
+}
+html.dark .avatar-menu-btn--logout svg {
+  stroke: #fca5a5 !important;
+}
+
+html.dark .theme-picker-label {
+  color: #94a3b8 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [3] FLOATING TOPBAR — search + bell
+   ═══════════════════════════════════════════════════════════════ */
+
+html.dark .header-search-box {
+  background: var(--surface) !important;
+  border-color: #334155 !important;
+}
+html.dark .header-search-box:hover,
+html.dark .header-search-box:focus-within {
+  border-color: var(--teal) !important;
+}
+html.dark .header-search-input {
+  color: #f1f5f9 !important;
+}
+html.dark .header-search-input::placeholder {
+  color: #64748b !important;
+}
+html.dark .header-search-icon-btn svg {
+  stroke: #94a3b8 !important;
+}
+
+html.dark .bell-btn {
+  background: var(--surface) !important;
+  border-color: #334155 !important;
+}
+html.dark .bell-btn:hover {
+  background: rgba(13, 148, 136, 0.15) !important;
+  border-color: var(--teal) !important;
+}
+html.dark .bell-btn svg {
+  stroke: #94a3b8 !important;
+}
+
+html.dark .bell-badge {
+  border-color: var(--surface) !important;
+}
+
+/* Bell dropdown */
+html.dark .bell-dropdown {
+  background: var(--surface) !important;
+  border-color: #334155 !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+}
+html.dark .bell-dropdown-header {
+  border-bottom-color: #334155 !important;
+}
+html.dark .bell-dropdown-title {
+  color: #f1f5f9 !important;
+}
+html.dark .bell-dropdown-action--read {
+  color: var(--teal) !important;
+}
+html.dark .bell-dropdown-action--clear {
+  color: #fca5a5 !important;
+}
+html.dark .bell-dropdown-sep {
+  color: #475569 !important;
+}
+html.dark .bell-list-empty {
+  color: #64748b !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [4] SEARCH WRAPPER + CLEAR BUTTON (đợt 1)
+   ═══════════════════════════════════════════════════════════════ */
+
+html.dark .search-clear-btn {
+  background: #475569 !important;
+}
+html.dark .search-clear-btn:hover {
+  background: #ef4444 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [5] PAGE TITLE OVERRIDE — class .page-title-dark đặt tên gây
+   hiểu lầm: nó là "title MÀU dark/đen" cho light mode. Trong dark
+   mode phải đảo lại thành trắng.
+   ═══════════════════════════════════════════════════════════════ */
+
+html.dark .page-title-dark {
+  color: #f1f5f9 !important;
+}
+html.dark .dashboard-title {
+  color: #f1f5f9 !important;
+}
+
+/* Stat label bold */
+html.dark .stat-label-bold {
+  color: #cbd5e1 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [6] SEARCH POPOVER (chem & electrode dropdown)
+   ═══════════════════════════════════════════════════════════════ */
+/* Đã dùng var(--surface) + var(--border) — sẽ tự đổi.
+   Bổ sung shadow để nổi bật hơn trên nền tối: */
+
+html.dark .search-popover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Input readonly background — đã có rule chung, bổ sung cho input-readonly class: */
+html.dark .input-readonly {
+  background: #162032 !important;
+  color: #cbd5e1 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [7] FILTER SELECTS
+   ═══════════════════════════════════════════════════════════════ */
+
+html.dark .filter-select,
+html.dark .filter-select--narrow {
+  /* search-input đã có rule sẵn — bổ sung border-radius rõ hơn */
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [8] LEGEND DOTS — giữ màu (vì là indicator status)
+   nhưng tăng opacity một chút để nổi bật trên nền tối
+   ═══════════════════════════════════════════════════════════════ */
+
+html.dark .legend-dot--warn {
+  background: rgba(245, 158, 11, 0.85) !important;
+}
+html.dark .legend-dot--info {
+  background: rgba(96, 165, 250, 0.85) !important;
+}
+html.dark .legend-dot--success {
+  background: rgba(45, 212, 191, 0.85) !important;
+}
+html.dark .legend-dot--gray {
+  background: rgba(148, 163, 184, 0.6) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [9] MUTED TEXT HELPERS
+   ═══════════════════════════════════════════════════════════════ */
+
+html.dark .muted-13,
+html.dark .muted-12-mt {
+  color: #64748b !important;
+}
+
+/* Helper for danger color text */
+html.dark .text-danger-color {
+  color: #fca5a5 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [10] IMAGE UPLOAD
+   ═══════════════════════════════════════════════════════════════ */
+
+html.dark .image-upload-label,
+html.dark .image-upload-label--bare {
+  color: #60a5fa !important;
+}
+
+/* Image preview giữ background trong suốt — không cần đổi */
+
+/* ═══════════════════════════════════════════════════════════════
+   [11] DASHBOARD SPECIFIC — recent grid header text
+   ═══════════════════════════════════════════════════════════════ */
+
+html.dark .recent-grid-head {
+  color: #94a3b8 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [12] MOBILE — đảm bảo mobile drawer dark đúng
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  html.dark #mobile-menu-btn {
+    background: var(--surface) !important;
+    border-color: #334155 !important;
+  }
+  html.dark #mobile-menu-btn svg {
+    stroke: #94a3b8 !important;
+  }
+  html.dark #mobile-sidebar-overlay {
+    background: rgba(0, 0, 0, 0.65) !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [13] SCROLLBAR — dark variant
+   ═══════════════════════════════════════════════════════════════ */
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #475569 !important;
+}
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [14] FORM SECTION TITLE (uppercase teal label)
+   ═══════════════════════════════════════════════════════════════ */
+
+html.dark .form-section-title {
+  color: var(--teal) !important;
+  border-bottom-color: #334155 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [15] FOCUS RING — sáng hơn, dễ thấy trên nền tối
+   ═══════════════════════════════════════════════════════════════ */
+
+html.dark .form-group input:focus,
+html.dark .form-group select:focus,
+html.dark .form-group textarea:focus {
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.2) !important;
+}
+
+html.dark .auth-input:focus,
+html.dark .auth-input--password:focus {
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.18) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [16] SKELETON LOADER (login screen)
+   ═══════════════════════════════════════════════════════════════ */
+
+html.dark #skeleton-loader {
+  background: #0f172a !important;
+}
+html.dark #skeleton-loader > div > div {
+  background: #1e293b !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [v2] FIX 4 VẤN ĐỀ USER FEEDBACK
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ───────────────────────────────────────────────────────────────
+   [v2-A] Card "Thí nghiệm gần đây" — h2 inline color #344767
+   không đổi trong dark; subtitle 8392ab cũng đen tối.
+   Override với specificity cao bằng inline-style attribute.
+   ─────────────────────────────────────────────────────────────── */
+
+html.dark .recent-card h2,
+html.dark .recent-card-header h2 {
+  color: #f1f5f9 !important;
+}
+html.dark .recent-card-header p {
+  color: #94a3b8 !important;
+}
+
+/* Recent rows text */
+html.dark .recent-rows,
+html.dark .recent-rows * {
+  color: var(--text) !important;
+}
+/* Trừ badges + spinner: */
+html.dark .recent-rows .badge {
+  color: inherit !important;
+}
+
+/* ───────────────────────────────────────────────────────────────
+   [v2-B] BADGES — Light backgrounds gây ảo giác "card trắng"
+   trong dashboard recent + tables ở các page.
+   ─────────────────────────────────────────────────────────────── */
+
+html.dark .badge-success {
+  background: rgba(13, 148, 136, 0.18) !important;
+  color: #5eead4 !important;
+  border-color: rgba(13, 148, 136, 0.4) !important;
+}
+html.dark .badge-warn {
+  background: rgba(245, 158, 11, 0.16) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(245, 158, 11, 0.35) !important;
+}
+html.dark .badge-danger {
+  background: rgba(239, 68, 68, 0.14) !important;
+  color: #fca5a5 !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+}
+html.dark .badge-info {
+  background: rgba(59, 130, 246, 0.16) !important;
+  color: #93c5fd !important;
+  border-color: rgba(59, 130, 246, 0.35) !important;
+}
+html.dark .badge-gray {
+  background: rgba(148, 163, 184, 0.16) !important;
+  color: #cbd5e1 !important;
+  border-color: rgba(148, 163, 184, 0.3) !important;
+}
+html.dark .badge-teal {
+  background: rgba(45, 212, 191, 0.16) !important;
+  color: #5eead4 !important;
+  border-color: rgba(45, 212, 191, 0.4) !important;
+}
+
+/* Tag (chip nhỏ) — cũng background sáng */
+html.dark .tag {
+  background: rgba(45, 212, 191, 0.14) !important;
+  color: #5eead4 !important;
+  border-color: rgba(45, 212, 191, 0.3) !important;
+}
+
+/* ───────────────────────────────────────────────────────────────
+   [v2-C] PAGE HEADERS — Page title inline color #0F172A
+   (sau refactor đã đổi thành class .page-title-dark, nhưng đôi
+   khi vẫn còn inline). Bổ sung đảm bảo mọi page-title trắng.
+   ─────────────────────────────────────────────────────────────── */
+
+html.dark h1.page-title,
+html.dark h1.page-title.page-title-dark,
+html.dark .page-title,
+html.dark h1[class*="page-title"] {
+  color: #f1f5f9 !important;
+}
+
+html.dark .page-subtitle {
+  color: #94a3b8 !important;
+}
+
+/* Inline-style fallback (hỗ trợ HTML chưa refactor đến) */
+html.dark h1[style*="#0F172A"],
+html.dark h1[style*="#0f172a"],
+html.dark h2[style*="#344767"],
+html.dark h2[style*="#0f172a"],
+html.dark h3[style*="#0f172a"] {
+  color: #f1f5f9 !important;
+}
+
+/* ───────────────────────────────────────────────────────────────
+   [v2-D] HEADER SEARCH BOX — Ô vuông tối lộ ra vì
+   #floating-topbar có background hoặc parent. Fix: đảm bảo
+   header-search-box trong suốt với khung tròn rõ ràng.
+   ─────────────────────────────────────────────────────────────── */
+
+html.dark #floating-topbar {
+  background: transparent !important;
+}
+
+html.dark .header-search-wrap {
+  background: transparent !important;
+}
+
+/* Search box: cố ý dark surface, viền subtle, không lộ vuông */
+html.dark .header-search-box {
+  background: var(--surface) !important;
+  border-color: #334155 !important;
+  /* shadow nhẹ để box "nổi" trên nền dashboard */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Bell btn cũng tương tự */
+html.dark .bell-btn {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* ───────────────────────────────────────────────────────────────
+   [v2-E] TABLE HEADER — `.table-wrap thead` background
+   var(--surface-2) trong dark = #0f172a (đã đúng).
+   Nhưng `.table-wrap th` color #94a3b8 — đã có rule.
+   Đảm bảo TH không bị inline-style override.
+   ─────────────────────────────────────────────────────────────── */
+
+html.dark .table-wrap thead {
+  background: #0f172a !important;
+}
+html.dark .table-wrap th {
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+
+/* QUAN TRỌNG: argon-flavor.css đặt `background: #f8fafc !important`
+   trên .table-wrap thead th + table thead th. Cần override với
+   specificity cao hơn cho dark mode. */
+html.dark .table-wrap thead th,
+html.dark table thead th {
+  background: #0f172a !important;
+  border-bottom-color: #334155 !important;
+}
+
+/* TH có .th-center vẫn dark đúng */
+html.dark .table-wrap th.th-center {
+  color: #94a3b8 !important;
+}
+
+/* TD đảm bảo trắng */
+html.dark .table-wrap td {
+  color: #f1f5f9 !important;
+}
+
+/* TD inline-style override (fallback) */
+html.dark .table-wrap td[style*="color"] {
+  color: #f1f5f9 !important;
+}
+
+/* Sortable header click hover */
+html.dark .table-wrap th[onclick]:hover,
+html.dark .table-wrap th.bk-sortable:hover {
+  background: rgba(13, 148, 136, 0.1) !important;
+  color: var(--teal) !important;
+}
+
+/* ───────────────────────────────────────────────────────────────
+   [v2-F] TEXT CONTRAST — Một số text quá tối trong dark mode
+   ─────────────────────────────────────────────────────────────── */
+
+/* Stat value đang #344767 (đậm) — trên surface dark cần sáng hơn */
+html.dark .stat-card .stat-value,
+html.dark .stat-card-r30 .stat-value {
+  color: #f1f5f9 !important;
+}
+
+/* Stat label đang #475569 (uppercase) — cần sáng hơn */
+html.dark .stat-card-r30 .stat-label,
+html.dark .stat-label-bold {
+  color: #94a3b8 !important;
+}
+
+/* Text-2 helpers đảm bảo đủ contrast */
+html.dark [style*="color:#475569"],
+html.dark [style*="color: #475569"] {
+  color: #cbd5e1 !important;
+}
+
+html.dark [style*="color:#64748b"],
+html.dark [style*="color: #64748b"] {
+  color: #94a3b8 !important;
+}
+
+html.dark [style*="color:#8392ab"],
+html.dark [style*="color: #8392ab"] {
+  color: #94a3b8 !important;
+}
+
+/* Trend +X% so với tháng trước — text màu xanh OK trên dark, giữ */
+/* Stat trend giữ nguyên */
+
+/* ───────────────────────────────────────────────────────────────
+   [v2-G] DASHBOARD KPI CARDS — Inline style color đảm bảo
+   text trên các stat card không bị "đen lì"
+   ─────────────────────────────────────────────────────────────── */
+
+/* Card thành viên lab text */
+html.dark #dash-members-kpi *,
+html.dark #dash-members-list * {
+  color: var(--text) !important;
+}
+
+html.dark #dash-members-kpi h3,
+html.dark #dash-members-kpi h2,
+html.dark #dash-members-kpi [style*="font-weight:600"],
+html.dark #dash-members-kpi [style*="font-weight: 600"] {
+  color: #f1f5f9 !important;
+}
+
+/* Member name nhẹ + email */
+html.dark #dash-members-kpi [style*="color:#0f172a"],
+html.dark #dash-members-kpi [style*="color: #0f172a"] {
+  color: #f1f5f9 !important;
+}
+
+/* ───────────────────────────────────────────────────────────────
+   [v2-H] CHART TITLES + LEGEND — Phân bổ loại TN, Lịch đăng ký
+   ─────────────────────────────────────────────────────────────── */
+
+html.dark #dash-chart-monthly h3,
+html.dark #dash-chart-distribution h3,
+html.dark #dash-booking-week h3,
+html.dark #dash-chem-status h3,
+html.dark .stat-card h3,
+html.dark .stat-card h2 {
+  color: #f1f5f9 !important;
+}
+
+/* Mọi text inline #0f172a / #344767 trong dashboard cards */
+html.dark .stat-card [style*="color:#0f172a"],
+html.dark .stat-card [style*="color: #0f172a"],
+html.dark .stat-card [style*="color:#344767"],
+html.dark .stat-card [style*="color: #344767"] {
+  color: #f1f5f9 !important;
+}
+
+/* ───────────────────────────────────────────────────────────────
+   [v2-I] Booking CALENDAR DATE PICKER + buttons trong dashboard
+   ─────────────────────────────────────────────────────────────── */
+
+html.dark #cal-date-picker {
+  background: var(--surface) !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+html.dark #cal-range-label {
+  color: #f1f5f9 !important;
+}
+
+/* ───────────────────────────────────────────────────────────────
+   [v2-J] FORM SECTION TITLE inline-style fallback
+   ─────────────────────────────────────────────────────────────── */
+
+html.dark .form-section h3,
+html.dark .form-section h4,
+html.dark .modal h2 {
+  color: #f1f5f9 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [v2-K] HARD-OVERRIDE: argon-flavor.css đặt `background:white !important`
+   cho .recent-card, #dash-tbody, .recent-grid-head, .recent-row.
+   Rule mặc định html.dark .stat-card không thắng được vì specificity
+   bằng + !important đôi bên. Dùng selector tăng specificity ở dark.
+   ─────────────────────────────────────────────────────────────── */
+
+/* recent-card body — toàn bộ card */
+html.dark .recent-card,
+html.dark .stat-card.recent-card,
+html.dark .stat-card.stat-card-r30.recent-card {
+  background: var(--surface) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid #334155 !important;
+}
+
+/* dash-tbody — tbody trắng cứng đầu */
+html.dark #dash-tbody,
+html.dark .recent-card #dash-tbody,
+html.dark .recent-rows {
+  background: var(--surface) !important;
+}
+
+/* recent-grid-head — header row của bảng recent */
+html.dark .recent-grid-head,
+html.dark .recent-card .recent-grid-head {
+  background: #0f172a !important;
+  border-bottom-color: #334155 !important;
+}
+
+/* Recent row separator */
+html.dark .recent-row,
+html.dark .recent-card .recent-row {
+  border-bottom-color: #334155 !important;
+}
+
+/* Recent row hover */
+html.dark .recent-row:hover,
+html.dark .recent-card .recent-row:hover {
+  background: rgba(13, 148, 136, 0.08) !important;
+}
+
+/* Recent card header border */
+html.dark .recent-card-header {
+  border-bottom-color: #334155 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [v2-L] CHEMICALS STATUS CARD (#dash-chem-status) — tương tự pattern
+   có thể dùng background trắng cứng
+   ─────────────────────────────────────────────────────────────── */
+
+html.dark #dash-chem-status,
+html.dark #dash-members-kpi,
+html.dark #dash-booking-week,
+html.dark #dash-chart-monthly,
+html.dark #dash-chart-distribution {
+  background: var(--surface) !important;
+  border: 1px solid #334155 !important;
+}
+
+/* Mọi heading trong các dashboard cards */
+html.dark [id^="dash-"] h1,
+html.dark [id^="dash-"] h2,
+html.dark [id^="dash-"] h3,
+html.dark [id^="dash-"] h4 {
+  color: #f1f5f9 !important;
+}
+
+/* Mọi text trong dashboard cards (inline color hardcoded) */
+html.dark [id^="dash-"] [style*="color:#0f172a"],
+html.dark [id^="dash-"] [style*="color: #0f172a"],
+html.dark [id^="dash-"] [style*="color:#344767"],
+html.dark [id^="dash-"] [style*="color: #344767"],
+html.dark [id^="dash-"] [style*="color:#1e293b"],
+html.dark [id^="dash-"] [style*="color: #1e293b"] {
+  color: #f1f5f9 !important;
+}
+
+html.dark [id^="dash-"] [style*="color:#475569"],
+html.dark [id^="dash-"] [style*="color: #475569"],
+html.dark [id^="dash-"] [style*="color:#64748b"],
+html.dark [id^="dash-"] [style*="color: #64748b"],
+html.dark [id^="dash-"] [style*="color:#8392ab"],
+html.dark [id^="dash-"] [style*="color: #8392ab"] {
+  color: #94a3b8 !important;
+}
