@@ -1,0 +1,70 @@
+/* ═══════════════════════════════════════════════════════════════
+   FIX-AVATAR-MENU-ZINDEX.CSS
+   Vấn đề: Avatar menu (z-index:9999) bị dashboard cards che một phần
+   bên phải, đặc biệt khi page có animation transform.
+   
+   Root cause:
+   1. `.page.active` có animation `fade-in` với `transform: translateY(4px)`
+      → tạo stacking context cho `.page.active`
+   2. `.site-main > .page.active` chứa stat-cards → các cards nằm trong
+      stacking context của .page.active
+   3. `nav.site-sidebar` (chứa avatar-menu) ở cùng level với .site-main
+      trong document, cả hai z-index: auto → DOM order quyết định
+      → .site-main đứng SAU sidebar trong DOM → .site-main + cháu nội
+        có thể đè lên menu nếu avatar-menu position:fixed bị cô lập
+   
+   Fix:
+   A. Sidebar có z-index cao hơn .site-main
+   B. Avatar menu z-index cực cao + đảm bảo không bị cô lập
+   C. Page animation chỉ dùng opacity (không transform) → không tạo SC
+   ═══════════════════════════════════════════════════════════════ */
+
+/* [A] Sidebar đứng trên site-main */
+nav.site-sidebar.sidebar {
+  z-index: 100 !important;
+}
+
+/* [B] Avatar menu cực cao + transform-style để thoát stacking context cha */
+#avatar-menu,
+.avatar-menu {
+  z-index: 99999 !important;
+  /* position:fixed sẽ thoát mọi parent container TRỪ KHI parent có
+     transform/filter/perspective. Sidebar không có những thuộc tính này
+     → menu thực sự fixed theo viewport. */
+}
+
+/* [C] Page fade-in animation: dùng opacity-only thay vì transform
+   để không tạo stacking context cô lập cho .page.active.
+   Nếu cần micro-motion, dùng filter:blur thay translateY. */
+.page.active {
+  animation: pageFadeInPure 0.18s ease !important;
+}
+
+@keyframes pageFadeInPure {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* [D] Ensure stat-card không tạo SC khi không hover */
+.stat-card,
+.stat-card-r30 {
+  /* Không cần transform khi static — chỉ apply khi :hover (đã có sẵn) */
+}
+
+/* [E] Bell dropdown cũng cần priority cao */
+#bell-dropdown,
+.bell-dropdown {
+  z-index: 9999 !important;
+}
+
+/* [F] Mobile sidebar overlay phải dưới avatar menu khi cả hai mở */
+#mobile-sidebar-overlay {
+  z-index: 105 !important;
+}
+nav.site-sidebar.sidebar.mobile-open {
+  z-index: 110 !important;
+}
