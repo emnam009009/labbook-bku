@@ -2,50 +2,65 @@
  * services/listeners.js
  * Firebase realtime listeners cho 9 collections + users + settings
  *
- * Phase 2A — Commit 1 changes:
- *  - Bỏ hardcoded SUPER_ADMIN_EMAIL (giờ check qua role 'superadmin' trong /users)
- *  - history listener CHỈ start cho admin/superadmin (member/viewer skip → tránh
- *    permission_denied loop)
- *  - users listener vẫn start cho mọi role (để hiển thị tên người gửi message,
- *    member name, ...) NHƯNG dùng fbGet một lần cho non-admin (không live update)
+ * Phase 2A — Commit 2 changes:
+ *  - Áp dụng limit 500 records gần nhất cho các collections growth-rate cao:
+ *    hydro, electrode, electrochem, bookings, ink
+ *  - orderBy: 'createdAt' (records mới có field này)
+ *  - Các collections nhỏ (chemicals, equipment, members, groups, eq_groups,
+ *    notifications, presence) giữ nguyên fbListen full
  *
- * Thiết kế cũ (giữ lại):
+ * Phase 2A — Commit 1 (giữ):
+ *  - Bỏ hardcoded SUPER_ADMIN_EMAIL (giờ check qua role 'superadmin')
+ *  - history listener CHỈ start cho admin/superadmin
+ *  - users listener: live cho admin, fbGet 1 lần cho non-admin
+ *
+ * Thiết kế cũ (giữ):
  *  - cache: object dùng chung (truyền vào từ main.js qua window.cache)
- *  - currentAuth: đọc qua window.currentAuth (auth.js gắn lúc runtime)
- *  - renderAll, renderUsers, renderMembers, updateGroupSelects: gọi qua
- *    window.* runtime để tránh circular import
- *
- * State module-level:
- *  - _listenersStarted: flag tránh đăng ký 2 lần
- *  - _unsubs[]: lưu unsubscribe functions
- *  - _usersUnsub, _historyUnsub: tách riêng vì bật/tắt theo role
+ *  - currentAuth: đọc qua window.currentAuth
+ *  - renderAll, renderUsers, renderMembers, updateGroupSelects: gọi qua window.*
  */
 
-import { fbListen, fbGet, auth } from '../firebase.js'
+import { fbListen, fbListenQuery, fbGet, auth } from '../firebase.js'
 import { startPresence } from './presence.js'
+
+// ── Config: collections dùng query với limit ────────────
+// Tăng limit khi cần — trade-off memory vs data coverage.
+// Tại 500 records: ~1MB/collection memory, đủ cho dashboard + recent views.
+// Cần xem records cũ hơn → tính năng Reports (Phase 3) sẽ query date range riêng.
+const LARGE_COLLECTIONS_CONFIG = {
+  hydro:       { orderBy: 'createdAt', limitLast: 500 },
+  electrode:   { orderBy: 'createdAt', limitLast: 500 },
+  electrochem: { orderBy: 'createdAt', limitLast: 500 },
+  bookings:    { orderBy: 'createdAt', limitLast: 500 },
+  ink:         { orderBy: 'createdAt', limitLast: 500 },
+};
+
+// Collections nhỏ — full listen (không limit)
+const SMALL_COLLECTIONS = [
+  'chemicals',     // Hóa chất, growth rate thấp
+  'members',       // Thành viên lab, thường <100
+  'equipment',     // Thiết bị, thường <50
+  'groups',        // Nhóm hóa chất, thường <20
+  'eq_groups',     // Nhóm thiết bị, thường <20
+  'notifications', // Per-user, đã filter theo rule
+  'presence',      // Online status, lightweight
+];
 
 let _listenersStarted = false;
 let _unsubs = [];
 let _usersUnsub = null;
 let _historyUnsub = null;
 
-// ── Helper: kiểm tra role qua window.currentAuth ────────
-// Tránh import từ auth.js để giữ pattern tránh circular imports
+// ── Helpers role check (tránh import auth.js → circular) ─
 function _isAdminLike() {
   const a = window.currentAuth;
   return !!(a && (a.isAdmin || a.role === 'admin' || a.role === 'superadmin'));
-}
-
-function _isSuperAdmin() {
-  const a = window.currentAuth;
-  return !!(a && (a.isSuperAdmin || a.role === 'superadmin'));
 }
 
 // ── Đăng ký listeners cho tất cả collections ────────────
 // Gọi sau khi user đã login thành công (initAuth onLogin callback)
 export function startListeners() {
   // ── USERS LISTENER ──
-  // Cleanup cũ nếu có
   if (_usersUnsub) {
     try { _usersUnsub(); } catch (e) {}
     _usersUnsub = null;
@@ -55,7 +70,6 @@ export function startListeners() {
     // Admin: subscribe live để thấy user mới register, role changes
     _usersUnsub = fbListen('users', function(users) {
       if (!users) return;
-      // Tìm super admin uid để các module khác (notifications, ...) ref được
       Object.entries(users).forEach(([uid, u]) => {
         if (u && u.role === 'superadmin') {
           window.__superAdminUid = uid;
@@ -68,9 +82,7 @@ export function startListeners() {
       }
     });
   } else {
-    // Non-admin: chỉ cần map uid → email/name 1 lần (cho chat, members display, ...)
-    // Không subscribe live vì rules có thể chỉ cho phép đọc users/$uid của chính mình.
-    // Dùng fbGet thay vì listener để tránh spam permission_denied.
+    // Non-admin: chỉ cần map uid → email/name 1 lần (cho chat, members display)
     fbGet('users').then(users => {
       if (!users) return;
       Object.entries(users).forEach(([uid, u]) => {
@@ -79,9 +91,8 @@ export function startListeners() {
         }
       });
       if (window.cache) window.cache._users = users;
-    }).catch(err => {
-      // Member không có quyền đọc /users (rule .read root level cho admin only)
-      // → fallback đọc users/{auth.uid} của chính mình
+    }).catch(() => {
+      // Member không có quyền đọc /users → fallback đọc users/{auth.uid}
       if (auth.currentUser) {
         fbGet('users/' + auth.currentUser.uid).then(self => {
           if (self && window.cache) {
@@ -92,26 +103,29 @@ export function startListeners() {
     });
   }
 
-  // ── PRESENCE ──
-  // Start presence cho user hiện tại (đăng ký onDisconnect)
+  // ── PRESENCE: registers onDisconnect ──
   if (auth.currentUser) {
     startPresence(auth.currentUser.uid);
   }
 
-  // ── Tránh đăng ký 2 lần các collection chính ──
   if (_listenersStarted) return;
   _listenersStarted = true;
 
-  // Collections subscribed cho mọi authenticated user (active role)
-  // KHÔNG bao gồm 'history' vì rule .read chỉ cho admin
-  const cols = ['hydro', 'electrode', 'electrochem', 'chemicals',
-                'members', 'ink', 'equipment', 'groups', 'bookings',
-                'notifications', 'presence'];
+  // ── LARGE COLLECTIONS: query với limit ──
+  // fbListenQuery dùng orderByChild + limitToLast → server chỉ trả về N records
+  // mới nhất, giảm bandwidth + memory rất đáng kể khi data scale.
+  Object.entries(LARGE_COLLECTIONS_CONFIG).forEach(([col, opts]) => {
+    _unsubs.push(fbListenQuery(col, opts, function(data) {
+      if (window.cache) window.cache[col] = data || {};
+      window.dispatchEvent(new CustomEvent('cache-update', { detail: { col } }));
+      if (typeof window.renderAll === 'function') window.renderAll();
+    }));
+  });
 
-  cols.forEach(function(col) {
+  // ── SMALL COLLECTIONS: full listen ──
+  SMALL_COLLECTIONS.forEach(function(col) {
     _unsubs.push(fbListen(col, function(data) {
       if (window.cache) window.cache[col] = data || {};
-      // Dispatch event cho các module lắng nghe (booking, member-filter, ...)
       window.dispatchEvent(new CustomEvent('cache-update', { detail: { col } }));
       if (typeof window.renderAll === 'function') window.renderAll();
       if (col === 'groups' && typeof window.updateGroupSelects === 'function') {
@@ -124,22 +138,19 @@ export function startListeners() {
     }));
   });
 
-  // ── HISTORY LISTENER (admin only) ──
-  // Member/viewer KHÔNG subscribe vì rule .read chỉ cho admin/superadmin
-  // → Tránh permission_denied error loop trong console
+  // ── HISTORY (admin only) ──
   if (_isAdminLike()) {
-    _historyUnsub = fbListen('history', function(data) {
+    // History có thể grow rất lớn → cũng dùng limit 500 records gần nhất
+    _historyUnsub = fbListenQuery('history', { orderBy: 'ts', limitLast: 500 }, function(data) {
       if (window.cache) window.cache.history = data || {};
       window.dispatchEvent(new CustomEvent('cache-update', { detail: { col: 'history' } }));
       if (typeof window.renderHistory === 'function') window.renderHistory();
     });
   } else {
-    // Non-admin: cache.history vẫn cần tồn tại (initialized rỗng) cho các code
-    // legacy không null-check
     if (window.cache && !window.cache.history) window.cache.history = {};
   }
 
-  // Settings: subtitle hiển thị dưới tên lab (Lab Manager BKU)
+  // Settings: subtitle hiển thị dưới tên lab
   _unsubs.push(fbListen('settings/subtitle', function(data) {
     if (data && data.value) {
       const el = document.getElementById('lab-subtitle');
@@ -166,7 +177,6 @@ export function stopListeners() {
 }
 
 // ── Helper UI: badge "tin nhắn mới" trên FAB chat ───────
-// (Để ở đây vì liên quan trạng thái chat từ listener; có thể move sang chat module ở Phần 7)
 export function updateChatFabBadge(hasNew) {
   const badge = document.getElementById('chat-fab-badge');
   if (!badge) return;
