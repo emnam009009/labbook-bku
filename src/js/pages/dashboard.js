@@ -347,7 +347,8 @@ function renderBookingWeek(bookings, members) {
     const [c1, c2] = avatarColors(userName);
     const init = avatarInitial(userName);
 
-    return `<div style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:0.5px solid var(--border)">
+    const bookingKey = b._key || '';
+    return `<div onclick="window._dashGoToBooking('${bookingKey}')" style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:0.5px solid var(--border);cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='var(--surface-2)'" onmouseout="this.style.background=''" title="Xem chi tiết yêu cầu đăng ký">
       <div style="font-size:11px;color:#64748b;font-family:'JetBrains Mono',monospace;min-width:80px;padding-top:2px;font-weight:500">${time}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600;color:#0f172a;line-height:1.3">${escapeHtml(eqName)}</div>
@@ -1306,3 +1307,73 @@ function _dashEscHandler(ev) {
 window.addEventListener('themechange', () => {
   if (window.cache) renderDash();
 });
+
+// ── Điều hướng từ dashboard booking item → page Booking + flash row ──
+window._dashGoToBooking = function(bookingKey) {
+  if (!bookingKey || typeof window.showPage !== 'function') return;
+
+  // 1. Tìm sidebar item booking để truyền vào showPage (giúp set active state)
+  let sidebarItem = null;
+  document.querySelectorAll('.sidebar-item').forEach(s => {
+    const onclick = s.getAttribute('onclick') || '';
+    if (onclick.includes("'booking'")) sidebarItem = s;
+  });
+
+  // 2. Navigate
+  window.showPage('booking', sidebarItem);
+
+  // 3. Flash row sau khi page render
+  // Multi-attempt vì tbody có thể chưa render xong ngay
+  const cache = window.cache || {};
+  const code = cache.bookings?.[bookingKey]?.code;
+  const attempts = [200, 400, 700, 1000, 1500, 2000];
+  attempts.forEach(delay => {
+    setTimeout(() => _dashFlashBookingRow(bookingKey, code), delay);
+  });
+};
+
+function _dashFlashBookingRow(bookingKey, code) {
+  const rows = document.querySelectorAll('#booking-tbody tr');
+  if (rows.length === 0) return;
+
+  // Skip empty-state row
+  const dataRows = [...rows].filter(r => {
+    const firstTd = r.querySelector('td:first-child');
+    return firstTd && firstTd.colSpan <= 1;
+  });
+  if (dataRows.length === 0) return;
+
+  let target = null;
+  // Match 1: bookingKey trong outerHTML
+  if (bookingKey) {
+    for (const row of dataRows) {
+      if (row.outerHTML.indexOf(bookingKey) !== -1) {
+        target = row;
+        break;
+      }
+    }
+  }
+  // Match 2: code trong text
+  if (!target && code) {
+    for (const row of dataRows) {
+      if ((row.textContent || '').indexOf(code) !== -1) {
+        target = row;
+        break;
+      }
+    }
+  }
+
+  if (!target) return;
+
+  // Scroll into view + flash highlight
+  target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  // Animation flash: dùng class .row-flash nếu có, fallback inline
+  if (target.classList.contains('row-flash')) {
+    target.classList.remove('row-flash');
+    void target.offsetWidth; // trigger reflow để re-animate
+  }
+  target.classList.add('row-flash');
+  setTimeout(() => target.classList.remove('row-flash'), 2200);
+}
+
