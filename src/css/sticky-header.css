@@ -1,0 +1,192 @@
+/* ═══════════════════════════════════════════════════════════════
+   STICKY-HEADER.CSS — Phiên bản MINIMAL
+   
+   Bỏ mọi visual effect (gradient line, transition, blur) để debug.
+   Chỉ giữ chức năng cốt lõi: sticky + opaque background + shadow đơn giản.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* QUAN TRỌNG: parent .site-main có `overflow-x: hidden` → sticky bị
+   vô hiệu hóa. Đổi thành `clip` để sticky hoạt động lại.
+   `clip` ngăn horizontal scroll giống `hidden` nhưng KHÔNG tạo
+   scroll container → sticky con vẫn bám vào viewport. */
+.site-main {
+  overflow-x: clip !important;
+  overflow-y: visible !important;
+}
+
+.page-sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: #f8fafc;
+  margin: -24px -32px 0 -32px;
+  /* Padding-bottom giảm xuống 8px (đã đủ vì rows trong wrapper có mb riêng) */
+  padding: 24px 32px 8px 32px;
+  /* KHÔNG có transition, KHÔNG có ::after, KHÔNG có blur */
+}
+
+/* Khi stuck — chỉ thêm shadow đơn giản */
+.page-sticky-header.is-stuck {
+  background: #f8fafc;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Bỏ margin-bottom của 2 div trong wrapper — wrapper tự handle spacing */
+.page-sticky-header > .flex.mb-6 {
+  margin-bottom: 12px !important;
+}
+.page-sticky-header > .flex.mb-4 {
+  margin-bottom: 0 !important;
+}
+/* tab-bar (electrode) trong sticky-header — bỏ mb-4 */
+.page-sticky-header > .tab-bar {
+  margin-bottom: 0 !important;
+}
+
+/* Button "Thêm" trong ROW TITLE (row đầu tiên) — KHÔNG đẩy xuống nữa */
+.page-sticky-header > .flex.mb-6 .btn-action-mt,
+.page-sticky-header > .flex:first-child .btn-action-mt {
+  margin-top: 0 !important;
+}
+
+/* Button có inline-style margin-top — override với selector specificity cao.
+   Cover 3 cases:
+   - button trực tiếp (Booking): .flex.mb-6 > button[style]
+   - button trong wrapper div (Hóa chất/Thiết bị): .flex.mb-6 > div > button[style]
+   - cả div wrapper cũng có thể có margin-top:36px */
+.page-sticky-header > .flex.mb-6 button[style*="margin-top:36px"],
+.page-sticky-header > .flex.mb-6 button[style*="margin-top: 36px"],
+.page-sticky-header > .flex:first-child button[style*="margin-top:36px"],
+.page-sticky-header > .flex:first-child button[style*="margin-top: 36px"],
+.page-sticky-header > .flex.mb-6 > div[style*="margin-top:36px"],
+.page-sticky-header > .flex.mb-6 > div[style*="margin-top: 36px"],
+.page-sticky-header > .flex:first-child > div[style*="margin-top:36px"],
+.page-sticky-header > .flex:first-child > div[style*="margin-top: 36px"] {
+  margin-top: 0 !important;
+}
+
+/* FALLBACK — TARGET TRỰC TIẾP TỪNG PAGE
+   Đề phòng selector phía trên không match (vd JS chưa wrap kịp,
+   hoặc browser không hỗ trợ 1 selector phức tạp).
+   Target row 1 (.flex.mb-6) trực tiếp trong page, không qua wrapper. */
+#page-booking > .flex.mb-6 button[style*="margin-top:36px"],
+#page-booking > .flex.mb-6 button[style*="margin-top: 36px"],
+#page-booking .page-sticky-header > .flex.mb-6 button[style*="margin-top:36px"],
+#page-booking .page-sticky-header > .flex.mb-6 button[style*="margin-top: 36px"],
+#page-chemicals > .flex.mb-6 button[style*="margin-top:36px"],
+#page-chemicals > .flex.mb-6 div[style*="margin-top:36px"],
+#page-chemicals .page-sticky-header > .flex.mb-6 button[style*="margin-top:36px"],
+#page-chemicals .page-sticky-header > .flex.mb-6 div[style*="margin-top:36px"],
+#page-equipment > .flex.mb-6 button[style*="margin-top:36px"],
+#page-equipment > .flex.mb-6 div[style*="margin-top:36px"],
+#page-equipment .page-sticky-header > .flex.mb-6 button[style*="margin-top:36px"],
+#page-equipment .page-sticky-header > .flex.mb-6 div[style*="margin-top:36px"] {
+  margin-top: 0 !important;
+}
+
+/* btn-action-mt trong ROW TOOLBAR (row 2 - search/filter) — giữ margin nhỏ */
+.page-sticky-header > .flex.btn-action-mt:not(.mb-6) {
+  margin-top: 8px !important;
+}
+
+/* Electrode page: search row nằm trong .tab-content (cháu của page),
+   không phải con sticky-header → rule trên không match.
+   Giảm margin-top:36px của search row trong tab-content */
+#page-electrode .tab-content > .flex.mb-4.btn-action-mt {
+  margin-top: 12px !important;
+}
+
+/* Tăng độ tương phản chữ thead khi sticky đang stuck — dễ đọc hơn */
+.page-sticky-header.is-stuck ~ .table-wrap th {
+  color: #475569 !important;
+}
+html.dark .page-sticky-header.is-stuck ~ .table-wrap th {
+  color: #cbd5e1 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DARK MODE
+   ═══════════════════════════════════════════════════════════════ */
+
+html.dark .page-sticky-header {
+  background: #0f172a;
+}
+html.dark .page-sticky-header.is-stuck {
+  background: #0f172a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Glass theme */
+html.glass .page-sticky-header,
+html.glass .page-sticky-header.is-stuck {
+  background: rgba(248, 250, 252, 0.96) !important;
+}
+html.glass.dark .page-sticky-header,
+html.glass.dark .page-sticky-header.is-stuck {
+  background: rgba(15, 23, 42, 0.96) !important;
+}
+
+/* Neuromorphism theme */
+html.neuro .page-sticky-header,
+html.neuro .page-sticky-header.is-stuck {
+  background: #e0e5ec !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE — Padding ít hơn
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .page-sticky-header {
+    margin: -14px -14px 0 -14px;
+    padding: 14px 14px 12px 14px;
+  }
+  .page-sticky-header > .flex.btn-action-mt {
+    margin-top: 8px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-sticky-header {
+    margin-left: -8px;
+    margin-right: -8px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Page-specific: Bỏ sticky cho dashboard
+   ═══════════════════════════════════════════════════════════════ */
+
+#page-dashboard .page-sticky-header {
+  position: static;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STICKY THEAD — TẠM DISABLE để xác minh bug
+   
+   Trước đây có rule sticky thead cho 3 page (hydro/electrode/ec)
+   nhưng gây bug thead nhảy xuống dưới empty state.
+   
+   TẠM THỜI bỏ rule sticky thead. Chỉ giữ sticky bar (page header
+   với search/filter). Nếu cần sticky thead, sẽ implement lại
+   sau khi tìm root cause.
+   
+   --sticky-bar-h vẫn được JS set, dùng cho future use.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* DISABLED — uncomment khi đã fix bug
+#page-hydrothermal .table-wrap thead,
+#page-electrode .table-wrap thead,
+#page-electrochemistry .table-wrap thead {
+  position: sticky;
+  top: var(--sticky-bar-h, 140px);
+  z-index: 20;
+  background: #f8fafc;
+}
+*/
