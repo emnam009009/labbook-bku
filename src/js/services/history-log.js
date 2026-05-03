@@ -1,19 +1,15 @@
 /**
  * services/history-log.js
- * Ghi lại lịch sử thao tác (audit log) vào Firebase Realtime DB tại path 'history'.
  *
- * Mỗi entry gồm: ts (ISO time), user (tên người), action (tên hành động), detail (chi tiết).
+ * Phase 2A — Bugfix: re-export từ firebase.js để conform với rules mới.
+ *
+ * logHistory được centralize trong firebase.js (Phase 1) với:
+ *  - ts: Date.now() (number)
+ *  - uid: từ auth.currentUser
+ *  - email: từ auth.currentUser
+ *  - safeAction/safeDetail trim length
+ *
+ * Giữ file này (thay vì xóa) để 5 files import vẫn work
+ * (duplicate-delete, group-lock-mgmt, save-handlers, main).
  */
-
-import { db, ref, push } from '../firebase.js'
-
-export function logHistory(action, detail) {
-  // Đọc currentUser từ runtime (được syncAuthState gán trên window)
-  const user = window.currentUser || 'Khách';
-  push(ref(db, 'history'), {
-    ts: new Date().toISOString(),
-    user,
-    action,
-    detail,
-  });
-}
+export { logHistory } from '../firebase.js'
