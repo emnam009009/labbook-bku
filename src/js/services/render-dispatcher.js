@@ -44,6 +44,7 @@ function _renderAllNow() {
   if (typeof window.renderChemicals === 'function')  window.renderChemicals();
   if (typeof window.renderMembers === 'function')    window.renderMembers();
   if (typeof window.renderHistory === 'function')    window.renderHistory();
+  if (typeof window.renderReports === 'function')    window.renderReports();
   if (typeof window.renderInk === 'function')        window.renderInk();
   if (typeof window.renderEquipment === 'function')  window.renderEquipment();
 

@@ -59,6 +59,7 @@ import { renderBooking } from './pages/booking.js'
 // ── Import members + history + users + avatar (Phần 6) ──
 import { renderMembers } from './pages/members.js'
 import { renderHistory } from './pages/history.js'
+import { renderReports } from './pages/reports.js'
 import { renderUsers } from './pages/users.js'
 import { toggleAvatarMenu, changeAvatar, resetAvatar, updateAvatarUI } from './services/avatar.js'
 
@@ -194,6 +195,7 @@ window.toggleEqGroup = toggleEqGroup;
 // Expose members + history + users + avatar lên window (Phần 6)
 window.renderMembers = renderMembers;
 window.renderHistory = renderHistory;
+window.renderReports = renderReports;
 window.renderUsers = renderUsers;
 window.toggleAvatarMenu = toggleAvatarMenu;
 window.changeAvatar = changeAvatar;

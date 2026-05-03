@@ -266,6 +266,9 @@
         <div class="sidebar-item admin-only" onclick="showPage('history',this)" data-tip="Lịch sử chỉnh sửa" style="display:none" role="button" tabindex="0" aria-label="Lịch sử chỉnh sửa">
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
         <span data-label>Lịch sử</span></div>
+        <div class="sidebar-item admin-only" onclick="showPage('reports',this)" data-tip="Báo cáo & Thống kê" style="display:none" role="button" tabindex="0" aria-label="Báo cáo">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>
+          <span data-label>Báo cáo</span></div>
         <div class="sidebar-item" onclick="showPage('chat',this)" data-tip="Chat nhóm" id="chat-nav-btn" role="button" tabindex="0" aria-label="Chat nhóm">
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
           <span data-label>Chat</span>
@@ -1041,6 +1044,29 @@
         <!-- Future settings sections can be added here -->
       </div>
     </div>
+
+    <!-- REPORTS PAGE (Phase 3) -->
+    <div class="page" id="page-reports">
+      <div style="max-width:1200px;margin:0 auto">
+        <div style="margin-bottom:24px">
+          <h1 class="page-title">Báo cáo &amp; Thống kê</h1>
+          <p class="page-subtitle">Phân tích dữ liệu thí nghiệm theo khoảng thời gian</p>
+        </div>
+
+        <!-- Date range picker -->
+        <div class="card" id="report-filter-card" style="padding:20px;margin-bottom:20px">
+          <div class="loading"><div class="spinner"></div>Đang tải...</div>
+        </div>
+
+        <!-- Card 1: Số lượng TN theo loại -->
+        <div class="card" id="report-type-count-card" style="padding:20px;margin-bottom:20px">
+          <div class="loading"><div class="spinner"></div>Đang tải...</div>
+        </div>
+
+        <!-- Phase 3B/3C/3D: Thêm cards ở đây -->
+      </div>
+    </div>
+
     </main>
   </div>
 
