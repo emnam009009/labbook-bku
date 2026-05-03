@@ -1,0 +1,502 @@
+/* ═══════════════════════════════════════════════════════════════
+   DASHBOARD.CSS — Responsive grid layout + skeleton loaders
+   
+   Mục đích:
+   - Replace 3 grid hardcode inline (repeat(4,1fr) / 1.5fr 1fr 1.5fr / 3fr 1fr)
+   - Replace height:500px / min-height:360px cố định
+   - Skeleton loaders thay 5 spinner đồng nhất
+   - Responsive breakpoints sạch đẹp
+   
+   Tải SAU mọi file CSS khác.
+   Hoàn toàn CSS-only — không động JS, không đụng HTML structure.
+   Dùng attribute selector [style*="..."] để target inline-grid-style cũ
+   → progressive enhancement, không breaking change.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════
+   [1] LAYOUT SHELL — page-dashboard wrapper
+   QUAN TRỌNG: chỉ apply display:flex khi page có .active
+   để không phá rule SPA `.page { display:none }`
+   ═══════════════════════════════════════════════════════════════ */
+
+#page-dashboard.active {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Header với padding-left mobile (cho hamburger) đã có ở mobile-ux.
+   Bổ sung: subtitle */
+.dashboard-header {
+  margin-bottom: 4px; /* Giảm từ 24px xuống vì có gap layout rồi */
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [2] ROW 1 — KPI CARDS (4 cards)
+   Target inline-grid: repeat(4,1fr)
+   
+   Strategy: Override grid-template-columns qua attribute selector.
+   ═══════════════════════════════════════════════════════════════ */
+
+#page-dashboard > div[style*="grid-template-columns:repeat(4,1fr)"] {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+  gap: 20px !important;
+  margin-bottom: 0 !important; /* gap layout đã handle */
+  align-items: stretch !important;
+}
+
+/* Tablet (1024-) — 2 col */
+@media (max-width: 1024px) {
+  #page-dashboard > div[style*="grid-template-columns:repeat(4,1fr)"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* Mobile (520-) — 1 col */
+@media (max-width: 520px) {
+  #page-dashboard > div[style*="grid-template-columns:repeat(4,1fr)"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [3] ROW 2 — Charts + Booking calendar (3 cells)
+   Target: grid-template-columns:1.5fr 1fr 1.5fr
+   ═══════════════════════════════════════════════════════════════ */
+
+#page-dashboard > div[style*="grid-template-columns:1.5fr 1fr 1.5fr"] {
+  display: grid !important;
+  grid-template-columns: 1.5fr 1fr 1.5fr !important;
+  gap: 20px !important;
+  margin-bottom: 0 !important;
+  align-items: stretch !important;
+  min-height: 380px !important; /* tăng nhẹ từ 360 cho thoáng */
+}
+
+/* Laptop (1280-) — chart 2 col, booking xuống dòng */
+@media (max-width: 1280px) {
+  #page-dashboard > div[style*="grid-template-columns:1.5fr 1fr 1.5fr"] {
+    grid-template-columns: 1fr 1fr !important;
+    min-height: auto !important;
+  }
+  /* Booking week chiếm full row 2 */
+  #page-dashboard #dash-booking-week {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Tablet (768-) — 1 col stack */
+@media (max-width: 768px) {
+  #page-dashboard > div[style*="grid-template-columns:1.5fr 1fr 1.5fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  #page-dashboard #dash-booking-week {
+    grid-column: auto;
+  }
+}
+
+/* Charts max-height bỏ để thoáng hơn trên dark mode */
+#page-dashboard #dash-chart-monthly,
+#page-dashboard #dash-chart-distribution {
+  max-height: none !important;
+  min-height: 320px !important;
+}
+
+@media (max-width: 768px) {
+  #page-dashboard #dash-chart-monthly,
+  #page-dashboard #dash-chart-distribution,
+  #page-dashboard #dash-booking-week {
+    min-height: 280px !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [4] ROW 3 — Recent experiments (3fr) + Chemicals (1fr)
+   Target: grid-template-columns:3fr 1fr
+   ═══════════════════════════════════════════════════════════════ */
+
+#page-dashboard > div[style*="grid-template-columns:3fr 1fr"] {
+  display: grid !important;
+  grid-template-columns: 3fr 1fr !important;
+  gap: 20px !important;
+  margin-bottom: 0 !important;
+  align-items: stretch !important;
+  /* Bỏ height:500px cứng, đồng bộ với row 2 (380px) */
+  height: 380px !important;
+  min-height: 380px !important;
+  max-height: 380px !important;
+}
+
+/* Laptop (1100-) — chemicals xuống thành full row */
+@media (max-width: 1100px) {
+  #page-dashboard > div[style*="grid-template-columns:3fr 1fr"] {
+    grid-template-columns: 1fr !important;
+    min-height: auto !important;
+  }
+}
+
+/* Recent card height auto trong responsive */
+@media (max-width: 1100px) {
+  #page-dashboard .recent-card {
+    height: auto !important;
+    min-height: 400px;
+    max-height: 600px;
+  }
+  #page-dashboard #dash-chem-status {
+    height: auto !important;
+    min-height: 320px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [5] CARD STYLES — Bổ sung consistent header
+   ═══════════════════════════════════════════════════════════════ */
+
+/* KPI cards (stat-card-r30) đã có style từ argon-flavor.
+   Chỉ bổ sung: smooth height transition, equal heights */
+#page-dashboard .stat-card-r30 {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Stat card body — flex grow */
+#page-dashboard .stat-card-r30 .stat-card-body {
+  flex-grow: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [6] SKELETON LOADERS — Specific cho dashboard cards
+   Replace .loading > .spinner pattern hiện tại
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Class .skel-card dùng để wrap skeleton content trong card.
+   JS có thể replace .loading bằng .skel-card-* khi cần. */
+
+@keyframes dashboard-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Generic shimmer block */
+.dash-skel {
+  background: linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0.08) 0%,
+    rgba(148, 163, 184, 0.18) 50%,
+    rgba(148, 163, 184, 0.08) 100%
+  );
+  background-size: 200% 100%;
+  animation: dashboard-shimmer 1.6s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* Dark variant */
+html.dark .dash-skel {
+  background: linear-gradient(
+    90deg,
+    rgba(51, 65, 85, 0.4) 0%,
+    rgba(71, 85, 105, 0.6) 50%,
+    rgba(51, 65, 85, 0.4) 100%
+  );
+  background-size: 200% 100%;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [7] LOADING STATE TRONG DASHBOARD CARDS
+   Wrap spinner trong skeleton-style frame
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Khi card chỉ có .loading (chưa có data), hide spinner-cũ ở 1 số chỗ
+   và thay bằng skeleton placeholder qua ::before */
+
+#page-dashboard .stat-card-r30 > .loading:only-child {
+  /* Card đang loading toàn phần (chưa có content nào khác) */
+  flex: 1;
+  min-height: 200px;
+  position: relative;
+  /* Ẩn spinner mặc định, dùng skeleton background thay */
+  background: linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0.04) 0%,
+    rgba(148, 163, 184, 0.10) 50%,
+    rgba(148, 163, 184, 0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: dashboard-shimmer 1.6s ease-in-out infinite;
+  border-radius: 8px;
+  margin: -8px;
+  padding: 8px;
+}
+
+/* Spinner vẫn hiện nhưng nhỏ và centered */
+#page-dashboard .stat-card-r30 > .loading:only-child .spinner {
+  width: 22px !important;
+  height: 22px !important;
+  border-width: 2.5px !important;
+}
+
+html.dark #page-dashboard .stat-card-r30 > .loading:only-child {
+  background: linear-gradient(
+    90deg,
+    rgba(51, 65, 85, 0.3) 0%,
+    rgba(71, 85, 105, 0.5) 50%,
+    rgba(51, 65, 85, 0.3) 100%
+  );
+  background-size: 200% 100%;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [8] RECENT CARD — Polish
+   Header text size + spacing
+   ═══════════════════════════════════════════════════════════════ */
+
+#page-dashboard .recent-card {
+  display: flex;
+  flex-direction: column;
+}
+
+#page-dashboard .recent-card-header h2 {
+  /* Override inline #344767 với class title color */
+  color: var(--text) !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em !important;
+  margin: 0 !important;
+}
+
+#page-dashboard .recent-card-header p {
+  font-size: 12px !important;
+  color: var(--text-3) !important;
+  margin: 2px 0 0 !important;
+}
+
+/* Recent grid head — fix spacing */
+#page-dashboard .recent-grid-head {
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+html.dark #page-dashboard .recent-grid-head {
+  background: #0f172a !important;
+  border-bottom-color: #334155 !important;
+}
+
+/* Recent rows scrollable */
+#page-dashboard .recent-rows {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Custom scrollbar mảnh hơn cho recent */
+#page-dashboard .dash-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [9] CHART CARDS — Title spacing
+   ═══════════════════════════════════════════════════════════════ */
+
+#page-dashboard #dash-chart-monthly,
+#page-dashboard #dash-chart-distribution,
+#page-dashboard #dash-booking-week,
+#page-dashboard #dash-chem-status,
+#page-dashboard #dash-members-kpi {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Chart container takes flex-grow */
+#page-dashboard #dash-chart-monthly canvas,
+#page-dashboard #dash-chart-distribution canvas {
+  max-width: 100%;
+  height: auto !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [10] STAT VALUE — Animation khi update
+   Subtle "count up" feel
+   ═══════════════════════════════════════════════════════════════ */
+
+#page-dashboard .stat-value {
+  font-variant-numeric: tabular-nums; /* số đều cột */
+  transition: color 0.3s ease;
+}
+
+/* Trend indicator subtle pulse khi positive */
+#page-dashboard .stat-trend {
+  font-size: 12px;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [11] DASHBOARD CARD CONSISTENT PADDING
+   ═══════════════════════════════════════════════════════════════ */
+
+#page-dashboard .stat-card.stat-card-r30 {
+  padding: 22px 24px;
+}
+
+@media (max-width: 768px) {
+  #page-dashboard .stat-card.stat-card-r30 {
+    padding: 18px 20px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [12] BOOKING WEEK CARD — Calendar mini
+   ═══════════════════════════════════════════════════════════════ */
+
+#page-dashboard #dash-booking-week {
+  min-width: 0; /* Cho phép shrink trong grid */
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [13] EMPTY STATE COMPACT — Cho dashboard cards
+   "Chưa có dữ liệu" inline div hiện tại quá đơn giản
+   ═══════════════════════════════════════════════════════════════ */
+
+#page-dashboard [style*="Chưa có"],
+#page-dashboard .recent-empty {
+  font-size: 12.5px !important;
+  color: var(--text-3) !important;
+  padding: 24px 0 !important;
+  text-align: center;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [14] HEIGHT EQUALIZATION — Row 3 cards equal height
+   ═══════════════════════════════════════════════════════════════ */
+
+#page-dashboard > div[style*="grid-template-columns:3fr 1fr"] > .stat-card,
+#page-dashboard > div[style*="grid-template-columns:3fr 1fr"] > .recent-card {
+  min-height: 0; /* fix overflow trong flex+grid */
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [15] SKELETON MOCK FOR LATER USE
+   Nếu sau này JS muốn render skeleton thật sự thay spinner
+   ═══════════════════════════════════════════════════════════════ */
+
+/* KPI skeleton */
+.dash-skel-kpi {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.dash-skel-kpi-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dash-skel-kpi-label {
+  height: 10px;
+  width: 50%;
+}
+.dash-skel-kpi-value {
+  height: 28px;
+  width: 40%;
+}
+.dash-skel-kpi-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+}
+
+/* Recent row skeleton */
+.dash-skel-recent-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.2fr 0.8fr 1fr;
+  gap: 16px;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.dash-skel-recent-row > div {
+  height: 14px;
+}
+
+html.dark .dash-skel-recent-row {
+  border-bottom-color: #334155 !important;
+}
+
+/* Chart skeleton */
+.dash-skel-chart {
+  width: 100%;
+  height: 240px;
+  border-radius: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [16] CARD HEADER ICON ANIMATION
+   Subtle icon scale on card hover (đã có .stat-card-r30:hover lift)
+   ═══════════════════════════════════════════════════════════════ */
+
+#page-dashboard .stat-card-r30 .stat-icon {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#page-dashboard .stat-card-r30:hover .stat-icon {
+  transform: scale(1.05) rotate(-2deg);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [17] CARD ENTRY STAGGER
+   Mỗi card xuất hiện lệch nhau 50ms → cảm giác "loading sequential"
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes dash-card-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+#page-dashboard.active .stat-card-r30 {
+  animation: dash-card-enter 0.3s ease backwards;
+}
+
+/* Stagger 5 cards trong row 1 */
+#page-dashboard.active > div:nth-child(2) > .stat-card-r30:nth-child(1) { animation-delay: 0.05s; }
+#page-dashboard.active > div:nth-child(2) > .stat-card-r30:nth-child(2) { animation-delay: 0.10s; }
+#page-dashboard.active > div:nth-child(2) > .stat-card-r30:nth-child(3) { animation-delay: 0.15s; }
+#page-dashboard.active > div:nth-child(2) > .stat-card-r30:nth-child(4) { animation-delay: 0.20s; }
+
+/* Row 2 (charts) */
+#page-dashboard.active > div:nth-child(3) > .stat-card-r30 { animation-delay: 0.25s; }
+
+/* Row 3 (recent + chemicals) */
+#page-dashboard.active > div:nth-child(4) > .stat-card-r30 { animation-delay: 0.30s; }
+
+/* Respect reduced motion (đã có rule chung trong polish.css) */
+@media (prefers-reduced-motion: reduce) {
+  #page-dashboard .stat-card-r30 {
+    animation: none !important;
+  }
+  #page-dashboard .stat-card-r30:hover .stat-icon {
+    transform: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   [18] LOADING TEXT TRONG SPINNER WRAP
+   "Đang tải..." cũng có shimmer
+   ═══════════════════════════════════════════════════════════════ */
+
+#page-dashboard .recent-empty:has(.spinner) {
+  color: var(--text-3) !important;
+  background: transparent !important;
+  position: relative;
+}
+
+#page-dashboard .recent-empty .spinner {
+  margin-right: 8px;
+}
