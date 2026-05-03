@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="vi" data-refactored-v1 data-refactored-v2 data-fix-header-search-v1 data-mobile-ux-v1 data-refactored-v3>
+<html lang="vi" data-align-center-v1>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#0d9488">
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
@@ -36,73 +36,93 @@
     </div>
     <style>@keyframes sk{from{opacity:.4}to{opacity:1}}</style>
   </div>
-  <div id="login-screen" class="fixed inset-0 z-[500] items-center justify-center login-screen" style="display:none">
-    <div class="login-glow"></div>
-    <div class="login-frame">
+  <div id="login-screen" class="fixed inset-0 z-[500] items-center justify-center" style="display:none"
+       style="background:#ffffff;overflow-y:auto;padding:40px 20px;align-items:center">
+    <div style="position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(circle at 50% 0%,rgba(56,193,182,0.45) 0%,transparent 65%);filter:blur(40px)"></div>
+    <div style="width:min(396px,90vw);position:fixed;top:120px;left:50%;transform:translateX(-50%);z-index:1;text-align:center">
       <div style="text-align:center;margin-bottom:0">
-        <div class="login-logo-wrap">
-          <img src="/icons/icon.svg" alt="LabBook logo" width="112" height="112" class="login-logo">
+        <div style="margin-bottom:16px">
+          <img src="/icons/icon.svg" alt="LabBook logo" width="112" height="112" style="border-radius:26px;box-shadow:0 12px 36px rgba(13,148,136,0.3);display:block;margin:0 auto">
         </div>
-        <div class="login-title">LabBook</div>
-        <div class="login-tagline">Lab Vật liệu — ĐH Bách Khoa HCM</div>
+        <div style="font-family:'Inter',sans-serif;font-size:34px;font-weight:700;color:#0f172a;letter-spacing:-0.5px;line-height:1">LabBook</div>
+        <div style="color:#64748b;font-size:13px;margin-top:6px">Lab Vật liệu — ĐH Bách Khoa HCM</div>
       </div>
-      <div class="login-card">
-        <div class="auth-tabs">
-          <button id="tab-login-btn" class="auth-tab-btn active" onclick="switchAuthTab('login')">
+      <div style="background:white;border-radius:20px;padding:32px;box-shadow:0 8px 40px rgba(var(--teal-rgb), 0.12),0 2px 8px rgba(0,0,0,0.06);border:1px solid rgba(var(--teal-rgb), 0.1);margin-top:24px">
+        <div style="display:flex;background:#f1f5f9;border-radius:10px;padding:4px;margin-bottom:28px">
+          <button id="tab-login-btn" onclick="switchAuthTab('login')"
+                  style="flex:1;padding:9px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;background:var(--teal);color:white;font-family:'Inter',sans-serif">
             Đăng nhập
           </button>
-          <button id="tab-register-btn" class="auth-tab-btn" onclick="switchAuthTab('register')">
+          <button id="tab-register-btn" onclick="switchAuthTab('register')"
+                  style="flex:1;padding:9px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;background:transparent;color:#475569;font-family:'Inter',sans-serif">
             Đăng ký
           </button>
         </div>
-        <form id="auth-login-form" class="auth-form" onsubmit="doLogin();return false;">
-          <div class="login-logo-wrap">
-            <label class="auth-label">Email</label>
-            <input type="email" id="login-email" placeholder="example@hcmut.edu.vn" autocomplete="email" autocapitalize="none" autocorrect="off" inputmode="email" class="auth-input"
+        <form id="auth-login-form" style="text-align:left" onsubmit="doLogin();return false;">
+          <div style="margin-bottom:16px">
+            <label style="display:block;color:#475569;font-size:12.5px;font-weight:600;margin-bottom:7px">Email</label>
+            <input type="email" id="login-email" placeholder="example@hcmut.edu.vn" autocomplete="email"
+                   style="width:100%;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:9px;padding:11px 14px;color:#0f172a;font-size:13.5px;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;transition:all 0.15s"
+                   onfocus="this.style.borderColor='var(--teal)';this.style.background='var(--teal-light)'"
+                   onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc'"
                    onkeydown="if(event.key==='Enter')document.getElementById('login-password').focus()">
           </div>
-          <div class="auth-field auth-field--last">
-            <label class="auth-label">Mật khẩu</label>
-            <div class="auth-pw-wrap">
-              <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" autocapitalize="off" autocorrect="off" class="auth-input auth-input--password"
+          <div style="margin-bottom:20px">
+            <label style="display:block;color:#475569;font-size:12.5px;font-weight:600;margin-bottom:7px">Mật khẩu</label>
+            <div style="position:relative">
+              <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"
+                     style="width:100%;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:9px;padding:11px 42px 11px 14px;color:#0f172a;font-size:13.5px;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;transition:all 0.15s"
+                     onfocus="this.style.borderColor='var(--teal)';this.style.background='var(--teal-light)'"
+                     onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc'"
                      onkeydown="if(event.key==='Enter')doLogin()">
-              <button onclick="togglePasswordVisibility()" tabindex="-1" class="auth-pw-toggle" aria-label="Hiện/ẩn mật khẩu">
+              <button onclick="togglePasswordVisibility()" tabindex="-1"
+                      style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#475569;padding:0">
                 <svg aria-hidden="true" id="pw-eye" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
                 </svg>
               </button>
             </div>
           </div>
-          <div id="login-error" class="auth-alert auth-alert--error" role="alert"></div>
-          <button onclick="doLogin()" id="login-btn" class="auth-submit-btn">
+          <div id="login-error" style="display:none;background:#fef2f2;border:1.5px solid #fecaca;border-radius:9px;padding:10px 14px;color:#dc2626;font-size:12.5px;margin-bottom:16px"></div>
+          <button onclick="doLogin()" id="login-btn"
+                  style="width:100%;background:var(--teal);color:white;border:none;border-radius:9px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:background 0.15s"
+                  onmouseover="this.style.background='#0f766e'" onmouseout="this.style.background='var(--teal)'">
             Đăng nhập
           </button>
         </form>
-        <form id="auth-register-form" class="auth-form" onsubmit="doRegister();return false;" style="display:none">
-          <div class="auth-field auth-field--register">
-            <label class="auth-label">Họ và tên</label>
-            <input type="text" id="reg-name" placeholder="Nguyễn Văn A" autocomplete="off" class="auth-input">
+        <form id="auth-register-form" onsubmit="doRegister();return false;" style="display:none;text-align:left">
+          <div style="margin-bottom:14px">
+            <label style="display:block;color:#475569;font-size:12.5px;font-weight:600;margin-bottom:7px">Họ và tên</label>
+            <input type="text" id="reg-name" placeholder="Nguyễn Văn A" autocomplete="off"
+                   style="width:100%;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:9px;padding:11px 14px;color:#0f172a;font-size:13.5px;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;transition:all 0.15s"
+                   onfocus="this.style.borderColor='var(--teal)';this.style.background='var(--teal-light)'" onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc'">
           </div>
-          <div class="auth-field auth-field--register">
-            <label class="auth-label">Email</label>
-            <input type="email" id="reg-email" placeholder="example@hcmut.edu.vn" autocomplete="off" autocapitalize="none" autocorrect="off" inputmode="email" class="auth-input">
+          <div style="margin-bottom:14px">
+            <label style="display:block;color:#475569;font-size:12.5px;font-weight:600;margin-bottom:7px">Email</label>
+            <input type="email" id="reg-email" placeholder="example@hcmut.edu.vn" autocomplete="off"
+                   style="width:100%;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:9px;padding:11px 14px;color:#0f172a;font-size:13.5px;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;transition:all 0.15s"
+                   onfocus="this.style.borderColor='var(--teal)';this.style.background='var(--teal-light)'" onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc'">
           </div>
-          <div class="auth-field auth-field--register-last">
-            <label class="auth-label">Mật khẩu</label>
-            <input type="password" id="reg-password" placeholder="Tối thiểu 6 ký tự" autocomplete="new-password" autocapitalize="off" autocorrect="off" class="auth-input"
+          <div style="margin-bottom:22px">
+            <label style="display:block;color:#475569;font-size:12.5px;font-weight:600;margin-bottom:7px">Mật khẩu</label>
+            <input type="password" id="reg-password" placeholder="Tối thiểu 6 ký tự" autocomplete="new-password"
+                   style="width:100%;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:9px;padding:11px 14px;color:#0f172a;font-size:13.5px;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;transition:all 0.15s"
+                   onfocus="this.style.borderColor='var(--teal)';this.style.background='var(--teal-light)'" onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc'"
                    onkeydown="if(event.key==='Enter')doRegister()">
           </div>
-          <div id="reg-error" class="auth-alert auth-alert--error" role="alert"></div>
-          <div id="reg-success" class="auth-alert auth-alert--success" role="status"></div>
-          <button onclick="doRegister()" id="reg-btn" class="auth-submit-btn">
+          <div id="reg-error" style="display:none;background:#fef2f2;border:1.5px solid #fecaca;border-radius:9px;padding:10px 14px;color:#dc2626;font-size:12.5px;margin-bottom:16px"></div>
+          <div id="reg-success" style="display:none;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:9px;padding:10px 14px;color:#15803d;font-size:12.5px;margin-bottom:16px;text-align:center"></div>
+          <button onclick="doRegister()" id="reg-btn"
+                  style="width:100%;background:var(--teal);color:white;border:none;border-radius:9px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:background 0.15s"
+                  onmouseover="this.style.background='#0f766e'" onmouseout="this.style.background='var(--teal)'">
             Tạo tài khoản
           </button>
-          <div class="auth-helper-text">
+          <div style="text-align:center;margin-top:14px;color:#475569;font-size:12px;line-height:1.6">
             Sau khi đăng ký, tài khoản cần được Admin duyệt trước khi sử dụng
           </div>
         </div>
       </form>
-      <div class="auth-footer">
+      <div style="text-align:center;margin-top:20px;color:#475569;font-size:11.5px">
         © 2025 LabBook — Lab Vật liệu BKU
       </div>
     </div>
@@ -122,37 +142,45 @@
 
   <!-- ══ HEADER ══ -->
 <!-- Round 19: Floating topbar (search + bell) replaces full-width header -->
-  <div id="floating-topbar" class="floating-topbar">
-<div id="header-search-wrap" class="header-search-wrap">
-        <div id="header-search-box" class="header-search-box">
-          <button type="button" tabindex="-1" aria-label="Tìm kiếm" class="header-search-icon-btn" onclick="document.getElementById('header-search-input').focus()">
+  <div id="floating-topbar" style="position:fixed;top:14px;right:32px;z-index:50;display:flex;align-items:center;gap:10px">
+<div id="header-search-wrap" style="position:relative;display:flex;align-items:center">
+        <div id="header-search-box" onmouseenter="clearTimeout(window._srchTimer);const i=document.getElementById('header-search-input');const b=this;b.style.width='240px';b.style.borderColor='var(--teal)';b.style.borderRadius='20px';i.style.width='180px';i.style.padding='0 8px 0 0';i.focus()" onmouseleave="window._srchTimer=setTimeout(()=>{const i=document.getElementById('header-search-input');if(!i.value){i.blur();const b=document.getElementById('header-search-box');b.style.width='40px';b.style.borderColor='#e2e8f0';b.style.borderRadius='50%';i.style.width='0';i.style.padding='0';}},400)" style="display:flex;align-items:center;overflow:hidden;width:40px;height:40px;border:1.5px solid #e2e8f0;border-radius:50%;background:white;transition:width 0.3s cubic-bezier(.4,0,.2,1),border-color 0.2s,border-radius 0.3s"
+             onmouseenter="this.style.borderColor='var(--teal)'"
+             onmouseleave="if(!document.getElementById('header-search-input').matches(':focus'))this.style.borderColor='#e2e8f0'">
+          <button type="button" aria-label="Tìm kiếm" onclick="document.getElementById('header-search-input').focus()"
+                  style="width:34px;height:34px;min-width:34px;flex-shrink:0;border-radius:50%;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-left:3px">
             <svg aria-hidden="true" width="15" height="15" viewBox="1 1 22 22" fill="none" stroke="#475569" stroke-width="2.5" stroke-linecap="round">
               <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
             </svg>
           </button>
-          <input id="header-search-input" type="search" inputmode="search" autocapitalize="off" autocorrect="off" placeholder="Tìm kiếm..." class="header-search-input">
+          <input id="header-search-input" type="text" placeholder="Tìm kiếm..."
+                 style="border:none;outline:none;background:none;font-size:13px;color:#0f172a;width:0;padding:0;transition:width 0.3s,padding 0.3s;font-family:'Inter',sans-serif"
+                 onfocus="const b=document.getElementById('header-search-box');b.style.width='240px';b.style.borderColor='var(--teal)';b.style.borderRadius='20px';this.style.width='180px';this.style.padding='0 8px 0 0'"
+                 onblur="setTimeout(()=>{if(!this.value){const b=document.getElementById('header-search-box');b.style.width='40px';b.style.borderColor='#e2e8f0';b.style.borderRadius='50%';this.style.width='0';this.style.padding='0';}},300)">
         </div>
       </div>
-      <div id="bell-wrapper" class="bell-wrapper" style="display:none" onmouseenter="clearTimeout(window._bellTimer);document.getElementById('bell-dropdown').style.display='block';if(typeof window.renderNotificationsList==='function')window.renderNotificationsList()" onmouseleave="window._bellTimer=setTimeout(()=>document.getElementById('bell-dropdown').style.display='none',200)">
-        <button id="bell-btn" type="button" class="bell-btn" aria-label="Mở thông báo" onclick="window.toggleBellDropdown()" title="Thông báo">
+      <div id="bell-wrapper" style="position:relative;display:none" onmouseenter="clearTimeout(window._bellTimer);document.getElementById('bell-dropdown').style.display='block';if(typeof window.renderNotificationsList==='function')window.renderNotificationsList()" onmouseleave="window._bellTimer=setTimeout(()=>document.getElementById('bell-dropdown').style.display='none',200)">
+        <button id="bell-btn" type="button" aria-label="Mở thông báo" onclick="window.toggleBellDropdown()" style="width:40px;height:40px;border-radius:50%;border:1px solid #e2e8f0;background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:all 0.15s;flex-shrink:0"
+                onmouseover="this.style.background='var(--teal-light)';this.style.borderColor='var(--teal-3)'"
+                onmouseout="this.style.background='white';this.style.borderColor='#e2e8f0'" title="Thông báo">
           <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round">
             <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
           </svg>
-          <span id="bell-badge" class="bell-badge">0</span>
+          <span id="bell-badge" style="display:none;position:absolute;top:2px;right:2px;min-width:18px;height:18px;padding:0 5px;background:#ef4444;color:white;border-radius:9px;border:2px solid white;font-size:10px;font-weight:700;align-items:center;justify-content:center;box-sizing:border-box;line-height:1">0</span>
         </button>
         <!-- Dropdown panel -->
-        <div id="bell-dropdown" class="bell-dropdown" role="dialog" aria-label="Thông báo" style="display:none">
-          <div class="bell-dropdown-header">
-            <div class="bell-dropdown-title">Thông báo</div>
-            <div class="bell-dropdown-actions">
-              <button onclick="window.markAllNotificationsRead()" class="bell-dropdown-action bell-dropdown-action--read" title="Đánh dấu đã đọc tất cả">Đã đọc tất cả</button>
-              <span class="bell-dropdown-sep">|</span>
-              <button onclick="window.clearAllNotifications()" class="bell-dropdown-action bell-dropdown-action--clear" title="Xóa tất cả thông báo">Xóa tất cả</button>
+        <div id="bell-dropdown" style="display:none;position:absolute;top:48px;right:0;width:340px;max-height:480px;background:white;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.15);border:1px solid #e2e8f0;z-index:200;overflow:hidden;display:none">
+          <div style="padding:14px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center">
+            <div style="font-size:14px;font-weight:600;color:var(--text)">Thông báo</div>
+            <div style="display:inline-flex;gap:10px;align-items:center">
+              <button onclick="window.markAllNotificationsRead()" style="background:none;border:none;color:var(--teal);font-size:11.5px;cursor:pointer;font-weight:500" title="Đánh dấu đã đọc tất cả">Đã đọc tất cả</button>
+              <span style="color:var(--border);font-size:11.5px">|</span>
+              <button onclick="window.clearAllNotifications()" style="background:none;border:none;color:var(--danger);font-size:11.5px;cursor:pointer;font-weight:500" title="Xóa tất cả thông báo">Xóa tất cả</button>
             </div>
           </div>
-          <div id="bell-list" class="bell-list">
-            <div class="bell-list-empty">
-              <svg aria-hidden="true" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="bell-list-empty-icon"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg>
+          <div id="bell-list" style="max-height:400px;overflow-y:auto">
+            <div style="padding:24px;text-align:center;color:var(--text-3);font-size:13px">
+              <svg aria-hidden="true" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.3;margin-bottom:8px"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg>
               <div>Chưa có thông báo</div>
             </div>
           </div>
@@ -195,12 +223,12 @@
       </div>
 
       <!-- Dashboard -->
-      <div class="sidebar-section">
+      <div style="padding:8px 0">
         <div class="sidebar-item active" onclick="showPage('dashboard',this)" data-tip="Dashboard" role="button" tabindex="0" aria-label="Dashboard">
           <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         <span data-label>Dashboard</span></div>
 
-        <div class="sidebar-divider"></div>
+        <div style="width:32px;height:1px;background:rgba(255,255,255,0.08);margin:6px auto"></div>
 
         <!-- Thí nghiệm -->
         <div class="sidebar-item" onclick="showPage('hydrothermal',this)" data-tip="Thủy nhiệt" role="button" tabindex="0" aria-label="Thủy nhiệt">
@@ -213,7 +241,7 @@
           <svg aria-hidden="true" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         <span data-label>Điện hóa</span></div>
 
-        <div class="sidebar-divider"></div>
+        <div style="width:32px;height:1px;background:rgba(255,255,255,0.08);margin:6px auto"></div>
 
         <!-- Quản lý -->
         <div class="sidebar-item" onclick="showPage('booking',this)" data-tip="Đăng ký sử dụng thiết bị" role="button" tabindex="0" aria-label="Đăng ký sử dụng thiết bị">
@@ -229,7 +257,7 @@
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
         <span data-label>Thành viên</span></div>
 
-        <div class="sidebar-divider"></div>
+        <div style="width:32px;height:1px;background:rgba(255,255,255,0.08);margin:6px auto"></div>
 
         <!-- Admin only -->
         <div class="sidebar-item admin-only" onclick="showPage('users',this)" data-tip="Quản lý tài khoản" style="display:none" role="button" tabindex="0" aria-label="Quản lý tài khoản">
@@ -246,7 +274,7 @@
       <!-- Round 16: Avatar at bottom of sidebar -->
       
       <!-- Settings Button (visual style picker) -->
-      <div class="sidebar-divider"></div>
+      <div style="width:32px;height:1px;background:rgba(255,255,255,0.08);margin:6px auto"></div>
       <div class="sidebar-item" onclick="showPage('settings',this)" data-tip="Cài đặt" role="button" tabindex="0" aria-label="Cài đặt">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="3"/>
@@ -257,53 +285,59 @@
 
       <div class="sidebar-footer">
 
-      <div class="avatar-wrapper" id="avatar-wrapper" onmouseenter="clearTimeout(window._avatarTimer);document.getElementById('avatar-menu').style.display='block'" onmouseleave="window._avatarTimer=setTimeout(()=>document.getElementById('avatar-menu').style.display='none',200)">
-        <button id="avatar-btn" class="avatar-btn" aria-label="Mở menu tài khoản">
-          <img id="avatar-img" class="avatar-btn-img" src="" alt="">
-          <span id="avatar-initials" class="avatar-btn-initials"></span>
+      <div style="position:relative" id="avatar-wrapper" onmouseenter="clearTimeout(window._avatarTimer);document.getElementById('avatar-menu').style.display='block'" onmouseleave="window._avatarTimer=setTimeout(()=>document.getElementById('avatar-menu').style.display='none',200)">
+        <button id="avatar-btn"
+                style="width:36px;height:36px;border-radius:50%;border:2px solid #e2e8f0;background:linear-gradient(135deg,var(--teal),var(--teal-3));display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;transition:border 0.15s;flex-shrink:0"
+                onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='#e2e8f0'">
+          <img id="avatar-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none;border-radius:50%">
+          <span id="avatar-initials" style="font-size:13px;font-weight:600;color:white"></span>
         </button>
-        <div id="avatar-menu" class="avatar-menu" role="menu" style="display:none">
-          <div class="avatar-menu-header">
-            <div id="menu-name" class="avatar-menu-name"></div>
-            <div id="menu-email" class="avatar-menu-email"></div>
-            <span id="admin-badge" class="admin-badge" onclick="toggleHistory()">Admin</span>
+        <div id="avatar-menu" style="display:none;position:fixed;left:55px;bottom:20px;width:240px;background:white;border-radius:10px;padding:12px 0;box-shadow:0 8px 32px rgba(0,0,0,0.3);z-index:9999;border:1px solid #e2e8f0">
+          <div style="padding:8px 14px 12px;border-bottom:1px solid #f1f5f9;margin-bottom:6px">
+            <div id="menu-name" style="font-size:13px;font-weight:600;color:#0f172a;display:flex;align-items:center;justify-content:space-between"></div>
+            <div id="menu-email" style="font-size:11px;color:#64748b;margin-top:2px"></div>
+            <span id="admin-badge" style="display:none;background:rgba(var(--teal-rgb), 0.15);color:var(--teal-3);border:1px solid rgba(var(--teal-rgb), 0.3);font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;margin-top:6px;cursor:pointer" onclick="toggleHistory()">Admin</span>
 
           </div>
-          <div class="avatar-menu-section">
-            <label class="avatar-menu-file-label">
+          <div style="padding:0 10px;display:flex;flex-direction:column;gap:4px">
+            <label style="display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;color:#0f172a;transition:all 0.2s"
+                   onmouseover="this.style.background='var(--teal)';this.style.color='white';this.style.transform='translate(1px,-1px)'"
+                   onmouseout="this.style.background='';this.style.color='#0f172a';this.style.transform=''">
               <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
               Đổi ảnh đại diện
-              <input type="file" accept="image/*" class="avatar-menu-file-input" onchange="changeAvatar(this)">
+              <input type="file" accept="image/*" style="display:none" onchange="changeAvatar(this)">
             </label>
-            <button onclick="resetAvatar()" class="avatar-menu-btn">
+            <button onclick="resetAvatar()" class="avatar-menu-btn" style="width:100%;display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:600;color:#0f172a;text-align:left;transition:all 0.2s">
               <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
               Ảnh mặc định
             </button>
           </div>
-          <div class="avatar-menu-divider" style="margin:6px 0"></div>
-          <div class="avatar-menu-section--no-gap">
-            <button onclick="openChangePassword()" class="avatar-menu-btn">
+          <div style="height:1px;background:#f1f5f9;margin:6px 0"></div>
+          <div style="padding:0 10px">
+            <button onclick="openChangePassword()" class="avatar-menu-btn" style="width:100%;display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:600;color:#0f172a;text-align:left;transition:all 0.2s">
               <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
               Đổi mật khẩu
             </button>
             <!-- Theme picker swatches -->
-            <div class="theme-picker-row">
-              <span class="theme-picker-label">Màu giao diện</span>
+            <div style="display:flex;align-items:center;gap:8px;padding:7px 8px">
+              <span style="font-size:12px;color:#64748b;flex:1">Màu giao diện</span>
               <button class="theme-swatch" data-theme="teal" style="background:#0d9488" onclick="applyTheme('teal')" title="Xanh teal"></button>
               <button class="theme-swatch" data-theme="cyan" style="background:#0891b2" onclick="applyTheme('cyan')" title="Xanh cyan"></button>
               <button class="theme-swatch" data-theme="purple" style="background:#7c3aed" onclick="applyTheme('purple')" title="Tím"></button>
               <button class="theme-swatch" data-theme="orange" style="background:#ea580c" onclick="applyTheme('orange')" title="Cam"></button>
               <button class="theme-custom-btn" onclick="openCustomThemePicker()" title="Tùy chỉnh màu"></button>
             </div>
-            <div class="avatar-menu-divider"></div>
-            <div class="dark-toggle-row">
+            <div style="height:1px;background:#f1f5f9;margin:4px 0"></div>
+            <div style="display:flex;align-items:center;gap:10px;padding:7px 8px">
               <label class="switch">
                 <input type="checkbox" id="theme-toggle" onchange="toggleDarkMode(this.checked)">
                 <span class="slider"></span>
               </label>
             </div>
-            <div class="avatar-menu-divider"></div>
-            <button onclick="doLogout()" id="logout-btn" class="avatar-menu-btn avatar-menu-btn--logout">
+            <div style="height:1px;background:#f1f5f9;margin:4px 0"></div>
+            <button onclick="doLogout()" id="logout-btn" style="width:100%;display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:6px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:#ef4444;text-align:left;transition:all 0.2s"
+                    onmouseover="this.style.background='#fef2f2';this.style.transform='translate(1px,-1px)'"
+                    onmouseout="this.style.background='';this.style.transform=''">
               <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" style="flex-shrink:0"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
               Đăng xuất
             </button>
@@ -327,8 +361,8 @@
 <div class="page active" id="page-dashboard">
 
   <!-- Page header -->
-  <div class="dashboard-header">
-    <h1 class="dashboard-title">Tổng quan Lab</h1>
+  <div style="margin-bottom:24px">
+    <h1 style="font-size:26px;font-weight:600;color:#0f172a;letter-spacing:-0.5px;line-height:1.2;margin-bottom:4px">Tổng quan Lab</h1>
   </div>
 
   <!-- HÀNG 1: 3 KPI cards + Card thành viên lab (cột 4) -->
@@ -337,7 +371,7 @@
     <div class="stat-card stat-card-r30">
       <div class="stat-card-body">
         <div class="stat-info">
-          <div class="stat-label stat-label-bold">Thí nghiệm</div>
+          <div class="stat-label" style="text-transform:none;font-size:14px;font-weight:700;color:#344767;letter-spacing:-0.01em">Thí nghiệm</div>
           <div class="stat-value" id="s-total">—</div>
         </div>
         <div class="stat-icon stat-icon-teal">
@@ -350,7 +384,7 @@
     <div class="stat-card stat-card-r30">
       <div class="stat-card-body">
         <div class="stat-info">
-          <div class="stat-label stat-label-bold">Điện cực</div>
+          <div class="stat-label" style="text-transform:none;font-size:14px;font-weight:700;color:#344767;letter-spacing:-0.01em">Điện cực</div>
           <div class="stat-value" id="s-electrode">—</div>
         </div>
         <div class="stat-icon" style="background:linear-gradient(135deg,#6366f1,#818cf8)">
@@ -363,7 +397,7 @@
     <div class="stat-card stat-card-r30">
       <div class="stat-card-body">
         <div class="stat-info">
-          <div class="stat-label stat-label-bold">Đo điện hóa</div>
+          <div class="stat-label" style="text-transform:none;font-size:14px;font-weight:700;color:#344767;letter-spacing:-0.01em">Đo điện hóa</div>
           <div class="stat-value" id="s-electrochem">—</div>
         </div>
         <div class="stat-icon" style="background:linear-gradient(135deg,#f97316,#fb923c)">
@@ -441,27 +475,29 @@
       <div class="page" id="page-hydrothermal">
         <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
           <div>
-            <h1 class="page-title page-title-dark">Thí nghiệm thủy nhiệt</h1>
+            <h1 class="page-title" style="color:#0F172A !important">Thí nghiệm thủy nhiệt</h1>
             <p class="page-subtitle">Tổng hợp vật liệu bằng phương pháp thủy nhiệt</p>
           </div>
-          <button class="btn btn-primary member-only btn-lg-action btn-action-mt" onclick="openModal('modal-hydrothermal')">
+          <button class="btn btn-primary member-only btn-lg-action" onclick="openModal('modal-hydrothermal')" style="margin-top:36px">
             <svg aria-hidden="true" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Thêm thí nghiệm
           </button>
         </div>
-        <div class="flex gap-2 mb-4 flex-wrap items-center btn-action-mt">
-          <div class="search-wrap">
-            <input  aria-label="Tìm theo mã, vật liệu, người thực hiện" class="search-input" id="hydro-search" type="search" inputmode="search" autocapitalize="off" autocorrect="off"
-                   placeholder="Tìm theo mã, vật liệu, người thực hiện..." oninput="renderHydro();document.getElementById('hydro-search-clear').classList.toggle('is-visible',!!this.value)">
-            <button id="hydro-search-clear" onclick="document.getElementById('hydro-search').value='';renderHydro();this.classList.remove('is-visible')" class="search-clear-btn">
+        <div class="flex gap-2 mb-4 flex-wrap items-center" style="margin-top:36px">
+          <div style="position:relative;flex:1;min-width:200px">
+            <input  aria-label="Tìm theo mã, vật liệu, người thực hiện" class="search-input" id="hydro-search" type="text" style="width:100%;padding-right:32px"
+                   placeholder="Tìm theo mã, vật liệu, người thực hiện..." oninput="renderHydro();document.getElementById('hydro-search-clear').style.display=this.value?'flex':'none'">
+            <button id="hydro-search-clear" onclick="document.getElementById('hydro-search').value='';renderHydro();this.style.display='none'"
+                    style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;background:#f87171;border:none;cursor:pointer;align-items:center;justify-content:center;transition:background 0.15s"
+                    onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#f87171'">
               <svg aria-hidden="true" width="8" height="8" viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
                 <line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/>
               </svg>
             </button>
           </div>
-          <button class="btn admin-only btn-icon-row" onclick="exportHydroExcel()" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
-          <select id="hydro-member-filter" class="search-input" onchange="window.setMemberFilter('hydro', this.value)" title="Lọc theo thành viên" class="filter-select"><option value="all">Tất cả thành viên</option></select>
-          <select class="search-input" class="filter-select--narrow" style="min-width:160px" id="hydro-status-filter" onchange="renderHydro()">
+          <button class="btn admin-only" onclick="exportHydroExcel()" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
+          <select id="hydro-member-filter" class="search-input" onchange="window.setMemberFilter('hydro', this.value)" title="Lọc theo thành viên" style="min-width:180px"><option value="all">Tất cả thành viên</option></select>
+          <select class="search-input" style="flex:0;min-width:160px" id="hydro-status-filter" onchange="renderHydro()">
             <option value="">Tất cả trạng thái</option>
             <option>Đang thực hiện</option><option>Hoàn thành</option>
             <option>Chờ phân tích</option><option>Thất bại</option>
@@ -470,14 +506,14 @@
         <div class="table-wrap">
           <table><caption class="sr-only">Danh sách thí nghiệm thủy nhiệt</caption><thead><tr>
             <th scope="col" data-sort="code">Mã TN</th>
-            <th scope="col" data-sort="createdAt" data-sort-type="text" class="th-center">Ngày tạo</th>
-            <th scope="col" data-sort="person" class="th-center">Người thực hiện</th>
-            <th scope="col" data-sort="material" class="th-center">Vật liệu</th>
-            <th scope="col" data-sort="temp" data-sort-type="number" class="th-center">Nhiệt độ</th>
-            <th scope="col" data-sort="time" data-sort-type="number" class="th-center">Thời gian</th>
-            <th scope="col" data-sort="ph" data-sort-type="number" class="th-center">pH</th>
-            <th scope="col" data-sort="status" class="th-center">Trạng thái</th>
-            <th scope="col" data-sort="note" class="th-center">Ghi chú</th>
+            <th scope="col" data-sort="createdAt" data-sort-type="text" style="text-align:center">Ngày tạo</th>
+            <th scope="col" data-sort="person" style="text-align:center">Người thực hiện</th>
+            <th scope="col" data-sort="material" style="text-align:center">Vật liệu</th>
+            <th scope="col" data-sort="temp" data-sort-type="number" style="text-align:center">Nhiệt độ</th>
+            <th scope="col" data-sort="time" data-sort-type="number" style="text-align:center">Thời gian</th>
+            <th scope="col" data-sort="ph" data-sort-type="number" style="text-align:center">pH</th>
+            <th scope="col" data-sort="status" style="text-align:center">Trạng thái</th>
+            <th scope="col" data-sort="note" style="text-align:center">Ghi chú</th>
             <th scope="col"></th>
           </tr></thead>
           <tbody id="hydro-tbody">
@@ -490,17 +526,17 @@
       <div class="page" id="page-electrode">
         <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
           <div>
-            <h1 class="page-title page-title-dark">Chuẩn bị điện cực</h1>
+            <h1 class="page-title" style="color:#0F172A !important">Chuẩn bị điện cực</h1>
             <p class="page-subtitle">Thông số chế tạo và công thức mực điện cực</p>
           </div>
           <div class="flex gap-2 flex-wrap" id="electrode-actions">
-            <button class="btn btn-primary member-only btn-lg-action btn-action-mt" onclick="openModal('modal-electrode')">
+            <button class="btn btn-primary member-only btn-lg-action" onclick="openModal('modal-electrode')" style="margin-top:36px">
               <svg aria-hidden="true" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Thêm điện cực
             </button>
           </div>
           <div class="flex gap-2 flex-wrap" id="ink-actions" style="display:none!important">
-            <button class="btn btn-primary member-only btn-action-mt" onclick="openModal('modal-ink')">
+            <button class="btn btn-primary member-only" onclick="openModal('modal-ink')" style="margin-top:36px">
               <svg aria-hidden="true" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Thêm công thức mực
             </button>
@@ -511,19 +547,21 @@
           <button class="tab-btn" onclick="switchElectrodeTab('ink',this)">Công thức mực (Ink)</button>
         </div>
         <div id="etab-electrode" class="tab-content active">
-          <div class="flex gap-2 mb-4 flex-wrap items-center btn-action-mt">
-            <div class="search-wrap">
-            <input  aria-label="Tìm theo mã, vật liệu" class="search-input" id="electrode-search" type="search" inputmode="search" autocapitalize="off" autocorrect="off"
-                   placeholder="Tìm theo mã, vật liệu..." oninput="renderElectrode();document.getElementById('electrode-search-clear').classList.toggle('is-visible',!!this.value)">
-            <button id="electrode-search-clear" onclick="document.getElementById('electrode-search').value='';renderElectrode();this.classList.remove('is-visible')" class="search-clear-btn">
+          <div class="flex gap-2 mb-4 flex-wrap items-center" style="margin-top:36px">
+            <div style="position:relative;flex:1;min-width:200px">
+            <input  aria-label="Tìm theo mã, vật liệu" class="search-input" id="electrode-search" type="text" style="width:100%;padding-right:32px"
+                   placeholder="Tìm theo mã, vật liệu..." oninput="renderElectrode();document.getElementById('electrode-search-clear').style.display=this.value?'flex':'none'">
+            <button id="electrode-search-clear" onclick="document.getElementById('electrode-search').value='';renderElectrode();this.style.display='none'"
+                    style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;background:#f87171;border:none;cursor:pointer;align-items:center;justify-content:center;transition:background 0.15s"
+                    onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#f87171'">
               <svg aria-hidden="true" width="8" height="8" viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
                 <line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/>
               </svg>
             </button>
           </div>
-            <button class="btn admin-only btn-icon-row" onclick="exportElectrodeExcel()" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
-            <select id="electrode-member-filter" class="search-input" onchange="window.setMemberFilter('electrode', this.value)" title="Lọc theo thành viên" class="filter-select"><option value="all">Tất cả thành viên</option></select>
-            <select class="search-input" class="filter-select--narrow" id="electrode-status-filter" onchange="renderElectrode()">
+            <button class="btn admin-only" onclick="exportElectrodeExcel()" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
+            <select id="electrode-member-filter" class="search-input" onchange="window.setMemberFilter('electrode', this.value)" title="Lọc theo thành viên" style="min-width:180px"><option value="all">Tất cả thành viên</option></select>
+            <select class="search-input" style="flex:0;min-width:180px" id="electrode-status-filter" onchange="renderElectrode()">
               <option value="">Tất cả trạng thái</option>
               <option>Sẵn sàng đo</option><option>Đang activation</option><option>Đang xử lý</option>
             </select>
@@ -531,15 +569,15 @@
           <div class="table-wrap">
             <table><caption class="sr-only">Danh sách thí nghiệm điện cực</caption><thead><tr>
               <th scope="col" data-sort="code">Mã ĐC</th>
-              <th scope="col" data-sort="createdAt" class="th-center">Ngày tạo</th>
-              <th scope="col" data-sort="person" class="th-center">Người thực hiện</th>
-              <th scope="col" data-sort="material" class="th-center">Vật liệu</th>
-              <th scope="col" data-sort="substrate" class="th-center">Nền ĐC</th>
-              <th scope="col" data-sort="volume" data-sort-type="number" class="th-center">V (μL)</th>
-              <th scope="col" data-sort="area" data-sort-type="number" class="th-center">S (cm²)</th>
-              <th scope="col" data-sort="loading" data-sort-type="number" class="th-center">Tải lượng</th>
-              <th scope="col" data-sort="drying" class="th-center">Sấy</th>
-              <th scope="col" data-sort="status" class="th-center">Trạng thái</th><th scope="col"></th>
+              <th scope="col" data-sort="createdAt" style="text-align:center">Ngày tạo</th>
+              <th scope="col" data-sort="person" style="text-align:center">Người thực hiện</th>
+              <th scope="col" data-sort="material" style="text-align:center">Vật liệu</th>
+              <th scope="col" data-sort="substrate" style="text-align:center">Nền ĐC</th>
+              <th scope="col" data-sort="volume" data-sort-type="number" style="text-align:center">V (μL)</th>
+              <th scope="col" data-sort="area" data-sort-type="number" style="text-align:center">S (cm²)</th>
+              <th scope="col" data-sort="loading" data-sort-type="number" style="text-align:center">Tải lượng</th>
+              <th scope="col" data-sort="drying" style="text-align:center">Sấy</th>
+              <th scope="col" data-sort="status" style="text-align:center">Trạng thái</th><th scope="col"></th>
             </tr></thead>
             <tbody id="electrode-tbody">
               <tr><td colspan="11"><div class="loading"><div class="spinner"></div>Đang tải...</div></td></tr>
@@ -550,12 +588,12 @@
           <div class="table-wrap">
             <table><caption class="sr-only">Danh sách mẫu điện cực</caption><thead><tr>
               <th scope="col" data-sort="code">Mã công thức</th>
-              <th scope="col" data-sort="name" class="th-center">Tên</th>
-              <th scope="col" data-sort="material" class="th-center">Vật liệu xúc tác</th>
-              <th scope="col" class="th-center">Chất rắn</th>
-              <th scope="col" class="th-center">Dung môi</th>
-              <th scope="col" data-sort="totalVol" data-sort-type="number" class="th-center">Tổng V (μL)</th>
-              <th scope="col" data-sort="createdAt" class="th-center">Ngày tạo</th>
+              <th scope="col" data-sort="name" style="text-align:center">Tên</th>
+              <th scope="col" data-sort="material" style="text-align:center">Vật liệu xúc tác</th>
+              <th scope="col" style="text-align:center">Chất rắn</th>
+              <th scope="col" style="text-align:center">Dung môi</th>
+              <th scope="col" data-sort="totalVol" data-sort-type="number" style="text-align:center">Tổng V (μL)</th>
+              <th scope="col" data-sort="createdAt" style="text-align:center">Ngày tạo</th>
               <th scope="col"></th>
             </tr></thead>
             <tbody id="ink-tbody">
@@ -569,27 +607,29 @@
       <div class="page" id="page-electrochemistry">
         <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
           <div>
-            <h1 class="page-title page-title-dark">Đo điện hóa</h1>
+            <h1 class="page-title" style="color:#0F172A !important">Đo điện hóa</h1>
             <p class="page-subtitle">Kết quả đo và thông số điện hóa</p>
           </div>
-          <button class="btn btn-primary member-only btn-lg-action btn-action-mt" onclick="openModal('modal-electrochem')">
+          <button class="btn btn-primary member-only btn-lg-action" onclick="openModal('modal-electrochem')" style="margin-top:36px">
             <svg aria-hidden="true" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Thêm phép đo
           </button>
         </div>
-        <div class="flex gap-2 mb-4 flex-wrap items-center btn-action-mt">
-          <div class="search-wrap">
-            <input  aria-label="Tìm theo mã, điện cực, phản ứng" class="search-input" id="ec-search" type="search" inputmode="search" autocapitalize="off" autocorrect="off"
-                   placeholder="Tìm theo mã, điện cực, phản ứng..." oninput="renderElectrochem();document.getElementById('ec-search-clear').classList.toggle('is-visible',!!this.value)">
-            <button id="ec-search-clear" onclick="document.getElementById('ec-search').value='';renderElectrochem();this.classList.remove('is-visible')" class="search-clear-btn">
+        <div class="flex gap-2 mb-4 flex-wrap items-center" style="margin-top:36px">
+          <div style="position:relative;flex:1;min-width:200px">
+            <input  aria-label="Tìm theo mã, điện cực, phản ứng" class="search-input" id="ec-search" type="text" style="width:100%;padding-right:32px"
+                   placeholder="Tìm theo mã, điện cực, phản ứng..." oninput="renderElectrochem();document.getElementById('ec-search-clear').style.display=this.value?'flex':'none'">
+            <button id="ec-search-clear" onclick="document.getElementById('ec-search').value='';renderElectrochem();this.style.display='none'"
+                    style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;background:#f87171;border:none;cursor:pointer;align-items:center;justify-content:center;transition:background 0.15s"
+                    onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#f87171'">
               <svg aria-hidden="true" width="8" height="8" viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
                 <line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/>
               </svg>
             </button>
           </div>
-          <button class="btn admin-only btn-icon-row" onclick="exportElectrochemExcel()" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
-          <select id="ec-member-filter" class="search-input" onchange="window.setMemberFilter('ec', this.value)" title="Lọc theo thành viên" class="filter-select"><option value="all">Tất cả thành viên</option></select>
-          <select class="search-input" class="filter-select--narrow" id="ec-type-filter" onchange="renderElectrochem()">
+          <button class="btn admin-only" onclick="exportElectrochemExcel()" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
+          <select id="ec-member-filter" class="search-input" onchange="window.setMemberFilter('ec', this.value)" title="Lọc theo thành viên" style="min-width:180px"><option value="all">Tất cả thành viên</option></select>
+          <select class="search-input" style="flex:0;min-width:180px" id="ec-type-filter" onchange="renderElectrochem()">
             <option value="">Tất cả loại đo</option>
             <option>LSV</option><option>CV</option><option>EIS</option><option>CA</option><option>CP</option>
           </select>
@@ -597,15 +637,15 @@
         <div class="table-wrap">
           <table><caption class="sr-only">Danh sách thí nghiệm điện hóa</caption><thead><tr>
             <th scope="col" data-sort="code">Mã đo</th>
-            <th scope="col" data-sort="createdAt" class="th-center">Ngày tạo</th>
-            <th scope="col" data-sort="person" class="th-center">Người thực hiện</th>
-            <th scope="col" data-sort="material" class="th-center">Vật liệu ĐC</th>
-            <th scope="col" data-sort="electrode" class="th-center">Mã ĐC</th>
-            <th scope="col" data-sort="type" class="th-center">Loại đo</th>
-            <th scope="col" data-sort="electrolyte" class="th-center">Chất điện ly</th>
-            <th scope="col" data-sort="eta" data-sort-type="number" class="th-center">η@10 (mV)</th>
-            <th scope="col" data-sort="tafel" data-sort-type="number" class="th-center">Tafel</th>
-            <th scope="col" data-sort="status" class="th-center">Trạng thái</th><th scope="col" class="admin-only"></th>
+            <th scope="col" data-sort="createdAt" style="text-align:center">Ngày tạo</th>
+            <th scope="col" data-sort="person" style="text-align:center">Người thực hiện</th>
+            <th scope="col" data-sort="material" style="text-align:center">Vật liệu ĐC</th>
+            <th scope="col" data-sort="electrode" style="text-align:center">Mã ĐC</th>
+            <th scope="col" data-sort="type" style="text-align:center">Loại đo</th>
+            <th scope="col" data-sort="electrolyte" style="text-align:center">Chất điện ly</th>
+            <th scope="col" data-sort="eta" data-sort-type="number" style="text-align:center">η@10 (mV)</th>
+            <th scope="col" data-sort="tafel" data-sort-type="number" style="text-align:center">Tafel</th>
+            <th scope="col" data-sort="status" style="text-align:center">Trạng thái</th><th scope="col" class="admin-only"></th>
           </tr></thead>
           <tbody id="electrochem-tbody">
             <tr><td colspan="11"><div class="loading"><div class="spinner"></div>Đang tải...</div></td></tr>
@@ -617,7 +657,7 @@
       <div class="page" id="page-chemicals">
         <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
           <div>
-            <h1 class="page-title page-title-dark">Quản lý hóa chất</h1>
+            <h1 class="page-title" style="color:#0F172A !important">Quản lý hóa chất</h1>
             <p class="page-subtitle">Tồn kho hóa chất và theo dõi tiêu hao</p>
           </div>
           <div style="display:flex;gap:8px">
@@ -631,11 +671,13 @@
             </button>
           </div>
         </div>
-        <div class="flex gap-2 mb-4 flex-wrap items-center btn-action-mt">
-          <div class="search-wrap">
-            <input  aria-label="Tìm theo tên, công thức, mã CAS" class="search-input" id="chem-search" type="search" inputmode="search" autocapitalize="off" autocorrect="off"
-                   placeholder="Tìm theo tên, công thức, mã CAS..." oninput="renderChemicals();document.getElementById('chem-search-clear').classList.toggle('is-visible',!!this.value)">
-            <button id="chem-search-clear" onclick="document.getElementById('chem-search').value='';renderChemicals();this.classList.remove('is-visible')" class="search-clear-btn">
+        <div class="flex gap-2 mb-4 flex-wrap items-center" style="margin-top:36px">
+          <div style="position:relative;flex:1;min-width:200px">
+            <input  aria-label="Tìm theo tên, công thức, mã CAS" class="search-input" id="chem-search" type="text" style="width:100%;padding-right:32px"
+                   placeholder="Tìm theo tên, công thức, mã CAS..." oninput="renderChemicals();document.getElementById('chem-search-clear').style.display=this.value?'flex':'none'">
+            <button id="chem-search-clear" onclick="document.getElementById('chem-search').value='';renderChemicals();this.style.display='none'"
+                    style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;background:#f87171;border:none;cursor:pointer;align-items:center;justify-content:center;transition:background 0.15s"
+                    onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#f87171'">
               <svg aria-hidden="true" width="8" height="8" viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
                 <line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/>
               </svg>
@@ -648,8 +690,8 @@
             <input type="checkbox" id="filter-cs2" onchange="renderChemicals()" >Cơ sở 2
           </label>
 
-          <button class="btn admin-only btn-icon-row" onclick="exportChemicalsExcel()" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
-          <select class="search-input" class="filter-select--narrow" style="min-width:160px" id="chem-status-filter" onchange="renderChemicals()">
+          <button class="btn admin-only" onclick="exportChemicalsExcel()" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
+          <select class="search-input" style="flex:0;min-width:160px" id="chem-status-filter" onchange="renderChemicals()">
             <option value="">Tất cả trạng thái</option>
             <option value="low">⚠ Sắp hết</option><option value="ok">✓ Đủ</option>
           </select>
@@ -658,15 +700,15 @@
           <table><caption class="sr-only">Danh sách hóa chất</caption><thead><tr>
             <th scope="col" data-sort="name">Tên hóa chất</th>
             <th scope="col" data-sort="formula">Công thức</th>
-            <th scope="col" class="th-center">Ảnh</th>
-            <th scope="col" data-sort="mw" data-sort-type="number" class="th-center">M (g/mol)</th>
-            <th scope="col" data-sort="purity" class="th-center">Độ tinh khiết</th>
-            <th scope="col" data-sort="cas" class="th-center">Mã CAS</th>
-            <th scope="col" data-sort="location" class="th-center">Nơi lưu trữ</th>
-            <th scope="col" data-sort="stock" data-sort-type="number" class="th-center">Tồn kho</th>
-            <th scope="col" data-sort="qty" data-sort-type="number" class="th-center">Số lượng</th>
-            <th scope="col" data-sort="createdAt" class="th-center">Ngày tạo</th>
-            <th scope="col" data-sort="status" class="th-center">Trạng thái</th>
+            <th scope="col" style="text-align:center">Ảnh</th>
+            <th scope="col" data-sort="mw" data-sort-type="number" style="text-align:center">M (g/mol)</th>
+            <th scope="col" data-sort="purity" style="text-align:center">Độ tinh khiết</th>
+            <th scope="col" data-sort="cas" style="text-align:center">Mã CAS</th>
+            <th scope="col" data-sort="location" style="text-align:center">Nơi lưu trữ</th>
+            <th scope="col" data-sort="stock" data-sort-type="number" style="text-align:center">Tồn kho</th>
+            <th scope="col" data-sort="qty" data-sort-type="number" style="text-align:center">Số lượng</th>
+            <th scope="col" data-sort="createdAt" style="text-align:center">Ngày tạo</th>
+            <th scope="col" data-sort="status" style="text-align:center">Trạng thái</th>
             <th scope="col" style="width:60px"></th>
           </tr>
         </thead>
@@ -680,7 +722,7 @@
       <div class="page" id="page-members">
         <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
           <div>
-            <h1 class="page-title page-title-dark">Thành viên</h1>
+            <h1 class="page-title" style="color:#0F172A !important">Thành viên</h1>
             <p class="page-subtitle">Sinh viên và nghiên cứu viên trong nhóm</p>
           </div>
           <button class="btn btn-primary btn-lg-action" id="btn-add-member" onclick="openModal('modal-member')">
@@ -697,7 +739,7 @@
       <div class="page" id="page-equipment">
         <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
           <div>
-            <h1 class="page-title page-title-dark">Dụng cụ và thiết bị</h1>
+            <h1 class="page-title" style="color:#0F172A !important">Dụng cụ và thiết bị</h1>
             <p class="page-subtitle">Quản lý trang thiết bị và dụng cụ trong lab</p>
           </div>
           <div style="display:flex;gap:8px">
@@ -711,11 +753,13 @@
             </button>
           </div>
         </div>
-        <div class="flex gap-2 mb-4 flex-wrap items-center btn-action-mt">
-          <div class="search-wrap">
-            <input  aria-label="Tìm theo tên, model, hãng" class="search-input" id="equipment-search" type="search" inputmode="search" autocapitalize="off" autocorrect="off"
-                   placeholder="Tìm theo tên, model, hãng..." oninput="renderEquipment();document.getElementById('equipment-search-clear').classList.toggle('is-visible',!!this.value)">
-            <button id="equipment-search-clear" onclick="document.getElementById('equipment-search').value='';renderEquipment();this.classList.remove('is-visible')" class="search-clear-btn">
+        <div class="flex gap-2 mb-4 flex-wrap items-center" style="margin-top:36px">
+          <div style="position:relative;flex:1;min-width:200px">
+            <input  aria-label="Tìm theo tên, model, hãng" class="search-input" id="equipment-search" type="text" style="width:100%;padding-right:32px"
+                   placeholder="Tìm theo tên, model, hãng..." oninput="renderEquipment();document.getElementById('equipment-search-clear').style.display=this.value?'flex':'none'">
+            <button id="equipment-search-clear" onclick="document.getElementById('equipment-search').value='';renderEquipment();this.style.display='none'"
+                    style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;background:#f87171;border:none;cursor:pointer;align-items:center;justify-content:center;transition:background 0.15s"
+                    onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#f87171'">
               <svg aria-hidden="true" width="8" height="8" viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
                 <line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/>
               </svg>
@@ -727,8 +771,8 @@
           <label class="flex items-center gap-1.5 px-3 py-2 border border-border rounded-lab cursor-pointer text-[13px] text-lab-text-2 bg-surface select-none whitespace-nowrap">
             <input type="checkbox" id="eq-filter-cs2" onchange="renderEquipment()" >Cơ sở 2
           </label>
-          <button class="btn admin-only btn-icon-row" onclick="exportEquipmentExcel()" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
-          <select class="search-input" class="filter-select--narrow" id="equipment-status-filter" onchange="renderEquipment()">
+          <button class="btn admin-only" onclick="exportEquipmentExcel()" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
+          <select class="search-input" style="flex:0;min-width:180px" id="equipment-status-filter" onchange="renderEquipment()">
             <option value="">Tất cả trạng thái</option>
             <option>Đang sử dụng</option><option>Đang sửa</option><option>Ngưng sử dụng</option>
           </select>
@@ -737,12 +781,12 @@
           <table><caption class="sr-only">Danh sách thiết bị</caption><thead><tr>
             <th scope="col" data-sort="name">Tên thiết bị</th>
             <th scope="col" data-sort="model">Model & Serial</th>
-            <th scope="col" data-sort="vendor">Hãng</th>
-            <th scope="col" class="th-center">Ảnh</th>
-            <th scope="col" data-sort="location" class="th-center">Nơi lưu trữ</th>
-            <th scope="col" data-sort="qty" data-sort-type="number" class="th-center">Số lượng</th>
-            <th scope="col" data-sort="createdAt" class="th-center">Ngày nhập</th>
-            <th scope="col" data-sort="status" class="th-center">Trạng thái</th>
+            <th scope="col" data-sort="vendor" class="th-center">Hãng</th>
+            <th scope="col" style="text-align:center">Ảnh</th>
+            <th scope="col" data-sort="location" style="text-align:center">Nơi lưu trữ</th>
+            <th scope="col" data-sort="qty" data-sort-type="number" style="text-align:center">Số lượng</th>
+            <th scope="col" data-sort="createdAt" style="text-align:center">Ngày nhập</th>
+            <th scope="col" data-sort="status" style="text-align:center">Trạng thái</th>
             <th scope="col"></th>
           </tr>
         </thead>
@@ -757,7 +801,7 @@
     <div class="page" id="page-booking">
       <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
         <div>
-          <h1 class="page-title page-title-dark">Đăng ký sử dụng thiết bị</h1>
+          <h1 class="page-title" style="color:#0F172A !important">Đăng ký sử dụng thiết bị</h1>
           <p class="page-subtitle">Đặt lịch trước, check-in khi đến giờ</p>
         </div>
         <button class="btn btn-primary member-only btn-lg-action" onclick="openBookingModal()" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center;margin-top:36px">
@@ -772,9 +816,9 @@
           <button id="bk-tab-list" class="bk-tab active" onclick="window.switchBookingView('list')" style="padding:7px 14px;border:none;background:linear-gradient(135deg,var(--teal),var(--teal-2));border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:white;box-shadow:0 2px 6px rgba(13,148,136,0.3);display:inline-flex;align-items:center;gap:6px"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Danh sách</button>
           <button id="bk-tab-cal" class="bk-tab" onclick="window.switchBookingView('calendar')" style="padding:7px 14px;border:none;background:transparent;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text-2);display:inline-flex;align-items:center;gap:6px"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Tuần</button>
         </div>
-        <input  aria-label="Tìm theo thiết bị, người đặt, mục đích" type="search" inputmode="search" autocapitalize="off" autocorrect="off" id="booking-search" placeholder="Tìm theo thiết bị, người đặt, mục đích..." class="search-input" style="flex:1;min-width:240px">
-        <button class="btn admin-only btn-icon-row" onclick="exportBookingsExcel()" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
-        <button class="btn btn-icon-row" onclick="window.openPdfReportModal()" title="Xuất báo cáo PDF"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h6M9 17h6"/></svg> PDF</button>
+        <input  aria-label="Tìm theo thiết bị, người đặt, mục đích" type="text" id="booking-search" placeholder="Tìm theo thiết bị, người đặt, mục đích..." class="search-input" style="flex:1;min-width:240px">
+        <button class="btn admin-only" onclick="exportBookingsExcel()" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
+        <button class="btn" onclick="window.openPdfReportModal()" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất báo cáo PDF"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h6M9 17h6"/></svg> PDF</button>
         <select id="booking-equipment-filter" class="search-input" onchange="window.renderBooking?.()">
           <option value="">Tất cả thiết bị</option>
         </select>
@@ -803,7 +847,7 @@
               <th scope="col" class="bk-sortable" data-sort="date" onclick="window.toggleBookingSort('date')" style="text-align:center;cursor:pointer;user-select:none">Ngày <span class="bk-sort-arrow"></span></th>
               <th scope="col" class="bk-sortable" data-sort="startTime" onclick="window.toggleBookingSort('startTime')" style="text-align:center;cursor:pointer;user-select:none">Giờ <span class="bk-sort-arrow"></span></th>
               <th scope="col">Mục đích</th>
-              <th scope="col" class="th-center">Trạng thái</th>
+              <th scope="col" style="text-align:center">Trạng thái</th>
               <th scope="col"></th>
             </tr>
           </thead>
@@ -827,10 +871,10 @@
               <div id="cal-range-label" style="font-size:14px;font-weight:600;color:var(--text)"></div>
             </div>
             <div style="display:inline-flex;gap:10px;font-size:11px;color:var(--text-2);flex-wrap:wrap">
-              <span class="legend-item"><span class="legend-dot legend-dot--warn"></span>Chờ duyệt</span>
-              <span class="legend-item"><span class="legend-dot legend-dot--info"></span>Đã duyệt</span>
-              <span class="legend-item"><span class="legend-dot legend-dot--success"></span>Đang dùng</span>
-              <span class="legend-item"><span class="legend-dot legend-dot--gray"></span>Hoàn thành</span>
+              <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:rgba(245,158,11,0.6);display:inline-block"></span>Chờ duyệt</span>
+              <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:rgba(59,130,246,0.6);display:inline-block"></span>Đã duyệt</span>
+              <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:rgba(16,185,129,0.6);display:inline-block"></span>Đang dùng</span>
+              <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:rgba(100,116,139,0.4);display:inline-block"></span>Hoàn thành</span>
             </div>
           </div>
           <!-- Calendar grid -->
@@ -855,10 +899,10 @@
               <div id="day-label" style="font-size:14px;font-weight:600;color:var(--text)"></div>
             </div>
             <div style="display:inline-flex;gap:10px;font-size:11px;color:var(--text-2);flex-wrap:wrap">
-              <span class="legend-item"><span class="legend-dot legend-dot--warn"></span>Chờ</span>
-              <span class="legend-item"><span class="legend-dot legend-dot--info"></span>Duyệt</span>
-              <span class="legend-item"><span class="legend-dot legend-dot--success"></span>Dùng</span>
-              <span class="legend-item"><span class="legend-dot legend-dot--gray"></span>Xong</span>
+              <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:rgba(245,158,11,0.6);display:inline-block"></span>Chờ</span>
+              <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:rgba(59,130,246,0.6);display:inline-block"></span>Duyệt</span>
+              <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:rgba(16,185,129,0.6);display:inline-block"></span>Dùng</span>
+              <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:rgba(100,116,139,0.4);display:inline-block"></span>Xong</span>
             </div>
           </div>
           <!-- Day grid (24h) -->
@@ -872,7 +916,7 @@
     <div class="page" id="page-users">
       <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
         <div>
-          <h1 class="page-title page-title-dark">Quản lý tài khoản</h1>
+          <h1 class="page-title" style="color:#0F172A !important">Quản lý tài khoản</h1>
           <p class="page-subtitle">Duyệt đăng ký và phân quyền thành viên</p>
         </div>
       </div>
@@ -913,7 +957,7 @@
       <div class="page" id="page-history">
         <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
           <div>
-            <h1 class="page-title page-title-dark">Lịch sử chỉnh sửa</h1>
+            <h1 class="page-title" style="color:#0F172A !important">Lịch sử chỉnh sửa</h1>
             <p class="page-subtitle">Toàn bộ thay đổi trong hệ thống — chỉ admin</p>
           </div>
         </div>
@@ -987,7 +1031,7 @@
         
         <!-- Theme Picker Section -->
         <div class="card" style="padding:24px">
-          <div class="login-logo-wrap">
+          <div style="margin-bottom:16px">
             <h2 class="section-title" style="font-size:16px;margin:0 0 4px">Giao diện</h2>
             <p style="font-size:12.5px;color:var(--text-2);margin:0">Chọn theme phù hợp với phong cách của bạn</p>
           </div>
@@ -1004,7 +1048,7 @@
 
   <!-- Modal Quản lý nhóm hóa chất -->
   <div class="modal-overlay" id="modal-groups" role="dialog" aria-modal="true" aria-labelledby="modal-groups-title">
-    <div class="modal modal--md">
+    <div class="modal" style="width:min(480px,96vw)">
       <div class="modal-header">
         <div class="modal-title" id="modal-groups-title">Quản lý nhóm hóa chất</div>
         <button class="modal-close" type="button" aria-label="Đóng" onclick="closeModal('modal-groups')">✕</button>
@@ -1021,7 +1065,7 @@
 
   <!-- Modal Quản lý nhóm thiết bị -->
   <div class="modal-overlay" id="modal-eq-groups" role="dialog" aria-modal="true" aria-labelledby="modal-eq-groups-title">
-    <div class="modal modal--md">
+    <div class="modal" style="width:min(480px,96vw)">
       <div class="modal-header">
         <div class="modal-title" id="modal-eq-groups-title">Quản lý nhóm thiết bị</div>
         <button class="modal-close" type="button" aria-label="Đóng" onclick="closeModal('modal-eq-groups')">✕</button>
@@ -1082,7 +1126,7 @@
     </div>
     <div class="form-section">
  <div class="form-section-title">Hóa chất sử dụng</div>
- <table class="chem-table"><thead><tr><th scope="col">Tên hóa chất</th><th scope="col">M (g/mol)</th><th scope="col">Khối lượng/Thể tích (g; mL)</th><th scope="col">mol (M)</th><th scope="col"></th></tr></thead><tbody id="h-chem-tbody"><tr><td class="td-relative"><input type="text" class="chem-search" placeholder="Tìm hóa chất..." oninput="searchChem(this)" autocomplete="off"><div class="chem-dropdown search-popover search-popover--w220"></div></td><td><input type="number" min="0" placeholder="M" class="chem-mw" readonly class="input-readonly"></td><td><input type="number" min="0" step="0.001" placeholder="g; mL" oninput="calcMol(this)"></td><td><input type="number" min="0" step="0.0001" readonly class="input-readonly"></td><td><button class="btn btn-xs btn-danger" onclick="removeChem(this)">✕</button></td></tr></tbody></table>
+ <table class="chem-table"><thead><tr><th scope="col">Tên hóa chất</th><th scope="col">M (g/mol)</th><th scope="col">Khối lượng/Thể tích (g; mL)</th><th scope="col">mol (M)</th><th scope="col"></th></tr></thead><tbody id="h-chem-tbody"><tr><td style="position:relative"><input type="text" class="chem-search" placeholder="Tìm hóa chất..." oninput="searchChem(this)" autocomplete="off"><div class="chem-dropdown" style="position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:50;width:220px;max-height:180px;overflow-y:auto;display:none"></div></td><td><input type="number" min="0" placeholder="M" class="chem-mw" readonly style="background:var(--surface2)"></td><td><input type="number" min="0" step="0.001" placeholder="g; mL" oninput="calcMol(this)"></td><td><input type="number" min="0" step="0.0001" readonly style="background:var(--surface2)"></td><td><button class="btn btn-xs btn-danger" onclick="removeChem(this)">✕</button></td></tr></tbody></table>
       <button class="btn btn-sm" onclick="addChem()">+ Thêm hóa chất</button>
     </div>
      <div class="form-group" style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
@@ -1109,20 +1153,20 @@
       <div class="modal-title" id="hydro-image-title">Ảnh thí nghiệm</div>
       <button class="modal-close" type="button" aria-label="Đóng" onclick="closeModal('modal-hydro-image')">✕</button>
     </div>
-    <div class="empty-state-center">
+    <div style="text-align:center;min-height:200px">
       <div id="hydro-drop-zone" style="border:2px dashed var(--border);border-radius:var(--radius-lg);padding:40px;cursor:pointer;transition:all 0.15s"
         ondragover="event.preventDefault();this.style.borderColor='var(--blue2)';this.style.background='var(--blue-light)'"
         ondragleave="this.style.borderColor='var(--border)';this.style.background=''"
         ondrop="dropHydroImage(event)">
         <svg aria-hidden="true" width="40" height="40" viewBox="0 0 24 24" stroke="var(--text-3)" fill="none" stroke-width="1.5" style="margin-bottom:10px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        <div class="muted-13">Kéo thả ảnh vào đây hoặc</div>
-        <label class="image-upload-label">
+        <div style="color:var(--text-3);font-size:13px">Kéo thả ảnh vào đây hoặc</div>
+        <label style="color:var(--blue2);cursor:pointer;font-size:13px;font-weight:500">
           <input type="file" accept="image/*" style="display:none" onchange="uploadHydroImage(this)">
           chọn từ máy tính
         </label>
-        <div class="muted-12-mt">hoặc Ctrl+V để dán ảnh</div>
+        <div style="color:var(--text-3);font-size:12px;margin-top:8px">hoặc Ctrl+V để dán ảnh</div>
       </div>
-      <img id="hydro-image-preview" src="" class="image-preview">
+      <img id="hydro-image-preview" src="" style="max-width:100%;border-radius:var(--radius);display:none;margin-top:10px">
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-hydro-image')">Đóng</button>
@@ -1152,7 +1196,7 @@
     <div class="form-section">
       <div class="form-section-title">Thông số mực (ink)</div>
       <div class="form-grid">
-        <div class="form-group form-group--full"><label>Công thức mực</label><select class="cs-select" id="e-ink-formula" onchange="fillInkFormula()"><option value="">-- Chọn công thức mực --</option></select></div>
+        <div class="form-group" style="grid-column:1/-1"><label>Công thức mực</label><select class="cs-select" id="e-ink-formula" onchange="fillInkFormula()"><option value="">-- Chọn công thức mực --</option></select></div>
         <div class="form-group"><label>Tổng nồng độ mực (mg/mL)</label><input type="number" step="0.1" id="e-conc" placeholder="—" readonly style="background:var(--surface2);color:var(--blue2);font-weight:600"></div>
         <div class="form-group"><label>Nồng độ xúc tác (mg/mL)</label><input type="number" step="0.1" id="e-conc-cat" placeholder="—" readonly style="background:var(--surface2);color:var(--blue2);font-weight:600"></div>
         <div class="form-group"><label>Thể tích mỗi lần nhỏ (μL)</label><input type="number" step="0.5" id="e-vol" placeholder="10" oninput="calcLoading()"></div>
@@ -1188,20 +1232,20 @@
       <div class="modal-title" id="electrode-image-title">Ảnh điện cực</div>
       <button class="modal-close" type="button" aria-label="Đóng" onclick="closeModal('modal-electrode-image')">✕</button>
     </div>
-    <div id="electrode-image-content" class="empty-state-center">
+    <div id="electrode-image-content" style="text-align:center;min-height:200px">
       <div id="electrode-drop-zone" style="border:2px dashed var(--border);border-radius:var(--radius-lg);padding:40px;cursor:pointer;transition:all 0.15s"
         ondragover="event.preventDefault();this.style.borderColor='var(--blue2)';this.style.background='var(--blue-light)'"
         ondragleave="this.style.borderColor='var(--border)';this.style.background=''"
         ondrop="dropElectrodeImage(event)">
         <svg aria-hidden="true" width="40" height="40" viewBox="0 0 24 24" stroke="var(--text-3)" fill="none" stroke-width="1.5" style="margin-bottom:10px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        <div class="muted-13">Kéo thả ảnh vào đây hoặc</div>
-        <label class="image-upload-label">
+        <div style="color:var(--text-3);font-size:13px">Kéo thả ảnh vào đây hoặc</div>
+        <label style="color:var(--blue2);cursor:pointer;font-size:13px;font-weight:500">
           <input type="file" accept="image/*" style="display:none" onchange="uploadElectrodeImage(this)">
           chọn từ máy tính
         </label>
-        <div class="muted-12-mt">hoặc Ctrl+V để dán ảnh</div>
+        <div style="color:var(--text-3);font-size:12px;margin-top:8px">hoặc Ctrl+V để dán ảnh</div>
       </div>
-      <img id="electrode-image-preview" src="" class="image-preview">
+      <img id="electrode-image-preview" src="" style="max-width:100%;border-radius:var(--radius);display:none;margin-top:10px">
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-electrode-image')">Đóng</button>
@@ -1223,7 +1267,7 @@
         <div class="form-group"><label>Mã công thức</label><input type="text" id="ink-code" placeholder="INK001" oninput="autoPrefix(this,'INK')"></div>
         <div class="form-group"><label>Tên công thức</label><input type="text" id="ink-name" placeholder="VD: WS₂/WO₃ HER ink"></div>
         <div class="form-group"><label>Vật liệu chính</label><input type="text" id="ink-material" placeholder="VD: WS₂/WO₃"></div>
-        <div class="form-group form-group--full"><label>DOI bài báo tham khảo</label><input type="text" id="ink-doi" placeholder="VD: 10.1021/jacs.0c00000"></div>
+        <div class="form-group" style="grid-column:1/-1"><label>DOI bài báo tham khảo</label><input type="text" id="ink-doi" placeholder="VD: 10.1021/jacs.0c00000"></div>
       </div>
     </div>
         <div class="form-section">
@@ -1231,7 +1275,7 @@
       <table class="chem-table">
         <thead><tr><th scope="col">Chọn hóa chất</th><th scope="col">M (g/mol)</th><th scope="col">Khối lượng (mg)</th><th scope="col"></th></tr></thead>
         <tbody id="ink-solid-tbody">
-          <tr><td class="td-relative"><input type="text" class="chem-search" placeholder="Tìm hóa chất..." oninput="searchChem(this)" autocomplete="off"><div class="chem-dropdown search-popover search-popover--w220"></div></td><td><input type="number" class="chem-mw" placeholder="M" readonly class="input-readonly"></td><td><input type="number" min="0" step="0.01" placeholder="mg"></td><td><button class="btn btn-xs btn-danger" onclick="removeChem(this)">✕</button></td></tr>
+          <tr><td style="position:relative"><input type="text" class="chem-search" placeholder="Tìm hóa chất..." oninput="searchChem(this)" autocomplete="off"><div class="chem-dropdown" style="position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:50;width:220px;max-height:180px;overflow-y:auto;display:none"></div></td><td><input type="number" class="chem-mw" placeholder="M" readonly style="background:var(--surface2)"></td><td><input type="number" min="0" step="0.01" placeholder="mg"></td><td><button class="btn btn-xs btn-danger" onclick="removeChem(this)">✕</button></td></tr>
         </tbody>
       </table>
       <button class="btn btn-sm" onclick="addInkRow('ink-solid-tbody')">+ Thêm chất rắn</button>
@@ -1241,7 +1285,7 @@
       <table class="chem-table">
         <thead><tr><th scope="col">Chọn dung môi</th><th scope="col">Thể tích (μL)</th><th scope="col"></th></tr></thead>
         <tbody id="ink-liquid-tbody">
-          <tr><td class="td-relative"><input type="text" class="chem-search" placeholder="Tìm dung môi..." oninput="searchChem(this)" autocomplete="off"><div class="chem-dropdown search-popover search-popover--w220"></div></td><td><input type="number" min="0" step="1" placeholder="μL"></td><td><button class="btn btn-xs btn-danger" onclick="removeChem(this)">✕</button></td></tr>
+          <tr><td style="position:relative"><input type="text" class="chem-search" placeholder="Tìm dung môi..." oninput="searchChem(this)" autocomplete="off"><div class="chem-dropdown" style="position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:50;width:220px;max-height:180px;overflow-y:auto;display:none"></div></td><td><input type="number" min="0" step="1" placeholder="μL"></td><td><button class="btn btn-xs btn-danger" onclick="removeChem(this)">✕</button></td></tr>
         </tbody>
       </table>
       <button class="btn btn-sm" onclick="addInkRow('ink-liquid-tbody')">+ Thêm dung môi</button>
@@ -1264,7 +1308,7 @@
       <div class="modal-title" id="ink-image-title">Quy trình pha mực</div>
       <button class="modal-close" type="button" aria-label="Đóng" onclick="closeModal('modal-ink-image')">✕</button>
     </div>
-    <div id="ink-image-content" class="empty-state-center">
+    <div id="ink-image-content" style="text-align:center;min-height:200px">
       <div id="ink-drop-zone"
         style="border:2px dashed var(--border2);border-radius:var(--radius-lg);padding:40px;cursor:pointer;transition:all 0.15s;background:var(--surface2)"
         ondragover="event.preventDefault();this.style.borderColor='var(--blue2)';this.style.background='var(--blue-light)'"
@@ -1274,13 +1318,13 @@
           <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" stroke="var(--text-3)" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </div>
         <div style="color:var(--text2);font-size:13px;font-weight:500">Kéo thả ảnh vào đây hoặc</div>
-        <label class="image-upload-label">
+        <label style="color:var(--blue2);cursor:pointer;font-size:13px;font-weight:500">
           <input type="file" id="ink-image-input" accept="image/*" style="display:none" onchange="uploadInkImage(this)">
           chọn từ máy tính
         </label>
-        <div class="muted-12-mt">hoặc Ctrl+V để dán từ clipboard</div>
+        <div style="color:var(--text-3);font-size:12px;margin-top:8px">hoặc Ctrl+V để dán từ clipboard</div>
       </div>
-      <img id="ink-image-preview" src="" class="image-preview">
+      <img id="ink-image-preview" src="" style="max-width:100%;border-radius:var(--radius);display:none;margin-top:10px">
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-ink-image')">Đóng</button>
@@ -1302,7 +1346,7 @@
         <div class="form-group"><label>Mã phép đo</label><input type="text" id="ec-code" placeholder="EC-001" oninput="autoPrefix(this,'EC')"></div>
         <div class="form-group"><label>Ngày đo</label><input type="date" id="ec-date"></div>
         
-<div class="form-group"><label>Mã điện cực sử dụng</label><div class="auth-pw-wrap"><input type="text" id="ec-electrode" class="electrode-search" placeholder="Tìm điện cực..." oninput="searchElectrode(this)" autocomplete="off"><div class="electrode-dropdown search-popover search-popover--w-full"></div></div></div>        <div class="form-group"><label>Loại phép đo</label><select class="cs-select" id="ec-type"><option>LSV</option><option>CV</option><option>EIS</option><option>CA</option><option>CP</option><option>OCP</option></select></div>
+<div class="form-group"><label>Mã điện cực sử dụng</label><div style="position:relative"><input type="text" id="ec-electrode" class="electrode-search" placeholder="Tìm điện cực..." oninput="searchElectrode(this)" autocomplete="off"><div class="electrode-dropdown" style="position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:50;width:100%;max-height:180px;overflow-y:auto;display:none"></div></div></div>        <div class="form-group"><label>Loại phép đo</label><select class="cs-select" id="ec-type"><option>LSV</option><option>CV</option><option>EIS</option><option>CA</option><option>CP</option><option>OCP</option></select></div>
         <div class="form-group"><label>Phản ứng</label><select class="cs-select" id="ec-reaction"><option>HER</option><option>OER</option><option>ORR</option><option>CO₂RR</option></select></div>
       </div>
     </div>
@@ -1351,7 +1395,7 @@
       <button class="modal-close" type="button" aria-label="Đóng" onclick="closeModal('modal-chemical')">✕</button>
     </div>
     <div class="form-grid" style="padding:8px 0">
-      <div class="form-group form-group--full">
+      <div class="form-group" style="grid-column:1/-1">
         <label>Mã CAS</label>
         <div style="display:flex;gap:6px">
           <input type="text" id="c-cas" placeholder="VD: 67-64-1" style="flex:1">
@@ -1378,7 +1422,7 @@
         </select>
       </div>
       <div class="form-group"><label>Số lượng (bình/chai)</label><input type="number" id="c-qty" min="0" placeholder="1" value="1"></div>
-      <div class="form-group form-group--full">
+      <div class="form-group" style="grid-column:1/-1">
         <label>Tồn kho hiện tại</label>
         <div style="display:flex;gap:6px;align-items:center;width:100%">
           <input type="number" step="0.1" id="c-stock" min="0" placeholder="50" style="flex:1;min-width:0;box-sizing:border-box">
@@ -1388,7 +1432,7 @@
           </select>
         </div>
       </div>
-      <div class="form-group form-group--full">
+      <div class="form-group" style="grid-column:1/-1">
         <label>Ngưỡng cảnh báo</label>
         <div style="display:flex;gap:6px;align-items:center">
           <input type="number" step="0.1" id="c-alert" min="0" placeholder="10" style="flex:1">
@@ -1409,7 +1453,7 @@
       <div class="modal-title" id="chemical-image-title">Ảnh hóa chất</div>
       <button class="modal-close" type="button" aria-label="Đóng" onclick="closeModal('modal-chemical-image')">✕</button>
     </div>
-    <div id="chemical-image-content" class="empty-state-center">
+    <div id="chemical-image-content" style="text-align:center;min-height:200px">
 <div id="chemical-drop-zone" class="drop-zone"
   ondragenter="event.preventDefault();this.classList.add('drag-over')"
   ondragover="event.preventDefault()"
@@ -1419,7 +1463,7 @@
     <svg aria-hidden="true" class="drop-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   </div>
   <div style="color:var(--text2);font-size:13px;font-weight:500;pointer-events:none">Kéo thả ảnh vào đây hoặc</div>
-  <label class="image-upload-label">
+  <label style="color:var(--blue2);cursor:pointer;font-size:13px;font-weight:500">
     <input type="file" id="chemical-image-input" accept="image/*" style="display:none" onchange="uploadChemicalImage(this)">
     chọn từ máy tính
   </label>
@@ -1445,7 +1489,7 @@
       <button class="modal-close" type="button" aria-label="Đóng" onclick="closeModal('modal-equipment')">✕</button>
     </div>
     <div class="form-grid" style="padding:8px 0">
-      <div class="form-group form-group--full"><label>Tên thiết bị</label><input type="text" id="eq-name" placeholder="VD: Máy khuấy từ gia nhiệt"></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Tên thiết bị</label><input type="text" id="eq-name" placeholder="VD: Máy khuấy từ gia nhiệt"></div>
       <div class="form-group"><label>Model</label><input type="text" id="eq-model" placeholder="VD: MS-H280-Pro"></div>
       <div class="form-group"><label>Serial Number</label><input type="text" id="eq-serial" placeholder="VD: SN-2024-001"></div>
       <div class="form-group"><label>Hãng sản xuất</label><input type="text" id="eq-vendor" placeholder="VD: DLAB"></div>
@@ -1466,7 +1510,7 @@
   </select>
 </div>
       
-<div class="form-group form-group--full">
+<div class="form-group" style="grid-column:1/-1">
         <label>Ảnh thiết bị</label>
         <div id="eq-drop-zone"
           style="border:2px dashed var(--border);border-radius:var(--radius-lg);padding:28px;text-align:center;cursor:pointer;transition:all 0.15s"
@@ -1474,8 +1518,8 @@
           ondragleave="this.style.borderColor='var(--border)';this.style.background=''"
           ondrop="dropEquipmentImage(event)">
           <svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" stroke="var(--text-3)" fill="none" stroke-width="1.5" style="margin-bottom:8px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          <div class="muted-13">Kéo thả ảnh vào đây hoặc
-            <label class="image-upload-label--bare">
+          <div style="color:var(--text-3);font-size:13px">Kéo thả ảnh vào đây hoặc
+            <label style="color:var(--blue2);cursor:pointer;font-weight:500">
               <input type="file" id="eq-image-input" accept="image/*" style="display:none" onchange="previewEquipmentImage(this)"> chọn từ máy tính
             </label>
           </div>
@@ -1504,26 +1548,26 @@
       <button class="modal-close" type="button" aria-label="Đóng" onclick="closeModal('modal-booking')">✕</button>
     </div>
     <div class="form-grid" style="padding:8px 0">
-      <div class="form-group form-group--full">
-        <label>Thiết bị <span class="text-danger-color">*</span></label>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Thiết bị <span style="color:var(--danger)">*</span></label>
         <select id="bk-equipment" class="cs-select" style="width:100%">
           <option value="">Chọn thiết bị</option>
         </select>
       </div>
-      <div class="form-group form-group--full">
-        <label>Ngày sử dụng <span class="text-danger-color">*</span></label>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Ngày sử dụng <span style="color:var(--danger)">*</span></label>
         <input type="date" id="bk-date" style="width:100%">
       </div>
       <div class="form-group">
-        <label>Giờ bắt đầu <span class="text-danger-color">*</span></label>
+        <label>Giờ bắt đầu <span style="color:var(--danger)">*</span></label>
         <input type="time" id="bk-start" value="08:00" style="width:100%">
       </div>
       <div class="form-group">
-        <label>Giờ kết thúc <span class="text-danger-color">*</span></label>
+        <label>Giờ kết thúc <span style="color:var(--danger)">*</span></label>
         <input type="time" id="bk-end" value="10:00" style="width:100%">
       </div>
-      <div class="form-group form-group--full">
-        <label>Mục đích sử dụng <span class="text-danger-color">*</span></label>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Mục đích sử dụng <span style="color:var(--danger)">*</span></label>
         <textarea id="bk-purpose" rows="3" placeholder="VD: Đo XRD mẫu Fe2O3 / Pha chế dung dịch H2SO4 0.5M..." style="width:100%;border:1.5px solid var(--border);border-radius:var(--radius);padding:9px 11px;font-size:13px;font-family:inherit;resize:vertical"></textarea>
       </div>
     </div>
@@ -1540,8 +1584,8 @@
       <div class="modal-title" id="modal-reject-reason-title">Từ chối đăng ký</div>
       <button class="modal-close" type="button" aria-label="Đóng" onclick="closeModal('modal-reject-reason')">✕</button>
     </div>
-    <div class="sidebar-section">
-      <div class="form-group form-group--full">
+    <div style="padding:8px 0">
+      <div class="form-group" style="grid-column:1/-1">
         <label>Lý do từ chối <span style="color:var(--text-3);font-weight:400">(tùy chọn)</span></label>
         <textarea id="bk-reject-reason" rows="3" placeholder="VD: Thiết bị đang bảo trì / Trùng với buổi họp lab..." style="width:100%;border:1.5px solid var(--border);border-radius:var(--radius);padding:9px 11px;font-size:13px;font-family:inherit;resize:vertical"></textarea>
       </div>
@@ -1567,7 +1611,7 @@
       <div class="form-group"><label>MSSV/MSHV</label><input type="text" id="m-id" placeholder="2xxxxxx"></div>
       <div class="form-group"><label>Email</label><input type="email" id="m-email" placeholder="example@hcmut.edu.vn"></div>
       <div class="form-group"><label>Số điện thoại</label><input type="text" id="m-phone" placeholder="0901234567"></div>
-      <div class="form-group form-group--full"><label>Hướng nghiên cứu</label><input type="text" id="m-topic" placeholder="VD: Vật liệu điện cực HER từ WS₂/WO₃"></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Hướng nghiên cứu</label><input type="text" id="m-topic" placeholder="VD: Vật liệu điện cực HER từ WS₂/WO₃"></div>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-member')">Hủy</button>

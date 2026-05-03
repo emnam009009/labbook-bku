@@ -932,6 +932,12 @@ table .badge,
   letter-spacing: 0.06em;
 }
 
+/* Header cell đầu tiên "NGƯỜI THỰC HIỆN" — thêm padding-left để align
+   với text tên (rows có avatar 32px + gap 10px = 42px offset) */
+.recent-grid-head > div:first-child {
+  padding-left: 42px;
+}
+
 .recent-rows {
   display: flex;
   flex-direction: column;

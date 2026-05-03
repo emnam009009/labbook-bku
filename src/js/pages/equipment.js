@@ -89,7 +89,7 @@ function makeEqRow(r) {
   return '<tr class="eq-row-' + (r.group || 'other') + ' clickable-row" onclick="if(window.isAdmin)editEquipment(\'' + r._key + '\')" title="' + (isAdmin ? 'Nhấn để sửa' : '') + '">' +
     '<td><strong>' + (r.name || '') + '</strong></td>' +
     '<td class="mono" style="font-size:12px">' + (r.model || '—') + '<br><span style="color:var(--teal)">' + (r.serial || '—') + '</span></td>' +
-    '<td class="mono">' + (r.vendor || '—') + '</td>' +
+    '<td class="mono td-center">' + (r.vendor || '—') + '</td>' +
     '<td style="text-align:center" onclick="event.stopPropagation()">' +
       '<div onclick="showEquipmentImage(\'' + r._key + '\')" ' +
         'ondrop="event.preventDefault();event.stopPropagation();this.style.transform=\'\';this.style.boxShadow=\'\';this.style.zIndex=\'\';this.style.borderColor=\'' + borderC + '\';this.style.background=\'' + bgC + '\';dropImageToCell(\'equipment\',\'' + r._key + '\',event.dataTransfer.files[0])" ' +
@@ -99,8 +99,8 @@ function makeEqRow(r) {
         imgBox +
       '</div>' +
     '</td>' +
-    '<td>' + (r.location || '—') + '</td>' +
-    '<td class="mono">' + (r.qty || 1) + ' cái</td>' +
+    '<td class="td-center">' + (r.location || '—') + '</td>' +
+    '<td class="mono td-center">' + (r.qty || 1) + ' cái</td>' +
     '<td class="mono" style="font-size:12px;text-align:center">' + dateStr + '</td>' +
     '<td style="text-align:center"><span class="badge ' + (sc[r.status] || 'badge-gray') + '">' + (r.status || '—') + '</span></td>' +
     '<td class="action-cell" onclick="event.stopPropagation()" style="text-align:left;white-space:nowrap">' +

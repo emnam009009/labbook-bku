@@ -175,7 +175,7 @@ export function renderChemicals() {
 
       html += '<tr class="clickable-row ' + gid + '-row" onclick="editChemical(\'' + r._key + '\')" title="Nhấn để sửa">' +
         '<td><strong>' + r.name + '</strong></td>' +
-        '<td class="mono" style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + formatChemical(r.formula) + '</td>' +
+        '<td class="mono" style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left">' + formatChemical(r.formula) + '</td>' +
         '<td style="text-align:center" onclick="event.stopPropagation()">' +
           '<div id="img-box-' + r._key + '" onclick="showChemicalImage(\'' + r._key + '\')" ' +
             'ondragover="event.preventDefault();event.stopPropagation();this.style.borderColor=\'var(--blue2)\';this.style.background=\'var(--blue-light)\';this.style.transform=\'scale(3)\';this.style.boxShadow=\'0 0 0 2px rgba(37,99,235,0.15)\';this.style.zIndex=\'10\'" ' +

@@ -325,6 +325,15 @@ window.saveBooking = async function() {
     showToast?.('Vui lòng chọn thiết bị!', 'danger');
     return;
   }
+  // Kiểm tra trạng thái thiết bị: không cho đặt lịch nếu đang sửa hoặc ngưng sử dụng
+  const equipmentRecord = window.cache?.equipment?.[equipmentKey];
+  if (equipmentRecord) {
+    const eqStatus = equipmentRecord.status;
+    if (eqStatus === 'Đang sửa' || eqStatus === 'Ngưng sử dụng') {
+      showToast?.(`Thiết bị "${equipmentRecord.name || ''}" đang ở trạng thái "${eqStatus}", không thể đặt lịch!`, 'danger');
+      return;
+    }
+  }
   if (!date) {
     showToast?.('Vui lòng chọn ngày!', 'danger');
     return;
@@ -959,6 +968,8 @@ window.calOnDragStart = function(e, key) {
   e.dataTransfer.effectAllowed = 'move';
   e.dataTransfer.setData('text/plain', key);
   window._draggingBookingKey = key;
+  // Add body class để CSS làm vùng hit của nav week to ra
+  document.body.classList.add('is-dragging-booking');
   setTimeout(() => {
     if (e.target && e.target.style) e.target.style.opacity = '0.4';
   }, 0);
@@ -1339,6 +1350,16 @@ window.calNavWeek = function(delta) {
   d.setDate(d.getDate() + delta * 7);
   _calStartDate = d;
   renderCalendar();
+  
+  // Slide animation cho calendar grid khi chuyển tuần
+  const grid = document.getElementById('cal-grid');
+  if (grid) {
+    const cls = delta > 0 ? 'cal-slide-from-right' : 'cal-slide-from-left';
+    grid.classList.remove('cal-slide-from-right', 'cal-slide-from-left');
+    void grid.offsetWidth; // force reflow
+    grid.classList.add(cls);
+    setTimeout(() => grid.classList.remove(cls), 400);
+  }
 };
 
 window.calToday = function() {
@@ -1409,3 +1430,116 @@ document.addEventListener('DOMContentLoaded', () => {
     searchEl.addEventListener('input', () => renderBooking());
   }
 });
+
+// ── Hover navigate tuần khi đang kéo block ──
+// Khi user kéo block và hover vào nút "Tuần trước/sau" trong 700ms
+// → tự động navigate tuần, user vẫn giữ chuột để kéo tiếp
+let _dragHoverNavTimer = null;
+const DRAG_HOVER_NAV_DELAY = 700; // ms
+
+window.calOnDragHoverNav = function(e, delta) {
+  e.preventDefault();
+  // Chỉ trigger nếu đang kéo 1 booking block
+  if (!window._draggingBookingKey) return;
+  
+  const btn = e.currentTarget;
+  // Visual feedback: highlight nút
+  btn.classList.add('cal-nav-btn-drag-hover');
+  
+  // Clear timer cũ (nếu có)
+  if (_dragHoverNavTimer) clearTimeout(_dragHoverNavTimer);
+  
+  // Start timer 700ms
+  _dragHoverNavTimer = setTimeout(() => {
+    _dragHoverNavTimer = null;
+    btn.classList.remove('cal-nav-btn-drag-hover');
+    if (typeof window.calNavWeek === 'function') {
+      window.calNavWeek(delta);
+    }
+  }, DRAG_HOVER_NAV_DELAY);
+};
+
+window.calOnDragLeaveNav = function(e) {
+  const btn = e.currentTarget;
+  btn.classList.remove('cal-nav-btn-drag-hover');
+  if (_dragHoverNavTimer) {
+    clearTimeout(_dragHoverNavTimer);
+    _dragHoverNavTimer = null;
+  }
+};
+
+// Cleanup timer khi drag end (đề phòng user thả chuột giữa hover)
+const _origCalOnDragEnd = window.calOnDragEnd;
+window.calOnDragEnd = function(e) {
+  if (_dragHoverNavTimer) {
+    clearTimeout(_dragHoverNavTimer);
+    _dragHoverNavTimer = null;
+  }
+  document.querySelectorAll('.cal-nav-btn-drag-hover').forEach(b => 
+    b.classList.remove('cal-nav-btn-drag-hover')
+  );
+  // Cleanup body class
+  document.body.classList.remove('is-dragging-booking');
+  if (_origCalOnDragEnd) _origCalOnDragEnd(e);
+};
+
+// ── Edge zones drag detect (chuyển tuần khi kéo block ra cạnh trái/phải) ──
+let _dragEdgeTimer = null;
+const DRAG_EDGE_NAV_DELAY = 200; // ms
+
+window.calOnDragEnterEdge = function(e, delta) {
+  e.preventDefault();
+  if (!window._draggingBookingKey) return;
+  
+  const zone = e.currentTarget;
+  zone.classList.add('is-hover');
+  
+  if (_dragEdgeTimer) clearTimeout(_dragEdgeTimer);
+  
+  _dragEdgeTimer = setTimeout(() => {
+    _dragEdgeTimer = null;
+    zone.classList.remove('is-hover');
+    if (typeof window.calNavWeek === 'function') {
+      window.calNavWeek(delta);
+      // Sau khi navigate, edge zone vẫn còn hover (chuột chưa rời)
+      // → restart timer ngay để có thể navigate tiếp nếu user vẫn ở edge
+      setTimeout(() => {
+        if (window._draggingBookingKey) {
+          // Re-add hover để continue navigate nếu user vẫn giữ ở edge
+          zone.classList.add('is-hover');
+          if (_dragEdgeTimer) clearTimeout(_dragEdgeTimer);
+          _dragEdgeTimer = setTimeout(() => {
+            _dragEdgeTimer = null;
+            zone.classList.remove('is-hover');
+            if (typeof window.calNavWeek === 'function') {
+              window.calNavWeek(delta);
+            }
+          }, DRAG_EDGE_NAV_DELAY);
+        }
+      }, 30);
+    }
+  }, DRAG_EDGE_NAV_DELAY);
+};
+
+window.calOnDragLeaveEdge = function(e) {
+  const zone = e.currentTarget;
+  zone.classList.remove('is-hover');
+  if (_dragEdgeTimer) {
+    clearTimeout(_dragEdgeTimer);
+    _dragEdgeTimer = null;
+  }
+};
+
+// Cleanup edge timer khi drag end
+const _origCalOnDragEnd2 = window.calOnDragEnd;
+window.calOnDragEnd = function(e) {
+  if (_dragEdgeTimer) {
+    clearTimeout(_dragEdgeTimer);
+    _dragEdgeTimer = null;
+  }
+  document.querySelectorAll('.cal-edge-zone.is-hover').forEach(z => 
+    z.classList.remove('is-hover')
+  );
+  if (_origCalOnDragEnd2) _origCalOnDragEnd2(e);
+};
+

@@ -755,7 +755,74 @@
 /* Center text trong table header & cell (đếm 47 chỗ) */
 .th-center,
 .td-center {
-  text-align: center;
+  text-align: center !important;
+}
+
+/* Sort arrow span trong th sortable: position absolute để không chiếm 
+   space khiến text header bị lệch khi center.
+   Chỉ apply cho th có `data-sort` (sortable header). */
+.table-wrap thead th[data-sort] {
+  position: relative;
+}
+.table-wrap thead th[data-sort] .ts-arrow {
+  position: absolute !important;
+  right: 8px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  margin-left: 0 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FORCE ALIGN LEFT TẤT CẢ — override mọi text-align center từ
+   inline styles, class, và rules khác. Áp dụng cho toàn bộ bảng
+   trong .table-wrap (chemicals, equipment, experiments, booking, ...)
+   
+   Loại trừ:
+   - Cell có .action-cell (last column, action buttons) — căn phải
+   - Cell colspan (group header, empty state) — giữ center cho đẹp
+   ═══════════════════════════════════════════════════════════════ */
+
+.table-wrap thead th,
+.table-wrap tbody td {
+  text-align: left !important;
+}
+
+/* Override inline style="text-align:center" hoặc :right trên header/cells.
+   Specificity siêu cao bằng cách lặp class 3 lần */
+.table-wrap.table-wrap.table-wrap thead tr th[style],
+.table-wrap.table-wrap.table-wrap tbody tr td[style]:not(.action-cell):not(:last-child) {
+  text-align: left !important;
+}
+
+/* Cell có badge bên trong (trạng thái) — override mọi inline style */
+.table-wrap tbody tr td:has(> .badge),
+.table-wrap.table-wrap tbody tr td:has(> .badge) {
+  text-align: left !important;
+}
+
+/* Recent card header - cell đầu tiên thêm padding-left = 42px (avatar 32px + gap 10px)
+   để align text "Người thực hiện" với tên user (sau avatar) */
+.recent-grid-head > div:first-child,
+.recent-grid.recent-grid-head > div:first-child {
+  padding-left: 42px !important;
+}
+
+/* Override margin:auto của div con (cell ảnh chemicals/equipment) 
+   để bám trái theo cell */
+.table-wrap tbody td > div[style*="margin:auto"],
+.table-wrap tbody td > div[style*="margin: auto"] {
+  margin-left: 0 !important;
+  margin-right: auto !important;
+}
+
+/* Sort arrow vẫn ở góc phải (không bị ảnh hưởng) — đã có rule trên */
+
+/* Action cell (cột cuối với buttons) căn phải như cũ.
+   Lưu ý: vẫn override inline-style center của TH cuối để TH cuối căn left
+   (TH cuối thường rỗng, nhưng nếu có text thì căn left). */
+.table-wrap tbody td.action-cell,
+.table-wrap tbody tr td:last-child {
+  text-align: right !important;
 }
 
 /* Form group chiếm full row trong grid (12 chỗ)

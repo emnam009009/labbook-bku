@@ -3108,3 +3108,221 @@ html.neuro .modal-overlay { background: rgba(45,62,80,0.4) !important; backdrop-
   stroke-width: 2;
 }
 body.viewer-mode .qr-btn { display: none !important; }
+
+/* Hover navigate tuần khi đang kéo block - visual feedback */
+.cal-nav-btn-drag-hover {
+  background: var(--teal) !important;
+  color: white !important;
+  border-color: var(--teal) !important;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.3),
+              0 4px 12px rgba(13, 148, 136, 0.4) !important;
+  animation: cal-nav-pulse 0.7s ease-in-out forwards;
+}
+
+/* SVG con không nhận drag events — để dragenter bubble lên button cha */
+.cal-nav-btn svg,
+.cal-nav-btn svg * {
+  pointer-events: none;
+}
+
+/* Tăng vùng kéo: khi user đang drag block, nút nav week to ra để dễ hit */
+body.is-dragging-booking .cal-nav-btn {
+  position: relative;
+  /* Tạo invisible hit area xung quanh nút (12px each side) */
+}
+body.is-dragging-booking .cal-nav-btn::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: -12px;
+  right: -12px;
+  bottom: -12px;
+  /* Hit area trong suốt — chỉ để bắt drag events */
+  background: transparent;
+  z-index: 1;
+}
+
+@keyframes cal-nav-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1.05); }
+}
+
+html.dark .cal-nav-btn-drag-hover {
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.4),
+              0 4px 12px rgba(13, 148, 136, 0.5) !important;
+}
+
+/* ── Calendar edge zones (drag chuyển tuần) ── */
+.cal-edge-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 0.3s ease;
+  overflow: hidden;
+}
+.cal-edge-zone--left { left: 0; transform-origin: left center; }
+.cal-edge-zone--right { right: 0; transform-origin: right center; }
+
+/* Khi đang drag booking, edge zones fade-in mượt */
+body.is-dragging-booking .cal-edge-zone {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+  background: linear-gradient(
+    to right,
+    rgba(13, 148, 136, 0.18),
+    rgba(13, 148, 136, 0.04)
+  );
+}
+body.is-dragging-booking .cal-edge-zone--right {
+  background: linear-gradient(
+    to left,
+    rgba(13, 148, 136, 0.18),
+    rgba(13, 148, 136, 0.04)
+  );
+}
+
+/* Hover state - background đậm hơn, animation glow */
+.cal-edge-zone.is-hover {
+  background: linear-gradient(
+    to right,
+    rgba(13, 148, 136, 0.55),
+    rgba(13, 148, 136, 0.18)
+  ) !important;
+}
+.cal-edge-zone--right.is-hover {
+  background: linear-gradient(
+    to left,
+    rgba(13, 148, 136, 0.55),
+    rgba(13, 148, 136, 0.18)
+  ) !important;
+}
+
+/* Progress bar countdown 700ms — chạy ngang để user thấy "đang đếm" */
+.cal-edge-zone.is-hover::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--teal);
+  transform-origin: left center;
+  animation: cal-edge-progress 0.2s linear forwards;
+  box-shadow: 0 0 8px var(--teal);
+}
+.cal-edge-zone--right.is-hover::after {
+  transform-origin: right center;
+}
+
+@keyframes cal-edge-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Mũi tên chỉ hướng — bouncing animation liên tục để hút mắt */
+.cal-edge-arrow {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--teal);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  opacity: 0.55;
+  transition: opacity 0.25s ease,
+              transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Arrow bouncing nhẹ liên tục (chỉ khi edge zone hiện) */
+body.is-dragging-booking .cal-edge-zone--left .cal-edge-arrow {
+  animation: cal-arrow-bounce-left 1.4s ease-in-out infinite;
+}
+body.is-dragging-booking .cal-edge-zone--right .cal-edge-arrow {
+  animation: cal-arrow-bounce-right 1.4s ease-in-out infinite;
+}
+
+@keyframes cal-arrow-bounce-left {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-4px); }
+}
+@keyframes cal-arrow-bounce-right {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(4px); }
+}
+
+/* Hover state - arrow zoom to + sáng hơn */
+.cal-edge-zone.is-hover .cal-edge-arrow {
+  opacity: 1;
+  transform: scale(1.4);
+  text-shadow: 0 0 12px rgba(13, 148, 136, 0.7),
+               0 1px 3px rgba(0,0,0,0.15);
+  animation: none; /* dừng bouncing khi hover */
+}
+
+/* Smooth slide animation cho calendar khi chuyển tuần */
+@keyframes cal-slide-in-from-right {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes cal-slide-in-from-left {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+#cal-grid.cal-slide-from-right {
+  animation: cal-slide-in-from-right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+#cal-grid.cal-slide-from-left {
+  animation: cal-slide-in-from-left 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Dark mode */
+html.dark body.is-dragging-booking .cal-edge-zone {
+  background: linear-gradient(
+    to right,
+    rgba(45, 212, 191, 0.22),
+    rgba(45, 212, 191, 0.04)
+  );
+}
+html.dark body.is-dragging-booking .cal-edge-zone--right {
+  background: linear-gradient(
+    to left,
+    rgba(45, 212, 191, 0.22),
+    rgba(45, 212, 191, 0.04)
+  );
+}
+html.dark .cal-edge-zone.is-hover {
+  background: linear-gradient(
+    to right,
+    rgba(45, 212, 191, 0.55),
+    rgba(45, 212, 191, 0.15)
+  ) !important;
+}
+html.dark .cal-edge-zone--right.is-hover {
+  background: linear-gradient(
+    to left,
+    rgba(45, 212, 191, 0.55),
+    rgba(45, 212, 191, 0.15)
+  ) !important;
+}
+
+/* Reduced motion respect */
+@media (prefers-reduced-motion: reduce) {
+  body.is-dragging-booking .cal-edge-zone--left .cal-edge-arrow,
+  body.is-dragging-booking .cal-edge-zone--right .cal-edge-arrow {
+    animation: none !important;
+  }
+  #cal-grid.cal-slide-from-right,
+  #cal-grid.cal-slide-from-left {
+    animation: none !important;
+  }
+}
