@@ -18,7 +18,7 @@
 import { escapeHtml, escapeJs, vals, fuzzy, formatChemical } from '../utils/format.js'
 import { applyTableSort, initTableSort } from '../services/table-sort.js'
 import { getPersonName, canDelete } from '../utils/auth-helpers.js'
-import { applyDisplayLimit } from '../utils/display-limit.js'
+import { applyPagination, resetPage } from '../utils/pagination.js'
 
 // SVG icons dùng chung — định nghĩa 1 lần ở module-level để không lặp string trong template
 const LOCK_ICON_ON = '<svg height="16" viewBox="0 0 100 100" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M30,46V38a20,20,0,0,1,40,0v8a8,8,0,0,1,8,8V74a8,8,0,0,1-8,8H30a8,8,0,0,1-8-8V54A8,8,0,0,1,30,46Zm32-8v8H38V38a12,12,0,0,1,24,0Z" fill-rule="evenodd"/></svg>';
@@ -48,7 +48,7 @@ export function renderHydro() {
   // Apply table sort (override default nếu user đã click header)
   initTableSort('hydro-tbody', renderHydro);
   rows = applyTableSort('hydro-tbody', rows, (a, b) => (b.date || '').localeCompare(a.date || ''));
-  rows = applyDisplayLimit(rows, 'hydro', 'hydro-limit-hint', 'hydro-tbody');
+  rows = applyPagination(rows, 'hydro', 'hydro-pagination', renderHydro);
 
   const tbody = document.getElementById('hydro-tbody');
   if (!tbody) return;
@@ -99,7 +99,7 @@ export function renderElectrode() {
   // Apply table sort
   initTableSort('electrode-tbody', renderElectrode);
   rows = applyTableSort('electrode-tbody', rows, (a, b) => (b.date || '').localeCompare(a.date || ''));
-  rows = applyDisplayLimit(rows, 'electrode', 'electrode-limit-hint', 'electrode-tbody');
+  rows = applyPagination(rows, 'electrode', 'electrode-pagination', renderElectrode);
 
   if (sf) rows = rows.filter(r => r.status === sf);
   if (window.passMemberFilter) {
@@ -160,7 +160,7 @@ export function renderElectrochem() {
   // Apply table sort
   initTableSort('electrochem-tbody', renderElectrochem);
   rows = applyTableSort('electrochem-tbody', rows, (a, b) => (b.date || '').localeCompare(a.date || ''));
-  rows = applyDisplayLimit(rows, 'electrochem', 'electrochem-limit-hint', 'electrochem-tbody');
+  rows = applyPagination(rows, 'electrochem', 'electrochem-pagination', renderElectrochem);
 
   if (sf) rows = rows.filter(r => r.status === sf);
   if (window.passMemberFilter) {

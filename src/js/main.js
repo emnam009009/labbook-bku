@@ -60,6 +60,7 @@ import { renderBooking } from './pages/booking.js'
 import { renderMembers } from './pages/members.js'
 import { renderHistory } from './pages/history.js'
 import { renderReports } from './pages/reports.js'
+import { resetPage } from './utils/pagination.js'
 import { renderUsers } from './pages/users.js'
 import { toggleAvatarMenu, changeAvatar, resetAvatar, updateAvatarUI } from './services/avatar.js'
 
@@ -196,6 +197,9 @@ window.toggleEqGroup = toggleEqGroup;
 window.renderMembers = renderMembers;
 window.renderHistory = renderHistory;
 window.renderReports = renderReports;
+window._resetHydroPage = () => resetPage('hydro');
+window._resetElectrodePage = () => resetPage('electrode');
+window._resetElectrochemPage = () => resetPage('electrochem');
 window.renderUsers = renderUsers;
 window.toggleAvatarMenu = toggleAvatarMenu;
 window.changeAvatar = changeAvatar;

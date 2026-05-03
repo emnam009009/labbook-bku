@@ -489,7 +489,7 @@
         <div class="flex gap-2 mb-4 flex-wrap items-center" style="margin-top:36px">
           <div style="position:relative;flex:1;min-width:200px">
             <input  aria-label="Tìm theo mã, vật liệu, người thực hiện" class="search-input" id="hydro-search" type="text" style="width:100%;padding-right:32px"
-                   placeholder="Tìm theo mã, vật liệu, người thực hiện..." oninput="renderHydro();document.getElementById('hydro-search-clear').style.display=this.value?'flex':'none'">
+                   placeholder="Tìm theo mã, vật liệu, người thực hiện..." oninput="window._resetHydroPage&&window._resetHydroPage();renderHydro();document.getElementById('hydro-search-clear').style.display=this.value?'flex':'none'">
             <button id="hydro-search-clear" onclick="document.getElementById('hydro-search').value='';renderHydro();this.style.display='none'"
                     style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;background:#f87171;border:none;cursor:pointer;align-items:center;justify-content:center;transition:background 0.15s"
                     onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#f87171'">
@@ -522,6 +522,7 @@
           <tbody id="hydro-tbody">
             <tr><td colspan="11"><div class="loading"><div class="spinner"></div>Đang tải...</div></td></tr>
           </tbody></table>
+          <div id="hydro-pagination" class="pagination-bar" style="margin-top:12px"></div>
         </div>
       </div>
 
@@ -553,7 +554,7 @@
           <div class="flex gap-2 mb-4 flex-wrap items-center" style="margin-top:36px">
             <div style="position:relative;flex:1;min-width:200px">
             <input  aria-label="Tìm theo mã, vật liệu" class="search-input" id="electrode-search" type="text" style="width:100%;padding-right:32px"
-                   placeholder="Tìm theo mã, vật liệu..." oninput="renderElectrode();document.getElementById('electrode-search-clear').style.display=this.value?'flex':'none'">
+                   placeholder="Tìm theo mã, vật liệu..." oninput="window._resetElectrodePage&&window._resetElectrodePage();renderElectrode();document.getElementById('electrode-search-clear').style.display=this.value?'flex':'none'">
             <button id="electrode-search-clear" onclick="document.getElementById('electrode-search').value='';renderElectrode();this.style.display='none'"
                     style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;background:#f87171;border:none;cursor:pointer;align-items:center;justify-content:center;transition:background 0.15s"
                     onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#f87171'">
@@ -585,6 +586,7 @@
             <tbody id="electrode-tbody">
               <tr><td colspan="11"><div class="loading"><div class="spinner"></div>Đang tải...</div></td></tr>
             </tbody></table>
+          <div id="electrode-pagination" class="pagination-bar" style="margin-top:12px"></div>
           </div>
         </div>
         <div id="etab-ink" class="tab-content">
@@ -621,7 +623,7 @@
         <div class="flex gap-2 mb-4 flex-wrap items-center" style="margin-top:36px">
           <div style="position:relative;flex:1;min-width:200px">
             <input  aria-label="Tìm theo mã, điện cực, phản ứng" class="search-input" id="ec-search" type="text" style="width:100%;padding-right:32px"
-                   placeholder="Tìm theo mã, điện cực, phản ứng..." oninput="renderElectrochem();document.getElementById('ec-search-clear').style.display=this.value?'flex':'none'">
+                   placeholder="Tìm theo mã, điện cực, phản ứng..." oninput="window._resetElectrochemPage&&window._resetElectrochemPage();renderElectrochem();document.getElementById('ec-search-clear').style.display=this.value?'flex':'none'">
             <button id="ec-search-clear" onclick="document.getElementById('ec-search').value='';renderElectrochem();this.style.display='none'"
                     style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;background:#f87171;border:none;cursor:pointer;align-items:center;justify-content:center;transition:background 0.15s"
                     onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#f87171'">
@@ -653,6 +655,7 @@
           <tbody id="electrochem-tbody">
             <tr><td colspan="11"><div class="loading"><div class="spinner"></div>Đang tải...</div></td></tr>
           </tbody></table>
+          <div id="electrochem-pagination" class="pagination-bar" style="margin-top:12px"></div>
         </div>
       </div>
 
