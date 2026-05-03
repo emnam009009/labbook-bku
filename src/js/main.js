@@ -6,6 +6,13 @@
 
 // ── Import CSS ───────────────────────────────────────────
 import '../css/main.css'
+import '../css/components.css'
+import '../css/mobile-ux.css'
+import '../css/dark-mode.css'
+import '../css/fix-avatar-zindex.css'
+import '../css/polish.css'
+import '../css/dashboard.css'
+import '../css/sticky-header.css'
 import '../css/theme-swatches.css'
 
 // ── Import Firebase ───────────────────────────────────────
@@ -57,6 +64,7 @@ import { toggleAvatarMenu, changeAvatar, resetAvatar, updateAvatarUI } from './s
 
 import { printSingleLabel, printBulkLabels, showLabelChoiceDialog } from './services/qr-labels.js'
 import { initUrlRouter } from './services/url-router.js'
+import './services/sticky-header.js'
 import { initBookingSuggestions } from './services/booking-suggestions.js'
 import { initPdfReport } from './services/pdf-report.js'
 // ── Import save handlers (Phần 7a) ───────────────────────
