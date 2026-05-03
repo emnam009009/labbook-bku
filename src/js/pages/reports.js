@@ -2,33 +2,37 @@
  * pages/reports.js
  *
  * Trang Reports — phân tích lịch sử thí nghiệm theo khoảng thời gian.
- * Phase 3A — Foundation:
- *   - Date range picker (3 modes: tháng / quý / custom)
- *   - Card 1: Số lượng TN theo loại (hydro/electrode/electrochem) trong khoảng đã chọn
  *
- * Tách module riêng (KHÔNG động dashboard.js) để:
- *   - Dashboard giữ vai trò "realtime overview" (không có filter)
- *   - Reports có thể grow dần (Phase 3B/3C/3D thêm cards mới)
+ * Phase 3A — Foundation (giữ):
+ *   - Date range picker (3 modes: tháng / quý / custom)
+ *   - Card 1: Số lượng TN theo loại (hydro/electrode/electrochem)
+ *
+ * Phase 3B — Chemicals consumption (mới):
+ *   - Card 2: Top 10 hóa chất tiêu thụ nhiều nhất + bảng chi tiết
+ *   - Parse từ /history entries với pattern "Trừ tồn kho: <name>" + "-Xg (TN: ...)"
+ *   - Net = subtractions - returns ("Hoàn tồn kho")
+ *   - Group by chemical + unit (vì g/ml không gộp được)
  *
  * Phụ thuộc:
- *   - cache qua window.cache (hydro, electrode, electrochem)
- *   - Chart.js lazy-loaded để giảm initial bundle
+ *   - cache qua window.cache (hydro, electrode, electrochem, history)
+ *   - Chart.js lazy-loaded
+ *   - history chỉ có cho admin/superadmin (rule .read)
  *
  * State module-level:
- *   - _filterMode: 'month' | 'quarter' | 'custom'
- *   - _filterFrom, _filterTo: Date objects (inclusive both ends)
- *   - _typeChartInstance: Chart.js instance để destroy trước khi tạo mới
+ *   - _filterMode, _filterFrom, _filterTo: range filter
+ *   - _typeChartInstance, _chemChartInstance: Chart.js refs
  */
 
 import { vals } from '../utils/format.js'
 
 // ── State ─────────────────────────────────────────────────
-let _filterMode = 'month'           // mode mặc định khi mở page lần đầu
-let _filterFrom = null              // Date | null
-let _filterTo = null                // Date | null
+let _filterMode = 'month'
+let _filterFrom = null
+let _filterTo = null
 let _typeChartInstance = null
+let _chemChartInstance = null
 
-// ── Chart.js lazy loader (~80KB, share với dashboard) ─────
+// ── Chart.js lazy loader ──────────────────────────────────
 let _chartJsPromise = null
 function loadChartJs() {
   if (!_chartJsPromise) {
@@ -58,7 +62,6 @@ function recordDate(r) {
 }
 
 function fmtDateInput(d) {
-  // Format Date → "YYYY-MM-DD" cho <input type="date">
   if (!d) return ''
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
@@ -66,34 +69,18 @@ function fmtDateInput(d) {
   return `${y}-${m}-${day}`
 }
 
-function startOfMonth(d) {
-  return new Date(d.getFullYear(), d.getMonth(), 1)
-}
+function startOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1) }
+function endOfMonth(d) { return new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999) }
+function startOfQuarter(d) { const q = Math.floor(d.getMonth() / 3); return new Date(d.getFullYear(), q * 3, 1) }
+function endOfQuarter(d) { const q = Math.floor(d.getMonth() / 3); return new Date(d.getFullYear(), q * 3 + 3, 0, 23, 59, 59, 999) }
 
-function endOfMonth(d) {
-  return new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999)
-}
-
-function startOfQuarter(d) {
-  const q = Math.floor(d.getMonth() / 3)
-  return new Date(d.getFullYear(), q * 3, 1)
-}
-
-function endOfQuarter(d) {
-  const q = Math.floor(d.getMonth() / 3)
-  return new Date(d.getFullYear(), q * 3 + 3, 0, 23, 59, 59, 999)
-}
-
-// ── Initialize default range ──────────────────────────────
 function _initDefaultRange() {
   if (_filterFrom && _filterTo) return
-  // Default: tháng hiện tại
   const now = new Date()
   _filterFrom = startOfMonth(now)
   _filterTo = endOfMonth(now)
 }
 
-// ── Filter logic ──────────────────────────────────────────
 function _filterByDate(records) {
   if (!_filterFrom || !_filterTo) return records
   const fromMs = _filterFrom.getTime()
@@ -106,7 +93,106 @@ function _filterByDate(records) {
   })
 }
 
-// ── Render: Date range picker ─────────────────────────────
+// ── Phase 3B: Aggregate chemicals từ /history ─────────────
+//
+// Pattern lookup từ save-handlers.js, duplicate-delete.js:
+//   action: "Trừ tồn kho: NaOH"  hoặc  "Hoàn tồn kho: NaOH"
+//   detail: "-100g (TN: HYD-001)"  hoặc  "+100g (Xóa TN: HYD-001)"
+//
+// Net consumption = subtractions - returns
+const RX_ACTION_SUBTRACT = /^Tr\u1eeb t\u1ed3n kho:\s*(.+)$/
+const RX_ACTION_RETURN = /^Ho\u00e0n t\u1ed3n kho:\s*(.+)$/
+const RX_DETAIL_AMOUNT = /^([+-])(\d+(?:\.\d+)?)\s*([a-zA-Z\u00c0-\u1ef9]+)/
+
+function aggregateChemicalsFromHistory() {
+  const cache = window.cache || {}
+  const history = vals(cache.history)
+
+  // Filter theo date range (history.ts là number — Date.now())
+  const fromMs = _filterFrom?.getTime() ?? 0
+  const toMs = _filterTo?.getTime() ?? Number.POSITIVE_INFINITY
+  const inRange = history.filter(h => {
+    const ts = Number(h.ts)
+    return ts >= fromMs && ts <= toMs
+  })
+
+  // Aggregate by (chem name, unit)
+  // Map<chemName, Map<unit, {totalNet, count, subtotal, returntotal}>>
+  const agg = new Map()
+
+  inRange.forEach(h => {
+    const action = String(h.action || '')
+    const detail = String(h.detail || '')
+
+    let chemName = null
+    let isReturn = false
+
+    let m = action.match(RX_ACTION_SUBTRACT)
+    if (m) {
+      chemName = m[1].trim()
+    } else {
+      m = action.match(RX_ACTION_RETURN)
+      if (m) {
+        chemName = m[1].trim()
+        isReturn = true
+      }
+    }
+    if (!chemName) return  // Skip non-chemical history
+
+    // Parse detail: "+100g (...)" or "-100g (...)"
+    const md = detail.match(RX_DETAIL_AMOUNT)
+    if (!md) return  // Skip if can't parse amount
+    const sign = md[1]
+    const amount = parseFloat(md[2])
+    const unit = md[3].toLowerCase()
+    if (!isFinite(amount) || amount <= 0) return
+
+    // Tính net delta:
+    //   - "Trừ tồn kho" + "-100g" → net consumption +100 (subtract more)
+    //   - "Trừ tồn kho" + "+50g" → net consumption -50 (rare: correction)
+    //   - "Hoàn tồn kho" + "+100g" → net consumption -100 (return reduces total)
+    //   - "Hoàn tồn kho" + "-..." → unusual, treat as return
+    let netDelta = 0
+    if (!isReturn) {
+      // "Trừ tồn kho": consumption = absolute value with sign
+      netDelta = sign === '-' ? amount : -amount
+    } else {
+      // "Hoàn tồn kho": ngược lại (return)
+      netDelta = sign === '+' ? -amount : amount
+    }
+
+    // Record
+    if (!agg.has(chemName)) agg.set(chemName, new Map())
+    const unitMap = agg.get(chemName)
+    if (!unitMap.has(unit)) {
+      unitMap.set(unit, { totalNet: 0, count: 0 })
+    }
+    const stat = unitMap.get(unit)
+    stat.totalNet += netDelta
+    stat.count += 1
+  })
+
+  // Flatten + filter (chỉ giữ entries có totalNet > 0 = thực sự tiêu thụ)
+  const result = []
+  agg.forEach((unitMap, chemName) => {
+    unitMap.forEach((stat, unit) => {
+      if (stat.totalNet > 0.0001) {  // ignore zero/negative net
+        result.push({
+          name: chemName,
+          unit,
+          total: stat.totalNet,
+          count: stat.count,
+        })
+      }
+    })
+  })
+
+  // Sort desc by total, take top 10
+  result.sort((a, b) => b.total - a.total)
+  return result
+}
+
+// ── Render: Date range picker (giữ Phase 3A) ──────────────
 function renderDatePicker() {
   const card = document.getElementById('report-filter-card')
   if (!card) return
@@ -115,7 +201,6 @@ function renderDatePicker() {
   const isQuarterMode = _filterMode === 'quarter'
   const isCustomMode = _filterMode === 'custom'
 
-  // Active button style helper
   const btn = (mode, label) => {
     const active = _filterMode === mode
     const bg = active ? 'var(--teal)' : 'var(--surface-2, #f1f5f9)'
@@ -123,7 +208,6 @@ function renderDatePicker() {
     return `<button onclick="window._reportsSetMode('${mode}')" style="padding:7px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:${bg};color:${fg};transition:all 0.15s">${label}</button>`
   }
 
-  // Month picker — list 12 tháng gần nhất
   let monthPicker = ''
   if (isMonthMode) {
     const now = new Date()
@@ -140,7 +224,6 @@ function renderDatePicker() {
     monthPicker = `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px">${months.join('')}</div>`
   }
 
-  // Quarter picker — 8 quý gần nhất
   let quarterPicker = ''
   if (isQuarterMode) {
     const now = new Date()
@@ -150,7 +233,6 @@ function renderDatePicker() {
       const totalQ = currentQuarter - i + now.getFullYear() * 4
       const year = Math.floor(totalQ / 4)
       const q = totalQ % 4
-      const fromD = new Date(year, q * 3, 1)
       const label = `Q${q + 1}/${year}`
       const isSelected = _filterFrom && _filterFrom.getFullYear() === year && Math.floor(_filterFrom.getMonth() / 3) === q
       const bg = isSelected ? 'var(--teal-light, #f0fdfa)' : 'transparent'
@@ -161,7 +243,6 @@ function renderDatePicker() {
     quarterPicker = `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px">${quarters.join('')}</div>`
   }
 
-  // Custom picker — 2 input date
   let customPicker = ''
   if (isCustomMode) {
     customPicker = `
@@ -182,7 +263,6 @@ function renderDatePicker() {
     `
   }
 
-  // Active range display
   const rangeDisplay = (_filterFrom && _filterTo)
     ? `${_filterFrom.toLocaleDateString('vi-VN')} → ${_filterTo.toLocaleDateString('vi-VN')}`
     : 'Chưa chọn'
@@ -203,7 +283,7 @@ function renderDatePicker() {
   `
 }
 
-// ── Render: Card "Số lượng TN theo loại" ──────────────────
+// ── Render: Card 1 — Số lượng TN theo loại (giữ Phase 3A) ─
 async function renderTypeCountCard() {
   const card = document.getElementById('report-type-count-card')
   if (!card) return
@@ -214,8 +294,7 @@ async function renderTypeCountCard() {
   const electrochem = _filterByDate(vals(cache.electrochem))
   const total = hydro.length + electrode.length + electrochem.length
 
-  // Header + summary numbers
-  const summaryHTML = `
+  card.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
       <h3 style="margin:0;font-size:16px;font-weight:700;color:#0f172a">🧪 Số lượng thí nghiệm theo loại</h3>
       <span style="font-size:14px;color:#64748b;font-weight:600">Tổng: <strong style="color:var(--teal)">${total}</strong></span>
@@ -238,9 +317,7 @@ async function renderTypeCountCard() {
       <canvas id="report-type-chart"></canvas>
     </div>
   `
-  card.innerHTML = summaryHTML
 
-  // Empty state — skip Chart.js
   if (total === 0) {
     const wrapper = card.querySelector('canvas').parentElement
     wrapper.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#94a3b8;font-size:13px;text-align:center">
@@ -249,7 +326,6 @@ async function renderTypeCountCard() {
     return
   }
 
-  // Render chart bar (mỗi loại 1 cột)
   const Chart = await loadChartJs()
   const canvas = document.getElementById('report-type-chart')
   if (!canvas) return
@@ -301,18 +377,141 @@ async function renderTypeCountCard() {
   })
 }
 
+// ── Phase 3B: Card 2 — Tiêu thụ hóa chất ──────────────────
+async function renderChemicalsCard() {
+  const card = document.getElementById('report-chemicals-card')
+  if (!card) return
+
+  // Yêu cầu admin (history chỉ admin đọc được)
+  const isAdmin = !!(window.currentAuth?.isAdmin)
+  if (!isAdmin) {
+    card.innerHTML = `
+      <h3 style="margin:0;font-size:16px;font-weight:700;color:#0f172a">🧪 Tiêu thụ hóa chất</h3>
+      <div style="margin-top:12px;padding:14px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:6px;font-size:13px;color:#92400e">
+        Báo cáo này chỉ dành cho admin/superadmin (cần quyền đọc lịch sử thao tác).
+      </div>
+    `
+    return
+  }
+
+  const data = aggregateChemicalsFromHistory()
+  const top10 = data.slice(0, 10)
+
+  // Header
+  let html = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <h3 style="margin:0;font-size:16px;font-weight:700;color:#0f172a">🧪 Tiêu thụ hóa chất</h3>
+      <span style="font-size:14px;color:#64748b;font-weight:600">${data.length} loại đã dùng</span>
+    </div>
+  `
+
+  // Empty state
+  if (top10.length === 0) {
+    html += `
+      <div style="padding:24px;text-align:center;color:#94a3b8;font-size:13px">
+        Không có hóa chất nào được tiêu thụ trong khoảng thời gian đã chọn.
+      </div>
+    `
+    card.innerHTML = html
+    if (_chemChartInstance) { _chemChartInstance.destroy(); _chemChartInstance = null }
+    return
+  }
+
+  // Chart container + table
+  html += `
+    <div style="position:relative;height:${Math.max(220, top10.length * 32)}px;margin-bottom:18px">
+      <canvas id="report-chem-chart"></canvas>
+    </div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr style="background:var(--surface-2,#f8fafc);color:#475569">
+            <th style="padding:8px 12px;text-align:left;border-bottom:1px solid #e2e8f0;font-weight:600">Hóa chất</th>
+            <th style="padding:8px 12px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:600">Tổng tiêu thụ</th>
+            <th style="padding:8px 12px;text-align:center;border-bottom:1px solid #e2e8f0;font-weight:600">Đơn vị</th>
+            <th style="padding:8px 12px;text-align:center;border-bottom:1px solid #e2e8f0;font-weight:600">Số lần</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map((row, i) => `
+            <tr style="${i % 2 ? 'background:rgba(248,250,252,0.5)' : ''}">
+              <td style="padding:7px 12px;border-bottom:1px solid #f1f5f9;color:#0f172a;font-weight:500">${row.name}</td>
+              <td style="padding:7px 12px;text-align:right;border-bottom:1px solid #f1f5f9;font-family:'Courier New',monospace;color:var(--teal);font-weight:600">${row.total.toFixed(2)}</td>
+              <td style="padding:7px 12px;text-align:center;border-bottom:1px solid #f1f5f9;color:#64748b">${row.unit}</td>
+              <td style="padding:7px 12px;text-align:center;border-bottom:1px solid #f1f5f9;color:#94a3b8">${row.count}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `
+
+  card.innerHTML = html
+
+  // Chart top 10 (horizontal bar)
+  const Chart = await loadChartJs()
+  const canvas = document.getElementById('report-chem-chart')
+  if (!canvas) return
+
+  if (_chemChartInstance) {
+    _chemChartInstance.destroy()
+    _chemChartInstance = null
+  }
+
+  _chemChartInstance = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: top10.map(r => r.name + ' (' + r.unit + ')'),
+      datasets: [{
+        data: top10.map(r => r.total),
+        backgroundColor: 'rgba(13,148,136,0.75)',
+        borderColor: '#0d9488',
+        borderWidth: 1.2,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      indexAxis: 'y',  // horizontal bar
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(15,23,42,0.95)',
+          padding: 10,
+          cornerRadius: 6,
+          callbacks: {
+            label: (ctx) => {
+              const row = top10[ctx.dataIndex]
+              return ` ${row.total.toFixed(2)} ${row.unit} (${row.count} lần)`
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          ticks: { font: { size: 11 }, color: '#94a3b8' },
+          grid: { color: '#e2e8f0', lineWidth: 0.5 }
+        },
+        y: { grid: { display: false }, ticks: { font: { size: 11.5 }, color: '#475569' } }
+      }
+    }
+  })
+}
+
 // ── Public API ────────────────────────────────────────────
 export function renderReports() {
   _initDefaultRange()
   renderDatePicker()
   renderTypeCountCard()
+  renderChemicalsCard()  // Phase 3B
 }
 
-// ── Window handlers (HTML inline onclick) ─────────────────
+// ── Window handlers ───────────────────────────────────────
 if (typeof window !== 'undefined') {
   window._reportsSetMode = function(mode) {
     _filterMode = mode
-    // Reset range theo mode mới
     const now = new Date()
     if (mode === 'month') {
       _filterFrom = startOfMonth(now)
@@ -321,7 +520,6 @@ if (typeof window !== 'undefined') {
       _filterFrom = startOfQuarter(now)
       _filterTo = endOfQuarter(now)
     }
-    // Custom: giữ nguyên _filterFrom/_filterTo (cho user tự chọn)
     renderReports()
   }
 
@@ -345,25 +543,31 @@ if (typeof window !== 'undefined') {
     const to = parseDateAny(toInput.value)
     if (!from || !to) return
     if (from > to) {
-      // Swap nếu user nhập ngược
       _filterFrom = to
       _filterTo = new Date(from.getFullYear(), from.getMonth(), from.getDate(), 23, 59, 59, 999)
     } else {
       _filterFrom = from
       _filterTo = new Date(to.getFullYear(), to.getMonth(), to.getDate(), 23, 59, 59, 999)
     }
-    renderTypeCountCard()  // chỉ re-render data card, không re-render picker (giữ input focus)
+    // Re-render data cards (giữ picker focus)
+    renderTypeCountCard()
+    renderChemicalsCard()
   }
 }
 
-// ── Auto re-render khi data hoặc theme thay đổi ───────────
+// ── Auto re-render khi data update ────────────────────────
 window.addEventListener('cache-update', (e) => {
   const col = e.detail?.col
-  if (!['hydro', 'electrode', 'electrochem'].includes(col)) return
-  // Chỉ re-render nếu đang ở page Reports
+  // Type-count quan tâm: hydro/electrode/electrochem
+  // Chemicals quan tâm: history
   const reportsPage = document.getElementById('page-reports')
-  if (reportsPage && reportsPage.classList.contains('active')) {
+  if (!reportsPage || !reportsPage.classList.contains('active')) return
+
+  if (['hydro', 'electrode', 'electrochem'].includes(col)) {
     renderTypeCountCard()
+  }
+  if (col === 'history') {
+    renderChemicalsCard()
   }
 })
 
