@@ -6,12 +6,29 @@ import {
 } from './firebase.js'
 import { browserLocalPersistence, setPersistence, updateProfile } from 'firebase/auth'
 
+// ── State ───────────────────────────────────────────────────────────────
+// isAdmin     = role thuộc nhóm có quyền quản trị (admin OR superadmin)
+// isMember    = role thuộc nhóm có quyền ghi data (member OR admin OR superadmin)
+// isSuperAdmin = role superadmin (quyền cao nhất, được phép gán/thu hồi role superadmin khác)
 export const currentAuth = {
   user: null, uid: null, email: null, displayName: null,
-  role: 'viewer', isAdmin: false, isMember: false,
+  role: 'viewer',
+  isAdmin: false,
+  isMember: false,
+  isSuperAdmin: false,
 }
 
-// ── Đăng nhập ─────────────────────────────────────────────────────────────
+// ── Role helpers (export để các module khác dùng nhất quán) ─────────────
+export const isAdminRole       = (role) => role === 'admin' || role === 'superadmin'
+export const isMemberRole      = (role) => role === 'member' || role === 'admin' || role === 'superadmin'
+export const isSuperAdminRole  = (role) => role === 'superadmin'
+export const isActiveRole      = (role) => role && role !== 'pending' && role !== 'rejected'
+
+// ── Internal flags (khai báo trước register/initAuth để tránh TDZ) ──────
+let _isRegistering = false
+export function setRegistering(v) { _isRegistering = v }
+
+// ── Đăng nhập ───────────────────────────────────────────────────────────
 export async function login(email, password) {
   const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRe.test(email)) throw new Error('Email không hợp lệ')
@@ -22,7 +39,7 @@ export async function login(email, password) {
   return cred.user
 }
 
-// ── Đăng ký ───────────────────────────────────────────────────────────────
+// ── Đăng ký ─────────────────────────────────────────────────────────────
 export async function register(email, password, fullName) {
   const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRe.test(email)) throw new Error('Email không hợp lệ')
@@ -48,27 +65,28 @@ export async function register(email, password, fullName) {
   return cred.user
 }
 
-// ── Đăng xuất ─────────────────────────────────────────────────────────────
+// ── Đăng xuất ───────────────────────────────────────────────────────────
 export async function logout() {
   await signOut(auth)
-  Object.assign(currentAuth, { user:null, uid:null, email:null, role:'viewer', isAdmin:false, isMember:false })
+  Object.assign(currentAuth, {
+    user: null, uid: null, email: null, role: 'viewer',
+    isAdmin: false, isMember: false, isSuperAdmin: false,
+  })
 }
 
-// ── Load role từ Firebase ─────────────────────────────────────────────────
+// ── Load role từ Firebase (realtime) ────────────────────────────────────
 export function loadUserRole(uid, callback) {
   onValue(ref(db, 'users/' + uid + '/role'), async snap => {
     const role = snap.val() || 'viewer'
-    currentAuth.role     = role
-    currentAuth.isAdmin  = role === 'admin'
-    currentAuth.isMember = role === 'member' || role === 'admin'
+    currentAuth.role         = role
+    currentAuth.isAdmin      = isAdminRole(role)
+    currentAuth.isMember     = isMemberRole(role)
+    currentAuth.isSuperAdmin = isSuperAdminRole(role)
     if (callback) callback(role)
   })
 }
 
-// ── Init Auth ─────────────────────────────────────────────────────────────
-let _isRegistering = false
-export function setRegistering(v) { _isRegistering = v }
-
+// ── Init Auth ───────────────────────────────────────────────────────────
 export function initAuth(onLogin, onLogout) {
   onAuthStateChanged(auth, user => {
     if (_isRegistering) return
@@ -77,10 +95,15 @@ export function initAuth(onLogin, onLogout) {
       currentAuth.uid         = user.uid
       currentAuth.email       = user.email
       window.__currentUserEmail = user.email
-      if (user.email === 'nvhn.7202@gmail.com') window.__superAdminUid = user.uid
       currentAuth.displayName = user.displayName || user.email.split('@')[0]
+      // window.__superAdminUid sẽ được set trong loadUserRole/applyRoleUI
+      // dựa trên role thay vì hardcode email
       let _firstCall = true
       loadUserRole(user.uid, role => {
+        // Nếu role này là superadmin, cập nhật ref
+        if (isSuperAdminRole(role)) {
+          window.__superAdminUid = user.uid
+        }
         if (_firstCall) {
           _firstCall = false
           if (onLogin) onLogin(user, role)
@@ -95,13 +118,17 @@ export function initAuth(onLogin, onLogout) {
   })
 }
 
-// ── Apply UI theo role ────────────────────────────────────────────────────
+// ── Apply UI theo role ──────────────────────────────────────────────────
 export function applyRoleUI(role) {
+  const isAdmin  = isAdminRole(role)
+  const isMember = isMemberRole(role)
+  const isSuper  = isSuperAdminRole(role)
+
   document.querySelectorAll('.admin-only').forEach(el => {
-    el.style.display = role === 'admin' ? 'flex' : 'none'
+    el.style.display = isAdmin ? 'flex' : 'none'
   })
   document.querySelectorAll('.member-only').forEach(el => {
-    el.style.display = (role === 'admin' || role === 'member') ? 'flex' : 'none'
+    el.style.display = isMember ? 'flex' : 'none'
   })
   // Viewer mode
   if (role === 'viewer') {
@@ -119,12 +146,11 @@ export function applyRoleUI(role) {
     document.body.classList.remove('viewer-mode')
   }
   document.querySelectorAll('.chem-admin-btn, .eq-admin-btn').forEach(btn => {
-    btn.style.display = role === 'admin' ? 'inline-flex' : 'none'
+    btn.style.display = isAdmin ? 'inline-flex' : 'none'
   })
+
   const badge = document.getElementById('admin-badge')
   if (badge) {
-    const isSuper = currentAuth.email === 'nvhn.7202@gmail.com';
-    // Reset display first - sẽ show lại nếu role có badge tương ứng
     badge.style.display = 'none'
     badge.classList.remove('show')
 
@@ -149,8 +175,6 @@ export function applyRoleUI(role) {
   }
   const ud = document.getElementById('user-display')
   if (ud) ud.textContent = currentAuth.displayName || currentAuth.email
-  // Hiện role badge cạnh tên
-
 }
 
 export async function updateDisplayName(newName) {

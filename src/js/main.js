@@ -511,7 +511,7 @@ document.addEventListener('DOMContentLoaded', () => {
     (user, role) => {
       // Nếu app đã load rồi (role thay đổi realtime)
       if (document.getElementById('app-shell').style.display !== 'none') {
-        if (!['admin','member','viewer'].includes(role)) {
+        if (!['superadmin','admin','member','viewer'].includes(role)) {
           showToast('Quyền bị thu hồi. Đang đăng xuất...', 'danger')
           setTimeout(() => logout(), 2000)
           return
@@ -524,7 +524,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('Quyền đã được cập nhật: ' + role, 'info')
         return
       }
-      if (!['admin','member','viewer'].includes(role)) {
+      if (!['superadmin','admin','member','viewer'].includes(role)) {
         // pending, rejected hoặc chưa có role
         document.getElementById('skeleton-loader').style.display = 'none'
         const ls = document.getElementById('login-screen')
