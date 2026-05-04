@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://lab-manager-268a6.web.app/sitemap.xml
