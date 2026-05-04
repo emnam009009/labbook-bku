@@ -85,13 +85,7 @@ import {
 } from './services/image-handlers.js'
 
 // ── Import chat widget (Phần 7c) ─────────────────────────
-import {
-  cleanupChat, initChat, chatSend, chatInput, chatKeydown,
-  chatPickImage, chatClearImage, insertMention,
-  showReactionPicker, toggleReaction, toggleChatWidget, _updateChatWidgetRole,
-  showRecallMenu, recallMessageEveryone, recallMessageSelf,
-  clearAllChatMessages, showClearAllConfirm
-} from './pages/chat.js'
+// [LAZY] chat page imported on-demand when user clicks FAB (see lazy loaders at bottom)
 
 // ── Import edit handlers (Phần 7d) ───────────────────────
 import {
@@ -246,23 +240,21 @@ window.showEquipmentImage = showEquipmentImage;
 
 // Expose chat lên window (Phần 7c)
 // HTML onclick gọi: chatSend(), chatInput(this), chatKeydown(event), etc.
-window.cleanupChat = cleanupChat;
-window.initChat = initChat;
-window.chatSend = chatSend;
-window.chatInput = chatInput;
-window.chatKeydown = chatKeydown;
-window.chatPickImage = chatPickImage;
-window.chatClearImage = chatClearImage;
-window.insertMention = insertMention;
-window.showReactionPicker = showReactionPicker;
-window.toggleReaction = toggleReaction;
-window.toggleChatWidget = toggleChatWidget;
-window.showRecallMenu = showRecallMenu;
-window.recallMessageEveryone = recallMessageEveryone;
-window.recallMessageSelf = recallMessageSelf;
-window.clearAllChatMessages = clearAllChatMessages;
-window.showClearAllConfirm = showClearAllConfirm;
-window._updateChatWidgetRole = _updateChatWidgetRole;
+// [LAZY] chat window functions assigned after dynamic import
+// toggleChatWidget proxy below triggers load on first FAB click
+const _toggleChatProxy = function(...args) {
+  // Lazy load chat module on first call, then call real toggleChatWidget
+  return _loadChatModule().then(() => {
+    // After load, window.toggleChatWidget is replaced by real function
+    if (window.toggleChatWidget !== _toggleChatProxy) {
+      return window.toggleChatWidget(...args);
+    }
+  });
+};
+window.toggleChatWidget = _toggleChatProxy;
+// Stubs for functions that may be called before chat module loads (no-op safe)
+window.cleanupChat = function() { /* no-op until chat loads */ };
+window._updateChatWidgetRole = function() { /* no-op until chat loads */ };
 
 // Expose edit handlers lên window (Phần 7d)
 // HTML onclick từ row click gọi: editHydro('...'), etc.
@@ -1265,6 +1257,40 @@ document.addEventListener('pageChange', async (e) => {
     _loadedPages.delete(id); // allow retry
   }
 });
+
+
+// ─── Chat lazy loader ───────────────────────────────────
+let _chatModulePromise = null;
+function _loadChatModule() {
+  if (!_chatModulePromise) {
+    _chatModulePromise = import('./pages/chat.js').then(m => {
+      // Replace proxy with real functions
+      window.cleanupChat = m.cleanupChat;
+      window.initChat = m.initChat;
+      window.chatSend = m.chatSend;
+      window.chatInput = m.chatInput;
+      window.chatKeydown = m.chatKeydown;
+      window.chatPickImage = m.chatPickImage;
+      window.chatClearImage = m.chatClearImage;
+      window.insertMention = m.insertMention;
+      window.showReactionPicker = m.showReactionPicker;
+      window.toggleReaction = m.toggleReaction;
+      window.toggleChatWidget = m.toggleChatWidget;
+      window.showRecallMenu = m.showRecallMenu;
+      window.recallMessageEveryone = m.recallMessageEveryone;
+      window.recallMessageSelf = m.recallMessageSelf;
+      window.clearAllChatMessages = m.clearAllChatMessages;
+      window.showClearAllConfirm = m.showClearAllConfirm;
+      window._updateChatWidgetRole = m._updateChatWidgetRole;
+      // Trigger initial role-aware setup if user already logged in
+      if (window.currentAuth?.uid && typeof m._updateChatWidgetRole === 'function') {
+        try { m._updateChatWidgetRole(); } catch(e) { console.warn('[lazy chat] role setup:', e); }
+      }
+      return m;
+    });
+  }
+  return _chatModulePromise;
+}
 
 // Register Service Worker SAU first paint để không block render
 // (vite-plugin-pwa: injectRegister: false → tự register ở đây)
