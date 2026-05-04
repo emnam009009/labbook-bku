@@ -696,10 +696,19 @@ export async function clearAllChatMessages() {
     return;
   }
   try {
-    await remove(ref(db, 'chat/messages'));
-    // Force re-render UI ngay (listener có thể delay khi node bị xóa hoàn toàn)
+    // Rules cho phép write ở $msgId, KHÔNG cho write parent /chat/messages.
+    // Vì vậy iterate qua từng message và remove riêng lẻ.
+    const messages = await fbGet('chat/messages') || {};
+    const msgIds = Object.keys(messages);
+    if (msgIds.length === 0) {
+      if (window.showToast) window.showToast('Không có tin nhắn để xóa', 'info');
+      renderChatMessages({});
+      return;
+    }
+    // Delete từng tin nhắn — superadmin được phép xóa của mọi user theo rule .write
+    await Promise.all(msgIds.map(id => remove(ref(db, `chat/messages/${id}`))));
     renderChatMessages({});
-    if (window.showToast) window.showToast('Đã xóa toàn bộ hội thoại', 'success');
+    if (window.showToast) window.showToast(`Đã xóa ${msgIds.length} tin nhắn`, 'success');
   } catch (err) {
     console.error('Clear all messages failed:', err);
     if (window.showToast) window.showToast('Không thể xóa hội thoại: ' + (err.message || 'Lỗi không xác định'), 'danger');
