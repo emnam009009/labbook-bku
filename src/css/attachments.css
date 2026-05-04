@@ -1,0 +1,1093 @@
+/* src/css/attachments.css
+ * Styles for attachments panel. Uses existing CSS variables from main.css.
+ */
+
+.att-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.att-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.att-cat-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+}
+
+.att-category {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.att-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid var(--teal);
+  border-radius: 6px;
+  background: var(--teal);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 500;
+  user-select: none;
+}
+.att-upload-btn:hover {
+  filter: brightness(0.95);
+}
+
+.att-counter {
+  margin-left: auto;
+  color: var(--text);
+  opacity: 0.7;
+  font-size: 13px;
+}
+
+/* Dropzone */
+.att-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 24px;
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  background: var(--teal-light, #f0fdfa);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+.att-dropzone:hover,
+.att-dropzone:focus-visible {
+  border-color: var(--teal);
+  outline: none;
+}
+.att-dropzone-active {
+  border-color: var(--teal);
+  background: var(--teal-light, #f0fdfa);
+  transform: scale(1.01);
+}
+.att-dropzone small {
+  opacity: 0.7;
+  font-size: 12px;
+}
+
+/* List */
+.att-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.att-empty {
+  grid-column: 1 / -1;
+  padding: 12px;
+  color: var(--text);
+  opacity: 0.6;
+  font-style: italic;
+  text-align: center;
+}
+
+.att-item {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  overflow: hidden;
+  transition: box-shadow 0.15s ease;
+}
+.att-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.att-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  flex: 1;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+}
+
+.att-thumb {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: #f1f5f9;
+  flex-shrink: 0;
+}
+
+.att-thumb-file {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: var(--teal);
+}
+
+.att-meta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.att-name {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.att-meta small {
+  color: var(--text);
+  opacity: 0.7;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.att-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--teal);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Per-category color hints (subtle) */
+.att-badge-xrd { background: #2563eb; }
+.att-badge-sem { background: #7c3aed; }
+.att-badge-tem { background: #9333ea; }
+.att-badge-raman { background: #db2777; }
+.att-badge-ftir { background: #ea580c; }
+.att-badge-uvvis { background: #ca8a04; }
+.att-badge-uvvis-drs { background: #b45309; }
+.att-badge-pl { background: #0891b2; }
+.att-badge-other { background: #64748b; }
+
+.att-del {
+  flex-shrink: 0;
+  align-self: center;
+  margin: 0 8px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: var(--danger, #ef4444);
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(239, 68, 68, 0.25);
+}
+.att-del:hover:not(:disabled) {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.35);
+}
+.att-del:active:not(:disabled) {
+  transform: translateY(0);
+}
+.att-del:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.att-progress {
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--teal-light, #f0fdfa);
+  color: var(--text);
+  font-size: 13px;
+  font-family: monospace;
+}
+
+/* Dark mode adjustments */
+html.dark .att-thumb { background: #1e293b; }
+html.dark .att-dropzone {
+  background: rgba(13, 148, 136, 0.08);
+}
+
+/* ─── Row button (nút 📎 trong table) ─────────────────── */
+.att-row-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  margin-right: 4px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--teal);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  transition: all 0.15s ease;
+  vertical-align: middle;
+}
+.att-row-btn:hover {
+  background: var(--teal-light, #f0fdfa);
+  border-color: var(--teal);
+  transform: translateY(-1px);
+}
+.att-row-btn:active {
+  transform: translateY(0);
+}
+html.dark .att-row-btn {
+  background: transparent;
+}
+html.dark .att-row-btn:hover {
+  background: rgba(13, 148, 136, 0.15);
+}
+
+/* ─── Dropdown menu cho nút ⋯ row ──────────────────────── */
+.exp-actions-menu {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08);
+  padding: 4px;
+  min-width: 180px;
+  font-size: 14px;
+  animation: exp-actions-fadein 0.12s ease-out;
+}
+
+@keyframes exp-actions-fadein {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.exp-actions-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 14px;
+  font-family: inherit;
+  transition: background 0.1s ease;
+}
+.exp-actions-item:hover,
+.exp-actions-item:focus-visible {
+  background: var(--teal-light, #f0fdfa);
+  outline: none;
+}
+html.dark .exp-actions-item:hover,
+html.dark .exp-actions-item:focus-visible {
+  background: rgba(13, 148, 136, 0.12);
+}
+
+.exp-actions-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* Style cho nút ⋯ trên row (kế thừa từ .att-row-btn) */
+.exp-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  margin-right: 4px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  transition: all 0.15s ease;
+  vertical-align: middle;
+}
+.exp-menu-btn:hover {
+  background: var(--teal-light, #f0fdfa);
+  border-color: var(--teal);
+  color: var(--teal);
+  transform: translateY(-1px);
+}
+html.dark .exp-menu-btn {
+  background: transparent;
+}
+html.dark .exp-menu-btn:hover {
+  background: rgba(13, 148, 136, 0.15);
+}
+
+/* ─── Preview workspace (Milestone B) ──────────────────── */
+.att-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Khi có preview, dropzone thu gọn thành 1 dải mỏng phía trên */
+.att-workspace:has(.att-preview:not([hidden])) .att-dropzone {
+  padding: 12px 16px;
+  flex-direction: row;
+  justify-content: center;
+  gap: 8px;
+}
+.att-workspace:has(.att-preview:not([hidden])) .att-dropzone span {
+  font-size: 13px;
+}
+.att-workspace:has(.att-preview:not([hidden])) .att-dropzone small {
+  font-size: 11px;
+}
+
+.att-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.att-preview-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.att-preview-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+}
+.att-preview-meta {
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.7;
+}
+.att-preview-canvas-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #ffffff;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+html.dark .att-preview-canvas-wrap {
+  background: #fff; /* keep white for chart legibility */
+}
+.att-preview-canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+.att-preview-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.att-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+.att-btn:hover:not(:disabled) {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+.att-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.att-btn-primary {
+  background: var(--teal);
+  color: #fff;
+  border-color: var(--teal);
+}
+.att-btn-primary:hover:not(:disabled) {
+  filter: brightness(0.95);
+  color: #fff;
+}
+
+.att-sep {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 4px 0;
+}
+
+/* ─── Column picker (manual override) ──────────────────── */
+.att-preview-cols {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+.att-preview-cols label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.85;
+}
+.att-preview-cols select {
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  max-width: 180px;
+}
+
+/* ─── att-link as button (clickable item) ─────────────── */
+.att-item .att-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+.att-item .att-link:hover {
+  background: rgba(13, 148, 136, 0.06);
+}
+.att-item .att-link:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+
+
+/* ─── Hamburger button (replace ⋯) ────────────────────── */
+.exp-bar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  margin-right: 4px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  cursor: pointer;
+  vertical-align: middle;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+.exp-bar:hover {
+  border-color: var(--teal);
+  background: var(--teal-light, #f0fdfa);
+}
+html.dark .exp-bar {
+  background: transparent;
+}
+html.dark .exp-bar:hover {
+  background: rgba(13, 148, 136, 0.15);
+}
+
+.exp-bar input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+  visibility: hidden;
+}
+
+.exp-bar span {
+  position: absolute;
+  left: 50%;
+  width: 16px;
+  height: 2px;
+  margin-left: -8px;
+  background: var(--text);
+  border-radius: 100px;
+  transition: 0.25s ease;
+  pointer-events: none;
+}
+.exp-bar:hover span {
+  background: var(--teal);
+}
+
+.exp-bar-top    { top: 8px; }
+.exp-bar-middle { top: 13px; }
+.exp-bar-bottom { top: 18px; }
+
+/* Open state: animate to X */
+.exp-bar input[type="checkbox"]:checked ~ span.exp-bar-top {
+  transform: rotate(45deg);
+  top: 13px;
+}
+.exp-bar input[type="checkbox"]:checked ~ span.exp-bar-bottom {
+  transform: rotate(-45deg);
+  top: 13px;
+}
+.exp-bar input[type="checkbox"]:checked ~ span.exp-bar-middle {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+.exp-bar:has(input[type="checkbox"]:checked) {
+  border-color: var(--teal);
+  background: var(--teal-light, #f0fdfa);
+}
+.exp-bar:has(input[type="checkbox"]:checked) span {
+  background: var(--teal);
+}
+
+/* ─── Refine dropdown menu để match custom-select ─────── */
+.exp-actions-menu {
+  border-radius: 10px;  /* tròn hơn, match custom-select-dropdown */
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10), 0 2px 6px rgba(0, 0, 0, 0.06);
+  padding: 6px;
+  min-width: 200px;
+}
+.exp-actions-item {
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-weight: 500;
+  color: var(--text);
+  gap: 12px;
+}
+.exp-actions-item:hover,
+.exp-actions-item:focus-visible {
+  background: var(--teal-light, #f0fdfa);
+  color: var(--teal);
+}
+.exp-actions-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--teal);
+  stroke: currentColor;
+}
+.exp-actions-item:hover .exp-actions-icon {
+  color: var(--teal);
+}
+
+/* ─── Hamburger trigger refinement (giữ design + bo tròn hơn) ── */
+.exp-bar {
+  border-radius: 8px;
+}
+
+/* ─── SVG line icon trong button .att-btn ─────────────── */
+.att-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.att-btn-icon {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  flex-shrink: 0;
+}
+
+/* ─── Clickable hint trong dropzone text ───────────────── */
+.att-pick-link {
+  color: var(--teal);
+  text-decoration: underline;
+  text-decoration-color: rgba(13, 148, 136, 0.4);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 2px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: text-decoration-color 0.15s ease;
+}
+.att-dropzone:hover .att-pick-link {
+  text-decoration-color: var(--teal);
+}
+
+/* ─── Subtle pulse ring quanh dropzone để báo "click được" ── */
+.att-dropzone {
+  position: relative;
+}
+.att-dropzone::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 0 0 0 rgba(13, 148, 136, 0);
+  transition: box-shadow 0.2s ease;
+}
+.att-dropzone:hover::before {
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+}
+
+/* ─── Modal Tài liệu rộng hơn (1.5x) để preview đồ thị dễ nhìn ── */
+#modal-attachments .modal {
+  width: min(1100px, 96vw);
+}
+
+
+/* Native <select> fallback (nếu initCustomFilters chưa wrap) */
+.att-category {
+  min-width: 140px;
+}
+
+/* ─── Trigger Loại: width = dropdown (codebase dùng .cs-filter-*) ── */
+.att-cat-label .cs-filter-wrap {
+  display: inline-block;
+}
+.att-cat-label .cs-filter-trigger {
+  min-width: 109.44px !important;
+  width: 109.44px !important;
+}
+.att-cat-label .cs-filter-dropdown,
+.att-cat-label .cs-filter-list {
+  min-width: 109.44px !important;
+}
+
+/* ─── Push chevron sang phải khi trigger rộng hơn nội dung ── */
+.att-cat-label .cs-filter-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+
+/* ─── Tauc controls (redesigned) ─────────────────────── */
+.att-tauc-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+  background: linear-gradient(180deg, transparent, rgba(13, 148, 136, 0.03));
+  border-radius: 0 0 8px 8px;
+  font-size: 13px;
+}
+
+/* Toggle switch style (thay vì checkbox + label màu) */
+.att-tauc-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--text);
+  user-select: none;
+}
+.att-tauc-toggle input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 34px;
+  height: 18px;
+  background: var(--border);
+  border-radius: 999px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+.att-tauc-toggle input[type="checkbox"]::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.att-tauc-toggle input[type="checkbox"]:checked {
+  background: var(--teal);
+}
+.att-tauc-toggle input[type="checkbox"]:checked::before {
+  transform: translateX(16px);
+}
+.att-tauc-toggle span {
+  color: var(--text);
+}
+
+/* Sub-controls (n, Lưu) — chỉ hiện khi toggle on */
+.att-tauc-n-label,
+.att-tauc-custom-label,
+.att-tauc-save-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  opacity: 0.85;
+  font-size: 13px;
+}
+
+.att-tauc-n,
+.att-tauc-save {
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  min-width: 80px;
+}
+.att-tauc-n:hover,
+.att-tauc-save:hover {
+  border-color: var(--teal);
+}
+.att-tauc-n:focus,
+.att-tauc-save:focus {
+  outline: none;
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+}
+
+.att-tauc-custom {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  font-family: inherit;
+  width: 70px;
+}
+.att-tauc-custom:focus {
+  outline: none;
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+}
+
+/* ─── Auto-fit Eg button + display ────────────────────── */
+.att-tauc-fit-btn {
+  padding: 5px 12px;
+  border: 1px solid var(--teal);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--teal);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+.att-tauc-fit-btn:hover {
+  background: var(--teal);
+  color: #fff;
+}
+.att-tauc-eg-display {
+  font-size: 13px;
+  font-weight: 600;
+  color: #dc2626;
+  font-family: 'Courier New', monospace;
+}
+
+/* ─── PDF Export Modal ─────────────────────────────────── */
+#modal-attachments-export .modal {
+  width: min(720px, 96vw);
+}
+.pdf-export-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 0;
+}
+.pdf-export-info {
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface-2, #f9fafb);
+  padding: 10px 14px;
+  border-radius: 8px;
+  border-left: 3px solid var(--teal);
+}
+.pdf-export-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.pdf-export-row > strong {
+  font-size: 14px;
+  color: var(--text);
+}
+.pdf-export-row label {
+  font-size: 13px;
+  color: var(--text);
+}
+.pdf-page-size {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+}
+.pdf-page-size:hover {
+  border-color: var(--teal);
+}
+.pdf-select-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.pdf-select-actions .btn-text {
+  border: none;
+  background: none;
+  color: var(--teal);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 4px;
+  font-family: inherit;
+}
+.pdf-select-actions .btn-text:hover {
+  text-decoration: underline;
+}
+.pdf-sep {
+  color: var(--border);
+  font-size: 12px;
+}
+
+.pdf-file-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 360px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.pdf-file-item {
+  border-bottom: 1px solid var(--border);
+}
+.pdf-file-item:last-child {
+  border-bottom: none;
+}
+.pdf-file-item.is-non-image {
+  opacity: 0.55;
+}
+.pdf-file-item label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  width: 100%;
+  margin: 0;
+}
+.pdf-file-item.is-non-image label {
+  cursor: not-allowed;
+}
+.pdf-file-cb {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--teal);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.pdf-file-cb:disabled {
+  cursor: not-allowed;
+}
+.pdf-file-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+  font-size: 13px;
+}
+.pdf-file-cat {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pdf-file-name {
+  color: var(--text);
+  font-weight: 500;
+}
+.pdf-file-size {
+  color: var(--text-2, #6b7280);
+  font-size: 12px;
+  margin-left: auto;
+}
+.pdf-file-skip {
+  color: #9ca3af;
+  font-size: 11px;
+  font-style: italic;
+}
+.pdf-file-loading,
+.pdf-file-empty {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-2, #6b7280);
+  font-size: 13px;
+}
+
+.pdf-export-progress {
+  padding: 12px;
+  background: rgba(13, 148, 136, 0.06);
+  border-radius: 8px;
+}
+.pdf-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.pdf-progress-fill {
+  height: 100%;
+  background: var(--teal);
+  width: 0%;
+  transition: width 0.3s ease;
+}
+.pdf-progress-text {
+  font-size: 12px;
+  color: var(--text);
+  text-align: center;
+}
+
+.pdf-export-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.pdf-export-actions .btn-primary {
+  padding: 8px 18px;
+  background: var(--teal);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  font-family: inherit;
+  transition: background 0.15s ease;
+}
+.pdf-export-actions .btn-primary:hover:not(:disabled) {
+  background: #0b7c70;
+}
+.pdf-export-actions .btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.pdf-export-actions .btn-secondary {
+  padding: 8px 18px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: inherit;
+}
+.pdf-export-actions .btn-secondary:hover:not(:disabled) {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+/* ─── PDF Preview stage ──────────────────────────────── */
+#modal-attachments-export .modal:has(.pdf-export-panel[data-stage="preview"]) {
+  width: min(1000px, 96vw);
+  max-width: 1000px;
+}
+.pdf-preview-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  background: rgba(13, 148, 136, 0.06);
+  border-radius: 8px;
+  border-left: 3px solid var(--teal);
+  font-size: 13px;
+}
+.pdf-preview-info strong {
+  font-size: 14px;
+  color: var(--text);
+}
+.pdf-preview-info span {
+  color: var(--text-2, #6b7280);
+  font-size: 12px;
+}
+.pdf-preview-frame {
+  width: 100%;
+  height: 65vh;
+  min-height: 500px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #525659;  /* nền đen như Chrome PDF viewer */
+}
+
+/* ─── Download button: flex align icon + text ─────────── */
+.pdf-download-btn {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+}
+.pdf-download-btn svg {
+  flex-shrink: 0;
+}

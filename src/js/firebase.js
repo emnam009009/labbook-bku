@@ -16,6 +16,16 @@ import {
   connectDatabaseEmulator,
 } from 'firebase/database'
 import {
+  getStorage,
+  ref as stRef,
+  uploadBytesResumable,
+  getDownloadURL,
+  deleteObject,
+  getBytes,
+  connectStorageEmulator,
+} from 'firebase/storage'
+
+import {
   getAuth,
   signInWithEmailAndPassword,
   signOut,
@@ -42,6 +52,7 @@ const firebaseConfig = {
 const app  = initializeApp(firebaseConfig)
 export const db   = getDatabase(app)
 export const auth = getAuth(app)
+export const storage = getStorage(app)
 
 // ── Connect to emulator nếu chạy với VITE_USE_EMULATOR=true ──
 // Chỉ dùng cho dev local, không ảnh hưởng production build
@@ -50,10 +61,12 @@ if (import.meta.env.VITE_USE_EMULATOR === 'true') {
   console.log('[firebase] Connecting to LOCAL EMULATORS')
   connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true })
   connectDatabaseEmulator(db, '127.0.0.1', 9000)
+  connectStorageEmulator(storage, '127.0.0.1', 9199)
 }
 
 export {
   ref, set, push, onValue, remove, update, onDisconnect, serverTimestamp,
+  stRef, uploadBytesResumable, getDownloadURL, deleteObject, getBytes,
   query, orderByChild, limitToLast, limitToFirst, startAt, endAt, equalTo,
   signInWithEmailAndPassword, signOut, onAuthStateChanged,
   updatePassword, EmailAuthProvider, reauthenticateWithCredential,

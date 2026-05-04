@@ -740,18 +740,18 @@ async function renderMonthlyChart(h, e, ec) {
         x: {
           type: 'number',
           easing: 'easeOutQuart',
-          duration: 1800,
+          duration: 1500,
           from: NaN,
           delay(ctx) {
             if (ctx.type !== 'data' || ctx.xStarted) return 0;
             ctx.xStarted = true;
-            return ctx.index * (1800 / Math.max(labels.length, 1));
+            return ctx.index * (500 / Math.max(labels.length, 1));
           }
         },
         y: {
           type: 'number',
           easing: 'easeOutQuart',
-          duration: 1800,
+          duration: 1500,
           from: (ctx) => {
             if (ctx.type !== 'data' || ctx.yStarted) return ctx.chart.scales.y.getPixelForValue(0);
             ctx.yStarted = true;
@@ -761,10 +761,10 @@ async function renderMonthlyChart(h, e, ec) {
           delay(ctx) {
             if (ctx.type !== 'data' || ctx.yStarted) return 0;
             ctx.yStarted = true;
-            return ctx.index * (1800 / Math.max(labels.length, 1));
+            return ctx.index * (500 / Math.max(labels.length, 1));
           }
         }
-      } : { duration: 200 },  // Wheel re-render: chỉ animation 200ms cho mượt mà không nháy
+      } : { duration: 200 },  // Wheel re-render: 200ms
       plugins: {
         legend: {
           position: 'top',
@@ -946,7 +946,7 @@ async function renderDistributionPie(h, e, ec, ink) {
       responsive: true,
       maintainAspectRatio: false,
       cutout: '62%',  // Tỉ lệ donut hole (62% giống ir=22/r=38 cũ)
-      animation: { duration: 400, animateRotate: true, animateScale: false },
+      animation: { duration: 2000, animateRotate: true, animateScale: false, easing: 'easeOutQuart' },
       plugins: {
         legend: { display: false },  // Dùng legend custom HTML bên dưới
         tooltip: {

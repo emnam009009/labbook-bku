@@ -2432,10 +2432,10 @@ html body #booking-tbody th {
   text-align: left !important;
   vertical-align: middle !important;
 }
-/* Trừ td chứa badge (trạng thái) và td chứa action buttons - căn giữa hoặc phải */
+/* Cột trạng thái (badge) căn trái */
 html body #booking-tbody td:has(.badge),
 html body #booking-tbody td:has(span[style*="border-radius:999px"]) {
-  text-align: center !important;
+  text-align: left !important;
 }
 html body #booking-tbody td.action-cell,
 html body #booking-tbody td:last-child {
@@ -3325,4 +3325,56 @@ html.dark .cal-edge-zone--right.is-hover {
   #cal-grid.cal-slide-from-left {
     animation: none !important;
   }
+}
+/* Booking: cột Trạng thái (cell 8 = nth-last-child(2)) căn trái */
+#page-booking tbody td:nth-child(8),
+#page-booking thead th:nth-child(8) {
+  text-align: left !important;
+}
+
+/* Electrode tab: giảm khoảng cách giữa tab line và filter bar */
+#etab-electrode > div.flex.gap-2.mb-4 {
+  margin-top: 8px !important;
+}
+#etab-ink > div.flex.gap-2.mb-4 {
+  margin-top: 8px !important;
+}
+
+/* Drag-to-navigate: highlight nút Tuần khi đang kéo block hover lên */
+.cal-nav-btn-drag-hover {
+  background: var(--teal) !important;
+  color: white !important;
+  transform: scale(1.1);
+  box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.2);
+  transition: all 0.15s ease;
+}
+
+/* Calendar edge zones — vùng cạnh trái/phải để drag-to-navigate */
+.cal-edge-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 30px;
+  z-index: 50;
+  pointer-events: none;  /* mặc định không nhận drag (tránh chặn click) */
+  transition: background 0.15s ease;
+}
+.cal-edge-zone.cal-edge-left { left: 0; }
+.cal-edge-zone.cal-edge-right { right: 0; }
+
+/* Khi đang drag booking, edge zones nhận event */
+body.is-dragging-booking .cal-edge-zone {
+  pointer-events: auto;
+  background: linear-gradient(to right, rgba(13,148,136,0.05), transparent);
+}
+body.is-dragging-booking .cal-edge-zone.cal-edge-right {
+  background: linear-gradient(to left, rgba(13,148,136,0.05), transparent);
+}
+
+/* Highlight khi hover */
+body.is-dragging-booking .cal-edge-zone.is-hover {
+  background: linear-gradient(to right, rgba(13,148,136,0.4), rgba(13,148,136,0.1));
+}
+body.is-dragging-booking .cal-edge-zone.cal-edge-right.is-hover {
+  background: linear-gradient(to left, rgba(13,148,136,0.4), rgba(13,148,136,0.1));
 }
