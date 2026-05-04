@@ -269,7 +269,7 @@ function renderDatePicker() {
 
   card.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-      <h3 style="margin:0;font-size:16px;font-weight:700;color:#0f172a">📅 Khoảng thời gian báo cáo</h3>
+      <h3 style="margin:0;font-size:16px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="color:var(--teal);"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Khoảng thời gian báo cáo</h3>
       <span style="font-size:13px;color:#64748b;font-weight:500">${rangeDisplay}</span>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -296,7 +296,7 @@ async function renderTypeCountCard() {
 
   card.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-      <h3 style="margin:0;font-size:16px;font-weight:700;color:#0f172a">🧪 Số lượng thí nghiệm theo loại</h3>
+      <h3 style="margin:0;font-size:16px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="color:#6366f1;"><path d="M10 2v7.31M14 9.3V1.99M8.5 2h7M14 9.3a6.5 6.5 0 1 1-4 0M5.58 16.5h12.85"/></svg>Số lượng thí nghiệm theo loại</h3>
       <span style="font-size:14px;color:#64748b;font-weight:600">Tổng: <strong style="color:var(--teal)">${total}</strong></span>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:10px;margin-bottom:16px">
@@ -386,7 +386,7 @@ async function renderChemicalsCard() {
   const isAdmin = !!(window.currentAuth?.isAdmin)
   if (!isAdmin) {
     card.innerHTML = `
-      <h3 style="margin:0;font-size:16px;font-weight:700;color:#0f172a">🧪 Tiêu thụ hóa chất</h3>
+      <h3 style="margin:0;font-size:16px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="color:#0d9488;"><path d="M7 19a3 3 0 0 1-2-5.243L5 13l2-2 2 2 1 .757a3 3 0 0 1-3 5.243"/><path d="M12.56 6.6a10 10 0 0 1 .203-.495 11 11 0 0 1 1.196-2.054 11 11 0 0 1 1.196 2.054 10 10 0 0 1 1.063 4.024c0 1.31-.4 2.535-1.082 3.541"/><path d="M17 9c0-3-2-7-5-7s-5 4-5 7"/></svg>Tiêu thụ hóa chất</h3>
       <div style="margin-top:12px;padding:14px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:6px;font-size:13px;color:#92400e">
         Báo cáo này chỉ dành cho admin/superadmin (cần quyền đọc lịch sử thao tác).
       </div>
@@ -400,7 +400,7 @@ async function renderChemicalsCard() {
   // Header
   let html = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-      <h3 style="margin:0;font-size:16px;font-weight:700;color:#0f172a">🧪 Tiêu thụ hóa chất</h3>
+      <h3 style="margin:0;font-size:16px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="color:#0d9488;"><path d="M7 19a3 3 0 0 1-2-5.243L5 13l2-2 2 2 1 .757a3 3 0 0 1-3 5.243"/><path d="M12.56 6.6a10 10 0 0 1 .203-.495 11 11 0 0 1 1.196-2.054 11 11 0 0 1 1.196 2.054 10 10 0 0 1 1.063 4.024c0 1.31-.4 2.535-1.082 3.541"/><path d="M17 9c0-3-2-7-5-7s-5 4-5 7"/></svg>Tiêu thụ hóa chất</h3>
       <span style="font-size:14px;color:#64748b;font-weight:600">${data.length} loại đã dùng</span>
     </div>
   `
