@@ -49,3 +49,11 @@ missing-handlers.js
 emulator-data/
 *.OLD*
 database-debug.log
+
+# Backup files (tạo bởi script trong development)
+*.bak
+*.bak.*
+
+# Font files gốc (chỉ commit subset version)
+public/fonts/NotoSans-Regular.ttf
+public/fonts/NotoSans-Bold.ttf

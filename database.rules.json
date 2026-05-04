@@ -1,154 +1,249 @@
 {
   "rules": {
-
     "users": {
       ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')",
-      ".indexOn": ["email", "role"],
-
+      ".indexOn": [
+        "email",
+        "role"
+      ],
       "$uid": {
         ".read": "auth != null && ($uid === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')",
-
         ".write": "auth != null && (($uid === auth.uid && (!data.exists() || (newData.child('role').val() === data.child('role').val() && newData.child('email').val() === data.child('email').val()))) || ($uid !== auth.uid && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')))",
-
         ".validate": "newData.hasChildren(['email','role']) && newData.child('email').isString() && newData.child('role').isString() && (newData.child('role').val() === 'pending' || newData.child('role').val() === 'rejected' || newData.child('role').val() === 'viewer' || newData.child('role').val() === 'member' || newData.child('role').val() === 'admin' || newData.child('role').val() === 'superadmin')",
-
         "role": {
           ".validate": "(!data.exists() && newData.val() === 'pending') || (data.exists() && newData.val() === data.val()) || (auth != null && $uid !== auth.uid && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin') && (newData.val() !== 'superadmin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin'))"
         },
-
-        "email":     { ".validate": "newData.isString() && newData.val().length <= 200" },
-        "name":      { ".validate": "newData.isString() && newData.val().length <= 100" },
-        "displayName": { ".validate": "newData.isString() && newData.val().length <= 100" },
-        "avatar":    { ".validate": "newData.isString() && newData.val().length <= 200000" },
-        "createdAt": { ".validate": "newData.isNumber()" },
-
-        "$other": { ".validate": true }
+        "email": {
+          ".validate": "newData.isString() && newData.val().length <= 200"
+        },
+        "name": {
+          ".validate": "newData.isString() && newData.val().length <= 100"
+        },
+        "displayName": {
+          ".validate": "newData.isString() && newData.val().length <= 100"
+        },
+        "avatar": {
+          ".validate": "newData.isString() && newData.val().length <= 200000"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "$other": {
+          ".validate": true
+        }
       }
     },
-
     "hydro": {
-      ".indexOn": ["createdAt", "person", "code", "date"],
-      ".read":  "auth != null && root.child('users').child(auth.uid).child('role').val() !== 'pending' && root.child('users').child(auth.uid).child('role').val() !== 'rejected'",
+      ".indexOn": [
+        "createdAt",
+        "person",
+        "code",
+        "date"
+      ],
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() !== 'pending' && root.child('users').child(auth.uid).child('role').val() !== 'rejected'",
       ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'member' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')",
       "$id": {
         ".validate": "newData.hasChildren(['createdAt']) || data.exists()"
       }
     },
-
     "electrode": {
-      ".indexOn": ["createdAt", "person", "code", "date"],
-      ".read":  "auth != null && root.child('users').child(auth.uid).child('role').val() !== 'pending' && root.child('users').child(auth.uid).child('role').val() !== 'rejected'",
+      ".indexOn": [
+        "createdAt",
+        "person",
+        "code",
+        "date"
+      ],
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() !== 'pending' && root.child('users').child(auth.uid).child('role').val() !== 'rejected'",
       ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'member' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')"
     },
-
     "electrochem": {
-      ".indexOn": ["createdAt", "person", "code", "date"],
-      ".read":  "auth != null && root.child('users').child(auth.uid).child('role').val() !== 'pending' && root.child('users').child(auth.uid).child('role').val() !== 'rejected'",
+      ".indexOn": [
+        "createdAt",
+        "person",
+        "code",
+        "date"
+      ],
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() !== 'pending' && root.child('users').child(auth.uid).child('role').val() !== 'rejected'",
       ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'member' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')"
     },
-
     "ink": {
-      ".indexOn": ["createdAt", "person", "code"],
-      ".read":  "auth != null && root.child('users').child(auth.uid).child('role').val() !== 'pending' && root.child('users').child(auth.uid).child('role').val() !== 'rejected'",
+      ".indexOn": [
+        "createdAt",
+        "person",
+        "code"
+      ],
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() !== 'pending' && root.child('users').child(auth.uid).child('role').val() !== 'rejected'",
       ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'member' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')"
     },
-
     "chemicals": {
-      ".indexOn": ["name", "groupId"],
-      ".read":  "auth != null && root.child('users').child(auth.uid).child('role').val() !== 'pending' && root.child('users').child(auth.uid).child('role').val() !== 'rejected'",
+      ".indexOn": [
+        "name",
+        "groupId"
+      ],
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() !== 'pending' && root.child('users').child(auth.uid).child('role').val() !== 'rejected'",
       ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')"
     },
-
     "groups": {
-      ".read":  "auth != null && root.child('users').child(auth.uid).child('role').val() !== 'pending' && root.child('users').child(auth.uid).child('role').val() !== 'rejected'",
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() !== 'pending' && root.child('users').child(auth.uid).child('role').val() !== 'rejected'",
       ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')"
     },
-
     "equipment": {
-      ".indexOn": ["name", "groupId"],
-      ".read":  "auth != null && root.child('users').child(auth.uid).child('role').val() !== 'pending' && root.child('users').child(auth.uid).child('role').val() !== 'rejected'",
+      ".indexOn": [
+        "name",
+        "groupId"
+      ],
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() !== 'pending' && root.child('users').child(auth.uid).child('role').val() !== 'rejected'",
       ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')"
     },
-
     "eq_groups": {
-      ".read":  "auth != null && root.child('users').child(auth.uid).child('role').val() !== 'pending' && root.child('users').child(auth.uid).child('role').val() !== 'rejected'",
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() !== 'pending' && root.child('users').child(auth.uid).child('role').val() !== 'rejected'",
       ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')"
     },
-
     "members": {
-      ".indexOn": ["name", "email", "role"],
-      ".read":  "auth != null && root.child('users').child(auth.uid).child('role').val() !== 'pending' && root.child('users').child(auth.uid).child('role').val() !== 'rejected'",
+      ".indexOn": [
+        "name",
+        "email",
+        "role"
+      ],
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() !== 'pending' && root.child('users').child(auth.uid).child('role').val() !== 'rejected'",
       ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'member' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')"
     },
-
     "bookings": {
-      ".indexOn": ["date", "userId", "equipmentId", "status", "createdAt"],
-      ".read":  "auth != null && root.child('users').child(auth.uid).child('role').val() !== 'pending' && root.child('users').child(auth.uid).child('role').val() !== 'rejected'",
+      ".indexOn": [
+        "date",
+        "userId",
+        "equipmentId",
+        "status",
+        "createdAt"
+      ],
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() !== 'pending' && root.child('users').child(auth.uid).child('role').val() !== 'rejected'",
       ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'member' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')"
     },
-
     "notifications": {
       "$uid": {
-        ".read":  "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')",
+        ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')",
         ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin' || root.child('users').child(auth.uid).child('role').val() === 'member')",
-        ".indexOn": ["ts", "read"]
+        ".indexOn": [
+          "ts",
+          "read"
+        ]
       }
     },
-
     "history": {
-      ".read":  "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')",
-      ".indexOn": ["ts", "uid"],
-
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')",
+      ".indexOn": [
+        "ts",
+        "uid"
+      ],
       "$id": {
         ".write": "auth != null && !data.exists() && (root.child('users').child(auth.uid).child('role').val() === 'member' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')",
-
         ".validate": "newData.hasChildren(['ts','uid','action']) && newData.child('uid').val() === auth.uid && newData.child('ts').isNumber() && newData.child('ts').val() <= now + 60000 && newData.child('ts').val() >= now - 60000 && newData.child('action').isString() && newData.child('action').val().length > 0 && newData.child('action').val().length <= 200",
-
-        "ts":     { ".validate": "newData.isNumber()" },
-        "uid":    { ".validate": "newData.isString() && newData.val() === auth.uid" },
-        "email":  { ".validate": "newData.isString() && newData.val().length <= 200" },
-        "action": { ".validate": "newData.isString() && newData.val().length <= 200" },
-        "detail": { ".validate": "newData.isString() && newData.val().length <= 2000" },
-        "$other": { ".validate": false }
+        "ts": {
+          ".validate": "newData.isNumber()"
+        },
+        "uid": {
+          ".validate": "newData.isString() && newData.val() === auth.uid"
+        },
+        "email": {
+          ".validate": "newData.isString() && newData.val().length <= 200"
+        },
+        "action": {
+          ".validate": "newData.isString() && newData.val().length <= 200"
+        },
+        "detail": {
+          ".validate": "newData.isString() && newData.val().length <= 2000"
+        },
+        "$other": {
+          ".validate": false
+        }
       }
     },
-
     "settings": {
-      ".read":  "auth != null",
+      ".read": "auth != null",
       ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')"
     },
-
     "chat": {
       ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() !== 'pending' && root.child('users').child(auth.uid).child('role').val() !== 'rejected'",
-
       "messages": {
-        ".indexOn": ["ts"],
+        ".indexOn": [
+          "ts"
+        ],
         "$msgId": {
           ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'member' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin') && ((!data.exists() && newData.child('uid').val() === auth.uid) || (data.exists() && data.child('uid').val() === auth.uid) || root.child('users').child(auth.uid).child('role').val() === 'superadmin')",
-
           ".validate": "newData.hasChildren(['uid','ts','text']) && newData.child('uid').val() === auth.uid && newData.child('ts').isNumber() && newData.child('text').isString() && newData.child('text').val().length <= 5000",
-
           "reactions": {
             ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() !== 'pending' && root.child('users').child(auth.uid).child('role').val() !== 'rejected'"
           }
         }
       },
-
       "typing": {
         "$uid": {
           ".write": "auth != null && $uid === auth.uid"
         }
       }
     },
-
     "presence": {
       ".read": "auth != null",
       "$uid": {
         ".write": "auth != null && auth.uid === $uid",
         ".validate": "newData.hasChildren(['online'])",
-        "online":   { ".validate": "newData.isBoolean()" },
-        "lastSeen": { ".validate": "newData.isNumber()" },
-        "$other":   { ".validate": false }
+        "online": {
+          ".validate": "newData.isBoolean()"
+        },
+        "lastSeen": {
+          ".validate": "newData.isNumber()"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "attachments": {
+      "$refType": {
+        ".validate": "$refType === 'hydro' || $refType === 'electrode'",
+        "$refId": {
+          ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() !== 'pending' && root.child('users').child(auth.uid).child('role').val() !== 'rejected'",
+          ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'member' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')",
+          ".indexOn": [
+            "uploadedAt",
+            "category",
+            "uploadedBy"
+          ],
+          "$attachmentId": {
+            ".write": "auth != null && (!data.exists() || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')",
+            ".validate": "newData.hasChildren(['category','fileName','mimeType','size','storagePath','downloadURL','uploadedBy','uploadedAt'])",
+            "category": {
+              ".validate": "newData.isString() && newData.val().matches(/^(xrd|sem|tem|raman|ftir|uvvis|uvvis-drs|pl|other)$/)"
+            },
+            "fileName": {
+              ".validate": "newData.isString() && newData.val().length <= 200"
+            },
+            "mimeType": {
+              ".validate": "newData.isString() && newData.val().length <= 100"
+            },
+            "size": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 26214400"
+            },
+            "storagePath": {
+              ".validate": "newData.isString() && newData.val().length <= 300"
+            },
+            "downloadURL": {
+              ".validate": "newData.isString() && newData.val().length <= 1000"
+            },
+            "uploadedBy": {
+              ".validate": "newData.isString() && newData.val() === auth.uid"
+            },
+            "uploadedAt": {
+              ".validate": "newData.isNumber()"
+            },
+            "note": {
+              ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 500)"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        }
       }
     }
   }

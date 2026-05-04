@@ -1,0 +1,29 @@
+rules_version = '2';
+
+// LabBook BKU — Storage rules
+// Path: attachments/{refType}/{refId}/{fileName}
+//   refType ∈ { hydro, electrode }
+//   25 MB / file limit
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /attachments/{refType}/{refId}/{fileName} {
+      // Đọc: mọi user đã auth (rules RTDB sẽ chặn pending/rejected ở metadata layer)
+      allow read: if request.auth != null;
+
+      // Upload: auth, refType allowlist, ≤ 25MB
+      allow create: if request.auth != null
+        && (refType == 'hydro' || refType == 'electrode')
+        && request.resource.size <= 26214400;
+
+      // Xoá: chỉ uploader (Storage không read được RTDB role, nên admin xoá qua client
+      // sẽ phải chấp nhận file mồ côi — RTDB metadata bị xoá, file Storage còn lại.
+      // Cleanup script sẽ dọn sau. Trade-off đã chốt.)
+      allow delete: if request.auth != null
+        && resource.metadata.uid == request.auth.uid;
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

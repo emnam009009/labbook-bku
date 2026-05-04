@@ -14,6 +14,7 @@ import '../css/polish.css'
 import '../css/dashboard.css'
 import '../css/sticky-header.css'
 import '../css/theme-swatches.css'
+import '../css/attachments.css'
 
 // ── Import Firebase ───────────────────────────────────────
 import { db, ref, push, onValue, fbListen, fbPush, fbSet, fbGet, fbDel, update } from './firebase.js'
@@ -150,6 +151,7 @@ window.logHistory = logHistory;
 
 // Expose UI core lên window (Phần 2)
 window.openModal = openModal;
+if (typeof initCustomFilters === "function") window.initCustomFilters = initCustomFilters;
 window.closeModal = closeModal;
 window.registerModalHook = registerModalHook;
 window.fireModalHooks = fireModalHooks;
@@ -255,6 +257,34 @@ window.toggleChatWidget = _toggleChatProxy;
 // Stubs for functions that may be called before chat module loads (no-op safe)
 window.cleanupChat = function() { /* no-op until chat loads */ };
 window._updateChatWidgetRole = function() { /* no-op until chat loads */ };
+
+// ─── Attachments lazy loader (PR #1) ────────────────────
+let _attachmentsModulePromise = null;
+function _loadAttachmentsModule() {
+  if (!_attachmentsModulePromise) {
+    _attachmentsModulePromise = import('./ui/attachments-panel.js').then(m => {
+      window.openAttachmentsModal = m.openAttachmentsModal;
+      window.mountAttachmentsPanel = m.mountAttachmentsPanel;
+      return m;
+    });
+  }
+  return _attachmentsModulePromise;
+}
+
+// Proxy để HTML inline onclick=openAttachmentsModal(...) hoạt động khi chưa lazy load
+window.openAttachmentsModal = function(opts) {
+  _loadAttachmentsModule().then(m => {
+    if (typeof m.openAttachmentsModal === 'function') {
+      m.openAttachmentsModal(opts);
+    }
+  }).catch(err => {
+    console.error('[attachments] load failed:', err);
+    if (typeof window.showToast === 'function') {
+      window.showToast('Không tải được module đính kèm', 'danger');
+    }
+  });
+};
+
 
 // Expose edit handlers lên window (Phần 7d)
 // HTML onclick từ row click gọi: editHydro('...'), etc.
@@ -1312,6 +1342,32 @@ document.addEventListener('pageChange', async (e) => {
   }
 });
 
+
+
+
+// ─── Exp actions menu lazy loader (Milestone A) ─────────
+let _expActionsMenuPromise = null;
+function _loadExpActionsMenu() {
+  if (!_expActionsMenuPromise) {
+    _expActionsMenuPromise = import('./ui/exp-actions-menu.js').then(m => {
+      window.openExpActionsMenu = m.openExpActionsMenu;
+      window.openAttachmentsExportModal = m.openAttachmentsExportModal;
+      return m;
+    });
+  }
+  return _expActionsMenuPromise;
+}
+window.openExpActionsMenu = function(anchor, ctx) {
+  _loadExpActionsMenu().then(m => m.openExpActionsMenu(anchor, ctx))
+    .catch(err => {
+      console.error('[exp-actions] load failed:', err);
+      window.showToast?.('Không tải được menu', 'error');
+    });
+};
+window.openAttachmentsExportModal = function(opts) {
+  _loadExpActionsMenu().then(m => m.openAttachmentsExportModal(opts))
+    .catch(err => console.error('[exp-actions-export] load failed:', err));
+};
 
 // ─── Chat lazy loader ───────────────────────────────────
 let _chatModulePromise = null;
