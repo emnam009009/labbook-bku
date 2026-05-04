@@ -11,7 +11,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
 
       // Auto inject script đăng ký SW vào index.html (không cần code thủ công)
-      injectRegister: 'auto',
+      injectRegister: false,  // Defer SW registration to after window.load (perf)
 
       // Dùng manifest.json hiện có trong public/ - không generate đè
       manifest: false,

@@ -1233,3 +1233,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }, 500);
 });
+
+// ─────────────────────────────────────────────────────────
+// Register Service Worker SAU first paint để không block render
+// (vite-plugin-pwa: injectRegister: false → tự register ở đây)
+// ─────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    // Chờ thêm 1 idle callback để chắc chắn không cạnh tranh first paint
+    const register = () => navigator.serviceWorker.register('/sw.js').catch(err => {
+      console.warn('[SW] register failed:', err);
+    });
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(register, { timeout: 2000 });
+    } else {
+      setTimeout(register, 1000);
+    }
+  });
+}
