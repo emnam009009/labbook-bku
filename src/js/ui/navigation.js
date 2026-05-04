@@ -23,6 +23,17 @@ export function showPage(id, el) {
   if (id === 'booking' && typeof window.renderBooking === 'function') {
     window.renderBooking();
   }
+  // Hydro / Electrode / Electrochem: re-render từ cache hiện tại để tránh
+  // kẹt skeleton "Đang tải..." khi data rỗng hoặc listener fire trước render.
+  if (id === 'hydrothermal' && typeof window.renderHydro === 'function') {
+    window.renderHydro();
+  }
+  if (id === 'electrode' && typeof window.renderElectrode === 'function') {
+    window.renderElectrode();
+  }
+  if (id === 'electrochemistry' && typeof window.renderElectrochem === 'function') {
+    window.renderElectrochem();
+  }
   // Dispatch event để các hook khác (chat, dashboard class, ...) lắng nghe
   document.dispatchEvent(new CustomEvent('pageChange', { detail: { id } }));
 }
