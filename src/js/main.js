@@ -44,7 +44,7 @@ import './pages/settings.js'
 import { initMemberFilter } from './services/member-filter.js'
 
 // ── Import experiment pages (Phần 4) ─────────────────────
-import { renderHydro, renderElectrode, renderElectrochem } from './pages/experiments.js'
+// [LAZY] experiments page imported on-demand via pageChange event listener
 
 // ── Import chemicals page (Phần 5a) ──────────────────────
 // [LAZY] chemicals page imported on-demand via pageChange event listener
@@ -171,9 +171,9 @@ window.renderDash = renderDash;
 
 // Expose experiment renders lên window (Phần 4)
 // render-dispatcher.js sẽ gọi window.renderHydro/Electrode/Electrochem
-window.renderHydro = renderHydro;
-window.renderElectrode = renderElectrode;
-window.renderElectrochem = renderElectrochem;
+// [LAZY] window.renderHydro set after dynamic import
+// [LAZY] window.renderElectrode set after dynamic import
+// [LAZY] window.renderElectrochem set after dynamic import
 
 // Expose chemicals lên window (Phần 5a)
 // [LAZY] window.renderChemicals set after dynamic import
@@ -1270,6 +1270,31 @@ const _pageLoaders = {
     // Other window.* functions (saveBooking, approveBooking, etc.) are
     // assigned at top level inside booking.js when the module evaluates
     if (typeof window.renderBooking === 'function') window.renderBooking();
+    // Re-init booking suggestions: original poll at login may have timed
+    // out (10s) before lazy booking module loaded. Idempotent — polling
+    // detects existing window.openBookingModal and wraps it.
+    try { initBookingSuggestions(); } catch(e) { console.warn('[lazy booking] suggestions init:', e); }
+  },
+  hydro: async () => {
+    const m = await import('./pages/experiments.js');
+    window.renderHydro = m.renderHydro;
+    window.renderElectrode = m.renderElectrode;
+    window.renderElectrochem = m.renderElectrochem;
+    if (typeof window.renderHydro === 'function') window.renderHydro();
+  },
+  electrode: async () => {
+    const m = await import('./pages/experiments.js');
+    window.renderHydro = m.renderHydro;
+    window.renderElectrode = m.renderElectrode;
+    window.renderElectrochem = m.renderElectrochem;
+    if (typeof window.renderElectrode === 'function') window.renderElectrode();
+  },
+  ec: async () => {
+    const m = await import('./pages/experiments.js');
+    window.renderHydro = m.renderHydro;
+    window.renderElectrode = m.renderElectrode;
+    window.renderElectrochem = m.renderElectrochem;
+    if (typeof window.renderElectrochem === 'function') window.renderElectrochem();
   },
 };
 
