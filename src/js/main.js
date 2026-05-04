@@ -53,7 +53,7 @@ import { renderChemicals, toggleChemGroup } from './pages/chemicals.js'
 import { renderInk } from './pages/ink.js'
 
 // ── Import equipment page (Phần 5c) ──────────────────────
-import { renderEquipment, toggleEqGroup } from './pages/equipment.js'
+// [LAZY] equipment page imported on-demand via pageChange event listener
 import { renderBooking } from './pages/booking.js'
 
 // ── Import members + history + users + avatar (Phần 6) ──
@@ -183,9 +183,9 @@ window.toggleChemGroup = toggleChemGroup;
 window.renderInk = renderInk;
 
 // Expose equipment lên window (Phần 5c)
-window.renderEquipment = renderEquipment;
+// [LAZY] window.renderEquipment set after dynamic import
 window.renderBooking = renderBooking;
-window.toggleEqGroup = toggleEqGroup;
+// [LAZY] window.toggleEqGroup set after dynamic import
 
 // Expose members + history + users + avatar lên window (Phần 6)
 // [LAZY] window.renderMembers set after dynamic import
@@ -1251,6 +1251,12 @@ const _pageLoaders = {
     const m = await import('./pages/members.js');
     window.renderMembers = m.renderMembers;
     if (typeof window.renderMembers === 'function') window.renderMembers();
+  },
+  equipment: async () => {
+    const m = await import('./pages/equipment.js');
+    window.renderEquipment = m.renderEquipment;
+    window.toggleEqGroup = m.toggleEqGroup;
+    if (typeof window.renderEquipment === 'function') window.renderEquipment();
   },
 };
 
