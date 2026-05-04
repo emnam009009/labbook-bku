@@ -57,8 +57,8 @@ import { renderEquipment, toggleEqGroup } from './pages/equipment.js'
 import { renderBooking } from './pages/booking.js'
 
 // ── Import members + history + users + avatar (Phần 6) ──
-import { renderMembers } from './pages/members.js'
-import { renderHistory } from './pages/history.js'
+// [LAZY] members page imported on-demand via pageChange event listener
+// [LAZY] history page imported on-demand via pageChange event listener
 import { renderReports } from './pages/reports.js'
 import { resetPage } from './utils/pagination.js'
 // [LAZY] users page imported on-demand via pageChange event listener (see bottom of file)
@@ -188,8 +188,8 @@ window.renderBooking = renderBooking;
 window.toggleEqGroup = toggleEqGroup;
 
 // Expose members + history + users + avatar lên window (Phần 6)
-window.renderMembers = renderMembers;
-window.renderHistory = renderHistory;
+// [LAZY] window.renderMembers set after dynamic import
+// [LAZY] window.renderHistory set after dynamic import
 window.renderReports = renderReports;
 window._resetHydroPage = () => resetPage('hydro');
 window._resetElectrodePage = () => resetPage('electrode');
@@ -1241,6 +1241,16 @@ const _pageLoaders = {
     window.renderUsers = m.renderUsers;
     // After load: trigger initial render if user is on this page
     if (typeof window.renderUsers === 'function') window.renderUsers();
+  },
+  history: async () => {
+    const m = await import('./pages/history.js');
+    window.renderHistory = m.renderHistory;
+    if (typeof window.renderHistory === 'function') window.renderHistory();
+  },
+  members: async () => {
+    const m = await import('./pages/members.js');
+    window.renderMembers = m.renderMembers;
+    if (typeof window.renderMembers === 'function') window.renderMembers();
   },
 };
 
