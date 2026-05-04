@@ -47,14 +47,14 @@ import { initMemberFilter } from './services/member-filter.js'
 import { renderHydro, renderElectrode, renderElectrochem } from './pages/experiments.js'
 
 // ── Import chemicals page (Phần 5a) ──────────────────────
-import { renderChemicals, toggleChemGroup } from './pages/chemicals.js'
+// [LAZY] chemicals page imported on-demand via pageChange event listener
 
 // ── Import ink page (Phần 5b) ────────────────────────────
 import { renderInk } from './pages/ink.js'
 
 // ── Import equipment page (Phần 5c) ──────────────────────
 // [LAZY] equipment page imported on-demand via pageChange event listener
-import { renderBooking } from './pages/booking.js'
+// [LAZY] booking page imported on-demand via pageChange event listener
 
 // ── Import members + history + users + avatar (Phần 6) ──
 // [LAZY] members page imported on-demand via pageChange event listener
@@ -176,15 +176,15 @@ window.renderElectrode = renderElectrode;
 window.renderElectrochem = renderElectrochem;
 
 // Expose chemicals lên window (Phần 5a)
-window.renderChemicals = renderChemicals;
-window.toggleChemGroup = toggleChemGroup;
+// [LAZY] window.renderChemicals set after dynamic import
+// [LAZY] window.toggleChemGroup set after dynamic import
 
 // Expose ink lên window (Phần 5b)
 window.renderInk = renderInk;
 
 // Expose equipment lên window (Phần 5c)
 // [LAZY] window.renderEquipment set after dynamic import
-window.renderBooking = renderBooking;
+// [LAZY] window.renderBooking set after dynamic import (other booking window fns are self-assigned by booking.js on first import)
 // [LAZY] window.toggleEqGroup set after dynamic import
 
 // Expose members + history + users + avatar lên window (Phần 6)
@@ -1257,6 +1257,19 @@ const _pageLoaders = {
     window.renderEquipment = m.renderEquipment;
     window.toggleEqGroup = m.toggleEqGroup;
     if (typeof window.renderEquipment === 'function') window.renderEquipment();
+  },
+  chemicals: async () => {
+    const m = await import('./pages/chemicals.js');
+    window.renderChemicals = m.renderChemicals;
+    window.toggleChemGroup = m.toggleChemGroup;
+    if (typeof window.renderChemicals === 'function') window.renderChemicals();
+  },
+  booking: async () => {
+    const m = await import('./pages/booking.js');
+    window.renderBooking = m.renderBooking;
+    // Other window.* functions (saveBooking, approveBooking, etc.) are
+    // assigned at top level inside booking.js when the module evaluates
+    if (typeof window.renderBooking === 'function') window.renderBooking();
   },
 };
 
