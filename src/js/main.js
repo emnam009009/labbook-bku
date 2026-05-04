@@ -61,7 +61,7 @@ import { renderMembers } from './pages/members.js'
 import { renderHistory } from './pages/history.js'
 import { renderReports } from './pages/reports.js'
 import { resetPage } from './utils/pagination.js'
-import { renderUsers } from './pages/users.js'
+// [LAZY] users page imported on-demand via pageChange event listener (see bottom of file)
 import { toggleAvatarMenu, changeAvatar, resetAvatar, updateAvatarUI } from './services/avatar.js'
 
 import { printSingleLabel, printBulkLabels, showLabelChoiceDialog } from './services/qr-labels.js'
@@ -200,7 +200,7 @@ window.renderReports = renderReports;
 window._resetHydroPage = () => resetPage('hydro');
 window._resetElectrodePage = () => resetPage('electrode');
 window._resetElectrochemPage = () => resetPage('electrochem');
-window.renderUsers = renderUsers;
+// [LAZY] window.renderUsers set after dynamic import
 window.toggleAvatarMenu = toggleAvatarMenu;
 window.changeAvatar = changeAvatar;
 window.resetAvatar = resetAvatar;
@@ -1235,6 +1235,37 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ─────────────────────────────────────────────────────────
+
+
+// ─────────────────────────────────────────────────────────
+// LAZY PAGE LOADERS — load page modules on demand to reduce
+// initial bundle size. Each page loads once per session when
+// user first navigates to it via showPage(...).
+// ─────────────────────────────────────────────────────────
+const _loadedPages = new Set();
+const _pageLoaders = {
+  users: async () => {
+    const m = await import('./pages/users.js');
+    window.renderUsers = m.renderUsers;
+    // After load: trigger initial render if user is on this page
+    if (typeof window.renderUsers === 'function') window.renderUsers();
+  },
+};
+
+document.addEventListener('pageChange', async (e) => {
+  const id = e.detail?.id;
+  if (!id) return;
+  const loader = _pageLoaders[id];
+  if (!loader || _loadedPages.has(id)) return;
+  _loadedPages.add(id);
+  try {
+    await loader();
+  } catch (err) {
+    console.error('[lazy-load]', id, 'failed:', err);
+    _loadedPages.delete(id); // allow retry
+  }
+});
+
 // Register Service Worker SAU first paint để không block render
 // (vite-plugin-pwa: injectRegister: false → tự register ở đây)
 // ─────────────────────────────────────────────────────────
