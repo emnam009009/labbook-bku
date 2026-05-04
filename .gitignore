@@ -47,5 +47,5 @@ missing-handlers.js
 .DS_Store
 
 emulator-data/
-*.OLD
+*.OLD*
 database-debug.log
