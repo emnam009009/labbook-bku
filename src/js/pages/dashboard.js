@@ -1139,15 +1139,25 @@ export function renderDash() {
   const ink = vals(cache.ink);
   const members = vals(cache.members).length;
 
+  // ── Sync render: text/numbers/tables (fast, FCP critical path) ──
   renderKPI(h, e, ec, members);
   renderMembersKPI(cache.members);
   renderBookingWeek(cache.bookings, cache.members);
   renderMembersList(cache.members);
   renderChemStatus(cache.chemicals);
-  renderMonthlyChart(h, e, ec);
-  renderDistributionPie(h, e, ec, ink);
-  // renderTopMembers(h, e, ec); // Disabled: card removed from dashboard HÀNG 2
   renderRecentTable(h, e, ec, cache.members);
+
+  // ── Defer charts (lazy Chart.js, không cần cho first paint) ──
+  // requestIdleCallback fallback to setTimeout cho browser cũ
+  const deferChart = (typeof requestIdleCallback === 'function')
+    ? (fn) => requestIdleCallback(fn, { timeout: 500 })
+    : (fn) => setTimeout(fn, 50);
+
+  deferChart(() => {
+    renderMonthlyChart(h, e, ec);
+    renderDistributionPie(h, e, ec, ink);
+    // renderTopMembers(h, e, ec); // Disabled: card removed from dashboard HÀNG 2
+  });
 }
 
 // Expose handler cho week navigation + day select
