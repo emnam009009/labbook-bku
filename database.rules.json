@@ -102,7 +102,7 @@
       "$id": {
         ".write": "auth != null && !data.exists() && (root.child('users').child(auth.uid).child('role').val() === 'member' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')",
 
-        ".validate": "newData.hasChildren(['ts','uid','action']) && newData.child('uid').val() === auth.uid && newData.child('ts').isNumber() && newData.child('ts').val() <= now && newData.child('ts').val() >= now - 60000 && newData.child('action').isString() && newData.child('action').val().length > 0 && newData.child('action').val().length <= 200",
+        ".validate": "newData.hasChildren(['ts','uid','action']) && newData.child('uid').val() === auth.uid && newData.child('ts').isNumber() && newData.child('ts').val() <= now + 60000 && newData.child('ts').val() >= now - 60000 && newData.child('action').isString() && newData.child('action').val().length > 0 && newData.child('action').val().length <= 200",
 
         "ts":     { ".validate": "newData.isNumber()" },
         "uid":    { ".validate": "newData.isString() && newData.val() === auth.uid" },
