@@ -18,7 +18,7 @@
  * Helper internal: isCodeDuplicate (kiểm tra mã trùng trong collection, bỏ qua editKey)
  */
 
-import { db, ref, update, fbPush } from '../firebase.js'
+import { db, ref, update, fbPush, fbGet } from '../firebase.js'
 import { vals } from '../utils/format.js'
 import { getPersonName } from '../utils/auth-helpers.js'
 import { logHistory } from './history-log.js'
@@ -86,7 +86,12 @@ export async function saveHydro() {
     r.usedChems = usedChems;
 
     // Compute net stock delta (refund old + deduct new)
-    const oldRecord = editKey ? cache.hydro[editKey] : null;
+    // Round 51 fix: neu editKey nam ngoai cache 500 records -> fbGet truc tiep
+    // tranh tinh delta sai (oldRecord=null -> khong refund chemical cu)
+    let oldRecord = editKey ? cache.hydro[editKey] : null;
+    if (editKey && !oldRecord) {
+      try { oldRecord = await fbGet('hydro/' + editKey); } catch(e) { oldRecord = null; }
+    }
     const oldUsed = (oldRecord && !oldRecord.isSample && Array.isArray(oldRecord.usedChems)) ? oldRecord.usedChems : [];
     const newUsed = !r.isSample ? usedChems : [];
 
@@ -220,7 +225,11 @@ export async function saveElectrode() {
     r.usedInkChems = usedInkChems;
 
     // Stock delta tính như saveHydro
-    const oldRecord = editKeyE ? cache.electrode[editKeyE] : null;
+    // Round 51 fix: fallback fbGet neu cache miss (record ngoai limit 500)
+    let oldRecord = editKeyE ? cache.electrode[editKeyE] : null;
+    if (editKeyE && !oldRecord) {
+      try { oldRecord = await fbGet('electrode/' + editKeyE); } catch(e) { oldRecord = null; }
+    }
     const oldUsed = (oldRecord && !oldRecord.isSample && Array.isArray(oldRecord.usedInkChems)) ? oldRecord.usedInkChems : [];
     const newUsed = !r.isSample ? usedInkChems : [];
 

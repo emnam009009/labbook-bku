@@ -57,3 +57,7 @@ database-debug.log
 # Font files gốc (chỉ commit subset version)
 public/fonts/NotoSans-Regular.ttf
 public/fonts/NotoSans-Bold.ttf
+
+# Patch backup files (Round 51+)
+*.bak50
+*.bak51

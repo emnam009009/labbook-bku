@@ -17,7 +17,7 @@ import '../css/theme-swatches.css'
 import '../css/attachments.css'
 
 // ── Import Firebase ───────────────────────────────────────
-import { db, ref, push, onValue, fbListen, fbPush, fbSet, fbGet, fbDel, update } from './firebase.js'
+import { db, ref, push, onValue, fbListen, fbPush, fbSet, fbGet, fbDel, update, updatePassword } from './firebase.js'
 import { initAuth, login, logout, register, currentAuth, applyRoleUI, updateDisplayName } from './auth.js'
 
 // ── Import utilities (Phần 1 refactor) ───────────────────
