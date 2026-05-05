@@ -94,6 +94,86 @@ export function attachGlobalDelegation() {
       case 'open-booking-modal-global':   if (typeof window.openBookingModal === 'function') window.openBookingModal(); break;
       case 'open-custom-theme-picker':    if (typeof window.openCustomThemePicker === 'function') window.openCustomThemePicker(); break;
       case 'confirm-reject-booking':      if (typeof window.confirmRejectBooking === 'function') window.confirmRejectBooking(); break;
+
+      // Round 58c additions
+      case 'clear-search': {
+        const searchId = target.dataset.searchId;
+        const renderFnName = target.dataset.renderFn;
+        const input = document.getElementById(searchId);
+        if (input) input.value = '';
+        if (renderFnName && typeof window[renderFnName] === 'function') {
+          window[renderFnName]();
+        }
+        target.style.display = 'none';
+        break;
+      }
+      case 'focus-element': {
+        const id = target.dataset.targetId;
+        const el = document.getElementById(id);
+        if (el) el.focus();
+        break;
+      }
+      case 'apply-theme':
+        if (typeof window.applyTheme === 'function') window.applyTheme(target.dataset.theme);
+        break;
+      case 'export-excel': {
+        const tgt = target.dataset.target;
+        const fnMap = {
+          hydro: 'exportHydroExcel',
+          electrode: 'exportElectrodeExcel',
+          electrochem: 'exportElectrochemExcel',
+          chemicals: 'exportChemicalsExcel',
+          equipment: 'exportEquipmentExcel',
+          bookings: 'exportBookingsExcel',
+        };
+        const fn = fnMap[tgt];
+        if (fn && typeof window[fn] === 'function') window[fn]();
+        break;
+      }
+      case 'toggle-booking-sort':
+        if (typeof window.toggleBookingSort === 'function') window.toggleBookingSort(target.dataset.sortKey);
+        break;
+      case 'cal-nav-prev':  if (typeof window.calNavWeek === 'function') window.calNavWeek(-1); break;
+      case 'cal-nav-next':  if (typeof window.calNavWeek === 'function') window.calNavWeek(1); break;
+      case 'cal-today':     if (typeof window.calToday === 'function') window.calToday(); break;
+      case 'day-nav-prev':  if (typeof window.dayNav === 'function') window.dayNav(-1); break;
+      case 'day-nav-next':  if (typeof window.dayNav === 'function') window.dayNav(1); break;
+      case 'day-today':     if (typeof window.dayToday === 'function') window.dayToday(); break;
+
+      case 'toggle-history':              if (typeof window.toggleHistory === 'function') window.toggleHistory(); break;
+      case 'reset-avatar':                if (typeof window.resetAvatar === 'function') window.resetAvatar(); break;
+      case 'add-chem':                    if (typeof window.addChem === 'function') window.addChem(); break;
+      case 'add-ink-row': {
+        const tbody = target.dataset.tbody;
+        if (typeof window.addInkRow === 'function') {
+          // Khi co data-tbody (modal Ink): pass arg; khi khong co (fallback): no-arg
+          if (tbody) window.addInkRow(tbody);
+          else window.addInkRow();
+        }
+        break;
+      }
+      case 'toggle-chat-widget-close':
+        if (typeof window.toggleChatWidget === 'function') window.toggleChatWidget(false);
+        break;
+      case 'add-chem-group':              if (typeof window.addChemGroup === 'function') window.addChemGroup(); break;
+      case 'add-eq-group':                if (typeof window.addEqGroup === 'function') window.addEqGroup(); break;
+      case 'lookup-cas':                  if (typeof window.lookupCAS === 'function') window.lookupCAS(); break;
+      case 'open-pdf-report-modal':       if (typeof window.openPdfReportModal === 'function') window.openPdfReportModal(); break;
+      case 'toggle-chat-widget':          if (typeof window.toggleChatWidget === 'function') window.toggleChatWidget(); break;
+      case 'chat-send':                   if (typeof window.chatSend === 'function') window.chatSend(); break;
+      case 'chat-clear-image':            if (typeof window.chatClearImage === 'function') window.chatClearImage(); break;
+      case 'remove-equipment-image-preview': if (typeof window.removeEquipmentImagePreview === 'function') window.removeEquipmentImagePreview(); break;
+      case 'delete-hydro-image':          if (typeof window.deleteHydroImage === 'function') window.deleteHydroImage(); break;
+      case 'delete-electrode-image':      if (typeof window.deleteElectrodeImage === 'function') window.deleteElectrodeImage(); break;
+      case 'delete-ink-image':            if (typeof window.deleteInkImage === 'function') window.deleteInkImage(); break;
+      case 'delete-chemical-image':       if (typeof window.deleteChemicalImage === 'function') window.deleteChemicalImage(); break;
+
+      case 'remove-chem':
+        if (typeof window.removeChem === 'function') window.removeChem(target);
+        break;
+      case 'show-clear-all-confirm':
+        if (typeof window.showClearAllConfirm === 'function') window.showClearAllConfirm(target);
+        break;
     }
   });
 
@@ -143,6 +223,15 @@ export function attachGlobalDelegation() {
       case 'day-jump-to':
         if (typeof window.dayJumpTo === 'function') window.dayJumpTo(target.value);
         break;
+
+      // Round 58c: modal form changes
+      case 'upload-hydro-image':       if (typeof window.uploadHydroImage === 'function') window.uploadHydroImage(target); break;
+      case 'upload-electrode-image':   if (typeof window.uploadElectrodeImage === 'function') window.uploadElectrodeImage(target); break;
+      case 'upload-ink-image':         if (typeof window.uploadInkImage === 'function') window.uploadInkImage(target); break;
+      case 'upload-chemical-image':    if (typeof window.uploadChemicalImage === 'function') window.uploadChemicalImage(target); break;
+      case 'preview-equipment-image':  if (typeof window.previewEquipmentImage === 'function') window.previewEquipmentImage(target); break;
+      case 'fill-ink-formula':         if (typeof window.fillInkFormula === 'function') window.fillInkFormula(); break;
+      case 'sync-unit':                if (typeof window.syncUnit === 'function') window.syncUnit(); break;
     }
   });
 
@@ -182,6 +271,20 @@ export function attachGlobalDelegation() {
         break;
       case 'header-search':
         if (typeof window.headerSearch === 'function') window.headerSearch(target);
+        break;
+
+      // Round 58c: modal form inputs
+      case 'search-chem':
+        if (typeof window.searchChem === 'function') window.searchChem(target);
+        break;
+      case 'calc-mol':
+        if (typeof window.calcMol === 'function') window.calcMol(target);
+        break;
+      case 'calc-loading':
+        if (typeof window.calcLoading === 'function') window.calcLoading();
+        break;
+      case 'search-electrode':
+        if (typeof window.searchElectrode === 'function') window.searchElectrode(target);
         break;
     }
   });
@@ -257,5 +360,119 @@ export function attachGlobalDelegation() {
       '[data-auth-input="1"]:focus{border-color:var(--teal) !important;background:var(--teal-light) !important}' +
       '[data-chat-input="1"]:focus{border-color:var(--teal) !important}';
     document.head.appendChild(style);
+  }
+
+  // ── Round 58c: INJECT CSS for hover effects ───────
+  // Thay cho onmouseover/out inline tren cac element
+  if (!document.getElementById('global-hover-css')) {
+    const style = document.createElement('style');
+    style.id = 'global-hover-css';
+    style.textContent =
+      // Auth button hover
+      '[data-hover="auth-btn"]:hover{background:#0f766e !important}' +
+      // Bell button hover
+      '[data-hover="bell-btn"]:hover{background:var(--teal-light) !important;border-color:var(--teal-3) !important}' +
+      // Avatar trigger hover
+      '[data-hover="avatar-trigger"]:hover{border-color:var(--teal) !important}' +
+      // Admin action button (changeAvatar)
+      '[data-hover="admin-action-btn"]:hover{background:var(--teal) !important;color:white !important;transform:translate(1px,-1px)}' +
+      // Logout button (resetAvatar)
+      '[data-hover="logout-btn"]:hover{background:#fef2f2 !important;transform:translate(1px,-1px)}' +
+      // Del-circle red (group delete buttons in modals)
+      '[data-hover="del-circle-red"]:hover{background:#dc2626 !important}' +
+      // Chat message hover
+      '[data-hover="chat-msg"]:hover{background:var(--surface-3) !important}' +
+      // Chat send button
+      '[data-hover="chat-send-btn"]:hover{background:var(--teal-2) !important}' +
+      // Chat widget clear-all button
+      '[data-hover="cw-clear-btn"]:hover{background:rgba(255,255,255,0.18) !important;opacity:1 !important}';
+    document.head.appendChild(style);
+  }
+
+  // ── Round 58c: bell-wrapper hover (logic phuc tap) ─
+  // Cho dropdown notif: enter -> show ngay; leave -> hide sau 200ms
+  const bellWrapper = document.querySelector('[data-bell-wrapper="1"]');
+  if (bellWrapper && !bellWrapper._delegated) {
+    bellWrapper._delegated = true;
+    bellWrapper.addEventListener('mouseenter', function() {
+      if (window._bellTimer) clearTimeout(window._bellTimer);
+      const dropdown = document.getElementById('bell-dropdown');
+      if (dropdown) dropdown.style.display = 'block';
+      if (typeof window.renderNotificationsList === 'function') {
+        window.renderNotificationsList();
+      }
+    });
+    bellWrapper.addEventListener('mouseleave', function() {
+      window._bellTimer = setTimeout(function() {
+        const dropdown = document.getElementById('bell-dropdown');
+        if (dropdown) dropdown.style.display = 'none';
+      }, 200);
+    });
+  }
+
+  // ── Round 58c: avatar-wrapper hover (similar to bell)
+  const avatarWrapper = document.querySelector('[data-avatar-wrapper="1"]');
+  if (avatarWrapper && !avatarWrapper._delegated) {
+    avatarWrapper._delegated = true;
+    avatarWrapper.addEventListener('mouseenter', function() {
+      if (window._avatarTimer) clearTimeout(window._avatarTimer);
+      const menu = document.getElementById('avatar-menu');
+      if (menu) menu.style.display = 'block';
+    });
+    avatarWrapper.addEventListener('mouseleave', function() {
+      window._avatarTimer = setTimeout(function() {
+        const menu = document.getElementById('avatar-menu');
+        if (menu) menu.style.display = 'none';
+      }, 200);
+    });
+  }
+
+  // ── Round 58c: header search box hover (expand/collapse w/ delay)
+  const hsBox = document.querySelector('[data-header-search-box="1"]');
+  if (hsBox && !hsBox._delegated) {
+    hsBox._delegated = true;
+    hsBox.addEventListener('mouseenter', function() {
+      if (window._srchTimer) clearTimeout(window._srchTimer);
+      const i = document.getElementById('header-search-input');
+      const b = this;
+      b.style.width = '240px';
+      b.style.borderColor = 'var(--teal)';
+      b.style.borderRadius = '20px';
+      if (i) {
+        i.style.width = '180px';
+        i.style.padding = '0 8px 0 0';
+        i.focus();
+      }
+    });
+    hsBox.addEventListener('mouseleave', function() {
+      window._srchTimer = setTimeout(function() {
+        const i = document.getElementById('header-search-input');
+        if (!i || i.value) return;
+        i.blur();
+        const b = document.getElementById('header-search-box');
+        if (b) {
+          b.style.width = '40px';
+          b.style.borderColor = '#e2e8f0';
+          b.style.borderRadius = '50%';
+        }
+        i.style.width = '0';
+        i.style.padding = '0';
+      }, 400);
+    });
+  }
+
+  // ── Round 58c: header search button hover (border on enter, conditional on leave)
+  const hsBtn = document.querySelector('[data-header-search-btn="1"]');
+  if (hsBtn && !hsBtn._delegated) {
+    hsBtn._delegated = true;
+    hsBtn.addEventListener('mouseenter', function() {
+      this.style.borderColor = 'var(--teal)';
+    });
+    hsBtn.addEventListener('mouseleave', function() {
+      const input = document.getElementById('header-search-input');
+      if (!input || !input.matches(':focus')) {
+        this.style.borderColor = '#e2e8f0';
+      }
+    });
   }
 }

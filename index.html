@@ -85,7 +85,7 @@
           <div id="login-error" style="display:none;background:#fef2f2;border:1.5px solid #fecaca;border-radius:9px;padding:10px 14px;color:#dc2626;font-size:12.5px;margin-bottom:16px"></div>
           <button data-action="do-login" id="login-btn"
                   style="width:100%;background:var(--teal);color:white;border:none;border-radius:9px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:background 0.15s"
-                  onmouseover="this.style.background='#0f766e'" onmouseout="this.style.background='var(--teal)'">
+                  data-hover="auth-btn">
             Đăng nhập
           </button>
         </form>
@@ -113,7 +113,7 @@
           <div id="reg-success" style="display:none;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:9px;padding:10px 14px;color:#15803d;font-size:12.5px;margin-bottom:16px;text-align:center"></div>
           <button data-action="do-register" id="reg-btn"
                   style="width:100%;background:var(--teal);color:white;border:none;border-radius:9px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:background 0.15s"
-                  onmouseover="this.style.background='#0f766e'" onmouseout="this.style.background='var(--teal)'">
+                  data-hover="auth-btn">
             Tạo tài khoản
           </button>
           <div style="text-align:center;margin-top:14px;color:#475569;font-size:12px;line-height:1.6">
@@ -143,10 +143,9 @@
 <!-- Round 19: Floating topbar (search + bell) replaces full-width header -->
   <div id="floating-topbar" style="position:fixed;top:14px;right:32px;z-index:50;display:flex;align-items:center;gap:10px">
 <div id="header-search-wrap" style="position:relative;display:flex;align-items:center">
-        <div id="header-search-box" onmouseenter="clearTimeout(window._srchTimer);const i=document.getElementById('header-search-input');const b=this;b.style.width='240px';b.style.borderColor='var(--teal)';b.style.borderRadius='20px';i.style.width='180px';i.style.padding='0 8px 0 0';i.focus()" onmouseleave="window._srchTimer=setTimeout(()=>{const i=document.getElementById('header-search-input');if(!i.value){i.blur();const b=document.getElementById('header-search-box');b.style.width='40px';b.style.borderColor='#e2e8f0';b.style.borderRadius='50%';i.style.width='0';i.style.padding='0';}},400)" style="display:flex;align-items:center;overflow:hidden;width:40px;height:40px;border:1.5px solid #e2e8f0;border-radius:50%;background:white;transition:width 0.3s cubic-bezier(.4,0,.2,1),border-color 0.2s,border-radius 0.3s"
-             onmouseenter="this.style.borderColor='var(--teal)'"
-             onmouseleave="if(!document.getElementById('header-search-input').matches(':focus'))this.style.borderColor='#e2e8f0'">
-          <button type="button" aria-label="Tìm kiếm" onclick="document.getElementById('header-search-input').focus()"
+        <div id="header-search-box" data-header-search-box="1" style="display:flex;align-items:center;overflow:hidden;width:40px;height:40px;border:1.5px solid #e2e8f0;border-radius:50%;background:white;transition:width 0.3s cubic-bezier(.4,0,.2,1),border-color 0.2s,border-radius 0.3s"
+             data-header-search-btn="1">
+          <button type="button" aria-label="Tìm kiếm" data-action="focus-element" data-target-id="header-search-input"
                   style="width:34px;height:34px;min-width:34px;flex-shrink:0;border-radius:50%;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-left:3px">
             <svg aria-hidden="true" width="15" height="15" viewBox="1 1 22 22" fill="none" stroke="#475569" stroke-width="2.5" stroke-linecap="round">
               <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
@@ -157,10 +156,9 @@
                  data-header-search="1">
         </div>
       </div>
-      <div id="bell-wrapper" style="position:relative;display:none" onmouseenter="clearTimeout(window._bellTimer);document.getElementById('bell-dropdown').style.display='block';if(typeof window.renderNotificationsList==='function')window.renderNotificationsList()" onmouseleave="window._bellTimer=setTimeout(()=>document.getElementById('bell-dropdown').style.display='none',200)">
+      <div id="bell-wrapper" style="position:relative;display:none" data-bell-wrapper="1">
         <button id="bell-btn" type="button" aria-label="Mở thông báo" data-action="toggle-bell-dropdown" style="width:40px;height:40px;border-radius:50%;border:1px solid #e2e8f0;background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:all 0.15s;flex-shrink:0"
-                onmouseover="this.style.background='var(--teal-light)';this.style.borderColor='var(--teal-3)'"
-                onmouseout="this.style.background='white';this.style.borderColor='#e2e8f0'" title="Thông báo">
+                data-hover="bell-btn" title="Thông báo">
           <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round">
             <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
           </svg>
@@ -286,10 +284,10 @@
 
       <div class="sidebar-footer">
 
-      <div style="position:relative" id="avatar-wrapper" onmouseenter="clearTimeout(window._avatarTimer);document.getElementById('avatar-menu').style.display='block'" onmouseleave="window._avatarTimer=setTimeout(()=>document.getElementById('avatar-menu').style.display='none',200)">
+      <div style="position:relative" id="avatar-wrapper" data-avatar-wrapper="1">
         <button id="avatar-btn"
                 style="width:36px;height:36px;border-radius:50%;border:2px solid #e2e8f0;background:linear-gradient(135deg,var(--teal),var(--teal-3));display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;transition:border 0.15s;flex-shrink:0"
-                onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='#e2e8f0'">
+                data-hover="avatar-trigger">
           <img id="avatar-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none;border-radius:50%">
           <span id="avatar-initials" style="font-size:13px;font-weight:600;color:white"></span>
         </button>
@@ -297,18 +295,18 @@
           <div style="padding:8px 14px 12px;border-bottom:1px solid #f1f5f9;margin-bottom:6px">
             <div id="menu-name" style="font-size:13px;font-weight:600;color:#0f172a;display:flex;align-items:center;justify-content:space-between"></div>
             <div id="menu-email" style="font-size:11px;color:#64748b;margin-top:2px"></div>
-            <span id="admin-badge" style="display:none;background:rgba(var(--teal-rgb), 0.15);color:var(--teal-3);border:1px solid rgba(var(--teal-rgb), 0.3);font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;margin-top:6px;cursor:pointer" onclick="toggleHistory()">Admin</span>
+            <span id="admin-badge" style="display:none;background:rgba(var(--teal-rgb), 0.15);color:var(--teal-3);border:1px solid rgba(var(--teal-rgb), 0.3);font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;margin-top:6px;cursor:pointer" data-action="toggle-history">Admin</span>
 
           </div>
           <div style="padding:0 10px;display:flex;flex-direction:column;gap:4px">
             <label style="display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;color:#0f172a;transition:all 0.2s"
-                   onmouseover="this.style.background='var(--teal)';this.style.color='white';this.style.transform='translate(1px,-1px)'"
-                   onmouseout="this.style.background='';this.style.color='#0f172a';this.style.transform=''">
+                   data-hover="admin-action-btn"
+>
               <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
               Đổi ảnh đại diện
               <input type="file" accept="image/*" style="display:none" data-change-action="change-avatar">
             </label>
-            <button onclick="resetAvatar()" class="avatar-menu-btn" style="width:100%;display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:600;color:#0f172a;text-align:left;transition:all 0.2s">
+            <button data-action="reset-avatar" class="avatar-menu-btn" style="width:100%;display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:600;color:#0f172a;text-align:left;transition:all 0.2s">
               <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
               Ảnh mặc định
             </button>
@@ -322,10 +320,10 @@
             <!-- Theme picker swatches -->
             <div style="display:flex;align-items:center;gap:8px;padding:7px 8px">
               <span style="font-size:12px;color:#64748b;flex:1">Màu giao diện</span>
-              <button class="theme-swatch" data-theme="teal" style="background:#0d9488" onclick="applyTheme('teal')" title="Xanh teal"></button>
-              <button class="theme-swatch" data-theme="cyan" style="background:#0891b2" onclick="applyTheme('cyan')" title="Xanh cyan"></button>
-              <button class="theme-swatch" data-theme="purple" style="background:#7c3aed" onclick="applyTheme('purple')" title="Tím"></button>
-              <button class="theme-swatch" data-theme="orange" style="background:#ea580c" onclick="applyTheme('orange')" title="Cam"></button>
+              <button class="theme-swatch" data-theme="teal" style="background:#0d9488" data-action="apply-theme" data-theme="teal" title="Xanh teal"></button>
+              <button class="theme-swatch" data-theme="cyan" style="background:#0891b2" data-action="apply-theme" data-theme="cyan" title="Xanh cyan"></button>
+              <button class="theme-swatch" data-theme="purple" style="background:#7c3aed" data-action="apply-theme" data-theme="purple" title="Tím"></button>
+              <button class="theme-swatch" data-theme="orange" style="background:#ea580c" data-action="apply-theme" data-theme="orange" title="Cam"></button>
               <button class="theme-custom-btn" data-action="open-custom-theme-picker" title="Tùy chỉnh màu"></button>
             </div>
             <div style="height:1px;background:#f1f5f9;margin:4px 0"></div>
@@ -337,8 +335,7 @@
             </div>
             <div style="height:1px;background:#f1f5f9;margin:4px 0"></div>
             <button data-action="do-logout" id="logout-btn" style="width:100%;display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:6px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:#ef4444;text-align:left;transition:all 0.2s"
-                    onmouseover="this.style.background='#fef2f2';this.style.transform='translate(1px,-1px)'"
-                    onmouseout="this.style.background='';this.style.transform=''">
+                    data-hover="logout-btn">
               <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" style="flex-shrink:0"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
               Đăng xuất
             </button>
@@ -488,15 +485,15 @@
           <div style="position:relative;flex:1;min-width:200px">
             <input  aria-label="Tìm theo mã, vật liệu, người thực hiện" class="search-input" id="hydro-search" type="text" style="width:100%;padding-right:32px"
                    placeholder="Tìm theo mã, vật liệu, người thực hiện..." data-input-action="search" data-reset-fn="_resetHydroPage" data-render-fn="renderHydro" data-clear-btn="hydro-search-clear">
-            <button id="hydro-search-clear" onclick="document.getElementById('hydro-search').value='';renderHydro();this.style.display='none'"
+            <button id="hydro-search-clear" data-action="clear-search" data-search-id="hydro-search" data-render-fn="renderHydro"
                     style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;background:#f87171;border:none;cursor:pointer;align-items:center;justify-content:center;transition:background 0.15s"
-                    onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#f87171'">
+                    data-hover="del-circle-red">
               <svg aria-hidden="true" width="8" height="8" viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
                 <line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/>
               </svg>
             </button>
           </div>
-          <button class="btn admin-only" onclick="exportHydroExcel()" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
+          <button class="btn admin-only" data-action="export-excel" data-target="hydro" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
           <select id="hydro-member-filter" class="search-input" data-change-action="set-member-filter" data-target="hydro" title="Lọc theo thành viên" style="min-width:180px"><option value="all">Tất cả thành viên</option></select>
           <select class="search-input" style="flex:0;min-width:160px" id="hydro-status-filter" data-change-action="render-hydro">
             <option value="">Tất cả trạng thái</option>
@@ -553,15 +550,15 @@
             <div style="position:relative;flex:1;min-width:200px">
             <input  aria-label="Tìm theo mã, vật liệu" class="search-input" id="electrode-search" type="text" style="width:100%;padding-right:32px"
                    placeholder="Tìm theo mã, vật liệu..." data-input-action="search" data-reset-fn="_resetElectrodePage" data-render-fn="renderElectrode" data-clear-btn="electrode-search-clear">
-            <button id="electrode-search-clear" onclick="document.getElementById('electrode-search').value='';renderElectrode();this.style.display='none'"
+            <button id="electrode-search-clear" data-action="clear-search" data-search-id="electrode-search" data-render-fn="renderElectrode"
                     style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;background:#f87171;border:none;cursor:pointer;align-items:center;justify-content:center;transition:background 0.15s"
-                    onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#f87171'">
+                    data-hover="del-circle-red">
               <svg aria-hidden="true" width="8" height="8" viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
                 <line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/>
               </svg>
             </button>
           </div>
-            <button class="btn admin-only" onclick="exportElectrodeExcel()" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
+            <button class="btn admin-only" data-action="export-excel" data-target="electrode" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
             <select id="electrode-member-filter" class="search-input" data-change-action="set-member-filter" data-target="electrode" title="Lọc theo thành viên" style="min-width:180px"><option value="all">Tất cả thành viên</option></select>
             <select class="search-input" style="flex:0;min-width:180px" id="electrode-status-filter" data-change-action="render-electrode">
               <option value="">Tất cả trạng thái</option>
@@ -622,15 +619,15 @@
           <div style="position:relative;flex:1;min-width:200px">
             <input  aria-label="Tìm theo mã, điện cực, phản ứng" class="search-input" id="ec-search" type="text" style="width:100%;padding-right:32px"
                    placeholder="Tìm theo mã, điện cực, phản ứng..." data-input-action="search" data-reset-fn="_resetElectrochemPage" data-render-fn="renderElectrochem" data-clear-btn="ec-search-clear">
-            <button id="ec-search-clear" onclick="document.getElementById('ec-search').value='';renderElectrochem();this.style.display='none'"
+            <button id="ec-search-clear" data-action="clear-search" data-search-id="ec-search" data-render-fn="renderElectrochem"
                     style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;background:#f87171;border:none;cursor:pointer;align-items:center;justify-content:center;transition:background 0.15s"
-                    onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#f87171'">
+                    data-hover="del-circle-red">
               <svg aria-hidden="true" width="8" height="8" viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
                 <line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/>
               </svg>
             </button>
           </div>
-          <button class="btn admin-only" onclick="exportElectrochemExcel()" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
+          <button class="btn admin-only" data-action="export-excel" data-target="electrochem" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
           <select id="ec-member-filter" class="search-input" data-change-action="set-member-filter" data-target="ec" title="Lọc theo thành viên" style="min-width:180px"><option value="all">Tất cả thành viên</option></select>
           <select class="search-input" style="flex:0;min-width:180px" id="ec-type-filter" data-change-action="render-electrochem">
             <option value="">Tất cả loại đo</option>
@@ -679,9 +676,9 @@
           <div style="position:relative;flex:1;min-width:200px">
             <input  aria-label="Tìm theo tên, công thức, mã CAS" class="search-input" id="chem-search" type="text" style="width:100%;padding-right:32px"
                    placeholder="Tìm theo tên, công thức, mã CAS..." data-input-action="search" data-render-fn="renderChemicals" data-clear-btn="chem-search-clear">
-            <button id="chem-search-clear" onclick="document.getElementById('chem-search').value='';renderChemicals();this.style.display='none'"
+            <button id="chem-search-clear" data-action="clear-search" data-search-id="chem-search" data-render-fn="renderChemicals"
                     style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;background:#f87171;border:none;cursor:pointer;align-items:center;justify-content:center;transition:background 0.15s"
-                    onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#f87171'">
+                    data-hover="del-circle-red">
               <svg aria-hidden="true" width="8" height="8" viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
                 <line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/>
               </svg>
@@ -694,7 +691,7 @@
             <input type="checkbox" id="filter-cs2" data-change-action="render-chemicals" >Cơ sở 2
           </label>
 
-          <button class="btn admin-only" onclick="exportChemicalsExcel()" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
+          <button class="btn admin-only" data-action="export-excel" data-target="chemicals" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
           <select class="search-input" style="flex:0;min-width:160px" id="chem-status-filter" data-change-action="render-chemicals">
             <option value="">Tất cả trạng thái</option>
             <option value="low">⚠ Sắp hết</option><option value="ok">✓ Đủ</option>
@@ -761,9 +758,9 @@
           <div style="position:relative;flex:1;min-width:200px">
             <input  aria-label="Tìm theo tên, model, hãng" class="search-input" id="equipment-search" type="text" style="width:100%;padding-right:32px"
                    placeholder="Tìm theo tên, model, hãng..." data-input-action="search" data-render-fn="renderEquipment" data-clear-btn="equipment-search-clear">
-            <button id="equipment-search-clear" onclick="document.getElementById('equipment-search').value='';renderEquipment();this.style.display='none'"
+            <button id="equipment-search-clear" data-action="clear-search" data-search-id="equipment-search" data-render-fn="renderEquipment"
                     style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;background:#f87171;border:none;cursor:pointer;align-items:center;justify-content:center;transition:background 0.15s"
-                    onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#f87171'">
+                    data-hover="del-circle-red">
               <svg aria-hidden="true" width="8" height="8" viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
                 <line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/>
               </svg>
@@ -775,7 +772,7 @@
           <label class="flex items-center gap-1.5 px-3 py-2 border border-border rounded-lab cursor-pointer text-[13px] text-lab-text-2 bg-surface select-none whitespace-nowrap">
             <input type="checkbox" id="eq-filter-cs2" data-change-action="render-equipment" >Cơ sở 2
           </label>
-          <button class="btn admin-only" onclick="exportEquipmentExcel()" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
+          <button class="btn admin-only" data-action="export-excel" data-target="equipment" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
           <select class="search-input" style="flex:0;min-width:180px" id="equipment-status-filter" data-change-action="render-equipment">
             <option value="">Tất cả trạng thái</option>
             <option>Đang sử dụng</option><option>Đang sửa</option><option>Ngưng sử dụng</option>
@@ -821,8 +818,8 @@
           <button id="bk-tab-cal" class="bk-tab" data-action="switch-booking-view" data-view="calendar" style="padding:7px 14px;border:none;background:transparent;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text-2);display:inline-flex;align-items:center;gap:6px"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Lịch</button>
         </div>
         <input  aria-label="Tìm theo thiết bị, người đặt, mục đích" type="text" id="booking-search" placeholder="Tìm theo thiết bị, người đặt, mục đích..." class="search-input" style="flex:1;min-width:240px">
-        <button class="btn admin-only" onclick="exportBookingsExcel()" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
-        <button class="btn" onclick="window.openPdfReportModal()" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất báo cáo PDF"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h6M9 17h6"/></svg> PDF</button>
+        <button class="btn admin-only" data-action="export-excel" data-target="bookings" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
+        <button class="btn" data-action="open-pdf-report-modal" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất báo cáo PDF"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h6M9 17h6"/></svg> PDF</button>
         <select id="booking-equipment-filter" class="search-input" data-change-action="render-booking">
           <option value="">Tất cả thiết bị</option>
         </select>
@@ -846,10 +843,10 @@
           <thead>
             <tr>
               <th scope="col">Mã đặt</th>
-              <th scope="col" class="bk-sortable" data-sort="userName" onclick="window.toggleBookingSort('userName')" style="cursor:pointer;user-select:none">Người đặt <span class="bk-sort-arrow"></span></th>
-              <th scope="col" class="bk-sortable" data-sort="equipmentName" onclick="window.toggleBookingSort('equipmentName')" style="cursor:pointer;user-select:none">Thiết bị <span class="bk-sort-arrow"></span></th>
-              <th scope="col" class="bk-sortable" data-sort="date" onclick="window.toggleBookingSort('date')" style="text-align:center;cursor:pointer;user-select:none">Ngày <span class="bk-sort-arrow"></span></th>
-              <th scope="col" class="bk-sortable" data-sort="startTime" onclick="window.toggleBookingSort('startTime')" style="text-align:center;cursor:pointer;user-select:none">Giờ <span class="bk-sort-arrow"></span></th>
+              <th scope="col" class="bk-sortable" data-sort="userName" data-action="toggle-booking-sort" data-sort-key="userName" style="cursor:pointer;user-select:none">Người đặt <span class="bk-sort-arrow"></span></th>
+              <th scope="col" class="bk-sortable" data-sort="equipmentName" data-action="toggle-booking-sort" data-sort-key="equipmentName" style="cursor:pointer;user-select:none">Thiết bị <span class="bk-sort-arrow"></span></th>
+              <th scope="col" class="bk-sortable" data-sort="date" data-action="toggle-booking-sort" data-sort-key="date" style="text-align:center;cursor:pointer;user-select:none">Ngày <span class="bk-sort-arrow"></span></th>
+              <th scope="col" class="bk-sortable" data-sort="startTime" data-action="toggle-booking-sort" data-sort-key="startTime" style="text-align:center;cursor:pointer;user-select:none">Giờ <span class="bk-sort-arrow"></span></th>
               <th scope="col">Mục đích</th>
               <th scope="col" style="text-align:center">Trạng thái</th>
             </tr>
@@ -865,9 +862,9 @@
           <!-- Calendar header: navigation + range -->
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
             <div style="display:inline-flex;gap:6px;align-items:center">
-              <button class="btn btn-xs" onclick="window.calNavWeek(-1)" title="Tuần trước"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
-              <button class="btn btn-xs" onclick="window.calToday()" style="font-size:12px">Hôm nay</button>
-              <button class="btn btn-xs" onclick="window.calNavWeek(1)" title="Tuần sau"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+              <button class="btn btn-xs" data-action="cal-nav-prev" title="Tuần trước"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+              <button class="btn btn-xs" data-action="cal-today" style="font-size:12px">Hôm nay</button>
+              <button class="btn btn-xs" data-action="cal-nav-next" title="Tuần sau"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
             </div>
             <div style="display:inline-flex;align-items:center;gap:10px">
               <input type="date" id="cal-date-picker" data-change-action="cal-jump-to-date" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;cursor:pointer;background:white;color:var(--text)" title="Chọn ngày để xem tuần đó">
@@ -897,9 +894,9 @@
           <!-- Day header -->
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
             <div style="display:inline-flex;gap:6px;align-items:center">
-              <button class="btn btn-xs" onclick="window.dayNav(-1)" title="Ngày trước"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
-              <button class="btn btn-xs" onclick="window.dayToday()" style="font-size:12px">Hôm nay</button>
-              <button class="btn btn-xs" onclick="window.dayNav(1)" title="Ngày sau"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+              <button class="btn btn-xs" data-action="day-nav-prev" title="Ngày trước"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+              <button class="btn btn-xs" data-action="day-today" style="font-size:12px">Hôm nay</button>
+              <button class="btn btn-xs" data-action="day-nav-next" title="Ngày sau"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
             </div>
             <div style="display:inline-flex;align-items:center;gap:10px">
               <input type="date" id="day-date-picker" data-change-action="day-jump-to" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;cursor:pointer;background:white;color:var(--text)">
@@ -996,14 +993,14 @@
           <div id="chat-img-preview" style="display:none;padding:8px 16px;border-top:1px solid var(--border)">
             <div style="display:flex;align-items:center;gap:8px">
               <img id="chat-img-thumb" style="height:60px;width:60px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">
-              <button onclick="window.chatClearImage()" style="background:#f43f5e;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <button data-action="chat-clear-image" style="background:#f43f5e;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">
                 <svg aria-hidden="true" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2"><line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/></svg>
               </button>
             </div>
           </div>
           <div style="border-top:1px solid var(--border);padding:12px 16px;display:flex;gap:10px;align-items:flex-end;background:var(--surface)">
             <label style="cursor:pointer;flex-shrink:0;color:var(--text-3);padding:6px;border-radius:8px;transition:all 0.15s" title="Gửi ảnh"
-                   onmouseover="this.style.background='var(--surface-3)'" onmouseout="this.style.background=''">
+                   data-hover="chat-msg">
               <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
               <input type="file" accept="image/*" style="display:none" data-change-action="chat-pick-image">
             </label>
@@ -1017,9 +1014,9 @@
                 data-chat-input="1"></textarea>
               <div id="chat-mention-dropdown" style="display:none;position:absolute;bottom:calc(100% + 4px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.12);max-height:160px;overflow-y:auto;z-index:100;padding:4px"></div>
             </div>
-            <button onclick="window.chatSend()" id="chat-send-btn"
+            <button data-action="chat-send" id="chat-send-btn"
               style="background:var(--teal);color:white;border:none;border-radius:10px;padding:10px 16px;cursor:pointer;font-size:13px;font-weight:600;transition:all 0.15s;flex-shrink:0;display:flex;align-items:center;gap:6px"
-              onmouseover="this.style.background='var(--teal-2)'" onmouseout="this.style.background='var(--teal)'">
+              data-hover="chat-send-btn">
               <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
               Gửi
             </button>
@@ -1092,7 +1089,7 @@
         <input type="text" id="new-group-name" placeholder="Tên nhóm mới..."
                class="search-input" style="flex:1"
                data-keydown-action="add-chem-group">
-        <button class="btn btn-primary" onclick="addChemGroup()">+ Thêm nhóm</button>
+        <button class="btn btn-primary" data-action="add-chem-group">+ Thêm nhóm</button>
       </div>
     </div>
   </div>
@@ -1109,7 +1106,7 @@
         <input type="text" id="new-eq-group-name" placeholder="Tên nhóm mới..."
                class="search-input" style="flex:1"
                data-keydown-action="add-eq-group">
-        <button class="btn btn-primary" onclick="addEqGroup()">+ Thêm nhóm</button>
+        <button class="btn btn-primary" data-action="add-eq-group">+ Thêm nhóm</button>
       </div>
     </div>
   </div>
@@ -1160,8 +1157,8 @@
     </div>
     <div class="form-section">
  <div class="form-section-title">Hóa chất sử dụng</div>
- <table class="chem-table"><thead><tr><th scope="col">Tên hóa chất</th><th scope="col">M (g/mol)</th><th scope="col">Khối lượng/Thể tích (g; mL)</th><th scope="col">mol (M)</th><th scope="col"></th></tr></thead><tbody id="h-chem-tbody"><tr><td style="position:relative"><input type="text" class="chem-search" placeholder="Tìm hóa chất..." oninput="searchChem(this)" autocomplete="off"><div class="chem-dropdown" style="position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:50;width:220px;max-height:180px;overflow-y:auto;display:none"></div></td><td><input type="number" min="0" placeholder="M" class="chem-mw" readonly style="background:var(--surface2)"></td><td><input type="number" min="0" step="0.001" placeholder="g; mL" oninput="calcMol(this)"></td><td><input type="number" min="0" step="0.0001" readonly style="background:var(--surface2)"></td><td><button class="btn btn-xs btn-danger" onclick="removeChem(this)">✕</button></td></tr></tbody></table>
-      <button class="btn btn-sm" onclick="addChem()">+ Thêm hóa chất</button>
+ <table class="chem-table"><thead><tr><th scope="col">Tên hóa chất</th><th scope="col">M (g/mol)</th><th scope="col">Khối lượng/Thể tích (g; mL)</th><th scope="col">mol (M)</th><th scope="col"></th></tr></thead><tbody id="h-chem-tbody"><tr><td style="position:relative"><input type="text" class="chem-search" placeholder="Tìm hóa chất..." data-input-action="search-chem" autocomplete="off"><div class="chem-dropdown" style="position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:50;width:220px;max-height:180px;overflow-y:auto;display:none"></div></td><td><input type="number" min="0" placeholder="M" class="chem-mw" readonly style="background:var(--surface2)"></td><td><input type="number" min="0" step="0.001" placeholder="g; mL" data-input-action="calc-mol"></td><td><input type="number" min="0" step="0.0001" readonly style="background:var(--surface2)"></td><td><button class="btn btn-xs btn-danger" data-action="remove-chem">✕</button></td></tr></tbody></table>
+      <button class="btn btn-sm" data-action="add-chem">+ Thêm hóa chất</button>
     </div>
      <div class="form-group" style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
         <label style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:1.5px solid #e2e8f0;border-radius:20px;cursor:pointer;font-size:13px;font-weight:500;color:#0f172a;transition:all 0.2s;user-select:none">
@@ -1195,7 +1192,7 @@
         <svg aria-hidden="true" width="40" height="40" viewBox="0 0 24 24" stroke="var(--text-3)" fill="none" stroke-width="1.5" style="margin-bottom:10px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         <div style="color:var(--text-3);font-size:13px">Kéo thả ảnh vào đây hoặc</div>
         <label style="color:var(--blue2);cursor:pointer;font-size:13px;font-weight:500">
-          <input type="file" accept="image/*" style="display:none" onchange="uploadHydroImage(this)">
+          <input type="file" accept="image/*" style="display:none" data-change-action="upload-hydro-image">
           chọn từ máy tính
         </label>
         <div style="color:var(--text-3);font-size:12px;margin-top:8px">hoặc Ctrl+V để dán ảnh</div>
@@ -1204,7 +1201,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn" data-action="close-modal" data-modal="modal-hydro-image">Đóng</button>
-      <button class="btn btn-danger" id="hydro-image-delete" style="display:none" onclick="deleteHydroImage()">Xóa ảnh</button>
+      <button class="btn btn-danger" id="hydro-image-delete" style="display:none" data-action="delete-hydro-image">Xóa ảnh</button>
     </div>
   </div>
 </div>
@@ -1230,11 +1227,11 @@
     <div class="form-section">
       <div class="form-section-title">Thông số mực (ink)</div>
       <div class="form-grid">
-        <div class="form-group" style="grid-column:1/-1"><label>Công thức mực</label><select class="cs-select" id="e-ink-formula" onchange="fillInkFormula()"><option value="">-- Chọn công thức mực --</option></select></div>
+        <div class="form-group" style="grid-column:1/-1"><label>Công thức mực</label><select class="cs-select" id="e-ink-formula" data-change-action="fill-ink-formula"><option value="">-- Chọn công thức mực --</option></select></div>
         <div class="form-group"><label>Tổng nồng độ mực (mg/mL)</label><input type="number" step="0.1" id="e-conc" placeholder="—" readonly style="background:var(--surface2);color:var(--blue2);font-weight:600"></div>
         <div class="form-group"><label>Nồng độ xúc tác (mg/mL)</label><input type="number" step="0.1" id="e-conc-cat" placeholder="—" readonly style="background:var(--surface2);color:var(--blue2);font-weight:600"></div>
-        <div class="form-group"><label>Thể tích mỗi lần nhỏ (μL)</label><input type="number" step="0.5" id="e-vol" placeholder="10" oninput="calcLoading()"></div>
-        <div class="form-group"><label>Số lần nhỏ</label><input type="number" id="e-drops" placeholder="3" oninput="calcLoading()"></div>
+        <div class="form-group"><label>Thể tích mỗi lần nhỏ (μL)</label><input type="number" step="0.5" id="e-vol" placeholder="10" data-input-action="calc-loading"></div>
+        <div class="form-group"><label>Số lần nhỏ</label><input type="number" id="e-drops" placeholder="3" data-input-action="calc-loading"></div>
         <div class="form-group"><label>Tải lượng tính (mg/cm²)</label><input type="number" step="0.001" id="e-loading" placeholder="—" readonly style="background:var(--surface2);font-weight:600;color:var(--blue2)"></div>
         <div class="form-group" style="grid-column:1/-1;display:flex;align-items:center;gap:8px">
         <label style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:1.5px solid #e2e8f0;border-radius:20px;cursor:pointer;font-size:13px;font-weight:500;color:#0f172a;transition:all 0.2s;user-select:none">
@@ -1274,7 +1271,7 @@
         <svg aria-hidden="true" width="40" height="40" viewBox="0 0 24 24" stroke="var(--text-3)" fill="none" stroke-width="1.5" style="margin-bottom:10px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         <div style="color:var(--text-3);font-size:13px">Kéo thả ảnh vào đây hoặc</div>
         <label style="color:var(--blue2);cursor:pointer;font-size:13px;font-weight:500">
-          <input type="file" accept="image/*" style="display:none" onchange="uploadElectrodeImage(this)">
+          <input type="file" accept="image/*" style="display:none" data-change-action="upload-electrode-image">
           chọn từ máy tính
         </label>
         <div style="color:var(--text-3);font-size:12px;margin-top:8px">hoặc Ctrl+V để dán ảnh</div>
@@ -1283,7 +1280,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn" data-action="close-modal" data-modal="modal-electrode-image">Đóng</button>
-      <button class="btn btn-danger" id="electrode-image-delete" style="display:none" onclick="deleteElectrodeImage()">Xóa ảnh</button>
+      <button class="btn btn-danger" id="electrode-image-delete" style="display:none" data-action="delete-electrode-image">Xóa ảnh</button>
     </div>
   </div>
 </div>
@@ -1309,20 +1306,20 @@
       <table class="chem-table">
         <thead><tr><th scope="col">Chọn hóa chất</th><th scope="col">M (g/mol)</th><th scope="col">Khối lượng (mg)</th><th scope="col"></th></tr></thead>
         <tbody id="ink-solid-tbody">
-          <tr><td style="position:relative"><input type="text" class="chem-search" placeholder="Tìm hóa chất..." oninput="searchChem(this)" autocomplete="off"><div class="chem-dropdown" style="position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:50;width:220px;max-height:180px;overflow-y:auto;display:none"></div></td><td><input type="number" class="chem-mw" placeholder="M" readonly style="background:var(--surface2)"></td><td><input type="number" min="0" step="0.01" placeholder="mg"></td><td><button class="btn btn-xs btn-danger" onclick="removeChem(this)">✕</button></td></tr>
+          <tr><td style="position:relative"><input type="text" class="chem-search" placeholder="Tìm hóa chất..." data-input-action="search-chem" autocomplete="off"><div class="chem-dropdown" style="position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:50;width:220px;max-height:180px;overflow-y:auto;display:none"></div></td><td><input type="number" class="chem-mw" placeholder="M" readonly style="background:var(--surface2)"></td><td><input type="number" min="0" step="0.01" placeholder="mg"></td><td><button class="btn btn-xs btn-danger" data-action="remove-chem">✕</button></td></tr>
         </tbody>
       </table>
-      <button class="btn btn-sm" onclick="addInkRow('ink-solid-tbody')">+ Thêm chất rắn</button>
+      <button class="btn btn-sm" data-action="add-ink-row" data-tbody="ink-solid-tbody">+ Thêm chất rắn</button>
     </div>
     <div class="form-section">
       <div class="form-section-title">Dung môi (lỏng)</div>
       <table class="chem-table">
         <thead><tr><th scope="col">Chọn dung môi</th><th scope="col">Thể tích (μL)</th><th scope="col"></th></tr></thead>
         <tbody id="ink-liquid-tbody">
-          <tr><td style="position:relative"><input type="text" class="chem-search" placeholder="Tìm dung môi..." oninput="searchChem(this)" autocomplete="off"><div class="chem-dropdown" style="position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:50;width:220px;max-height:180px;overflow-y:auto;display:none"></div></td><td><input type="number" min="0" step="1" placeholder="μL"></td><td><button class="btn btn-xs btn-danger" onclick="removeChem(this)">✕</button></td></tr>
+          <tr><td style="position:relative"><input type="text" class="chem-search" placeholder="Tìm dung môi..." data-input-action="search-chem" autocomplete="off"><div class="chem-dropdown" style="position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:50;width:220px;max-height:180px;overflow-y:auto;display:none"></div></td><td><input type="number" min="0" step="1" placeholder="μL"></td><td><button class="btn btn-xs btn-danger" data-action="remove-chem">✕</button></td></tr>
         </tbody>
       </table>
-      <button class="btn btn-sm" onclick="addInkRow('ink-liquid-tbody')">+ Thêm dung môi</button>
+      <button class="btn btn-sm" data-action="add-ink-row" data-tbody="ink-liquid-tbody">+ Thêm dung môi</button>
     </div>
     <div class="form-section">
       <div class="form-section-title">Ghi chú</div>
@@ -1353,7 +1350,7 @@
         </div>
         <div style="color:var(--text2);font-size:13px;font-weight:500">Kéo thả ảnh vào đây hoặc</div>
         <label style="color:var(--blue2);cursor:pointer;font-size:13px;font-weight:500">
-          <input type="file" id="ink-image-input" accept="image/*" style="display:none" onchange="uploadInkImage(this)">
+          <input type="file" id="ink-image-input" accept="image/*" style="display:none" data-change-action="upload-ink-image">
           chọn từ máy tính
         </label>
         <div style="color:var(--text-3);font-size:12px;margin-top:8px">hoặc Ctrl+V để dán từ clipboard</div>
@@ -1362,7 +1359,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn" data-action="close-modal" data-modal="modal-ink-image">Đóng</button>
-      <button class="btn btn-danger" id="ink-image-delete" style="display:none" onclick="deleteInkImage()">Xóa ảnh</button>
+      <button class="btn btn-danger" id="ink-image-delete" style="display:none" data-action="delete-ink-image">Xóa ảnh</button>
     </div>
   </div>
 </div>
@@ -1380,7 +1377,7 @@
         <div class="form-group"><label>Mã phép đo</label><input type="text" id="ec-code" placeholder="EC-001" data-input-action="auto-prefix" data-prefix="EC"></div>
         <div class="form-group"><label>Ngày đo</label><input type="date" id="ec-date"></div>
         
-<div class="form-group"><label>Mã điện cực sử dụng</label><div style="position:relative"><input type="text" id="ec-electrode" class="electrode-search" placeholder="Tìm điện cực..." oninput="searchElectrode(this)" autocomplete="off"><div class="electrode-dropdown" style="position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:50;width:100%;max-height:180px;overflow-y:auto;display:none"></div></div></div>        <div class="form-group"><label>Loại phép đo</label><select class="cs-select" id="ec-type"><option>LSV</option><option>CV</option><option>EIS</option><option>CA</option><option>CP</option><option>OCP</option></select></div>
+<div class="form-group"><label>Mã điện cực sử dụng</label><div style="position:relative"><input type="text" id="ec-electrode" class="electrode-search" placeholder="Tìm điện cực..." data-input-action="search-electrode" autocomplete="off"><div class="electrode-dropdown" style="position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:50;width:100%;max-height:180px;overflow-y:auto;display:none"></div></div></div>        <div class="form-group"><label>Loại phép đo</label><select class="cs-select" id="ec-type"><option>LSV</option><option>CV</option><option>EIS</option><option>CA</option><option>CP</option><option>OCP</option></select></div>
         <div class="form-group"><label>Phản ứng</label><select class="cs-select" id="ec-reaction"><option>HER</option><option>OER</option><option>ORR</option><option>CO₂RR</option></select></div>
       </div>
     </div>
@@ -1433,7 +1430,7 @@
         <label>Mã CAS</label>
         <div style="display:flex;gap:6px">
           <input type="text" id="c-cas" placeholder="VD: 67-64-1" style="flex:1">
-          <button class="btn btn-primary" onclick="lookupCAS()" type="button" style="white-space:nowrap;flex-shrink:0">Tra cứu</button>
+          <button class="btn btn-primary" data-action="lookup-cas" type="button" style="white-space:nowrap;flex-shrink:0">Tra cứu</button>
         </div>
       </div>
       <div class="form-group"><label>Tên hóa chất</label><input type="text" id="c-name" placeholder="Sodium tungstate dihydrate"></div>
@@ -1460,7 +1457,7 @@
         <label>Tồn kho hiện tại</label>
         <div style="display:flex;gap:6px;align-items:center;width:100%">
           <input type="number" step="0.1" id="c-stock" min="0" placeholder="50" style="flex:1;min-width:0;box-sizing:border-box">
-          <select id="c-unit" class="search-input" onchange="syncUnit()">
+          <select id="c-unit" class="search-input" data-change-action="sync-unit">
             <option value="g">g</option>
             <option value="mL">mL</option>
           </select>
@@ -1498,7 +1495,7 @@
   </div>
   <div style="color:var(--text2);font-size:13px;font-weight:500;pointer-events:none">Kéo thả ảnh vào đây hoặc</div>
   <label style="color:var(--blue2);cursor:pointer;font-size:13px;font-weight:500">
-    <input type="file" id="chemical-image-input" accept="image/*" style="display:none" onchange="uploadChemicalImage(this)">
+    <input type="file" id="chemical-image-input" accept="image/*" style="display:none" data-change-action="upload-chemical-image">
     chọn từ máy tính
   </label>
   <div style="color:var(--text-3);font-size:12px;margin-top:8px;pointer-events:none">hoặc Ctrl+V để dán từ clipboard</div>
@@ -1511,7 +1508,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn" data-action="close-modal" data-modal="modal-chemical-image">Đóng</button>
-      <button class="btn btn-danger" id="chemical-image-delete" style="display:none;justify-content:center" onclick="deleteChemicalImage()">Xóa ảnh</button>
+      <button class="btn btn-danger" id="chemical-image-delete" style="display:none;justify-content:center" data-action="delete-chemical-image">Xóa ảnh</button>
     </div>
   </div>
 </div>
@@ -1554,7 +1551,7 @@
           <svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" stroke="var(--text-3)" fill="none" stroke-width="1.5" style="margin-bottom:8px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
           <div style="color:var(--text-3);font-size:13px">Kéo thả ảnh vào đây hoặc
             <label style="color:var(--blue2);cursor:pointer;font-weight:500">
-              <input type="file" id="eq-image-input" accept="image/*" style="display:none" onchange="previewEquipmentImage(this)"> chọn từ máy tính
+              <input type="file" id="eq-image-input" accept="image/*" style="display:none" data-change-action="preview-equipment-image"> chọn từ máy tính
             </label>
           </div>
           <div style="color:var(--text-3);font-size:12px;margin-top:6px">hoặc Ctrl+V để dán ảnh</div>
@@ -1564,7 +1561,7 @@
           ondragover="event.preventDefault();this.style.opacity='0.7'"
           ondragleave="this.style.opacity='1'"
           ondrop="event.preventDefault();this.style.opacity='1';var f=event.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))previewEquipmentImage({files:[f]})">
-        <button id="eq-image-remove" class="btn btn-danger" style="justify-content:center" onclick="removeEquipmentImagePreview()">Xóa ảnh</button>
+        <button id="eq-image-remove" class="btn btn-danger" style="justify-content:center" data-action="remove-equipment-image-preview">Xóa ảnh</button>
       </div>
     </div>
     <div class="modal-footer">
@@ -1822,7 +1819,7 @@ void main(){
 </script>
 
 <!-- Round 14: Chat FAB -->
-<button id="chat-fab" class="chatBtn member-only" onclick="toggleChatWidget()" title="Chat nhóm" aria-label="Mở chat nhóm">
+<button id="chat-fab" class="chatBtn member-only" data-action="toggle-chat-widget" title="Chat nhóm" aria-label="Mở chat nhóm">
   <svg aria-hidden="true" height="1.6em" fill="white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">
     <path d="M881.1,720.5H434.7L173.3,941V720.5h-54.4C58.8,720.5,10,671.1,10,610.2v-441C10,108.4,58.8,59,118.9,59h762.2C941.2,59,990,108.4,990,169.3v441C990,671.1,941.2,720.5,881.1,720.5L881.1,720.5z M935.6,169.3c0-30.4-24.4-55.2-54.5-55.2H118.9c-30.1,0-54.5,24.7-54.5,55.2v441c0,30.4,24.4,55.1,54.5,55.1h54.4h54.4v110.3l163.3-110.2H500h381.1c30.1,0,54.5-24.7,54.5-55.1V169.3L935.6,169.3z M717.8,444.8c-30.1,0-54.4-24.7-54.4-55.1c0-30.4,24.3-55.2,54.4-55.2c30.1,0,54.5,24.7,54.5,55.2C772.2,420.2,747.8,444.8,717.8,444.8L717.8,444.8z M500,444.8c-30.1,0-54.4-24.7-54.4-55.1c0-30.4,24.3-55.2,54.4-55.2c30.1,0,54.4,24.7,54.4,55.2C554.4,420.2,530.1,444.8,500,444.8L500,444.8z M282.2,444.8c-30.1,0-54.5-24.7-54.5-55.1c0-30.4,24.4-55.2,54.5-55.2c30.1,0,54.4,24.7,54.4,55.2C336.7,420.2,312.3,444.8,282.2,444.8L282.2,444.8z"/>
   </svg>
@@ -1839,13 +1836,13 @@ void main(){
       <button class="cw-tab cw-tab-ai" data-tab="ai" type="button" style="display:none">AI</button>
     </div>
     <div class="cw-actions" style="display:flex;align-items:center;gap:4px">
-    <button id="cw-clear-all" type="button" aria-label="Xóa toàn bộ hội thoại" title="Xóa toàn bộ hội thoại" onclick="window.showClearAllConfirm(this)" style="display:none;background:transparent;border:none;width:28px;height:28px;border-radius:50%;align-items:center;justify-content:center;cursor:pointer;color:white;opacity:0.85;transition:all 0.15s;padding:0" onmouseover="this.style.background='rgba(255,255,255,0.18)';this.style.opacity='1'" onmouseout="this.style.background='transparent';this.style.opacity='0.85'">
+    <button id="cw-clear-all" type="button" aria-label="Xóa toàn bộ hội thoại" title="Xóa toàn bộ hội thoại" data-action="show-clear-all-confirm" style="display:none;background:transparent;border:none;width:28px;height:28px;border-radius:50%;align-items:center;justify-content:center;cursor:pointer;color:white;opacity:0.85;transition:all 0.15s;padding:0" data-hover="cw-clear-btn">
       <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="3 6 5 6 21 6"/>
         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
       </svg>
     </button>
-    <button class="cw-close" type="button" aria-label="Đóng" onclick="window.toggleChatWidget(false)">
+    <button class="cw-close" type="button" aria-label="Đóng" data-action="toggle-chat-widget-close">
       <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
         <line x1="18" y1="6" x2="6" y2="18"/>
         <line x1="6" y1="6" x2="18" y2="18"/>
@@ -1864,7 +1861,7 @@ void main(){
       <!-- Round 14E: image preview before send -->
       <div id="cw-img-preview" class="cw-img-preview" style="display:none">
         <img id="cw-img-thumb" alt="">
-        <button type="button" class="cw-img-close" onclick="window.chatClearImage()" aria-label="Xóa ảnh">
+        <button type="button" class="cw-img-close" data-action="chat-clear-image" aria-label="Xóa ảnh">
           <svg aria-hidden="true" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2"><line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/></svg>
         </button>
       </div>
