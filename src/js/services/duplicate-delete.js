@@ -54,6 +54,21 @@ export async function delItem(col, key, name) {
     }
   }
 
+  // Round 57c constraint: chặn xoá điện cực đang được phép đo điện hoá dùng
+  // electrochem.electrode lưu mã code (string), không phải _key
+  if (col === 'electrode') {
+    const electrodeCode = _rec?.code;
+    if (electrodeCode) {
+      const usedBy = vals(cache.electrochem || {}).filter(ec => ec.electrode === electrodeCode);
+      if (usedBy.length > 0) {
+        const codes = usedBy.map(ec => ec.code).slice(0, 5).join(', ');
+        const more = usedBy.length > 5 ? ` và ${usedBy.length - 5} phép đo khác` : '';
+        showToast(`Không thể xóa điện cực "${name}": đang được dùng bởi ${usedBy.length} phép đo điện hoá (${codes}${more}). Xóa các phép đo này trước.`, 'danger', null, 6000);
+        return;
+      }
+    }
+  }
+
   if (!confirm(`Xóa "${name}"?\n\nHành động này có thể hoàn tác trong vài giây qua nút "Hoàn tác".`)) return;
 
   const backup = { ...cache[col][key] };
