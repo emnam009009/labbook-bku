@@ -940,6 +940,30 @@ function ensureCalendarCSS() {
 // 1 listener tren #cal-grid xu ly: click, dblclick, drag*, drop, mousedown
 // Idempotent qua flag _delegated
 function attachCalendarDelegation() {
+  // Round 58e: them listener tren cal-grid-wrap cho cal-edge-zone
+  const wrap = document.getElementById('cal-grid-wrap');
+  if (wrap && !wrap._edgeDelegated) {
+    wrap._edgeDelegated = true;
+    wrap.addEventListener('dragenter', function(e) {
+      const ez = e.target.closest('[data-cal-edge]');
+      if (!ez) return;
+      const dir = parseInt(ez.dataset.calEdge, 10);
+      if (typeof window.calOnDragEnterEdge === 'function') {
+        window.calOnDragEnterEdge(e, dir);
+      }
+    });
+    wrap.addEventListener('dragover', function(e) {
+      if (e.target.closest('[data-cal-edge]')) e.preventDefault();
+    });
+    wrap.addEventListener('dragleave', function(e) {
+      const ez = e.target.closest('[data-cal-edge]');
+      if (!ez) return;
+      if (typeof window.calOnDragLeaveEdge === 'function') {
+        window.calOnDragLeaveEdge(e);
+      }
+    });
+  }
+
   const grid = document.getElementById('cal-grid');
   if (!grid || grid._delegated) return;
   grid._delegated = true;

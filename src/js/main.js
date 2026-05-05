@@ -27,6 +27,9 @@ import { getPersonName, canDelete, canEdit, syncAuthState } from './utils/auth-h
 import { safeAsync } from './utils/async.js'
 import { logHistory } from './services/history-log.js'
 import { attachGlobalDelegation } from './services/global-delegation.js'
+// Round 58e: 2 file moi tach tu inline <script> trong index.html
+import './services/threads-bg.js'
+import './services/mobile-sidebar.js'
 
 // ── Import UI core (Phần 2 refactor) ─────────────────────
 import { openModal, closeModal, registerModalHook, fireModalHooks } from './ui/modal.js'

@@ -475,4 +475,92 @@ export function attachGlobalDelegation() {
       }
     });
   }
+
+  // ── Round 58e: drag-drop delegation for image upload zones ──────
+  // Pattern A: Pattern B (border + bg style change) - 4 modal drop zones
+  // Pattern C: class toggle (chemical main)
+  // Pattern D: opacity change + file processing (preview drops)
+  // Calendar edge zones (cal-edge-zone) handled separately in booking.js
+
+  document.body.addEventListener('dragover', function(e) {
+    // Drop zones with style change (Pattern B)
+    const dz = e.target.closest('[data-drop-zone]');
+    if (dz) {
+      e.preventDefault();
+      const cls = dz.dataset.dropClass;
+      if (cls) {
+        // Pattern C: class toggle (chemical-main)
+        dz.classList.add(cls);
+        return;
+      }
+      // Pattern B: style change
+      const borderActive = dz.dataset.dropBorderActive;
+      const bgActive = dz.dataset.dropBgActive;
+      if (borderActive) dz.style.borderColor = borderActive;
+      if (bgActive) dz.style.background = bgActive;
+      return;
+    }
+    // Drop preview zones (Pattern D)
+    const dp = e.target.closest('[data-drop-preview]');
+    if (dp) {
+      e.preventDefault();
+      const opacityActive = dp.dataset.dropOpacityActive;
+      if (opacityActive) dp.style.opacity = opacityActive;
+      return;
+    }
+  });
+
+  document.body.addEventListener('dragleave', function(e) {
+    const dz = e.target.closest('[data-drop-zone]');
+    if (dz) {
+      const cls = dz.dataset.dropClass;
+      if (cls) {
+        // Pattern C: class toggle - check relatedTarget like original
+        if (!dz.contains(e.relatedTarget)) {
+          dz.classList.remove(cls);
+        }
+        return;
+      }
+      // Pattern B: restore style
+      const borderRest = dz.dataset.dropBorderRest;
+      const bgRest = dz.dataset.dropBgRest;
+      if (borderRest !== undefined) dz.style.borderColor = borderRest;
+      if (bgRest !== undefined) dz.style.background = bgRest;
+      return;
+    }
+    const dp = e.target.closest('[data-drop-preview]');
+    if (dp) {
+      dp.style.opacity = '1';
+    }
+  });
+
+  document.body.addEventListener('drop', function(e) {
+    const dz = e.target.closest('[data-drop-zone]');
+    if (dz) {
+      const fn = dz.dataset.dropFn;
+      const cls = dz.dataset.dropClass;
+      if (cls) dz.classList.remove(cls);
+      // Restore Pattern B style
+      const borderRest = dz.dataset.dropBorderRest;
+      const bgRest = dz.dataset.dropBgRest;
+      if (borderRest !== undefined) dz.style.borderColor = borderRest;
+      if (bgRest !== undefined) dz.style.background = bgRest;
+      // Call drop function
+      if (fn && typeof window[fn] === 'function') {
+        window[fn](e);
+      }
+      return;
+    }
+    const dp = e.target.closest('[data-drop-preview]');
+    if (dp) {
+      e.preventDefault();
+      dp.style.opacity = '1';
+      // Pattern D inline logic: extract file + check image type + call fn
+      const fn = dp.dataset.dropFn;
+      const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f && f.type && f.type.startsWith('image/') && typeof window[fn] === 'function') {
+        window[fn]({ files: [f] });
+      }
+    }
+  });
 }
