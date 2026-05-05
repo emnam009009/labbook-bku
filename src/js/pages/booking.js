@@ -851,7 +851,7 @@ function renderCalendar() {
     const isWeekend = idx >= 5;
     const dayBookings = bookings.filter(b => b.date === iso && !['rejected','cancelled'].includes(b.status));
     
-    bodyHtml += `<div data-day-iso="${iso}" ondragover="window.calOnDragOver(event)" ondragleave="window.calOnDragLeave(event)" ondrop="window.calOnDrop(event,'${iso}')" ondblclick="window.calOnDblClick(event,'${iso}')" style="position:relative;border-right:1px solid var(--border);background:${isWeekend ? '#fffbeb' : 'white'};min-height:720px;transition:background 0.15s">`;
+    bodyHtml += `<div data-day-iso="${iso}" data-day-cell="1" style="position:relative;border-right:1px solid var(--border);background:${isWeekend ? '#fffbeb' : 'white'};min-height:720px;transition:background 0.15s">`;
     // Hour grid lines
     for (let h = 0; h < 24; h++) {
       bodyHtml += `<div style="position:absolute;top:${h*30}px;left:0;right:0;height:30px;border-bottom:1px solid #f1f5f9;pointer-events:none"></div>`;
@@ -866,16 +866,16 @@ function renderCalendar() {
       const bg = STATUS_BG[b.status] || '#94a3b8';
       
       const canDrag = canDragBooking(b);
-      const draggableAttr = canDrag ? `draggable="true" ondragstart="window.calOnDragStart(event,'${b._key}')" ondragend="window.calOnDragEnd(event)"` : '';
+      const draggableAttr = canDrag ? `draggable="true" data-can-drag="1"` : '';
       
       const handleTop = canDrag
-        ? `<div class="day-resize-handle" onmousedown="window.dayStartResize(event,'${b._key}','top')" style="position:absolute;left:0;right:0;top:0;height:6px;cursor:ns-resize;background:rgba(255,255,255,0.35);border-radius:6px 6px 0 0;transition:background 0.15s,height 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.7)';this.style.height='9px'" onmouseout="this.style.background='rgba(255,255,255,0.35)';this.style.height='6px'"></div>`
+        ? `<div class="day-resize-handle" data-resize-handle="top" data-bk-key="${b._key}" style="position:absolute;left:0;right:0;top:0;height:6px;cursor:ns-resize;border-radius:6px 6px 0 0"></div>`
         : '';
       const handleBottom = canDrag
-        ? `<div class="day-resize-handle" onmousedown="window.dayStartResize(event,'${b._key}','bottom')" style="position:absolute;left:0;right:0;bottom:0;height:6px;cursor:ns-resize;background:rgba(255,255,255,0.35);border-radius:0 0 6px 6px;transition:background 0.15s,height 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.7)';this.style.height='9px'" onmouseout="this.style.background='rgba(255,255,255,0.35)';this.style.height='6px'"></div>`
+        ? `<div class="day-resize-handle" data-resize-handle="bottom" data-bk-key="${b._key}" style="position:absolute;left:0;right:0;bottom:0;height:6px;cursor:ns-resize;border-radius:0 0 6px 6px"></div>`
         : '';
       
-      bodyHtml += `<div ${draggableAttr} data-bk-key="${b._key}" onclick="event.stopPropagation();window.openBookingDetail('${b._key}')" title="${escapeHtml(b.equipmentName + ' | ' + b.userName + ' | ' + (b.purpose||''))}" style="position:absolute;top:${top}px;left:3px;right:3px;height:${height}px;background:${bg};color:white;border-radius:5px;padding:4px 6px;cursor:${canDrag ? 'grab' : 'pointer'};font-size:10px;line-height:1.25;overflow:hidden;border:none;transition:transform 0.1s,box-shadow 0.1s,opacity 0.2s;z-index:10" onmouseover="this.style.transform='scale(1.01)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+      bodyHtml += `<div ${draggableAttr} class="cal-bk" data-bk-key="${b._key}" title="${escapeHtml(b.equipmentName + ' | ' + b.userName + ' | ' + (b.purpose||''))}" style="position:absolute;top:${top}px;left:3px;right:3px;height:${height}px;background:${bg};color:white;border-radius:5px;padding:4px 6px;cursor:${canDrag ? 'grab' : 'pointer'};font-size:10px;line-height:1.25;overflow:hidden;border:none;z-index:10">
         <div style="font-weight:700;font-family:'JetBrains Mono',monospace;font-size:9.5px">${escapeHtml(b.startTime||'')} – ${escapeHtml(b.endTime||'')}</div>
         <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px">${escapeHtml(b.equipmentName||'')}</div>
         <div style="opacity:0.9;font-size:9.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(b.userName||'')}</div>
@@ -917,6 +917,98 @@ function renderCalendar() {
       wrap.scrollTop = savedScroll;
     }
   }
+
+  // Round 57b (CSP): inject CSS hover + attach delegation
+  ensureCalendarCSS();
+  attachCalendarDelegation();
+}
+
+// ── CSS hover injected 1 lan ──────────────────────
+// Thay cho onmouseover/out inline tren booking block + resize handle
+function ensureCalendarCSS() {
+  if (document.getElementById('cal-csp-css')) return;
+  const style = document.createElement('style');
+  style.id = 'cal-csp-css';
+  style.textContent =
+    '.cal-bk{transition:transform 0.1s,box-shadow 0.1s,opacity 0.2s}' +
+    '.cal-bk:hover{transform:scale(1.01);box-shadow:0 4px 12px rgba(0,0,0,0.15)}' +
+    '.day-resize-handle{background:rgba(255,255,255,0.35);transition:background 0.15s,height 0.15s}' +
+    '.day-resize-handle:hover{background:rgba(255,255,255,0.7);height:9px !important}';
+  document.head.appendChild(style);
+}
+
+// ── Event delegation cho calendar ─────────────────
+// 1 listener tren #cal-grid xu ly: click, dblclick, drag*, drop, mousedown
+// Idempotent qua flag _delegated
+function attachCalendarDelegation() {
+  const grid = document.getElementById('cal-grid');
+  if (!grid || grid._delegated) return;
+  grid._delegated = true;
+
+  // CLICK booking block -> openBookingDetail
+  // Note: closest() chon innermost match - click tren resize handle (con cua block)
+  // se khop voi handle (data-resize-handle) chu khong khop block -> handle no-op cho click
+  grid.addEventListener('click', function(e) {
+    // Click resize handle: do nothing (handle dung cho mousedown)
+    if (e.target.closest('[data-resize-handle]')) return;
+    const block = e.target.closest('[data-bk-key]');
+    if (!block) return;
+    e.stopPropagation();
+    const key = block.dataset.bkKey;
+    if (typeof window.openBookingDetail === 'function') window.openBookingDetail(key);
+  });
+
+  // DBLCLICK day cell -> tao booking moi
+  grid.addEventListener('dblclick', function(e) {
+    // Dblclick tren booking block: bo qua (chi handle dblclick tren day cell trong)
+    if (e.target.closest('[data-bk-key]')) return;
+    const dayCell = e.target.closest('[data-day-cell="1"]');
+    if (!dayCell) return;
+    const iso = dayCell.dataset.dayIso;
+    if (typeof window.calOnDblClick === 'function') window.calOnDblClick(e, iso);
+  });
+
+  // DRAGSTART tren booking block (chi nhung block co data-can-drag)
+  grid.addEventListener('dragstart', function(e) {
+    const block = e.target.closest('[data-can-drag="1"]');
+    if (!block) return;
+    const key = block.dataset.bkKey;
+    if (typeof window.calOnDragStart === 'function') window.calOnDragStart(e, key);
+  });
+
+  // DRAGEND
+  grid.addEventListener('dragend', function(e) {
+    if (typeof window.calOnDragEnd === 'function') window.calOnDragEnd(e);
+  });
+
+  // DRAGOVER tren day cell
+  grid.addEventListener('dragover', function(e) {
+    if (!e.target.closest('[data-day-cell="1"]')) return;
+    if (typeof window.calOnDragOver === 'function') window.calOnDragOver(e);
+  });
+
+  // DRAGLEAVE tren day cell
+  grid.addEventListener('dragleave', function(e) {
+    if (!e.target.closest('[data-day-cell="1"]')) return;
+    if (typeof window.calOnDragLeave === 'function') window.calOnDragLeave(e);
+  });
+
+  // DROP tren day cell
+  grid.addEventListener('drop', function(e) {
+    const dayCell = e.target.closest('[data-day-cell="1"]');
+    if (!dayCell) return;
+    const iso = dayCell.dataset.dayIso;
+    if (typeof window.calOnDrop === 'function') window.calOnDrop(e, iso);
+  });
+
+  // MOUSEDOWN tren resize handle -> bat dau resize (handler tu setup global mousemove/mouseup)
+  grid.addEventListener('mousedown', function(e) {
+    const handle = e.target.closest('[data-resize-handle]');
+    if (!handle) return;
+    const key = handle.dataset.bkKey;
+    const edge = handle.dataset.resizeHandle; // 'top' | 'bottom'
+    if (typeof window.dayStartResize === 'function') window.dayStartResize(e, key, edge);
+  });
 }
 
 window.calNavWeek = function(delta) {
