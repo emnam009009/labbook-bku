@@ -24,7 +24,9 @@ const SUPER_ADMIN_EMAIL = 'nvhn.7202@gmail.com';
 // Helper: render nút xoá tài khoản (chỉ super admin thấy, ẩn nếu target là super)
 function renderDeleteBtn(uid, email, displayName) {
   const currentAuth = window.currentAuth || {};
-  if (currentAuth.email !== SUPER_ADMIN_EMAIL) return '';
+  if (currentAuth.role !== 'superadmin') return '';
+  // target user la superadmin -> khong cho xoa
+  // (dat xa boi caller: chi truyen vao neu khong phai super)
   if (email === SUPER_ADMIN_EMAIL) return '';
   const safeName = (displayName || email).replace(/'/g, "\\'");
   return `<button class="del-btn" onclick="deleteUserAccount('${uid}','${safeName}')" title="Xóa tài khoản"><svg class="w-4 h-4 fill-none stroke-white" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" stroke-linejoin="round" stroke-linecap="round"></path></svg></button>`;
@@ -82,7 +84,7 @@ export function renderUsers() {
 
   usersTbody.innerHTML = all.length
     ? all.map(u => {
-        const isSuper = u.email === SUPER_ADMIN_EMAIL;
+        const isSuper = u.role === 'superadmin';
         // Superadmin có badge gradient cam riêng (không cho phép đổi role/xoá)
         const badge = isSuper
           ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:linear-gradient(135deg,#f59e0b,#d97706);color:white"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> Superadmin</span>`
