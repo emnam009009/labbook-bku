@@ -305,7 +305,7 @@ function highlightBookingRow(bookingKey) {
   const code = cache?.bookings?.[bookingKey]?.code;
   window._pendingFlashBookingKey = bookingKey;
   window._pendingFlashCode = code;
-  console.log('[row-flash] highlightBookingRow:', { bookingKey, code });
+  window.devLog?.('[row-flash] highlightBookingRow:', { bookingKey, code });
   // Multi-attempt: chờ tbody render
   const attempts = [0, 150, 300, 600, 1000, 1500, 2000, 3000];
   attempts.forEach(delay => {
@@ -322,7 +322,7 @@ function applyFlashByBookingKey(bookingKey, code) {
   
   const rows = document.querySelectorAll('#booking-tbody tr');
   if (rows.length === 0) {
-    console.log('[row-flash] No rows yet');
+    window.devLog?.('[row-flash] No rows yet');
     return;
   }
   
@@ -333,7 +333,7 @@ function applyFlashByBookingKey(bookingKey, code) {
   });
   
   if (dataRows.length === 0) {
-    console.log('[row-flash] Only empty-state rows');
+    window.devLog?.('[row-flash] Only empty-state rows');
     return;
   }
   
@@ -344,7 +344,7 @@ function applyFlashByBookingKey(bookingKey, code) {
     for (const row of dataRows) {
       if (row.outerHTML.indexOf(bookingKey) !== -1) {
         target = row;
-        console.log('[row-flash] Matched by bookingKey');
+        window.devLog?.('[row-flash] Matched by bookingKey');
         break;
       }
     }
@@ -355,14 +355,14 @@ function applyFlashByBookingKey(bookingKey, code) {
     for (const row of dataRows) {
       if ((row.textContent || '').indexOf(code) !== -1) {
         target = row;
-        console.log('[row-flash] Matched by code');
+        window.devLog?.('[row-flash] Matched by code');
         break;
       }
     }
   }
   
   if (!target) {
-    console.log('[row-flash] No match. Code:', code);
+    window.devLog?.('[row-flash] No match. Code:', code);
     return;
   }
   
@@ -371,7 +371,7 @@ function applyFlashByBookingKey(bookingKey, code) {
   target.scrollIntoView({ behavior: 'smooth', block: 'center' });
   void target.offsetWidth;
   target.classList.add('row-flash');
-  console.log('[row-flash] ✓ Class added');
+  window.devLog?.('[row-flash] ✓ Class added');
   setTimeout(() => target.classList.remove('row-flash'), 2500);
 }
 

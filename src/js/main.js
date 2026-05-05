@@ -1226,18 +1226,26 @@ window.injectNavLabels = function() {
     document.body.classList.remove('superadmin-mode','admin-mode','member-mode','viewer-mode','pending-mode','rejected-mode');
     document.body.classList.add(role + '-mode');
 
-    // Hide/show 2 admin items
+    // Round 54 fix #4: doi tu check 2 tip cung sang check class .admin-only
+    // bao quat "Bao cao & Thong ke" + bat ki admin-only sidebar item nao trong tuong lai
     const canSeeAdminPages = (role === 'admin' || role === 'superadmin');
-    document.querySelectorAll('.sidebar-item').forEach(item => {
-      const tip = item.getAttribute('data-tip');
-      if (tip === 'Quản lý tài khoản' || tip === 'Lịch sử chỉnh sửa') {
-        item.style.display = canSeeAdminPages ? '' : 'none';
-      }
+    document.querySelectorAll('.sidebar-item.admin-only').forEach(item => {
+      item.style.display = canSeeAdminPages ? '' : 'none';
     });
   }
 
-  setInterval(apply, 1000);
+  // Round 54 fix #5: luu interval id de co the clear khi logout
+  // tranh chay vinh vien sau khi user da dang xuat
+  let _roleSidebarTimer = setInterval(apply, 1000);
   apply();
+
+  // Expose stop function de logout flow goi (auth.js)
+  window.stopRoleSidebarWatch = function() {
+    if (_roleSidebarTimer) {
+      clearInterval(_roleSidebarTimer);
+      _roleSidebarTimer = null;
+    }
+  };
 })();
 
 // Workaround: avatar menu hover effect via JS (CSS không apply được)

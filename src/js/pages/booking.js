@@ -359,10 +359,10 @@ window.saveBooking = async function() {
   }
   
   // Conflict check
-  console.log('[saveBooking] Checking conflict:', { equipmentKey, date, startTime, endTime });
-  console.log('[saveBooking] All bookings:', vals(window.cache?.bookings || {}));
+  window.devLog?.('[saveBooking] Checking conflict:', { equipmentKey, date, startTime, endTime });
+  window.devLog?.('[saveBooking] All bookings:', vals(window.cache?.bookings || {}));
   const conflict = checkConflict(equipmentKey, date, startTime, endTime);
-  console.log('[saveBooking] Conflict result:', conflict);
+  window.devLog?.('[saveBooking] Conflict result:', conflict);
   if (conflict) {
     showToast?.(`Trùng lịch với "${conflict.userName}" (${conflict.startTime} - ${conflict.endTime})`, 'danger');
     return;
@@ -583,7 +583,7 @@ let _knownBookingKeys = null; // null = chưa init (lần load đầu)
 function checkNewPendingBookings() {
   const cache = window.cache;
   const isAdmin = window.currentAuth?.isAdmin;
-  console.log('[notify] cache update, isAdmin:', isAdmin, 'has bookings:', !!cache?.bookings);
+  window.devLog?.('[notify] cache update, isAdmin:', isAdmin, 'has bookings:', !!cache?.bookings);
   if (!isAdmin || !cache?.bookings) return;
   
   const currentKeys = Object.keys(cache.bookings);
@@ -597,7 +597,7 @@ function checkNewPendingBookings() {
   // Tìm booking mới (key chưa có trong _knownBookingKeys)
   const newKeys = currentKeys.filter(k => !_knownBookingKeys.has(k));
   
-  console.log('[notify] new keys:', newKeys.length, newKeys);
+  window.devLog?.('[notify] new keys:', newKeys.length, newKeys);
   newKeys.forEach(k => {
     const b = cache.bookings[k];
     // Toast đã chuyển sang notifications.js (Phase D+) - không show ở đây nữa
@@ -611,12 +611,12 @@ function checkNewPendingBookings() {
 // AUTO-CANCEL — booking quá giờ kết thúc 30p chưa check-in
 // ═══════════════════════════════════════════════════
 async function autoCancelOverdueBookings() {
-  console.log('[autoCancel] Running...');
+  window.devLog?.('[autoCancel] Running...');
   const cache = window.cache;
-  if (!cache?.bookings) { console.log('[autoCancel] No bookings'); return; }
-  console.log('[autoCancel] isAdmin:', window.currentAuth?.isAdmin);
+  if (!cache?.bookings) { window.devLog?.('[autoCancel] No bookings'); return; }
+  window.devLog?.('[autoCancel] isAdmin:', window.currentAuth?.isAdmin);
   // Chỉ admin mới chạy auto-cancel để tránh nhiều client cùng update
-  if (!window.currentAuth?.isAdmin) { console.log('[autoCancel] Not admin, skip'); return; }
+  if (!window.currentAuth?.isAdmin) { window.devLog?.('[autoCancel] Not admin, skip'); return; }
 
   const now = new Date();
   const bookings = vals(cache.bookings);
@@ -658,7 +658,7 @@ async function autoCancelOverdueBookings() {
           rejectedReason: reason,  // dùng rejectedReason để UI tooltip hiện được
         });
         cancelledCount++;
-        console.log(`[autoCancel] ${b.code} (${b.userName}) - ${reason}`);
+        window.devLog?.(`[autoCancel] ${b.code} (${b.userName}) - ${reason}`);
 
         // Gửi notification cho user
         if (b.userId && typeof window.createNotification === 'function') {
@@ -677,7 +677,7 @@ async function autoCancelOverdueBookings() {
   }
 
   if (cancelledCount > 0) {
-    console.log(`[autoCancel] Cancelled ${cancelledCount} booking(s)`);
+    window.devLog?.(`[autoCancel] Cancelled ${cancelledCount} booking(s)`);
   }
 }
 

@@ -69,9 +69,13 @@ export async function register(email, password, fullName) {
 export async function logout() {
   await signOut(auth)
   Object.assign(currentAuth, {
-    user: null, uid: null, email: null, role: 'viewer',
+    user: null, uid: null, email: null, displayName: null, role: 'viewer',
     isAdmin: false, isMember: false, isSuperAdmin: false,
   })
+  // Round 54 fix #5: stop role sidebar watcher (cleared by main.js IIFE)
+  if (typeof window.stopRoleSidebarWatch === 'function') {
+    window.stopRoleSidebarWatch()
+  }
 }
 
 // ── Load role từ Firebase (realtime) ────────────────────────────────────
