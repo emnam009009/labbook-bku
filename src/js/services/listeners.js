@@ -21,7 +21,7 @@
  */
 
 import { fbListen, fbListenQuery, fbGet, auth } from '../firebase.js'
-import { startPresence } from './presence.js'
+import { startPresence, stopPresence } from './presence.js'
 
 // ── Config: collections dùng query với limit ────────────
 // Tăng limit khi cần — trade-off memory vs data coverage.
@@ -161,6 +161,10 @@ export function startListeners() {
 
 // ── Hủy tất cả listeners (gọi khi logout) ───────────────
 export function stopListeners() {
+  // Round 52 fix: stop presence truoc -> server biet user offline ngay
+  // (truoc day phai cho onDisconnect ban -> co the lag vai giay)
+  try { stopPresence(); } catch (e) {}
+
   _unsubs.forEach(fn => {
     try { fn && fn(); } catch (e) {}
   });
