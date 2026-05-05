@@ -17,7 +17,7 @@
  *  - sessionStorage 'chemGroups' lưu trạng thái collapse
  */
 
-import { vals, fuzzy, formatChemical } from '../utils/format.js'
+import { vals, fuzzy, formatChemical, escapeHtml, escapeJs } from '../utils/format.js'
 import { applyTableSort, initTableSort } from '../services/table-sort.js'
 
 // ── toggleChemGroup: collapse/expand 1 group ──────────────
@@ -136,14 +136,17 @@ export function renderChemicals() {
     const gid = 'chem-group-' + (gKey || 'other');
 
     // Group header row (collapsible)
+    // Round 53 XSS fix: escape gKey (JS arg) + label (HTML content)
+    const safeGKey = escapeJs(gKey || '');
+    const safeLabel = escapeHtml(label);
     html += '<tr class="chem-group-header" id="' + gid + '-header" onclick="toggleChemGroup(\'' + gid + '\')" data-collapsed="false">' +
       '<td colspan="12" style="background:var(--surface-alt,var(--teal-light));padding:10px 14px;font-size:12px;font-weight:600;color:var(--text-2);cursor:pointer;user-select:none;border-bottom:1px solid var(--border)">' +
         '<div style="display:flex;align-items:center;gap:8px">' +
           '<svg id="' + gid + '-chevron" width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" style="transition:transform 0.2s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>' +
           numBadge +
-          '<span onclick="startEditGroup(\'' + gKey + '\', this)" style="cursor:' + (isAdmin ? 'text' : 'default') + '" title="' + (isAdmin ? 'Click để đổi tên' : '') + '">' + label + '</span>' +
+          '<span onclick="startEditGroup(\'' + safeGKey + '\', this)" style="cursor:' + (isAdmin ? 'text' : 'default') + '" title="' + (isAdmin ? 'Click để đổi tên' : '') + '">' + safeLabel + '</span>' +
           (isAdmin && gKey
-            ? '<button onclick="event.stopPropagation();deleteGroup(\'' + gKey + '\')" style="margin-left:8px;width:18px;height:18px;border-radius:50%;background:#f87171;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s" onmouseover="this.style.background=\'#dc2626\'" onmouseout="this.style.background=\'#f87171\'" title="Xóa nhóm"><svg width="8" height="8" viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/></svg></button>'
+            ? '<button onclick="event.stopPropagation();deleteGroup(\'' + safeGKey + '\')" style="margin-left:8px;width:18px;height:18px;border-radius:50%;background:#f87171;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s" onmouseover="this.style.background=\'#dc2626\'" onmouseout="this.style.background=\'#f87171\'" title="Xóa nhóm"><svg width="8" height="8" viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/></svg></button>'
             : ''
           ) +
           '<span style="margin-left:auto;font-weight:400;color:var(--teal);padding-right:8px">' + gRows.length + ' chất</span>' +
@@ -173,35 +176,52 @@ export function renderChemicals() {
         } catch (e) { return r.createdAt; }
       })() : '—';
 
-      html += '<tr class="clickable-row ' + gid + '-row" onclick="editChemical(\'' + r._key + '\')" title="Nhấn để sửa">' +
-        '<td><strong>' + r.name + '</strong></td>' +
-        '<td class="mono" style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left">' + formatChemical(r.formula) + '</td>' +
+      // Round 53 XSS fix: escape moi user-controlled string
+      const safeKey = escapeJs(r._key);
+      const safeName = escapeHtml(r.name || '');
+      const safeNameJs = escapeJs(r.name || '');
+      const safeFormula = formatChemical(escapeHtml(r.formula || ''));
+      const safeMw = escapeHtml(r.mw || '');
+      const safePurity = escapeHtml(r.purity || '');
+      const safeCas = escapeHtml(r.cas || '—');
+      const safeLocation = escapeHtml(r.location || '—');
+      const safeStock = escapeHtml(String(r.stock != null ? r.stock : ''));
+      const safeUnit = escapeHtml(r.unit || 'g');
+      const safeQty = escapeHtml(String(r.qty || 1));
+      // r.image la base64 data URI -> escapeHtml de tranh attribute injection
+      const safeImage = escapeHtml(r.image || '');
+      const noImgBorder = r.image ? 'transparent' : 'var(--teal-3)';
+      const noImgBg = r.image ? 'transparent' : 'var(--teal-light)';
+
+      html += '<tr class="clickable-row ' + gid + '-row" onclick="editChemical(\'' + safeKey + '\')" title="Nhấn để sửa">' +
+        '<td><strong>' + safeName + '</strong></td>' +
+        '<td class="mono" style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left">' + safeFormula + '</td>' +
         '<td style="text-align:center" onclick="event.stopPropagation()">' +
-          '<div id="img-box-' + r._key + '" onclick="showChemicalImage(\'' + r._key + '\')" ' +
+          '<div id="img-box-' + safeKey + '" onclick="showChemicalImage(\'' + safeKey + '\')" ' +
             'ondragover="event.preventDefault();event.stopPropagation();this.style.borderColor=\'var(--blue2)\';this.style.background=\'var(--blue-light)\';this.style.transform=\'scale(3)\';this.style.boxShadow=\'0 0 0 2px rgba(37,99,235,0.15)\';this.style.zIndex=\'10\'" ' +
-            'ondragleave="this.style.borderColor=\'' + (r.image ? 'transparent' : 'var(--teal-3)') + '\';this.style.background=\'' + (r.image ? 'transparent' : 'var(--teal-light)') + '\';this.style.transform=\'\';this.style.boxShadow=\'\';this.style.zIndex=\'\'" ' +
-            'ondrop="event.preventDefault();event.stopPropagation();this.style.transform=\'\';this.style.boxShadow=\'\';this.style.zIndex=\'\';this.style.borderColor=\'' + (r.image ? 'transparent' : 'var(--teal-3)') + '\';this.style.background=\'' + (r.image ? 'transparent' : 'var(--teal-light)') + '\';var f=event.dataTransfer.files[0];dropImageToCell(\'chemicals\',\'' + r._key + '\',f)" ' +
-            'style="width:44px;height:44px;border:2px dashed ' + (r.image ? 'transparent' : 'var(--teal-3)') + ';border-radius:var(--radius);display:flex;align-items:center;justify-content:center;margin:auto;cursor:pointer;overflow:visible;background:' + (r.image ? 'transparent' : 'var(--teal-light)') + ';transition:all 0.18s cubic-bezier(.4,0,.2,1);position:relative;z-index:1">' +
+            'ondragleave="this.style.borderColor=\'' + noImgBorder + '\';this.style.background=\'' + noImgBg + '\';this.style.transform=\'\';this.style.boxShadow=\'\';this.style.zIndex=\'\'" ' +
+            'ondrop="event.preventDefault();event.stopPropagation();this.style.transform=\'\';this.style.boxShadow=\'\';this.style.zIndex=\'\';this.style.borderColor=\'' + noImgBorder + '\';this.style.background=\'' + noImgBg + '\';var f=event.dataTransfer.files[0];dropImageToCell(\'chemicals\',\'' + safeKey + '\',f)" ' +
+            'style="width:44px;height:44px;border:2px dashed ' + noImgBorder + ';border-radius:var(--radius);display:flex;align-items:center;justify-content:center;margin:auto;cursor:pointer;overflow:visible;background:' + noImgBg + ';transition:all 0.18s cubic-bezier(.4,0,.2,1);position:relative;z-index:1">' +
             (r.image
-              ? '<img src="' + r.image + '" style="width:100%;height:100%;object-fit:cover;border-radius:5px;pointer-events:none">'
+              ? '<img src="' + safeImage + '" style="width:100%;height:100%;object-fit:cover;border-radius:5px;pointer-events:none">'
               : '<svg width="16" height="16" viewBox="0 0 24 24" stroke="var(--teal)" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
             ) +
           '</div>' +
         '</td>' +
-        '<td class="mono" style="text-align:center">' + r.mw + '</td>' +
-        '<td class="mono" style="text-align:center">' + r.purity + '%</td>' +
-        '<td class="mono" style="text-align:center">' + (r.cas || '—') + '</td>' +
-        '<td style="text-align:center">' + (r.location || '—') + '</td>' +
-        '<td class="mono" style="text-align:center;color:' + (low ? 'var(--danger)' : '') + '">' + r.stock + (r.unit || 'g') + '</td>' +
-        '<td class="mono" style="text-align:center">' + (r.qty || 1) + ' bình</td>' +
+        '<td class="mono" style="text-align:center">' + safeMw + '</td>' +
+        '<td class="mono" style="text-align:center">' + safePurity + '%</td>' +
+        '<td class="mono" style="text-align:center">' + safeCas + '</td>' +
+        '<td style="text-align:center">' + safeLocation + '</td>' +
+        '<td class="mono" style="text-align:center;color:' + (low ? 'var(--danger)' : '') + '">' + safeStock + safeUnit + '</td>' +
+        '<td class="mono" style="text-align:center">' + safeQty + ' bình</td>' +
         '<td class="mono" style="text-align:center;font-size:12px">' + createdAtCell + '</td>' +
         '<td style="text-align:center">' + (low
           ? '<span class="badge badge-danger" style="font-size:13px;padding:3px 14px;border-radius:14px">⚠ Sắp hết</span>'
           : '<span class="badge badge-success" style="font-size:13px;padding:3px 14px;border-radius:14px">Đủ</span>'
         ) + '</td>' +
         '<td class="action-cell" onclick="event.stopPropagation()">' +
-          '<button class="qr-btn" title="In nhãn QR" onclick="showLabelChoiceForChem(\'' + r._key + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="2" height="2"/><rect x="19" y="14" width="2" height="2"/><rect x="14" y="19" width="2" height="2"/><rect x="19" y="19" width="2" height="2"/></svg></button>' +
-          '<button class="del-btn chem-admin-btn" style="display:none" onclick="delItem(\'chemicals\',\'' + r._key + '\',\'' + r.name + '\')"><svg class="w-4 h-4 fill-none stroke-white" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" stroke-linejoin="round" stroke-linecap="round"/></svg></button>' +
+          '<button class="qr-btn" title="In nhãn QR" onclick="showLabelChoiceForChem(\'' + safeKey + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="2" height="2"/><rect x="19" y="14" width="2" height="2"/><rect x="14" y="19" width="2" height="2"/><rect x="19" y="19" width="2" height="2"/></svg></button>' +
+          '<button class="del-btn chem-admin-btn" style="display:none" onclick="delItem(\'chemicals\',\'' + safeKey + '\',\'' + safeNameJs + '\')"><svg class="w-4 h-4 fill-none stroke-white" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" stroke-linejoin="round" stroke-linecap="round"/></svg></button>' +
         '</td>' +
       '</tr>';
     });
