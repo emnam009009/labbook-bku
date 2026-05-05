@@ -101,15 +101,12 @@ function makeEqRow(r) {
     } catch (e) { return escapeHtml(r.date || ''); }
   })() : '—';
 
-  return '<tr class="eq-row-' + safeGroup + ' clickable-row" onclick="if(window.isAdmin)editEquipment(\'' + safeKey + '\')" title="' + (isAdmin ? 'Nhấn để sửa' : '') + '">' +
+  return '<tr class="eq-row-' + safeGroup + ' clickable-row" data-action="edit-equipment" data-key="' + safeKey + '" title="' + (isAdmin ? 'Nhấn để sửa' : '') + '">' +
     '<td><strong>' + safeName + '</strong></td>' +
     '<td class="mono" style="font-size:12px">' + safeModel + '<br><span style="color:var(--teal)">' + safeSerial + '</span></td>' +
     '<td class="mono td-center">' + safeVendor + '</td>' +
-    '<td style="text-align:center" onclick="event.stopPropagation()">' +
-      '<div onclick="showEquipmentImage(\'' + safeKey + '\')" ' +
-        'ondrop="event.preventDefault();event.stopPropagation();this.style.transform=\'\';this.style.boxShadow=\'\';this.style.zIndex=\'\';this.style.borderColor=\'' + borderC + '\';this.style.background=\'' + bgC + '\';dropImageToCell(\'equipment\',\'' + safeKey + '\',event.dataTransfer.files[0])" ' +
-        'ondragover="event.preventDefault();event.stopPropagation();this.style.borderColor=\'var(--blue2)\';this.style.background=\'var(--blue-light)\';this.style.transform=\'scale(3)\';this.style.boxShadow=\'0 0 0 2px rgba(37,99,235,0.15)\';this.style.zIndex=\'10\'" ' +
-        'ondragleave="this.style.borderColor=\'' + borderC + '\';this.style.background=\'' + bgC + '\';this.style.transform=\'\';this.style.boxShadow=\'\';this.style.zIndex=\'\'" ' +
+    '<td style="text-align:center">' +
+      '<div data-action="show-equipment-image" data-drop-zone="equipment-image" data-key="' + safeKey + '" data-orig-border="' + borderC + '" data-orig-bg="' + bgC + '" ' +
         'style="width:44px;height:44px;border:2px dashed ' + borderC + ';border-radius:8px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;background:' + bgC + ';transition:all 0.18s;margin:0 auto;position:relative;z-index:1">' +
         imgBox +
       '</div>' +
@@ -118,9 +115,9 @@ function makeEqRow(r) {
     '<td class="mono td-center">' + safeQty + ' cái</td>' +
     '<td class="mono" style="font-size:12px;text-align:center">' + dateStr + '</td>' +
     '<td style="text-align:center"><span class="badge ' + (sc[r.status] || 'badge-gray') + '">' + safeStatus + '</span></td>' +
-    '<td class="action-cell" onclick="event.stopPropagation()" style="text-align:left;white-space:nowrap">' +
-      '<button class="qr-btn" title="In nhãn QR" onclick="showLabelChoiceForEquip(\'' + safeKey + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="2" height="2"/><rect x="19" y="14" width="2" height="2"/><rect x="14" y="19" width="2" height="2"/><rect x="19" y="19" width="2" height="2"/></svg></button>' +
-      '<button class="del-btn eq-admin-btn" style="display:none" onclick="delItem(\'equipment\',\'' + safeKey + '\',\'' + safeNameJs + '\')"><svg class="w-4 h-4 fill-none stroke-white" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" stroke-linejoin="round" stroke-linecap="round"/></svg></button>' +
+    '<td class="action-cell" style="text-align:left;white-space:nowrap">' +
+      '<button class="qr-btn" title="In nhãn QR" data-action="show-equip-label" data-key="' + safeKey + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="2" height="2"/><rect x="19" y="14" width="2" height="2"/><rect x="14" y="19" width="2" height="2"/><rect x="19" y="19" width="2" height="2"/></svg></button>' +
+      '<button class="del-btn eq-admin-btn" style="display:none" data-action="delete-equipment" data-key="' + safeKey + '" data-name="' + safeNameJs + '"><svg class="w-4 h-4 fill-none stroke-white" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" stroke-linejoin="round" stroke-linecap="round"/></svg></button>' +
     '</td>' +
   '</tr>';
 }
@@ -161,7 +158,7 @@ export function renderEquipment() {
       '<svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>' +
       '<div class="empty-state-text">Chưa có thiết bị nào</div>' +
       '<div class="empty-state-sub">Chưa có dữ liệu</div>' +
-      (isAdmin ? '<button class="empty-state-btn" onclick="openModal(\'modal-equipment\')"><svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Thêm thiết bị</button>' : '') +
+      (isAdmin ? '<button class="empty-state-btn" data-action="open-equipment-modal"><svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Thêm thiết bị</button>' : '') +
     '</div></td></tr>';
     return;
   }
@@ -195,10 +192,10 @@ export function renderEquipment() {
       ? '<span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--teal);color:white;font-size:10px;font-weight:700;flex-shrink:0">' + (gi + 1) + '</span>'
       : '<span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#94a3b8;color:white;font-size:12px;font-weight:700;flex-shrink:0">?</span>';
     const delBtn = (isAdmin && gKey)
-      ? '<button onclick="event.stopPropagation();delEqGroup(\'' + safeGKey + '\')" style="margin-left:8px;width:18px;height:18px;border-radius:50%;background:#f87171;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:background 0.15s" onmouseover="this.style.background=\'#dc2626\'" onmouseout="this.style.background=\'#f87171\'"><svg width="8" height="8" viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/></svg></button>'
+      ? '<button class="del-group-btn" data-action="delete-eq-group" data-gkey="' + safeGKey + '" style="margin-left:8px;width:18px;height:18px;border-radius:50%;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center"><svg width="8" height="8" viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/></svg></button>'
       : '';
 
-    eqHtml += '<tr id="' + gid + '-header" onclick="toggleEqGroup(\'' + gid + '\')" data-collapsed="false" style="background:var(--surface-alt,var(--teal-light));cursor:pointer;user-select:none">' +
+    eqHtml += '<tr id="' + gid + '-header" data-action="toggle-eq-group" data-gid="' + gid + '" data-collapsed="false" style="background:var(--surface-alt,var(--teal-light));cursor:pointer;user-select:none">' +
       '<td colspan="9" style="background:var(--surface-alt,var(--teal-light));padding:10px 14px;font-size:12px;font-weight:600;color:var(--text-2);border-bottom:1px solid var(--border)">' +
         '<div style="display:flex;align-items:center;gap:8px">' +
           '<svg id="' + gid + '-chevron" width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" style="transition:transform 0.2s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>' +
@@ -216,4 +213,107 @@ export function renderEquipment() {
     btn.style.display = isAdmin ? 'inline-flex' : 'none';
   });
   restoreEqGroups();
+
+  // Round 56b (CSP): event delegation thay cho inline handlers
+  ensureEquipmentCSS();
+  attachEquipmentDelegation();
+}
+
+// ── CSS hover injected 1 lan ──────────────────────
+// Reuse class .del-group-btn (chemicals da co) - dat id rieng de tranh trung
+function ensureEquipmentCSS() {
+  if (document.getElementById('eq-csp-css')) return;
+  const style = document.createElement('style');
+  style.id = 'eq-csp-css';
+  // Neu chemicals da inject roi thi rule trung lap se khong gay loi (idempotent CSS)
+  style.textContent = '.del-group-btn{background:#f87171;transition:background 0.15s}' +
+    '.del-group-btn:hover{background:#dc2626}';
+  document.head.appendChild(style);
+}
+
+// ── Event delegation cho equipment tbody ──────────
+// 1 listener click + 3 listener drag-drop. Idempotent qua flag _delegated.
+function attachEquipmentDelegation() {
+  const tbody = document.getElementById('equipment-tbody');
+  if (!tbody || tbody._delegated) return;
+  tbody._delegated = true;
+
+  // CLICK: dispatch theo data-action
+  tbody.addEventListener('click', function(e) {
+    const target = e.target.closest('[data-action]');
+    if (!target) return;
+    const action = target.dataset.action;
+    const key = target.dataset.key;
+    const gkey = target.dataset.gkey;
+    const gid = target.dataset.gid;
+    const name = target.dataset.name || '';
+
+    switch (action) {
+      case 'edit-equipment':
+        // Tuong duong inline cu: chi edit khi isAdmin
+        if (window.isAdmin && typeof window.editEquipment === 'function') {
+          window.editEquipment(key);
+        }
+        break;
+      case 'show-equipment-image':
+        if (typeof window.showEquipmentImage === 'function') window.showEquipmentImage(key);
+        break;
+      case 'show-equip-label':
+        if (typeof window.showLabelChoiceForEquip === 'function') window.showLabelChoiceForEquip(key);
+        break;
+      case 'delete-equipment':
+        if (typeof window.delItem === 'function') window.delItem('equipment', key, name);
+        break;
+      case 'open-equipment-modal':
+        if (typeof window.openModal === 'function') window.openModal('modal-equipment');
+        break;
+      case 'toggle-eq-group':
+        if (typeof window.toggleEqGroup === 'function') window.toggleEqGroup(gid);
+        break;
+      case 'delete-eq-group':
+        e.stopPropagation();
+        if (typeof window.delEqGroup === 'function') window.delEqGroup(gkey);
+        break;
+    }
+  });
+
+  // DRAG-DROP: chi xu ly tren element co data-drop-zone="equipment-image"
+  tbody.addEventListener('dragover', function(e) {
+    const zone = e.target.closest('[data-drop-zone="equipment-image"]');
+    if (!zone) return;
+    e.preventDefault();
+    e.stopPropagation();
+    zone.style.borderColor = 'var(--blue2)';
+    zone.style.background = 'var(--blue-light)';
+    zone.style.transform = 'scale(3)';
+    zone.style.boxShadow = '0 0 0 2px rgba(37,99,235,0.15)';
+    zone.style.zIndex = '10';
+  });
+
+  tbody.addEventListener('dragleave', function(e) {
+    const zone = e.target.closest('[data-drop-zone="equipment-image"]');
+    if (!zone) return;
+    zone.style.borderColor = zone.dataset.origBorder || 'var(--teal-3)';
+    zone.style.background = zone.dataset.origBg || 'var(--teal-light)';
+    zone.style.transform = '';
+    zone.style.boxShadow = '';
+    zone.style.zIndex = '';
+  });
+
+  tbody.addEventListener('drop', function(e) {
+    const zone = e.target.closest('[data-drop-zone="equipment-image"]');
+    if (!zone) return;
+    e.preventDefault();
+    e.stopPropagation();
+    zone.style.transform = '';
+    zone.style.boxShadow = '';
+    zone.style.zIndex = '';
+    zone.style.borderColor = zone.dataset.origBorder || 'var(--teal-3)';
+    zone.style.background = zone.dataset.origBg || 'var(--teal-light)';
+    const file = e.dataTransfer.files[0];
+    const key = zone.dataset.key;
+    if (file && key && typeof window.dropImageToCell === 'function') {
+      window.dropImageToCell('equipment', key, file);
+    }
+  });
 }
