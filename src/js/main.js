@@ -26,6 +26,7 @@ import { flashRow, setText, setHtml } from './utils/dom.js'
 import { getPersonName, canDelete, canEdit, syncAuthState } from './utils/auth-helpers.js'
 import { safeAsync } from './utils/async.js'
 import { logHistory } from './services/history-log.js'
+import { attachGlobalDelegation } from './services/global-delegation.js'
 
 // ── Import UI core (Phần 2 refactor) ─────────────────────
 import { openModal, closeModal, registerModalHook, fireModalHooks } from './ui/modal.js'
@@ -517,6 +518,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.body.style.visibility = 'visible'
   initCustomFilters()
   initMemberFilter()
+  // Round 58a (CSP): delegation cap body cho data-action trong index.html
+  attachGlobalDelegation()
   // Đóng modal khi click ngoài
   document.querySelectorAll('.modal-overlay').forEach(m =>
     m.addEventListener('click', e => { if (e.target === m) closeModal(m.id) })

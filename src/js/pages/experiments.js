@@ -285,11 +285,6 @@ function attachExpDelegation(tbodyId) {
         }
         break;
       }
-      case 'open-modal': {
-        const modal = target.dataset.modal;
-        if (modal && typeof window.openModal === 'function') window.openModal(modal);
-        break;
-      }
     }
   });
 }
