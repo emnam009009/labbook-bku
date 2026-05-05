@@ -59,23 +59,21 @@
             Đăng ký
           </button>
         </div>
-        <form id="auth-login-form" style="text-align:left" onsubmit="doLogin();return false;">
+        <form id="auth-login-form" style="text-align:left" data-submit-action="login">
           <div style="margin-bottom:16px">
             <label style="display:block;color:#475569;font-size:12.5px;font-weight:600;margin-bottom:7px">Email</label>
             <input type="email" id="login-email" placeholder="example@hcmut.edu.vn" autocomplete="email"
                    style="width:100%;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:9px;padding:11px 14px;color:#0f172a;font-size:13.5px;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;transition:all 0.15s"
-                   onfocus="this.style.borderColor='var(--teal)';this.style.background='var(--teal-light)'"
-                   onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc'"
-                   onkeydown="if(event.key==='Enter')document.getElementById('login-password').focus()">
+                   data-auth-input="1"
+                   data-keydown-action="focus-next" data-next-id="login-password">
           </div>
           <div style="margin-bottom:20px">
             <label style="display:block;color:#475569;font-size:12.5px;font-weight:600;margin-bottom:7px">Mật khẩu</label>
             <div style="position:relative">
               <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"
                      style="width:100%;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:9px;padding:11px 42px 11px 14px;color:#0f172a;font-size:13.5px;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;transition:all 0.15s"
-                     onfocus="this.style.borderColor='var(--teal)';this.style.background='var(--teal-light)'"
-                     onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc'"
-                     onkeydown="if(event.key==='Enter')doLogin()">
+                     data-auth-input="1"
+                     data-keydown-action="do-login">
               <button data-action="toggle-password-visibility" tabindex="-1"
                       style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#475569;padding:0">
                 <svg aria-hidden="true" id="pw-eye" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -91,25 +89,25 @@
             Đăng nhập
           </button>
         </form>
-        <form id="auth-register-form" onsubmit="doRegister();return false;" style="display:none;text-align:left">
+        <form id="auth-register-form" data-submit-action="register" style="display:none;text-align:left">
           <div style="margin-bottom:14px">
             <label style="display:block;color:#475569;font-size:12.5px;font-weight:600;margin-bottom:7px">Họ và tên</label>
             <input type="text" id="reg-name" placeholder="Nguyễn Văn A" autocomplete="off"
                    style="width:100%;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:9px;padding:11px 14px;color:#0f172a;font-size:13.5px;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;transition:all 0.15s"
-                   onfocus="this.style.borderColor='var(--teal)';this.style.background='var(--teal-light)'" onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc'">
+                   data-auth-input="1">
           </div>
           <div style="margin-bottom:14px">
             <label style="display:block;color:#475569;font-size:12.5px;font-weight:600;margin-bottom:7px">Email</label>
             <input type="email" id="reg-email" placeholder="example@hcmut.edu.vn" autocomplete="off"
                    style="width:100%;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:9px;padding:11px 14px;color:#0f172a;font-size:13.5px;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;transition:all 0.15s"
-                   onfocus="this.style.borderColor='var(--teal)';this.style.background='var(--teal-light)'" onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc'">
+                   data-auth-input="1">
           </div>
           <div style="margin-bottom:22px">
             <label style="display:block;color:#475569;font-size:12.5px;font-weight:600;margin-bottom:7px">Mật khẩu</label>
             <input type="password" id="reg-password" placeholder="Tối thiểu 6 ký tự" autocomplete="new-password"
                    style="width:100%;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:9px;padding:11px 14px;color:#0f172a;font-size:13.5px;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;transition:all 0.15s"
-                   onfocus="this.style.borderColor='var(--teal)';this.style.background='var(--teal-light)'" onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc'"
-                   onkeydown="if(event.key==='Enter')doRegister()">
+                   data-auth-input="1"
+                   data-keydown-action="do-register">
           </div>
           <div id="reg-error" style="display:none;background:#fef2f2;border:1.5px solid #fecaca;border-radius:9px;padding:10px 14px;color:#dc2626;font-size:12.5px;margin-bottom:16px"></div>
           <div id="reg-success" style="display:none;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:9px;padding:10px 14px;color:#15803d;font-size:12.5px;margin-bottom:16px;text-align:center"></div>
@@ -156,8 +154,7 @@
           </button>
           <input id="header-search-input" type="text" placeholder="Tìm kiếm..."
                  style="border:none;outline:none;background:none;font-size:13px;color:#0f172a;width:0;padding:0;transition:width 0.3s,padding 0.3s;font-family:'Inter',sans-serif"
-                 onfocus="const b=document.getElementById('header-search-box');b.style.width='240px';b.style.borderColor='var(--teal)';b.style.borderRadius='20px';this.style.width='180px';this.style.padding='0 8px 0 0'"
-                 onblur="setTimeout(()=>{if(!this.value){const b=document.getElementById('header-search-box');b.style.width='40px';b.style.borderColor='#e2e8f0';b.style.borderRadius='50%';this.style.width='0';this.style.padding='0';}},300)">
+                 data-header-search="1">
         </div>
       </div>
       <div id="bell-wrapper" style="position:relative;display:none" onmouseenter="clearTimeout(window._bellTimer);document.getElementById('bell-dropdown').style.display='block';if(typeof window.renderNotificationsList==='function')window.renderNotificationsList()" onmouseleave="window._bellTimer=setTimeout(()=>document.getElementById('bell-dropdown').style.display='none',200)">
@@ -309,7 +306,7 @@
                    onmouseout="this.style.background='';this.style.color='#0f172a';this.style.transform=''">
               <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
               Đổi ảnh đại diện
-              <input type="file" accept="image/*" style="display:none" onchange="changeAvatar(this)">
+              <input type="file" accept="image/*" style="display:none" data-change-action="change-avatar">
             </label>
             <button onclick="resetAvatar()" class="avatar-menu-btn" style="width:100%;display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:600;color:#0f172a;text-align:left;transition:all 0.2s">
               <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
@@ -334,7 +331,7 @@
             <div style="height:1px;background:#f1f5f9;margin:4px 0"></div>
             <div style="display:flex;align-items:center;gap:10px;padding:7px 8px">
               <label class="switch">
-                <input type="checkbox" id="theme-toggle" onchange="toggleDarkMode(this.checked)">
+                <input type="checkbox" id="theme-toggle" data-change-action="toggle-dark-mode">
                 <span class="slider"></span>
               </label>
             </div>
@@ -490,7 +487,7 @@
         <div class="flex gap-2 mb-4 flex-wrap items-center" style="margin-top:36px">
           <div style="position:relative;flex:1;min-width:200px">
             <input  aria-label="Tìm theo mã, vật liệu, người thực hiện" class="search-input" id="hydro-search" type="text" style="width:100%;padding-right:32px"
-                   placeholder="Tìm theo mã, vật liệu, người thực hiện..." oninput="window._resetHydroPage&&window._resetHydroPage();renderHydro();document.getElementById('hydro-search-clear').style.display=this.value?'flex':'none'">
+                   placeholder="Tìm theo mã, vật liệu, người thực hiện..." data-input-action="search" data-reset-fn="_resetHydroPage" data-render-fn="renderHydro" data-clear-btn="hydro-search-clear">
             <button id="hydro-search-clear" onclick="document.getElementById('hydro-search').value='';renderHydro();this.style.display='none'"
                     style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;background:#f87171;border:none;cursor:pointer;align-items:center;justify-content:center;transition:background 0.15s"
                     onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#f87171'">
@@ -500,8 +497,8 @@
             </button>
           </div>
           <button class="btn admin-only" onclick="exportHydroExcel()" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
-          <select id="hydro-member-filter" class="search-input" onchange="window.setMemberFilter('hydro', this.value)" title="Lọc theo thành viên" style="min-width:180px"><option value="all">Tất cả thành viên</option></select>
-          <select class="search-input" style="flex:0;min-width:160px" id="hydro-status-filter" onchange="renderHydro()">
+          <select id="hydro-member-filter" class="search-input" data-change-action="set-member-filter" data-target="hydro" title="Lọc theo thành viên" style="min-width:180px"><option value="all">Tất cả thành viên</option></select>
+          <select class="search-input" style="flex:0;min-width:160px" id="hydro-status-filter" data-change-action="render-hydro">
             <option value="">Tất cả trạng thái</option>
             <option>Đang thực hiện</option><option>Hoàn thành</option>
             <option>Chờ phân tích</option><option>Thất bại</option>
@@ -555,7 +552,7 @@
           <div class="flex gap-2 mb-4 flex-wrap items-center" style="margin-top:36px">
             <div style="position:relative;flex:1;min-width:200px">
             <input  aria-label="Tìm theo mã, vật liệu" class="search-input" id="electrode-search" type="text" style="width:100%;padding-right:32px"
-                   placeholder="Tìm theo mã, vật liệu..." oninput="window._resetElectrodePage&&window._resetElectrodePage();renderElectrode();document.getElementById('electrode-search-clear').style.display=this.value?'flex':'none'">
+                   placeholder="Tìm theo mã, vật liệu..." data-input-action="search" data-reset-fn="_resetElectrodePage" data-render-fn="renderElectrode" data-clear-btn="electrode-search-clear">
             <button id="electrode-search-clear" onclick="document.getElementById('electrode-search').value='';renderElectrode();this.style.display='none'"
                     style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;background:#f87171;border:none;cursor:pointer;align-items:center;justify-content:center;transition:background 0.15s"
                     onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#f87171'">
@@ -565,8 +562,8 @@
             </button>
           </div>
             <button class="btn admin-only" onclick="exportElectrodeExcel()" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
-            <select id="electrode-member-filter" class="search-input" onchange="window.setMemberFilter('electrode', this.value)" title="Lọc theo thành viên" style="min-width:180px"><option value="all">Tất cả thành viên</option></select>
-            <select class="search-input" style="flex:0;min-width:180px" id="electrode-status-filter" onchange="renderElectrode()">
+            <select id="electrode-member-filter" class="search-input" data-change-action="set-member-filter" data-target="electrode" title="Lọc theo thành viên" style="min-width:180px"><option value="all">Tất cả thành viên</option></select>
+            <select class="search-input" style="flex:0;min-width:180px" id="electrode-status-filter" data-change-action="render-electrode">
               <option value="">Tất cả trạng thái</option>
               <option>Sẵn sàng đo</option><option>Đang activation</option><option>Đang xử lý</option>
             </select>
@@ -624,7 +621,7 @@
         <div class="flex gap-2 mb-4 flex-wrap items-center" style="margin-top:36px">
           <div style="position:relative;flex:1;min-width:200px">
             <input  aria-label="Tìm theo mã, điện cực, phản ứng" class="search-input" id="ec-search" type="text" style="width:100%;padding-right:32px"
-                   placeholder="Tìm theo mã, điện cực, phản ứng..." oninput="window._resetElectrochemPage&&window._resetElectrochemPage();renderElectrochem();document.getElementById('ec-search-clear').style.display=this.value?'flex':'none'">
+                   placeholder="Tìm theo mã, điện cực, phản ứng..." data-input-action="search" data-reset-fn="_resetElectrochemPage" data-render-fn="renderElectrochem" data-clear-btn="ec-search-clear">
             <button id="ec-search-clear" onclick="document.getElementById('ec-search').value='';renderElectrochem();this.style.display='none'"
                     style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;background:#f87171;border:none;cursor:pointer;align-items:center;justify-content:center;transition:background 0.15s"
                     onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#f87171'">
@@ -634,8 +631,8 @@
             </button>
           </div>
           <button class="btn admin-only" onclick="exportElectrochemExcel()" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
-          <select id="ec-member-filter" class="search-input" onchange="window.setMemberFilter('ec', this.value)" title="Lọc theo thành viên" style="min-width:180px"><option value="all">Tất cả thành viên</option></select>
-          <select class="search-input" style="flex:0;min-width:180px" id="ec-type-filter" onchange="renderElectrochem()">
+          <select id="ec-member-filter" class="search-input" data-change-action="set-member-filter" data-target="ec" title="Lọc theo thành viên" style="min-width:180px"><option value="all">Tất cả thành viên</option></select>
+          <select class="search-input" style="flex:0;min-width:180px" id="ec-type-filter" data-change-action="render-electrochem">
             <option value="">Tất cả loại đo</option>
             <option>LSV</option><option>CV</option><option>EIS</option><option>CA</option><option>CP</option>
           </select>
@@ -681,7 +678,7 @@
         <div class="flex gap-2 mb-4 flex-wrap items-center" style="margin-top:36px">
           <div style="position:relative;flex:1;min-width:200px">
             <input  aria-label="Tìm theo tên, công thức, mã CAS" class="search-input" id="chem-search" type="text" style="width:100%;padding-right:32px"
-                   placeholder="Tìm theo tên, công thức, mã CAS..." oninput="renderChemicals();document.getElementById('chem-search-clear').style.display=this.value?'flex':'none'">
+                   placeholder="Tìm theo tên, công thức, mã CAS..." data-input-action="search" data-render-fn="renderChemicals" data-clear-btn="chem-search-clear">
             <button id="chem-search-clear" onclick="document.getElementById('chem-search').value='';renderChemicals();this.style.display='none'"
                     style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;background:#f87171;border:none;cursor:pointer;align-items:center;justify-content:center;transition:background 0.15s"
                     onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#f87171'">
@@ -691,14 +688,14 @@
             </button>
           </div>
           <label class="flex items-center gap-1.5 px-3 py-2 border border-border rounded-lab cursor-pointer text-[13px] text-lab-text-2 bg-surface select-none whitespace-nowrap">
-            <input type="checkbox" id="filter-cs1" onchange="renderChemicals()" >Cơ sở 1
+            <input type="checkbox" id="filter-cs1" data-change-action="render-chemicals" >Cơ sở 1
           </label>
           <label class="flex items-center gap-1.5 px-3 py-2 border border-border rounded-lab cursor-pointer text-[13px] text-lab-text-2 bg-surface select-none whitespace-nowrap">
-            <input type="checkbox" id="filter-cs2" onchange="renderChemicals()" >Cơ sở 2
+            <input type="checkbox" id="filter-cs2" data-change-action="render-chemicals" >Cơ sở 2
           </label>
 
           <button class="btn admin-only" onclick="exportChemicalsExcel()" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
-          <select class="search-input" style="flex:0;min-width:160px" id="chem-status-filter" onchange="renderChemicals()">
+          <select class="search-input" style="flex:0;min-width:160px" id="chem-status-filter" data-change-action="render-chemicals">
             <option value="">Tất cả trạng thái</option>
             <option value="low">⚠ Sắp hết</option><option value="ok">✓ Đủ</option>
           </select>
@@ -763,7 +760,7 @@
         <div class="flex gap-2 mb-4 flex-wrap items-center" style="margin-top:36px">
           <div style="position:relative;flex:1;min-width:200px">
             <input  aria-label="Tìm theo tên, model, hãng" class="search-input" id="equipment-search" type="text" style="width:100%;padding-right:32px"
-                   placeholder="Tìm theo tên, model, hãng..." oninput="renderEquipment();document.getElementById('equipment-search-clear').style.display=this.value?'flex':'none'">
+                   placeholder="Tìm theo tên, model, hãng..." data-input-action="search" data-render-fn="renderEquipment" data-clear-btn="equipment-search-clear">
             <button id="equipment-search-clear" onclick="document.getElementById('equipment-search').value='';renderEquipment();this.style.display='none'"
                     style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;background:#f87171;border:none;cursor:pointer;align-items:center;justify-content:center;transition:background 0.15s"
                     onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#f87171'">
@@ -773,13 +770,13 @@
             </button>
           </div>
           <label class="flex items-center gap-1.5 px-3 py-2 border border-border rounded-lab cursor-pointer text-[13px] text-lab-text-2 bg-surface select-none whitespace-nowrap">
-            <input type="checkbox" id="eq-filter-cs1" onchange="renderEquipment()" >Cơ sở 1
+            <input type="checkbox" id="eq-filter-cs1" data-change-action="render-equipment" >Cơ sở 1
           </label>
           <label class="flex items-center gap-1.5 px-3 py-2 border border-border rounded-lab cursor-pointer text-[13px] text-lab-text-2 bg-surface select-none whitespace-nowrap">
-            <input type="checkbox" id="eq-filter-cs2" onchange="renderEquipment()" >Cơ sở 2
+            <input type="checkbox" id="eq-filter-cs2" data-change-action="render-equipment" >Cơ sở 2
           </label>
           <button class="btn admin-only" onclick="exportEquipmentExcel()" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
-          <select class="search-input" style="flex:0;min-width:180px" id="equipment-status-filter" onchange="renderEquipment()">
+          <select class="search-input" style="flex:0;min-width:180px" id="equipment-status-filter" data-change-action="render-equipment">
             <option value="">Tất cả trạng thái</option>
             <option>Đang sử dụng</option><option>Đang sửa</option><option>Ngưng sử dụng</option>
           </select>
@@ -826,14 +823,14 @@
         <input  aria-label="Tìm theo thiết bị, người đặt, mục đích" type="text" id="booking-search" placeholder="Tìm theo thiết bị, người đặt, mục đích..." class="search-input" style="flex:1;min-width:240px">
         <button class="btn admin-only" onclick="exportBookingsExcel()" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất Excel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Excel</button>
         <button class="btn" onclick="window.openPdfReportModal()" style="white-space:nowrap;gap:6px;display:inline-flex;align-items:center" title="Xuất báo cáo PDF"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h6M9 17h6"/></svg> PDF</button>
-        <select id="booking-equipment-filter" class="search-input" onchange="window.renderBooking?.()">
+        <select id="booking-equipment-filter" class="search-input" data-change-action="render-booking">
           <option value="">Tất cả thiết bị</option>
         </select>
-        <select id="booking-mine-filter" class="search-input" onchange="window.renderBooking?.()">
+        <select id="booking-mine-filter" class="search-input" data-change-action="render-booking">
           <option value="all">Tất cả</option>
           <option value="mine">Chỉ của tôi</option>
         </select>
-        <select id="booking-status-filter" class="search-input" onchange="window.renderBooking?.()">
+        <select id="booking-status-filter" class="search-input" data-change-action="render-booking">
           <option value="">Tất cả trạng thái</option>
           <option value="pending">Chờ duyệt</option>
           <option value="approved">Đã duyệt</option>
@@ -855,11 +852,10 @@
               <th scope="col" class="bk-sortable" data-sort="startTime" onclick="window.toggleBookingSort('startTime')" style="text-align:center;cursor:pointer;user-select:none">Giờ <span class="bk-sort-arrow"></span></th>
               <th scope="col">Mục đích</th>
               <th scope="col" style="text-align:center">Trạng thái</th>
-              <th scope="col"></th>
             </tr>
           </thead>
           <tbody id="booking-tbody">
-            <tr><td colspan="8"><div class="loading"><div class="spinner"></div>Đang tải...</div></td></tr>
+            <tr><td colspan="7"><div class="loading"><div class="spinner"></div>Đang tải...</div></td></tr>
           </tbody>
         </table>
       </div>
@@ -874,7 +870,7 @@
               <button class="btn btn-xs" onclick="window.calNavWeek(1)" title="Tuần sau"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
             </div>
             <div style="display:inline-flex;align-items:center;gap:10px">
-              <input type="date" id="cal-date-picker" onchange="window.calJumpToDate(this.value)" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;cursor:pointer;background:white;color:var(--text)" title="Chọn ngày để xem tuần đó">
+              <input type="date" id="cal-date-picker" data-change-action="cal-jump-to-date" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;cursor:pointer;background:white;color:var(--text)" title="Chọn ngày để xem tuần đó">
               <div id="cal-range-label" style="font-size:14px;font-weight:600;color:var(--text)"></div>
             </div>
             <div style="display:inline-flex;gap:10px;font-size:11px;color:var(--text-2);flex-wrap:wrap">
@@ -906,7 +902,7 @@
               <button class="btn btn-xs" onclick="window.dayNav(1)" title="Ngày sau"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
             </div>
             <div style="display:inline-flex;align-items:center;gap:10px">
-              <input type="date" id="day-date-picker" onchange="window.dayJumpTo(this.value)" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;cursor:pointer;background:white;color:var(--text)">
+              <input type="date" id="day-date-picker" data-change-action="day-jump-to" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;cursor:pointer;background:white;color:var(--text)">
               <div id="day-label" style="font-size:14px;font-weight:600;color:var(--text)"></div>
             </div>
             <div style="display:inline-flex;gap:10px;font-size:11px;color:var(--text-2);flex-wrap:wrap">
@@ -1009,17 +1005,16 @@
             <label style="cursor:pointer;flex-shrink:0;color:var(--text-3);padding:6px;border-radius:8px;transition:all 0.15s" title="Gửi ảnh"
                    onmouseover="this.style.background='var(--surface-3)'" onmouseout="this.style.background=''">
               <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-              <input type="file" accept="image/*" style="display:none" onchange="window.chatPickImage(this)">
+              <input type="file" accept="image/*" style="display:none" data-change-action="chat-pick-image">
             </label>
             <div style="flex:1;position:relative">
               <textarea id="chat-input"
                 placeholder="Nhắn tin... (dùng @tên để mention)"
                 style="width:100%;resize:none;border:1.5px solid var(--border);border-radius:12px;padding:10px 14px;font-size:13px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;transition:border 0.15s;line-height:1.5;max-height:120px;overflow-y:auto;display:block"
                 rows="1"
-                onkeydown="window.chatKeydown(event)"
-                oninput="window.chatInput(this)"
-                onfocus="this.style.borderColor='var(--teal)'"
-                onblur="this.style.borderColor='var(--border)'"></textarea>
+                data-keydown-action="chat-keydown"
+                data-input-action="chat-input"
+                data-chat-input="1"></textarea>
               <div id="chat-mention-dropdown" style="display:none;position:absolute;bottom:calc(100% + 4px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.12);max-height:160px;overflow-y:auto;z-index:100;padding:4px"></div>
             </div>
             <button onclick="window.chatSend()" id="chat-send-btn"
@@ -1096,7 +1091,7 @@
       <div style="display:flex;gap:8px">
         <input type="text" id="new-group-name" placeholder="Tên nhóm mới..."
                class="search-input" style="flex:1"
-               onkeydown="if(event.key==='Enter')addChemGroup()">
+               data-keydown-action="add-chem-group">
         <button class="btn btn-primary" onclick="addChemGroup()">+ Thêm nhóm</button>
       </div>
     </div>
@@ -1113,7 +1108,7 @@
       <div style="display:flex;gap:8px">
         <input type="text" id="new-eq-group-name" placeholder="Tên nhóm mới..."
                class="search-input" style="flex:1"
-               onkeydown="if(event.key==='Enter')addEqGroup()">
+               data-keydown-action="add-eq-group">
         <button class="btn btn-primary" onclick="addEqGroup()">+ Thêm nhóm</button>
       </div>
     </div>
@@ -1127,7 +1122,7 @@
     <div style="font-family:'Inter',sans-serif;font-size:20px;margin-bottom:6px">Đăng nhập Admin</div>
     <div style="font-size:13px;color:var(--text-3);margin-bottom:20px">Nhập mật khẩu để truy cập chức năng quản lý</div>
     <div class="form-group" style="margin-bottom:14px">
-      <input type="password" id="admin-pw" placeholder="Mật khẩu admin" onkeydown="if(event.key==='Enter')checkAdmin()">
+      <input type="password" id="admin-pw" placeholder="Mật khẩu admin" data-keydown-action="check-admin">
     </div>
     <div style="display:flex;gap:8px;justify-content:center">
      <button class="btn" style="flex:1;justify-content:center" data-action="close-modal" data-modal="modal-login">Hủy</button>
@@ -1146,7 +1141,7 @@
 <div class="form-section">
   <div class="form-section-title">Thông tin chung</div>
   <div class="form-grid">
-    <div class="form-group"><label>Mã thí nghiệm</label><input type="text" id="h-code" placeholder="HT-2026-001" oninput="autoPrefix(this,'HT')"></div>
+    <div class="form-group"><label>Mã thí nghiệm</label><input type="text" id="h-code" placeholder="HT-2026-001" data-input-action="auto-prefix" data-prefix="HT"></div>
     <div class="form-group"><label>Ngày thực hiện</label><input type="date" id="h-date"></div>
     
     <div class="form-group"><label>Vật liệu tổng hợp</label><input type="text" id="h-material" placeholder="VD: WS₂/WO₃"></div>
@@ -1224,7 +1219,7 @@
     <div class="form-section">
       <div class="form-section-title">Thông tin chung</div>
       <div class="form-grid">
-        <div class="form-group"><label>Mã điện cực</label><input type="text" id="e-code" placeholder="E-001" oninput="autoPrefix(this,'E')"></div>
+        <div class="form-group"><label>Mã điện cực</label><input type="text" id="e-code" placeholder="E-001" data-input-action="auto-prefix" data-prefix="E"></div>
         <div class="form-group"><label>Ngày</label><input type="date" id="e-date"></div>
         
         <div class="form-group"><label>Vật liệu xúc tác</label><input type="text" id="e-material" placeholder="WS₂/WO₃"></div>
@@ -1303,7 +1298,7 @@
       <div class="form-section">
       <div class="form-section-title">Thông tin công thức</div>
       <div class="form-grid">
-        <div class="form-group"><label>Mã công thức</label><input type="text" id="ink-code" placeholder="INK001" oninput="autoPrefix(this,'INK')"></div>
+        <div class="form-group"><label>Mã công thức</label><input type="text" id="ink-code" placeholder="INK001" data-input-action="auto-prefix" data-prefix="INK"></div>
         <div class="form-group"><label>Tên công thức</label><input type="text" id="ink-name" placeholder="VD: WS₂/WO₃ HER ink"></div>
         <div class="form-group"><label>Vật liệu chính</label><input type="text" id="ink-material" placeholder="VD: WS₂/WO₃"></div>
         <div class="form-group" style="grid-column:1/-1"><label>DOI bài báo tham khảo</label><input type="text" id="ink-doi" placeholder="VD: 10.1021/jacs.0c00000"></div>
@@ -1382,7 +1377,7 @@
     <div class="form-section">
       <div class="form-section-title">Thông tin chung</div>
       <div class="form-grid">
-        <div class="form-group"><label>Mã phép đo</label><input type="text" id="ec-code" placeholder="EC-001" oninput="autoPrefix(this,'EC')"></div>
+        <div class="form-group"><label>Mã phép đo</label><input type="text" id="ec-code" placeholder="EC-001" data-input-action="auto-prefix" data-prefix="EC"></div>
         <div class="form-group"><label>Ngày đo</label><input type="date" id="ec-date"></div>
         
 <div class="form-group"><label>Mã điện cực sử dụng</label><div style="position:relative"><input type="text" id="ec-electrode" class="electrode-search" placeholder="Tìm điện cực..." oninput="searchElectrode(this)" autocomplete="off"><div class="electrode-dropdown" style="position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:50;width:100%;max-height:180px;overflow-y:auto;display:none"></div></div></div>        <div class="form-group"><label>Loại phép đo</label><select class="cs-select" id="ec-type"><option>LSV</option><option>CV</option><option>EIS</option><option>CA</option><option>CP</option><option>OCP</option></select></div>
@@ -1879,7 +1874,7 @@ void main(){
         <!-- Round 14E: image upload button -->
         <label class="cw-img-btn" title="Gửi ảnh" aria-label="Tải ảnh lên">
           <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          <input type="file" accept="image/*" style="display:none" onchange="window.chatPickImage(this)">
+          <input type="file" accept="image/*" style="display:none" data-change-action="chat-pick-image">
         </label>
         <textarea id="cw-input" class="cw-input" placeholder="Nhập tin nhắn... (@tên để mention)" rows="1"></textarea>
         <button id="cw-send" class="cw-send" type="button" aria-label="Gửi">

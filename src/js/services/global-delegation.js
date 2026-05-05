@@ -96,4 +96,166 @@ export function attachGlobalDelegation() {
       case 'confirm-reject-booking':      if (typeof window.confirmRejectBooking === 'function') window.confirmRejectBooking(); break;
     }
   });
+
+  // ── SUBMIT (forms) ─────────────────────────────────
+  document.body.addEventListener('submit', function(e) {
+    const target = e.target.closest('[data-submit-action]');
+    if (!target) return;
+    e.preventDefault();
+    const action = target.dataset.submitAction;
+    if (action === 'login') {
+      if (typeof window.doLogin === 'function') window.doLogin();
+    } else if (action === 'register') {
+      if (typeof window.doRegister === 'function') window.doRegister();
+    }
+  });
+
+  // ── CHANGE (selects, checkboxes, file inputs) ─────
+  document.body.addEventListener('change', function(e) {
+    const target = e.target.closest('[data-change-action]');
+    if (!target) return;
+    const action = target.dataset.changeAction;
+
+    switch (action) {
+      case 'change-avatar':
+        if (typeof window.changeAvatar === 'function') window.changeAvatar(target);
+        break;
+      case 'chat-pick-image':
+        if (typeof window.chatPickImage === 'function') window.chatPickImage(target);
+        break;
+      case 'toggle-dark-mode':
+        if (typeof window.toggleDarkMode === 'function') window.toggleDarkMode(target.checked);
+        break;
+      case 'render-hydro':       if (typeof window.renderHydro === 'function') window.renderHydro(); break;
+      case 'render-electrode':   if (typeof window.renderElectrode === 'function') window.renderElectrode(); break;
+      case 'render-electrochem': if (typeof window.renderElectrochem === 'function') window.renderElectrochem(); break;
+      case 'render-chemicals':   if (typeof window.renderChemicals === 'function') window.renderChemicals(); break;
+      case 'render-equipment':   if (typeof window.renderEquipment === 'function') window.renderEquipment(); break;
+      case 'render-booking':     if (typeof window.renderBooking === 'function') window.renderBooking(); break;
+      case 'set-member-filter':
+        if (typeof window.setMemberFilter === 'function') {
+          window.setMemberFilter(target.dataset.target, target.value);
+        }
+        break;
+      case 'cal-jump-to-date':
+        if (typeof window.calJumpToDate === 'function') window.calJumpToDate(target.value);
+        break;
+      case 'day-jump-to':
+        if (typeof window.dayJumpTo === 'function') window.dayJumpTo(target.value);
+        break;
+    }
+  });
+
+  // ── INPUT (text inputs - search + autoPrefix + chat) ─
+  document.body.addEventListener('input', function(e) {
+    const target = e.target.closest('[data-input-action]');
+    if (!target) return;
+    const action = target.dataset.inputAction;
+
+    switch (action) {
+      case 'search': {
+        // Search inputs co chained logic: reset + render + toggle clear button
+        const resetFnName = target.dataset.resetFn;
+        const renderFnName = target.dataset.renderFn;
+        const clearBtnId = target.dataset.clearBtn;
+        if (resetFnName && typeof window[resetFnName] === 'function') {
+          window[resetFnName]();
+        }
+        if (renderFnName && typeof window[renderFnName] === 'function') {
+          window[renderFnName]();
+        }
+        if (clearBtnId) {
+          const btn = document.getElementById(clearBtnId);
+          if (btn) btn.style.display = target.value ? 'flex' : 'none';
+        }
+        break;
+      }
+      case 'auto-prefix': {
+        const prefix = target.dataset.prefix;
+        if (prefix && typeof window.autoPrefix === 'function') {
+          window.autoPrefix(target, prefix);
+        }
+        break;
+      }
+      case 'chat-input':
+        if (typeof window.chatInput === 'function') window.chatInput(target);
+        break;
+      case 'header-search':
+        if (typeof window.headerSearch === 'function') window.headerSearch(target);
+        break;
+    }
+  });
+
+  // ── KEYDOWN (Enter handlers) ──────────────────────
+  document.body.addEventListener('keydown', function(e) {
+    const target = e.target.closest('[data-keydown-action]');
+    if (!target) return;
+    const action = target.dataset.keydownAction;
+
+    if (action === 'chat-keydown') {
+      // Special: pass full event to chatKeydown
+      if (typeof window.chatKeydown === 'function') window.chatKeydown(e);
+      return;
+    }
+
+    // Cac keydown khac chi trigger khi Enter
+    if (e.key !== 'Enter') return;
+
+    switch (action) {
+      case 'focus-next': {
+        const nextId = target.dataset.nextId;
+        const next = document.getElementById(nextId);
+        if (next) next.focus();
+        break;
+      }
+      case 'do-login':         if (typeof window.doLogin === 'function') window.doLogin(); break;
+      case 'do-register':      if (typeof window.doRegister === 'function') window.doRegister(); break;
+      case 'add-chem-group':   if (typeof window.addChemGroup === 'function') window.addChemGroup(); break;
+      case 'add-eq-group':     if (typeof window.addEqGroup === 'function') window.addEqGroup(); break;
+      case 'check-admin':      if (typeof window.checkAdmin === 'function') window.checkAdmin(); break;
+    }
+  });
+
+  // ── HEADER SEARCH BOX focus/blur (phuc tap) ───────
+  // Logic: focus -> expand box; blur -> if empty, collapse
+  // Khong dung delegation vi can listen tren chinh element (focus/blur khong bubble)
+  const hsInput = document.querySelector('[data-header-search="1"]');
+  if (hsInput) {
+    hsInput.addEventListener('focus', function() {
+      const b = document.getElementById('header-search-box');
+      if (b) {
+        b.style.width = '240px';
+        b.style.borderColor = 'var(--teal)';
+        b.style.borderRadius = '20px';
+      }
+      this.style.width = '180px';
+      this.style.padding = '0 8px 0 0';
+    });
+    hsInput.addEventListener('blur', function() {
+      const self = this;
+      setTimeout(function() {
+        if (!self.value) {
+          const b = document.getElementById('header-search-box');
+          if (b) {
+            b.style.width = '40px';
+            b.style.borderColor = '#e2e8f0';
+            b.style.borderRadius = '50%';
+          }
+          self.style.width = '0';
+          self.style.padding = '0';
+        }
+      }, 300);
+    });
+  }
+
+  // ── INJECT CSS for auth/chat input focus ──────────
+  // Thay cho onfocus/onblur inline
+  if (!document.getElementById('global-input-css')) {
+    const style = document.createElement('style');
+    style.id = 'global-input-css';
+    style.textContent =
+      '[data-auth-input="1"]:focus{border-color:var(--teal) !important;background:var(--teal-light) !important}' +
+      '[data-chat-input="1"]:focus{border-color:var(--teal) !important}';
+    document.head.appendChild(style);
+  }
 }
