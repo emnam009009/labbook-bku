@@ -23,7 +23,7 @@
  *   - _typeChartInstance, _chemChartInstance: Chart.js refs
  */
 
-import { vals } from '../utils/format.js'
+import { vals, escapeHtml } from '../utils/format.js'
 
 // ── State ─────────────────────────────────────────────────
 let _filterMode = 'month'
@@ -435,9 +435,9 @@ async function renderChemicalsCard() {
         <tbody>
           ${data.map((row, i) => `
             <tr style="${i % 2 ? 'background:rgba(248,250,252,0.5)' : ''}">
-              <td style="padding:7px 12px;border-bottom:1px solid #f1f5f9;color:#0f172a;font-weight:500">${row.name}</td>
+              <td style="padding:7px 12px;border-bottom:1px solid #f1f5f9;color:#0f172a;font-weight:500">${escapeHtml(row.name)}</td>
               <td style="padding:7px 12px;text-align:right;border-bottom:1px solid #f1f5f9;font-family:'Courier New',monospace;color:var(--teal);font-weight:600">${row.total.toFixed(2)}</td>
-              <td style="padding:7px 12px;text-align:center;border-bottom:1px solid #f1f5f9;color:#64748b">${row.unit}</td>
+              <td style="padding:7px 12px;text-align:center;border-bottom:1px solid #f1f5f9;color:#64748b">${escapeHtml(row.unit)}</td>
               <td style="padding:7px 12px;text-align:center;border-bottom:1px solid #f1f5f9;color:#94a3b8">${row.count}</td>
             </tr>
           `).join('')}

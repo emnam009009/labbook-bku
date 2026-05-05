@@ -17,7 +17,7 @@
  *  - cache._users được listener cập nhật → khi data đổi, listener gọi renderUsers (admin only)
  */
 
-import { fmtDate } from '../utils/format.js'
+import { fmtDate, escapeHtml, escapeJs } from '../utils/format.js'
 
 const SUPER_ADMIN_EMAIL = 'nvhn.7202@gmail.com';
 
@@ -28,8 +28,9 @@ function renderDeleteBtn(uid, email, displayName) {
   // target user la superadmin -> khong cho xoa
   // (dat xa boi caller: chi truyen vao neu khong phai super)
   if (email === SUPER_ADMIN_EMAIL) return '';
-  const safeName = (displayName || email).replace(/'/g, "\\'");
-  return `<button class="del-btn" onclick="deleteUserAccount('${uid}','${safeName}')" title="Xóa tài khoản"><svg class="w-4 h-4 fill-none stroke-white" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" stroke-linejoin="round" stroke-linecap="round"></path></svg></button>`;
+  const safeName = escapeJs(displayName || email);
+  const safeUid = escapeJs(uid);
+  return `<button class="del-btn" onclick="deleteUserAccount('${safeUid}','${safeName}')" title="Xóa tài khoản"><svg class="w-4 h-4 fill-none stroke-white" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" stroke-linejoin="round" stroke-linecap="round"></path></svg></button>`;
 }
 
 export function renderUsers() {
@@ -57,13 +58,13 @@ export function renderUsers() {
     pendingTbody.innerHTML = pending.length
       ? pending.map(u => `
         <tr>
-          <td><strong>${u.displayName || '—'}</strong></td>
-          <td class="mono">${u.email || '—'}</td>
+          <td><strong>${escapeHtml(u.displayName || '—')}</strong></td>
+          <td class="mono">${escapeHtml(u.email || '—')}</td>
           <td>${fmtDate(u.createdAt)}</td>
           <td class="action-cell">
-            <button class="btn btn-xs btn-primary" onclick="approveUser('${u.uid}','member')">✓ Member</button>
-            <button class="btn btn-xs btn-gold" onclick="approveUser('${u.uid}','viewer')">👁 Viewer</button>
-            <button class="btn btn-xs btn-danger" onclick="approveUser('${u.uid}','rejected')">✕ Từ chối</button>
+            <button class="btn btn-xs btn-primary" onclick="approveUser('${escapeJs(u.uid)}','member')">✓ Member</button>
+            <button class="btn btn-xs btn-gold" onclick="approveUser('${escapeJs(u.uid)}','viewer')">👁 Viewer</button>
+            <button class="btn btn-xs btn-danger" onclick="approveUser('${escapeJs(u.uid)}','rejected')">✕ Từ chối</button>
           </td>
         </tr>`).join('')
       : '<tr><td colspan="4" style="padding:24px;font-size:13px"><center style="color:#94a3b8">Không có tài khoản chờ duyệt</center></td></tr>';
@@ -91,12 +92,12 @@ export function renderUsers() {
           : `<span class="badge ${roleBadge[u.role] || 'badge-gray'}" style="display:inline-flex;align-items:center;gap:4px">${roleIcon[u.role] || ''}${roleLabel[u.role] || u.role}</span>`;
         return `
         <tr style="vertical-align:middle${isSuper ? ';background:linear-gradient(90deg,rgba(245,158,11,0.05),transparent)' : ''}">
-          <td><strong>${u.displayName || '—'}</strong></td>
-          <td class="mono">${u.email || '—'}</td>
+          <td><strong>${escapeHtml(u.displayName || '—')}</strong></td>
+          <td class="mono">${escapeHtml(u.email || '—')}</td>
           <td>${badge}</td>
           <td>${fmtDate(u.createdAt)}</td>
           <td style="text-align:left;padding-left:8px">${isSuper ? '' : `
-            <select onchange="changeUserRole('${u.uid}',this.value)"
+            <select onchange="changeUserRole('${escapeJs(u.uid)}',this.value)"
                     style="border:1.5px solid var(--border);border-radius:var(--radius);font-size:12px;background:var(--surface);color:var(--text);padding:4px 0">
               <option value="admin"    ${u.role === 'admin'    ? 'selected' : ''}>Admin</option>
               <option value="member"   ${u.role === 'member'   ? 'selected' : ''}>Member</option>

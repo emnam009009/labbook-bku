@@ -12,7 +12,7 @@
  *  - vals từ utils/format.js
  */
 
-import { vals } from '../utils/format.js'
+import { vals, escapeHtml } from '../utils/format.js'
 
 export function renderHistory() {
   const cache = window.cache;
@@ -37,9 +37,9 @@ export function renderHistory() {
         return `<div class="timeline-item">
           <div class="timeline-dot"></div>
           <div class="timeline-date">${dt}</div>
-          <div class="timeline-content">${r.action || ''}</div>
-          <div class="timeline-sub">👤 ${who}</div>
-          ${r.detail ? '<div class="timeline-change">' + r.detail + '</div>' : ''}
+          <div class="timeline-content">${escapeHtml(r.action || '')}</div>
+          <div class="timeline-sub">👤 ${escapeHtml(who)}</div>
+          ${r.detail ? '<div class="timeline-change">' + escapeHtml(r.detail) + '</div>' : ''}
         </div>`;
       }).join('')
     : '<div style="color:var(--teal)">Chưa có lịch sử</div>';

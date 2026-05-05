@@ -17,7 +17,7 @@
  *  - Lock toggle (admin only)
  */
 
-import { vals, formatChemical } from '../utils/format.js'
+import { vals, formatChemical, escapeHtml, escapeJs } from '../utils/format.js'
 import { applyTableSort, initTableSort } from '../services/table-sort.js'
 import { canDelete } from '../utils/auth-helpers.js'
 
@@ -54,33 +54,40 @@ export function renderInk() {
 
   tbody.innerHTML = rows.map(function(r) {
     const solidStr = (r.solids || []).map(s =>
-      s.name + ' <span style="color:#C2410C;font-weight:600">' + s.mass + 'mg</span>'
+      escapeHtml(s.name) + ' <span style="color:#C2410C;font-weight:600">' + s.mass + 'mg</span>'
     ).join('<br>');
     const liquidStr = (r.liquids || []).map(l =>
-      l.name + ' <span style="color:#1D4ED8;font-weight:600">' + l.vol + 'μL</span>'
+      escapeHtml(l.name) + ' <span style="color:#1D4ED8;font-weight:600">' + l.vol + 'μL</span>'
     ).join('<br>');
 
     // Tên formula: nếu có DOI → link mở publication, không thì plain text
+    // r.doi: encode URL component; r.name: escape HTML
+    const safeDoi = encodeURIComponent(r.doi || '');
+    const safeName = escapeHtml(r.name || '');
     const nameCell = r.doi
-      ? '<a href="https://doi.org/' + r.doi + '" target="_blank" style="font-weight:600;color:var(--text);text-decoration:none" onmouseover="this.style.color=\'var(--blue2)\'" onmouseout="this.style.color=\'var(--text)\'">' + r.name + ' <svg width="11" height="11" viewBox="0 0 24 24" stroke="var(--blue2)" fill="none" stroke-width="2" style="vertical-align:middle"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>'
-      : '<strong>' + r.name + '</strong>';
+      ? '<a href="https://doi.org/' + safeDoi + '" target="_blank" style="font-weight:600;color:var(--text);text-decoration:none" onmouseover="this.style.color=\'var(--blue2)\'" onmouseout="this.style.color=\'var(--text)\'">' + safeName + ' <svg width="11" height="11" viewBox="0 0 24 24" stroke="var(--blue2)" fill="none" stroke-width="2" style="vertical-align:middle"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>'
+      : '<strong>' + safeName + '</strong>';
 
-    return '<tr class="clickable-row" style="vertical-align:middle" onclick="' + (!r.locked ? 'editInk(\'' + r._key + '\')' : '') + '" title="' + (!r.locked ? 'Nhấn để sửa' : 'Đã khóa') + '">' +
-      '<td onclick="event.stopPropagation()"><strong style="font-family:\'Courier New\',monospace;font-size:14px;cursor:pointer;color:var(--blue2)" onclick="showInkImage(\'' + r._key + '\')">' + r.code + '</strong></td>' +
+    const safeKey = escapeJs(r._key);
+    const safeCode = escapeHtml(r.code || '');
+    const safeCodeJs = escapeJs(r.code || '');
+
+    return '<tr class="clickable-row" style="vertical-align:middle" onclick="' + (!r.locked ? 'editInk(\'' + safeKey + '\')' : '') + '" title="' + (!r.locked ? 'Nhấn để sửa' : 'Đã khóa') + '">' +
+      '<td onclick="event.stopPropagation()"><strong style="font-family:\'Courier New\',monospace;font-size:14px;cursor:pointer;color:var(--blue2)" onclick="showInkImage(\'' + safeKey + '\')">' + safeCode + '</strong></td>' +
       '<td style="text-align:center">' + nameCell + '</td>' +
-      '<td style="text-align:center"><span class="tag">' + formatChemical(r.material) + '</span></td>' +
+      '<td style="text-align:center"><span class="tag">' + formatChemical(escapeHtml(r.material || '')) + '</span></td>' +
       '<td style="font-size:12px;text-align:center">' + (solidStr || '—') + '</td>' +
       '<td style="font-size:12px;text-align:center">' + (liquidStr || '—') + '</td>' +
       '<td class="mono" style="text-align:center">' + (r.totalVol || 0) + ' μL</td>' +
-      '<td style="text-align:center">' + (r.createdAt || '') + '</td>' +
+      '<td style="text-align:center">' + escapeHtml(r.createdAt || '') + '</td>' +
       '<td class="action-cell" onclick="event.stopPropagation()" style="text-align:left">' +
-        '<label class="lock-toggle ink-lock-btn" style="display:none" onclick="event.stopPropagation();' + (r.locked ? 'unlockItem(\'ink\',\'' + r._key + '\')' : 'lockItem(\'ink\',\'' + r._key + '\')') + '">' +
+        '<label class="lock-toggle ink-lock-btn" style="display:none" onclick="event.stopPropagation();' + (r.locked ? 'unlockItem(\'ink\',\'' + safeKey + '\')' : 'lockItem(\'ink\',\'' + safeKey + '\')') + '">' +
           '<div class="lock-track ' + (r.locked ? 'locked' : 'unlocked') + '">' +
             '<span class="lock-icon">' + (r.locked ? LOCK_ICON_ON : LOCK_ICON_OFF) + '</span><div class="lock-thumb"></div>' +
           '</div>' +
         '</label>' +
-        '<button class="plusButton" onclick="duplicateItem(\'ink\',\'' + r._key + '\')" title="Nhân bản"><svg class="plusIcon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 5v14M5 12h14"/></svg></button>' +
-        '<button class="del-btn" onclick="delItem(\'ink\',\'' + r._key + '\',\'' + r.code + '\')" style="' + (!canDelete(r) || r.locked ? 'visibility:hidden' : '') + '">' + DEL_SVG + '</button>' +
+        '<button class="plusButton" onclick="duplicateItem(\'ink\',\'' + safeKey + '\')" title="Nhân bản"><svg class="plusIcon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 5v14M5 12h14"/></svg></button>' +
+        '<button class="del-btn" onclick="delItem(\'ink\',\'' + safeKey + '\',\'' + safeCodeJs + '\')" style="' + (!canDelete(r) || r.locked ? 'visibility:hidden' : '') + '">' + DEL_SVG + '</button>' +
       '</td>' +
     '</tr>';
   }).join('');
