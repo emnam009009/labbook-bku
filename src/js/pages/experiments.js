@@ -174,7 +174,7 @@ export function renderElectrochem() {
     ? rows.map(r => {
         const locked = !!r.locked;
         const k = r._key;
-        const isAI = window.currentAuth?.role === 'superadmin';
+        const isAI = window.__currentUserEmail === 'nvhn.7202@gmail.com';
         const delStyle = (locked || !canDelete(r)) ? 'visibility:hidden' : '';
         const lockOnclick = locked ? "unlockItem('electrochem','" + k + "')" : "lockItem('electrochem','" + k + "')";
 

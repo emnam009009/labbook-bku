@@ -201,7 +201,7 @@ function formatChatTime(ts) {
 function renderChatMsg(m, myUid, prevMsg) {
   const isMe = m.uid === myUid;
   const currentAuth = window.currentAuth || {};
-  const isSuperAdmin = currentAuth.role === 'superadmin';
+  const isSuperAdmin = currentAuth.email === SUPER_ADMIN_EMAIL;
   // Cho phép superadmin gỡ mọi tin (kể cả của user khác)
   const canRecall = isMe || isSuperAdmin;
 
@@ -552,7 +552,7 @@ export function toggleChatWidget(forceOpen) {
 // Show AI tab chỉ cho superadmin
 export function _updateChatWidgetRole() {
   const currentAuth = window.currentAuth || {};
-  const isSuperAdmin = currentAuth.role === 'superadmin';
+  const isSuperAdmin = currentAuth.email === SUPER_ADMIN_EMAIL;
 
   // Show/hide nút "Xóa hội thoại" cho superadmin
   const clearBtn = document.getElementById('cw-clear-all');
@@ -606,7 +606,7 @@ export async function recallMessageSelf(msgKey) {
 // Show recall menu: popup nhỏ cạnh nút 3 chấm
 export function showRecallMenu(msgKey, msgTs, isMe, btn) {
   const currentAuth = window.currentAuth || {};
-  const isSuperAdmin = currentAuth.role === 'superadmin';
+  const isSuperAdmin = currentAuth.email === SUPER_ADMIN_EMAIL;
   // Chỉ cho phép gỡ nếu là chủ tin HOẶC superadmin
   if (!isMe && !isSuperAdmin) return;
 
@@ -691,7 +691,7 @@ export function showRecallMenu(msgKey, msgTs, isMe, btn) {
 // ─── Clear all chat messages (superadmin only) ───
 export async function clearAllChatMessages() {
   const currentAuth = window.currentAuth || {};
-  if (currentAuth.role !== 'superadmin') {
+  if (currentAuth.email !== SUPER_ADMIN_EMAIL) {
     if (window.showToast) window.showToast('Chỉ Super Admin mới được phép xóa toàn bộ hội thoại', 'danger');
     return;
   }
@@ -718,7 +718,7 @@ export async function clearAllChatMessages() {
 // Show confirm popup trước khi xóa toàn bộ
 export function showClearAllConfirm(btn) {
   const currentAuth = window.currentAuth || {};
-  if (currentAuth.role !== 'superadmin') return;
+  if (currentAuth.email !== SUPER_ADMIN_EMAIL) return;
 
   // Đóng popup cũ nếu có
   const existing = document.getElementById('chat-clear-confirm');

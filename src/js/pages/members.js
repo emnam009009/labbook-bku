@@ -49,7 +49,7 @@ export function renderMembers() {
     const initials = m.name.split(' ').slice(-2).map(w => w[0]).join('');
     const [bg, tc] = colors[i % colors.length];
     const canEdit = currentAuth.isAdmin || currentAuth.uid === m.uid;
-    const isSuper = m.role === 'superadmin' || (window.__superAdminUid && m.uid === window.__superAdminUid);
+    const isSuper = m.email === SUPER_ADMIN_EMAIL || (window.__superAdminUid && m.uid === window.__superAdminUid);
     const showDelete = currentAuth.isAdmin && !isSuper;
 
     return `<div class="member-card" ${canEdit ? `onclick="editMember('${m._key}')"` : ''} style="cursor:${canEdit ? 'pointer' : 'default'}">

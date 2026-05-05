@@ -271,7 +271,7 @@ export async function deleteUserAccount(uid, name) {
   const currentUser = window.currentUser || 'Khách';
   const showToast = window.showToast;
 
-  if (currentAuth.role !== 'superadmin') {
+  if (currentAuth.email !== SUPER_ADMIN_EMAIL) {
     showToast('Không có quyền!', 'danger');
     return;
   }
