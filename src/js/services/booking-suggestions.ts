@@ -125,8 +125,8 @@ function injectSuggestionsUI(): void {
   }
 
   // Wire events
-  document.getElementById('bk-suggest-find').addEventListener('click', handleFindSlots)
-  document.getElementById('bk-suggest-toggle').addEventListener('click', toggleBody)
+  document.getElementById('bk-suggest-find')?.addEventListener('click', handleFindSlots)
+  document.getElementById('bk-suggest-toggle')?.addEventListener('click', toggleBody)
 }
 
 function toggleBody(): void {
@@ -154,6 +154,7 @@ function handleFindSlots(): void {
     if (resultsEl) resultsEl.innerHTML = '<div style="text-align:center;padding:14px;color:var(--text-3);font-size:12px">⚠ Chọn thiết bị bên dưới rồi nhấn lại</div>'
     return
   }
+  if (!resultsEl) return
 
   // Find slots
   const slots = findAvailableSlots(equipmentKey, duration, rangeDays)

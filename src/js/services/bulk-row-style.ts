@@ -222,6 +222,7 @@
     } else if (t.classList?.contains('bulk-cb-all')) {
       forceCheckboxStyle(t);
       const tbodyId = t.dataset.tbody;
+      if (!tbodyId) return;
       const tbody = document.getElementById(tbodyId);
       if (!tbody) return;
       tbody.querySelectorAll<HTMLInputElement>('.bulk-cb').forEach(syncRowState);
