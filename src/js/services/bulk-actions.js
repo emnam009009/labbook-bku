@@ -64,6 +64,21 @@ import { printBulkLabels } from './qr-labels.js'
     if (tr.dataset.key) return tr.dataset.key;
     if (tr.dataset.bkKey) return tr.dataset.bkKey;
 
+    // Round 59: doc data-key tu button co data-action (Phase CSP da bo inline onclick)
+    // Pattern moi: <button data-action="edit-xxx" data-key="abc123">
+    const dataActionEl = tr.querySelector('[data-action][data-key]');
+    if (dataActionEl) {
+      const key = dataActionEl.dataset.key;
+      if (key) {
+        const cache = window.cache;
+        if (cache && cache[cfg.col]) {
+          if (cache[cfg.col][key]) return key;
+        } else {
+          return key;
+        }
+      }
+    }
+
     const allOnclicks = [];
     if (tr.getAttribute('onclick')) allOnclicks.push(tr.getAttribute('onclick'));
     tr.querySelectorAll('[onclick]').forEach(el => {

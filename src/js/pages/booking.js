@@ -168,7 +168,8 @@ function renderRow(r) {
     <td style="text-align:center">${formatDate(r.date)}</td>
     <td style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:12.5px">${escapeHtml(r.startTime || '')} - ${escapeHtml(r.endTime || '')}</td>
     <td style="font-size:12.5px;color:var(--text-2)">${escapeHtml(r.purpose || '')}${r.status === 'rejected' && r.rejectedReason ? `<div style="margin-top:4px;font-size:11.5px;color:var(--danger);font-style:italic">⚠ ${escapeHtml(r.rejectedReason)}</div>` : ''}</td>
-    <td class="action-cell" style="text-align:center"><div style="display:inline-flex;flex-direction:column;align-items:center;gap:6px">${badge}${actions ? `<div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center">${actions}</div>` : ''}</div></td>
+    <td style="text-align:center">${badge}</td>
+    <td class="action-cell" style="text-align:right">${actions ? `<div style="display:inline-flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">${actions}</div>` : ''}</td>
   </tr>`;
 }
 
