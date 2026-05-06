@@ -467,6 +467,10 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
         _currentPreview = { file, parsed, category, attachmentId: null };
         updateAxSaveBtnState();  // Round 88: new file -> disable save axis
         previewBox.hidden = false;
+        // Round 94: CRITICAL — set state to 'preview' so CSS rules show canvas
+        // (without this, .att-preview[data-state="empty"] .att-preview-canvas
+        //  CSS rule hides the rendered chart, leaving canvas visually blank)
+        (previewBox as HTMLElement).dataset.state = 'preview';
         if (axisCtrls) (axisCtrls as any).hidden = false;
         clearAxisDOM();  // New file: no saved settings
         const heuristicNote = parsed.matchedByHeuristic

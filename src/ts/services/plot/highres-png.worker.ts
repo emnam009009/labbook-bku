@@ -180,10 +180,11 @@ async function renderToBlob({ parsed, opts, canvas }) {
   if (cfg.data.datasets[1]) cfg.data.datasets[1].borderWidth = 2 * scale;
   if (cfg.options.scales.x.border) cfg.options.scales.x.border.width = 1.5 * scale;
   if (cfg.options.scales.y.border) cfg.options.scales.y.border.width = 1.5 * scale;
-  // Round 93: scale ticks.padding so label spacing matches font scaling
-  // (without this, hi-res labels overlap with tick marks)
-  if (cfg.options.scales.x.ticks) cfg.options.scales.x.ticks.padding = 6 * scale;
-  if (cfg.options.scales.y.ticks) cfg.options.scales.y.ticks.padding = 6 * scale;
+  // Round 94: padding MUST exceed tickLength (8*scale) — otherwise tick
+  // marks visually intrude into label area. Use 12*scale (~38px @ 300 DPI)
+  // so labels sit clear of tick marks (which extend 8*scale ~25px from axis).
+  if (cfg.options.scales.x.ticks) cfg.options.scales.x.ticks.padding = 12 * scale;
+  if (cfg.options.scales.y.ticks) cfg.options.scales.y.ticks.padding = 12 * scale;
   // Title font padding scaled too
   if (cfg.options.plugins?.title?.padding) {
     cfg.options.plugins.title.padding = { top: 6 * scale, bottom: 12 * scale };
