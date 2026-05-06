@@ -13,6 +13,8 @@ LabBook BKU là web app quản lý phòng thí nghiệm hoá. Stack **Vite 8 + T
 - **Repo**: https://github.com/emnam009009/labbook-bku
 - **Owner ngôn ngữ**: tiếng Việt (toàn bộ giao tiếp + UI strings)
 - **Tests**: 62 unit tests (Vitest). Phải pass khi đụng code.
+- **Latest round**: Round 90 (Drop replace preview + upload speedups). Xem section 12 cho timeline Round 73-90.
+- **AGENTS.md tracked in repo** từ Round 72 — đầu session `git pull` để sync, KHÔNG `rm -f`.
 
 ---
 
@@ -38,8 +40,8 @@ firebase deploy --only hosting   # deploy
 - **TypeScript ESM** (không React/Vue). Tất cả file dùng `import/export`.
 - File ngoài `src/js/` được Vite bundle thành `dist/assets/index-*.js`.
 - **TypeScript strict mode**: `noImplicitAny` + `strictNullChecks` + `noUnusedLocals` + `noUnusedParameters` ON. `strict: true` chưa bật.
-- 23 file lớn render-heavy (DOM/Chart.js/jsPDF) có `@ts-nocheck` directive — strict flag không apply cho các file này.
-- Migration hoàn tất ở Round 71. Xem chi tiết ở mục 11.
+- 24 file lớn render-heavy (DOM/Chart.js/jsPDF/Worker) có `@ts-nocheck` directive — strict flag không apply cho các file này.
+- Migration TS hoàn tất ở Round 71. Feature work tiếp tục Round 72-90 (xem section 12).
 
 ---
 
@@ -190,6 +192,86 @@ window.cache = {
 ### 4.8. Notifications
 - Schema **flat** (không nested by rule). Bug #11 đã defer — không refactor unless user yêu cầu.
 
+### 4.9. Attachments system (Round 73+, đỉnh điểm Round 90)
+
+**Architecture**:
+- Files lưu Firebase Storage tại path `attachments/{refType}/{refId}/{ts}_{safe}`
+- Metadata lưu RTDB tại `attachments/{refType}/{refId}/{attachmentId}`
+- 12 categories: xrd, sem, tem, raman, ftir, uvvis, uvvis-drs, pl,
+  eds, xps, electrochem, other (Round 77a thêm 3 cuối)
+- Per-experiment limit: 20 files, per-file: 25 MB
+
+**Pipeline khi user drop file**:
+1. `detectCategory(file)` → 4 layers: extension → filename → JCAMP/CorrWare → header keywords
+2. Auto-set dropdown category (Round 74)
+3. Single file + parseable + canAutoPlot → preview chart
+4. Multi-file/non-parseable → bulk upload
+5. Parallel upload pool (8 concurrent, Round 90), small files <1MB
+   dùng `uploadBytes` (single PUT), files lớn dùng `uploadBytesResumable`
+
+**Auto-plot subtypes** (Round 86):
+- CorrWare `.cor` electrochem files: detect subtype CV/LSV/GCD từ header
+  - CV/LSV: X=Potential (V), Y=Current density (A/cm²)
+  - GCD: X=Time (s), Y=Potential (V)
+- JCAMP-DX (`.txt` JASCO UV-Vis output): standard format
+
+**RTDB rules** (`database.rules.json` line ~216):
+- Category regex MUST include all 12 values:
+  `/^(xrd|sem|tem|raman|ftir|uvvis|uvvis-drs|pl|eds|xps|electrochem|other)$/`
+- Quên update regex khi thêm category sẽ gây PERMISSION_DENIED (Round 88 fix).
+- Sau khi sửa rules: `firebase deploy --only database` (KHÔNG chỉ hosting!)
+
+### 4.10. PNG export — OffscreenCanvas + Web Worker (Round 89)
+
+`renderHighResPNG()` trong `services/plot/plot-preview.ts` là dispatcher:
+- Feature-detect `OffscreenCanvas` + `Worker` + `transferControlToOffscreen`
+- ✓ Support → spawn worker (`./highres-png.worker.ts?worker`), transfer canvas,
+  worker render Chart.js + convertToBlob → postMessage blob về (DPI 300, main thread free)
+- ✗ Fallback → sync render trên main thread (DPI 220 thay vì 300)
+
+**Worker code self-contained** — KHÔNG import từ main thread (functions
+không cross postMessage được). buildChartConfig + 5 plugins inline trong
+worker scope. Khi sửa preview rendering logic, NHỚ sync giữa
+`plot-preview.ts` (preview path) và `highres-png.worker.ts` (export path)
+để saved PNG khớp preview.
+
+**Plugins Chart.js cho hi-res**: whiteBg, chartFrameHires, xAxisTicksHires,
+yAxisTicksHires, egAnnotation (Tauc only).
+
+**Vite bundle**: `?worker` syntax tự handle — output 2 chunks (worker entry
++ Chart.js shared). Lazy-loaded on first save click — 0KB delta initial bundle.
+
+### 4.11. Busy overlay pattern (Round 87)
+
+Tránh spam upload — `src/js/ui/upload-busy-overlay.ts`:
+- `showBusyOverlay(panel, msg)`: insert spinner overlay over `.att-panel`,
+  disable file input + `.att-upload-btn`
+- `setBusyMessage(msg)`: update message qua các stages mà không thay đổi
+  visibility (ví dụ "Đang phân tích" → "Đang đọc" → "Đang vẽ" → "Đang tải lên")
+- `hideBusyOverlay(panel)`: reverse, reference-counted (multiple show
+  calls require matching hide)
+- `isBusy()`: handleFiles entry check + savePlotBtn click check
+
+CSS trong `attachments.css` Round 88: KHÔNG dùng `backdrop-filter: blur(2px)`
+(GPU contention với heavy canvas renders) — dùng opaque background.
+
+### 4.12. Drop-to-replace preview (Round 90)
+
+Khi đang preview file (chưa upload), drop file mới vào canvas area
+→ tự động `closePreview()` + `handleFiles(newFile)`. Drop chỉ block
+khi `isBusy()`. Click handler trong dropzone vẫn chỉ trigger file picker
+khi state='empty' AND target không phải interactive child (Round 85).
+
+### 4.13. Modal stacking (Round 83)
+
+`openModalStacked(modalId)`:
+- KHÔNG close other modals khi mở (như `openModal` legacy)
+- Compute z-index = max of currently-open + 10
+- Dùng cho overview modal stacked trên attachments modal
+
+**ESC handler** (`main.ts`): pick TOP modal theo z-index (Round 85), không
+phải first DOM-order.
+
 ---
 
 ## 5. Quy trình patch (cách làm việc với owner)
@@ -260,8 +342,16 @@ Tool configs (`vite.config.js`, `tailwind.config.js`, `postcss.config.js`, `vite
 - ✅ **Phase Critical Bugs** (51-54): XSS, hard-coded email, presence cleanup
 - ✅ **Phase CSP** (55-58e): strict CSP, ~480 inline events removed
 - ✅ **UI fixes** (57d, 60, 60b): booking column layout
-- 🔮 **Phase 59+ TS migration**: TypeScript (chưa start)
+- ✅ **Phase TS migration** (61-71): 100% TypeScript, strict flags ON
+- ✅ **Phase Attachments** (73-77): Firebase Storage upload, 12 categories,
+     auto-detect, preview Chart.js, Tauc plot, save high-res PNG
+- ✅ **Phase Reskin** (78-82): UI polish, image lightbox, axisSettings persisted
+- ✅ **Phase UX** (83-88): stacked modals, drop-zone canvas merge, axis save UX,
+     .cor RTDB rules fix
+- ✅ **Phase Performance** (87-90): parallel upload pool, busy overlay,
+     OffscreenCanvas worker, drop replace preview, upload speedups
 - 🔮 **Optional**: Bỏ inline `style=` để Mozilla 135/100 max (effort lớn, lợi ích nhỏ)
+- 🔮 **Optional**: Strip @ts-nocheck từng file (opportunistic — xem section 11)
 
 ---
 
@@ -292,11 +382,11 @@ Tool configs (`vite.config.js`, `tailwind.config.js`, `postcss.config.js`, `vite
 
 **Status**: COMPLETE. 100% TypeScript trong code paths (`src/` + `tests/`).
 
-**Stats hiện tại:**
-- 80 `.ts` files (77 source + 3 tests), 0 `.js` files trong code paths
+**Stats hiện tại** (post-Round 90):
+- 87 `.ts` files (84 source + 3 tests), 0 `.js` files trong code paths
 - Strict flags ON: `noImplicitAny`, `strictNullChecks`, `noUnusedLocals`,
   `noUnusedParameters`, `noFallthroughCasesInSwitch`
-- 23 file render-heavy còn `@ts-nocheck` (DOM/Chart.js/jsPDF) — intentional,
+- 24 file render-heavy còn `@ts-nocheck` (DOM/Chart.js/jsPDF/Worker) — intentional,
   strict flag không apply cho các file này
 - 5 `.js` còn lại đều là build/tool configs (vite/tailwind/postcss/vitest/
   commitlint), giữ nguyên theo convention Node.js
@@ -383,4 +473,135 @@ and `as any` for window.X dispatching. Benchmarked at Round 67d:
 
 Most errors are DOM type assertions that bloat code without adding real
 safety — code already runs correctly with full test coverage.
+
+---
+
+## 12. Post-migration feature work (Round 72-90)
+
+Sau khi TS migration hoàn tất ở Round 71, tập trung vào **attachments system**
++ **performance/UX**. Tóm tắt timeline (chi tiết xem git log):
+
+### Phase Attachments — Foundation (73-77)
+- **Round 73**: Initial attachments panel — Firebase Storage upload, RTDB metadata,
+  basic categories (xrd/sem/tem/raman/ftir/uvvis/uvvis-drs/pl/other), 25 MB limit
+- **Round 74**: Auto-detect category (4-layer pipeline trong `parsers/detect.ts`)
+- **Round 75-75b**: CSV/TSV parser, Chart.js preview, axis title plugins, Tauc plot
+- **Round 76**: Bandgap fit (linear regression on Tauc plot)
+- **Round 77a**: Extended categories — eds, xps, electrochem (3 mới)
+- **Round 77b**: Per-experiment overview modal — accordion 6 groups
+- **Round 77c**: Drag-to-open row + sidebar overview page + jump-to-row
+
+### Phase Reskin — Polish (78-82)
+- **Round 78**: Shared classifier extracted to `services/attachment-classifier.ts`
+- **Round 79**: Sticky sidebar brand + footer
+- **Round 80**: Smooth drag-to-open row + click suppression
+- **Round 81**: Status badge colors fixed
+- **Round 82**: ⭐ Image lightbox + Vietnamese diacritics + axisSettings persisted
+  (saved PNG matches preview), bandgapFit persisted
+
+### Phase UX (83-86)
+- **Round 83**: Merged dropzone into preview canvas, stacked modals, gallery icon,
+  modal Tổng quan resize
+- **Round 84**: Empty-state polish, Tổng quan button solid fill, accordion
+  padding leak fix
+- **Round 85**: Button heights 38px, dropzone click guards (only fire in empty
+  state, skip interactive children), ESC handler picks top modal by z-index
+- **Round 86**: ⭐ CorrWare ASCII (.cor) parser — CV/LSV/GCD/EIS support,
+  axes per subtype (CV: X=Potential/Y=Current; GCD: X=Time/Y=Potential)
+
+### Phase Performance (87-90)
+- **Round 87**: ⭐ uploadMany sequential → parallel pool 5 concurrent + busy
+  overlay (`ui/upload-busy-overlay.ts`) + spam guard. Pre-fetch existing list
+  once. Stage messages: "Đang phân tích → Đang đọc → Đang vẽ → Đang tải lên"
+- **Round 88**: 3 fixes:
+  - axSaveBtn auto-disable when no attachmentId (state-aware tooltip)
+  - **Critical**: `database.rules.json` regex extended với eds/xps/electrochem
+    (Round 77a thêm TS constants nhưng forgot RTDB rules → .cor PERMISSION_DENIED).
+    **Phải `firebase deploy --only database`** — không chỉ hosting!
+  - PNG render perf: DPI 300→220, decimation >4000 points, yield event loop,
+    overlay backdrop-filter removed (GPU contention)
+- **Round 89**: ⭐⭐ OffscreenCanvas + Web Worker for PNG export
+  - NEW `services/plot/highres-png.worker.ts` (~330 lines, @ts-nocheck) —
+    self-contained Chart.js render in worker
+  - `renderHighResPNG` becomes dispatcher: feature-detect → worker path (DPI 300,
+    main thread free) or sync fallback (DPI 220)
+  - Vite `?worker` syntax bundles worker chunk lazily (loaded on first save)
+  - Net effect: UI freeze 1s → 0ms; DPI bumped back to 300
+- **Round 90**: Drop replace preview + 4 upload speedups
+  - Drop in preview state now triggers closePreview + handleFiles (replaces
+    current preview without clicking Hủy)
+  - `uploadAttachment.skipDupCheck` option — uploadMany passes true since
+    dedupe already done at batch level (saves N-1 listAttachments round-trips)
+  - Files ≤1MB use `uploadBytes` (single PUT) instead of `uploadBytesResumable`
+    (~30-50% faster for typical CSV/.cor files)
+  - Fire-and-forget `logHistory` — don't await, save 150-300ms/file
+  - Concurrency 5 → 8 simultaneous uploads
+  - Net: 5x500KB files ~2.5s → ~1.5s; 10 mixed ~5s → ~2.5s
+
+### Critical conventions established Round 73-90
+
+1. **Patch safety** — Always `grep`/`view` ACTUAL file contents before writing
+   replace patterns. Scripts must verify boundaries exist before replacing
+   and assert critical IDs after.
+
+2. **Backup convention** — `.bak{N}` suffix per round. Always create before
+   modifying. Cleanup at end of session: `find . -name "*.bak{N}" -delete`.
+
+3. **AGENTS.md is tracked** (since Round 72). Don't `rm -f` at session start —
+   use `git pull` to sync. Update sections after major rounds.
+
+4. **`:has()` selector confirmed broken** in user's browser. Never use.
+
+5. **`uploadBytes` vs `uploadBytesResumable`** — file size threshold 1 MB
+   (Round 90). Single-PUT for small files, chunked for large (with progress).
+
+6. **Worker code self-contained** — can't import from main code paths because
+   functions/closures don't survive postMessage. Plugins must be inlined.
+   If main config diverges from worker config, saved PNG won't match preview.
+
+7. **Category enum changes need 3-place sync**:
+   - TS constant `ATTACHMENT_CATEGORIES`
+   - `database.rules.json` validate regex (deploy with `--only database`)
+   - `parsers/detect.ts` extension/keyword maps (if auto-detect needed)
+
+### Deferred / not done
+
+- **Bug #11**: Notifications schema flat vs rule-nested. Reviewed Round 88,
+  intentionally deferred — refactor cost not justified for ~50 users.
+- **EIS-specific parser**: Round 86 covered CV/LSV/GCD; EIS in CorrWare uses
+  different multi-column format (Z'/Z''/freq). Falls through to generic
+  electrochem parser. User can manually pick columns.
+- **uPlot.js migration**: Considered Round 89 as alternative to OffscreenCanvas.
+  Decided against — would require duplicate logic vs Chart.js preview, risk
+  saved PNG ≠ preview. OffscreenCanvas chosen for compatibility.
+
+---
+
+## 13. Quick reference — Files đã đụng nhiều trong attachments system
+
+Khi sửa attachments-related, đây là mức độ ảnh hưởng:
+
+**TIER 1 — đụng tới 90% các fix**:
+- `src/js/ui/attachments-panel.ts` (~1100 lines): handleFiles, preview chart,
+  axis controls, save plot button, dropzone state management
+- `src/js/services/attachments.ts` (~457 lines): uploadAttachment, uploadMany,
+  validateFile, sanitizeFileName, listAttachments, deleteAttachment
+- `src/css/attachments.css` (~1572 lines): toàn bộ styling
+
+**TIER 2 — đụng khi liên quan parsing/plotting**:
+- `src/js/services/parsers/detect.ts`: 4-layer auto-detect category
+- `src/js/services/parsers/index.ts`: parseDataFile dispatcher, isParseableFile whitelist
+- `src/js/services/parsers/{jcamp-jasco,corrware,parser-core}.ts`: format-specific parsers
+- `src/js/services/plot/plot-preview.ts`: renderPreview, renderHighResPNG dispatcher
+- `src/js/services/plot/highres-png.worker.ts`: worker PNG render
+
+**TIER 3 — đụng khi liên quan UX modals/lightbox**:
+- `src/js/ui/overview-modal.ts`: 6-group accordion modal
+- `src/js/ui/upload-busy-overlay.ts`: spinner + spam guard
+- `src/js/ui/image-lightbox.ts`: click-to-zoom thumbnails
+- `src/js/ui/modal.ts`: openModal + openModalStacked
+
+**TIER 4 — RTDB/Storage rules** (deploy riêng `firebase deploy --only database`):
+- `database.rules.json`: attachments validate (category regex, file metadata fields)
+- `storage.rules`: attachments path whitelist + 25 MB limit
 
