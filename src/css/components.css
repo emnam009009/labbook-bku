@@ -1064,3 +1064,13 @@
 .notif-row:hover {
   background: var(--surface-2) !important;
 }
+
+/* Round 74: brief highlight when category is auto-detected */
+.att-category-detected {
+  animation: att-category-pulse 1.5s ease-out;
+}
+@keyframes att-category-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.5); }
+  60%  { box-shadow: 0 0 0 6px rgba(13, 148, 136, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(13, 148, 136, 0); }
+}

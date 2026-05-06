@@ -14,7 +14,7 @@ import {
 import { showToast } from './toast.js';
 import { canDelete } from '../utils/auth-helpers.js';
 import { escapeHtml, fmtDate } from '../utils/format.js';
-import { canAutoPlot, isParseableFile, parseDataFile, reparseWithColumns } from '../services/parsers/index.js';
+import { canAutoPlot, isParseableFile, parseDataFile, reparseWithColumns, detectCategory, detectionToastMessage } from '../services/parsers/index.js';
 import { renderPreview, renderHighResPNG } from '../services/plot/plot-preview.js';
 import { transformToTauc, TAUC_PRESETS, formatN } from '../services/plot/tauc.js';
 import { autoFitBandgap } from '../services/plot/bandgap-fit.js';
@@ -337,6 +337,30 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
 
   const handleFiles = async (files) => {
     if (!files || !files.length) return;
+
+    // ─── Round 74: Auto-detect category from first file ───
+    // Run before reading current select value, so user gets badge auto-set.
+    if (files.length === 1) {
+      try {
+        const detection = await detectCategory(files[0]);
+        if (detection.category !== 'other') {
+          // Auto-set the dropdown to detected category
+          catSelect.value = detection.category;
+          // Get human-readable label for toast
+          const cats = ATTACHMENT_CATEGORIES;
+          const label = cats[detection.category]?.label || detection.category;
+          const { msg, type } = detectionToastMessage(detection, label);
+          showToast(msg, type as any);
+          // Briefly highlight the dropdown so user notices the change
+          catSelect.classList.add('att-category-detected');
+          setTimeout(() => catSelect.classList.remove('att-category-detected'), 2000);
+        }
+      } catch (e: any) {
+        console.warn('[attachments] detectCategory failed:', e.message);
+        // Fall through with whatever category was selected
+      }
+    }
+
     const category = catSelect.value;
 
     // If single file AND parseable AND category supports auto-plot → preview

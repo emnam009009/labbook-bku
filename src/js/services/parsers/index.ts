@@ -3,6 +3,8 @@
 
 import { parseFileWithSpec, readFileAsText, readExcelAsRows, parseDelimited } from './parser-core.js';
 import { isJcampJasco, parseJcampJasco } from './jcamp-jasco.js';
+export { detectCategory, detectionToastMessage } from './detect.js';
+export type { DetectedCategory, DetectConfidence, DetectResult } from './detect.js';
 
 export interface ParserSpec {
   xKeywords: string[];
