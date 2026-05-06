@@ -1093,26 +1093,37 @@ html.dark .exp-bar:hover {
 }
 
 /* Round 75a: Editable category badge + inline dropdown */
+/* Round 75c FIX: don't override .att-badge background/font — only reset native
+   button quirks (border, outline) so .att-badge-{xrd,raman,...} colors apply. */
 .att-badge-edit {
-  background: inherit;
-  border: 1px dashed transparent;
-  font: inherit;
-  padding: 2px 8px;
+  /* Reset native button styles WITHOUT clobbering badge color/font */
+  border: 1px dashed transparent;  /* placeholder for hover dashed border */
+  outline: none;
+  /* Inherit font properties explicitly so badge keeps uppercase + bold */
+  font-family: inherit;
+  /* Keep .att-badge's font-size/weight/letter-spacing untouched (don't set 'font:') */
+  /* Hover affordance */
   cursor: pointer;
-  transition: border-color 0.15s, transform 0.1s;
+  transition: border-color 0.15s, transform 0.1s, box-shadow 0.15s;
 }
 .att-badge-edit:hover {
   border-color: var(--teal);
-  transform: scale(1.03);
+  transform: scale(1.05);
+  box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.2);
+}
+.att-badge-edit:focus-visible {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.3);
 }
 .att-badge-edit::after {
   content: ' ✎';
   opacity: 0;
   transition: opacity 0.15s;
   font-size: 9px;
+  margin-left: 2px;
 }
 .att-badge-edit:hover::after {
-  opacity: 0.6;
+  opacity: 0.85;
 }
 
 .att-cat-select-inline {
