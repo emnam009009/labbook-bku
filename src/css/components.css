@@ -1079,21 +1079,33 @@
    Round 77c: Drag-to-open + cross-experiment overview page
    ════════════════════════════════════════════════════════════════ */
 
-/* Row being actively dragged */
+/* Row being actively dragged
+ * Round 81: bo z-index cao + isolation: isolate de tao stacking context
+ *  rieng -> khong vuot len header/row khac. Box-shadow nho lai. */
 tr.dragging-overview {
   cursor: grabbing !important;
   position: relative;
-  z-index: 5;
-  background: var(--surface-2, #f8fafc);
+  isolation: isolate;
   user-select: none;
+}
+/* Apply background tren cells thay vi tr de chac chan ket dinh */
+tr.dragging-overview > td {
+  background: var(--surface-2, #f8fafc) !important;
+  position: relative;
 }
 
 /* Highlight when past 150px threshold — release to open */
-tr.dragging-overview.drag-overview-trigger {
-  background: rgba(13, 148, 136, 0.12);
-  box-shadow: -4px 0 0 0 var(--teal), 0 4px 12px rgba(13, 148, 136, 0.3);
+tr.dragging-overview.drag-overview-trigger > td {
+  background: rgba(13, 148, 136, 0.12) !important;
 }
-tr.dragging-overview.drag-overview-trigger::before {
+/* Vach trai mau teal (giu nguyen) + shadow nho gon trong cell */
+tr.dragging-overview.drag-overview-trigger > td:first-child {
+  box-shadow: inset 4px 0 0 0 var(--teal);
+}
+
+/* Tooltip "Tha de xem tong quan" — gan vao first td thay vi tr de tranh
+ * tooltip vuot ra ngoai bounding box cua row khi keo. */
+tr.dragging-overview.drag-overview-trigger > td:first-child::before {
   content: '📊 Thả để xem tổng quan';
   position: absolute;
   right: 100%;
@@ -1108,6 +1120,8 @@ tr.dragging-overview.drag-overview-trigger::before {
   border-radius: 6px;
   white-space: nowrap;
   pointer-events: none;
+  z-index: 1;
+  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.3);
 }
 
 /* Flash highlight when jumping back to a row from overview page */

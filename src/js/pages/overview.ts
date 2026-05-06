@@ -59,8 +59,8 @@ export async function renderOverview(): Promise<void> {
 
   page.innerHTML = `
     <div class="page-header">
-      <h1>📊 Tổng quan ảnh — Tất cả thí nghiệm</h1>
-      <p class="page-header-sub">Tổng hợp ảnh + đồ thị đã lưu của tất cả thí nghiệm thủy nhiệt và điện cực, phân loại theo 6 nhóm phép phân tích.</p>
+      <h1>📊 Tổng quan phổ dữ liệu</h1>
+      <p class="page-header-sub">Tổng hợp phổ + ảnh đã lưu từ tất cả thí nghiệm thủy nhiệt và điện cực, phân loại theo 6 nhóm phép phân tích.</p>
     </div>
     <div class="att-overview-page-body"><p class="att-overview-loading">Đang tải dữ liệu...</p></div>
   `;

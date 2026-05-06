@@ -11,14 +11,24 @@ import { vals, escapeHtml } from '../utils/format.js'
 
 // Render status badge HTML
 export function statusBadge(s: string): string {
+  // Round 81 fix: map keys dung voi text co dau trong DB.
+  // Truoc day keys khong dau -> moi status fallback 'gray' -> cung mau.
   const map: Record<string, string> = {
-    'Hoan thanh': 'success',
-    'Dang thuc hien': 'warn',
-    'That bai': 'danger',
-    'Cho phan tich': 'info',
-    'San sang do': 'success',
-    'Dang activation': 'warn',
-    'Dang xu ly': 'info',
+    'Hoàn thành':       'success',
+    'Đang thực hiện':   'warn',
+    'Thất bại':         'danger',
+    'Chờ phân tích':    'info',
+    'Sẵn sàng đo':      'success',
+    'Đang activation':  'warn',
+    'Đang xử lý':       'info',
+    // Backward compat: cu cung work cho old data co the chua co dau
+    'Hoan thanh':       'success',
+    'Dang thuc hien':   'warn',
+    'That bai':         'danger',
+    'Cho phan tich':    'info',
+    'San sang do':      'success',
+    'Dang activation':  'warn',
+    'Dang xu ly':       'info',
   };
   return `<span class="badge badge-${map[s] || 'gray'}">${s}</span>`;
 }
