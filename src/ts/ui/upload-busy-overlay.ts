@@ -70,3 +70,29 @@ export function hideBusyOverlay(panel: HTMLElement): void {
 export function isBusy(): boolean {
   return _busyCount > 0;
 }
+
+/**
+ * Round 93: escape hatch — reset busy counter when caller detects
+ * inconsistent state (counter > 0 but overlay element not visible).
+ * This can happen if an error path skipped hideBusyOverlay or if the
+ * panel was unmounted and remounted while counter was non-zero.
+ *
+ * Also removes any stale overlay element from DOM.
+ */
+export function resetBusyCount(): void {
+  _busyCount = 0;
+  if (_overlayEl) {
+    _overlayEl.classList.remove('att-busy-visible');
+    if (_overlayEl.parentElement) {
+      _overlayEl.parentElement.removeChild(_overlayEl);
+    }
+    _overlayEl = null;
+  }
+  // Re-enable any disabled inputs/buttons
+  document.querySelectorAll<HTMLInputElement>('.att-file-input').forEach(i => {
+    i.disabled = false;
+  });
+  document.querySelectorAll<HTMLElement>('.att-upload-btn').forEach(b => {
+    b.style.pointerEvents = '';
+  });
+}

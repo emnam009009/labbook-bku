@@ -19,7 +19,7 @@ import { escapeHtml, fmtDate } from '../utils/format.js';
 import { canAutoPlot, isParseableFile, parseDataFile, reparseWithColumns, detectCategory, detectionToastMessage } from '../services/parsers/index.js';
 import { renderPreview, renderHighResPNG } from '../services/plot/plot-preview.js';
 import { openImageLightbox } from './image-lightbox.js';
-import { showBusyOverlay, hideBusyOverlay, setBusyMessage, isBusy } from './upload-busy-overlay.js';
+import { showBusyOverlay, hideBusyOverlay, setBusyMessage, isBusy, resetBusyCount } from './upload-busy-overlay.js';
 import { transformToTauc, TAUC_PRESETS, formatN } from '../services/plot/tauc.js';
 import { autoFitBandgap } from '../services/plot/bandgap-fit.js';
 
@@ -395,18 +395,34 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
   const closePreview = () => {
     if (_currentChart) { try { _currentChart.destroy(); } catch (e) {} _currentChart = null; }
     _currentPreview = null;
-    previewBox.hidden = true;
+    // Round 93: restore Round 83 empty-state pattern.
+    // - previewBox stays VISIBLE (it's also the dropzone)
+    // - dataset.state = 'empty' triggers CSS to hide actions/canvas/header
+    //   and show the empty-state hint (icon + 'Kéo thả file vào đây')
+    previewBox.hidden = false;
+    (previewBox as HTMLElement).dataset.state = 'empty';
     if (axisCtrls) (axisCtrls as any).hidden = true;
     if (axStatus) axStatus.textContent = '';
     clearAxisDOM();
+    // Round 88: reset axis-save button state too
+    if (typeof updateAxSaveBtnState === 'function') updateAxSaveBtnState();
   };
 
   const handleFiles = async (files) => {
     if (!files || !files.length) return;
     // Round 87: prevent spam — block if already uploading
+    // Round 93: detect stale busy counter (overlay was destroyed/never-shown
+    // but counter wasn't decremented due to error path) and reset it
     if (isBusy()) {
-      showToast('Đang xử lý file trước, vui lòng đợi...', 'warning' as any);
-      return;
+      const overlayEl = panel.querySelector('.att-busy-overlay.att-busy-visible');
+      if (!overlayEl) {
+        // Stale state — counter > 0 but no visible overlay. Reset.
+        console.warn('[handleFiles] Stale busy state detected, resetting...');
+        resetBusyCount();
+      } else {
+        showToast('Đang xử lý file trước, vui lòng đợi...', 'warning' as any);
+        return;
+      }
     }
 
     const _panel = panel as HTMLElement;
@@ -615,6 +631,9 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
     } finally {
       savePlotBtn.disabled = false;
       savePlotBtn.querySelector('span').textContent = 'Lưu đồ thị (PNG 300 DPI)';
+      // Round 92: ensure overlay hides even if worker resolves successfully
+      // (Round 89 worker path was missing this in finally block)
+      hideBusyOverlay(panel as HTMLElement);
     }
   });
 

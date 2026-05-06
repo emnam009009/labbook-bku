@@ -63,15 +63,28 @@ function buildChartConfig({ x, y, xLabel, yLabel, title, spec, bandgapFit, categ
   const startFromZero = _axisStartFromZero(category, xLabel);
   const reverseX = !!(spec && spec.reverseX);
 
-  // Axis options helper
+  // Round 92: axis options synced with preview (plot-preview.ts) so
+  // saved PNG matches preview exactly — no grid lines, custom plugins
+  // handle tick rendering with hi-res scaling.
   const buildAxisOpts = (axis, axisLabel) => {
     const settings = axisSettings && axisSettings[axis];
     const opts: any = {
       type: 'linear',
-      title: { display: !!axisLabel, text: axisLabel || '', font: { size: 14, weight: 'bold', family: 'Arial, sans-serif' }, color: '#000' },
-      ticks: { color: '#000', font: { size: 12, weight: 'bold', family: 'Arial, sans-serif' } },
-      grid: { color: 'rgba(0,0,0,0.06)', drawTicks: false, tickLength: 0 },
-      border: { display: true, color: '#000', width: 1 },
+      title: {
+        display: !!axisLabel,
+        text: axisLabel || '',
+        font: { size: 14, weight: 'bold', family: 'Arial, sans-serif' },
+        color: '#000000',
+      },
+      ticks: {
+        color: '#000000',
+        font: { size: 12, weight: 'bold', family: 'Arial, sans-serif' },
+        // padding scaled later — see post-build pass below
+      },
+      // Round 92: NO grid lines — preview has display:false. Custom hires
+      // plugins (xAxisTicksHires/yAxisTicksHires) draw ticks themselves.
+      grid: { display: false, drawTicks: false, tickLength: 0 },
+      border: { display: true, color: '#000000', width: 1 },
     };
     if (axis === 'x' && reverseX) opts.reverse = true;
     if (axis === 'y' && startFromZero) opts.beginAtZero = true;
@@ -167,9 +180,19 @@ async function renderToBlob({ parsed, opts, canvas }) {
   if (cfg.data.datasets[1]) cfg.data.datasets[1].borderWidth = 2 * scale;
   if (cfg.options.scales.x.border) cfg.options.scales.x.border.width = 1.5 * scale;
   if (cfg.options.scales.y.border) cfg.options.scales.y.border.width = 1.5 * scale;
+  // Round 93: scale ticks.padding so label spacing matches font scaling
+  // (without this, hi-res labels overlap with tick marks)
+  if (cfg.options.scales.x.ticks) cfg.options.scales.x.ticks.padding = 6 * scale;
+  if (cfg.options.scales.y.ticks) cfg.options.scales.y.ticks.padding = 6 * scale;
+  // Title font padding scaled too
+  if (cfg.options.plugins?.title?.padding) {
+    cfg.options.plugins.title.padding = { top: 6 * scale, bottom: 12 * scale };
+  }
   cfg.options.layout = cfg.options.layout || {};
+  // Round 92: increase padding so last axis tick label (e.g. '90') doesn't
+  // bleed into chart frame border. Right needs extra room for label width.
   cfg.options.layout.padding = {
-    top: 20 * scale, right: 20 * scale, bottom: 20 * scale, left: 20 * scale,
+    top: 32 * scale, right: 60 * scale, bottom: 32 * scale, left: 32 * scale,
   };
 
   // White background
