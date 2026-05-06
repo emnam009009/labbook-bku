@@ -10,6 +10,7 @@ import {
   listAttachments,
   uploadMany,
   deleteAttachment,
+  updateAttachmentCategory,
 } from '../services/attachments.js';
 import { showToast } from './toast.js';
 import { canDelete } from '../utils/auth-helpers.js';
@@ -175,9 +176,14 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
           ${thumb}
           <div class="att-meta">
             <strong class="att-name">${escapeHtml(it.fileName)}</strong>
-            <small>
-              <span class="att-badge att-badge-${escapeHtml(it.category)}">${escapeHtml(catLabel)}</span>
-              · ${formatBytes(it.size)} · ${fmtDate(it.uploadedAt)}
+            <small class="att-meta-line">
+              <button type="button"
+                      class="att-badge att-badge-edit att-badge-${escapeHtml(it.category)}"
+                      data-action="edit-category"
+                      data-id="${escapeHtml(it.id)}"
+                      data-category="${escapeHtml(it.category)}"
+                      title="Bấm để đổi loại">${escapeHtml(catLabel)}</button>
+              <span class="att-meta-rest">· ${formatBytes(it.size)} · ${fmtDate(it.uploadedAt)}</span>
             </small>
           </div>
         </button>
@@ -620,8 +626,97 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
     }
   };
 
-  // Click delegation: delete | preview | open
+  // ─── Round 75a: Inline category edit dropdown ──────────────────
+  // When badge is clicked, replace it with a <select> right in place.
+  // On change, update Firebase + refresh list. Click outside or Escape to revert.
+  let _activeEditBadge: HTMLButtonElement | null = null;
+
+  const closeEditBadge = () => {
+    if (!_activeEditBadge) return;
+    const editingBadge = _activeEditBadge;
+    _activeEditBadge = null;
+    // Restore original badge HTML (re-render the parent row)
+    refresh();
+    editingBadge.dispatchEvent(new CustomEvent('badge-closed'));
+  };
+
+  const openEditBadge = (badgeBtn: HTMLButtonElement) => {
+    if (_activeEditBadge) closeEditBadge();
+    _activeEditBadge = badgeBtn;
+
+    const id = badgeBtn.dataset.id || '';
+    const currentCat = badgeBtn.dataset.category || '';
+    const optsHTML = Object.entries(ATTACHMENT_CATEGORIES)
+      .map(([key, def]) => `<option value="${escapeHtml(key)}"${key === currentCat ? ' selected' : ''}>${escapeHtml(def.label)}</option>`)
+      .join('');
+    // Replace badge with select in place
+    const select = document.createElement('select');
+    select.className = 'att-cat-select-inline';
+    select.innerHTML = optsHTML;
+    select.dataset.id = id;
+    select.dataset.oldCategory = currentCat;
+    badgeBtn.replaceWith(select);
+
+    select.focus();
+    select.addEventListener('change', async () => {
+      const newCat = select.value;
+      const oldCat = select.dataset.oldCategory || '';
+      if (newCat === oldCat) {
+        _activeEditBadge = null;
+        refresh();
+        return;
+      }
+      try {
+        select.disabled = true;
+        await updateAttachmentCategory({
+          refType, refId, attachmentId: id, newCategory: newCat,
+        });
+        const oldLabel = ATTACHMENT_CATEGORIES[oldCat]?.label || oldCat;
+        const newLabel = ATTACHMENT_CATEGORIES[newCat]?.label || newCat;
+        showToast(`Đã đổi: ${oldLabel} → ${newLabel}`, 'success');
+        _activeEditBadge = null;
+        await refresh();
+      } catch (err: any) {
+        showToast(`Lỗi: ${err.message}`, 'danger');
+        select.disabled = false;
+      }
+    });
+    select.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeEditBadge();
+      }
+    });
+    // Close on click outside the select
+    setTimeout(() => {
+      document.addEventListener('click', onDocClickOutside, true);
+    }, 0);
+  };
+
+  const onDocClickOutside = (e: Event) => {
+    if (!_activeEditBadge) {
+      document.removeEventListener('click', onDocClickOutside, true);
+      return;
+    }
+    const target = e.target as HTMLElement;
+    const inSelect = target.closest('.att-cat-select-inline');
+    if (!inSelect) {
+      document.removeEventListener('click', onDocClickOutside, true);
+      closeEditBadge();
+    }
+  };
+
+  // Click delegation: edit-category | delete | preview | open
   list.addEventListener('click', async (e) => {
+    // Edit category badge — open inline dropdown
+    const editBadge = (e.target as HTMLElement).closest('.att-badge-edit') as HTMLButtonElement | null;
+    if (editBadge) {
+      e.preventDefault();
+      e.stopPropagation();
+      openEditBadge(editBadge);
+      return;
+    }
+
     // Delete button
     const delBtn = e.target.closest('.att-del');
     if (delBtn) {

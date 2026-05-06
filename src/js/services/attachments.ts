@@ -262,6 +262,52 @@ export async function deleteAttachment({ refType, refId, attachmentId }: DeleteP
   }
 }
 
+interface UpdateCategoryParams {
+  refType: string;
+  refId: string;
+  attachmentId: string;
+  newCategory: string;
+}
+
+/**
+ * Update category cua mot attachment da upload.
+ * Validate newCategory phai co trong ATTACHMENT_CATEGORIES.
+ * Log history voi action 'attachment_category_change'.
+ */
+export async function updateAttachmentCategory({
+  refType, refId, attachmentId, newCategory,
+}: UpdateCategoryParams): Promise<void> {
+  validateRef(refType, refId);
+  if (!attachmentId) throw new Error('Thieu attachmentId');
+  if (!Object.prototype.hasOwnProperty.call(ATTACHMENT_CATEGORIES, newCategory)) {
+    throw new Error(`Loai khong hop le: ${newCategory}`);
+  }
+
+  const path = `attachments/${refType}/${refId}/${attachmentId}`;
+  const meta = await fbGet(path) as AttachmentRecord | null;
+  if (!meta) throw new Error('Attachment khong ton tai');
+
+  const oldCategory = meta.category;
+  if (oldCategory === newCategory) return;  // No-op
+
+  // Update only the category field via fbSet on sub-path.
+  // (RTDB doesn't have UPDATE — set on full record then merge would
+  // require atomic transaction. Setting just the field is fine for
+  // a single-field change.)
+  await fbSet(`${path}/category`, newCategory);
+
+  try {
+    await (logHistory as any)({
+      action: 'attachment_category_change',
+      target: `${refType}/${refId}`,
+      detail: `${meta.fileName}: ${oldCategory} -> ${newCategory}`,
+    });
+  } catch (e) {
+    console.warn('logHistory failed', e);
+  }
+}
+
+
 interface UploadManyParams {
   refType: string;
   refId: string;
