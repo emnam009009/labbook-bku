@@ -19,11 +19,11 @@ export async function lockItem(col: string, key: string): Promise<void> {
   if (!isAdmin) return;
   try {
     await update(ref(db, `${col}/${key}`), { locked: true });
-    (logHistory as any)(`Khoa ${col}: ${key}`, '');
-    showToast('Da khoa!');
+    (logHistory as any)(`Khóa ${col}: ${key}`, '');
+    showToast('Đã khóa!');
   } catch (err: any) {
     console.error('[lockItem]', err);
-    showToast('Loi khoa: ' + (err.message || err), 'danger');
+    showToast('Lỗi khóa: ' + (err.message || err), 'danger');
   }
 }
 
@@ -34,11 +34,11 @@ export async function unlockItem(col: string, key: string): Promise<void> {
   if (!isAdmin) return;
   try {
     await update(ref(db, `${col}/${key}`), { locked: false });
-    (logHistory as any)(`Mo khoa ${col}: ${key}`, '');
-    showToast('Da mo khoa!');
+    (logHistory as any)(`Mở khóa ${col}: ${key}`, '');
+    showToast('Đã mở khóa!');
   } catch (err: any) {
     console.error('[unlockItem]', err);
-    showToast('Loi mo khoa: ' + (err.message || err), 'danger');
+    showToast('Lỗi mở khóa: ' + (err.message || err), 'danger');
   }
 }
 
@@ -50,11 +50,11 @@ export async function lockInk(key: string): Promise<void> {
   if (!isAdmin) return;
   try {
     await update(ref(db, `ink/${key}`), { locked: true });
-    (logHistory as any)(`Khoa cong thuc muc`, `Key: ${key}`);
-    showToast('Da khoa cong thuc!');
+    (logHistory as any)(`Khóa công thức mực`, `Key: ${key}`);
+    showToast('Đã khóa công thức!');
   } catch (err: any) {
     console.error('[lockInk]', err);
-    showToast('Loi khoa: ' + (err.message || err), 'danger');
+    showToast('Lỗi khóa: ' + (err.message || err), 'danger');
   }
 }
 
@@ -65,11 +65,11 @@ export async function unlockInk(key: string): Promise<void> {
   if (!isAdmin) return;
   try {
     await update(ref(db, `ink/${key}`), { locked: false });
-    (logHistory as any)(`Mo khoa cong thuc muc`, `Key: ${key}`);
-    showToast('Da mo khoa!');
+    (logHistory as any)(`Mở khóa công thức mực`, `Key: ${key}`);
+    showToast('Đã mở khóa!');
   } catch (err: any) {
     console.error('[unlockInk]', err);
-    showToast('Loi mo khoa: ' + (err.message || err), 'danger');
+    showToast('Lỗi mở khóa: ' + (err.message || err), 'danger');
   }
 }
 

@@ -1174,3 +1174,64 @@ body.viewer-mode .sidebar-item[data-tip="Lịch sử chỉnh sửa"] {
     width: 100% !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Round 79: Sticky sidebar brand (top) + footer (bottom)
+   Khi noi dung sidebar dai hon viewport (vd nhieu items sau Round 77c),
+   nav phan giua scroll duoc nhung brand & avatar luon dinh chac.
+═══════════════════════════════════════════════════════════════ */
+nav.site-sidebar.sidebar {
+  /* Scroll giua brand & footer khi tong chieu cao vuot viewport */
+  overflow-y: auto !important;
+  /* Hidden scrollbar visual cho cleaner look (van scroll duoc) */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.15) transparent;
+}
+nav.site-sidebar.sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+nav.site-sidebar.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.15);
+  border-radius: 2px;
+}
+
+/* Brand stick top */
+nav.site-sidebar .sidebar-brand {
+  position: sticky !important;
+  top: 0;
+  z-index: 5;
+  background: white !important;
+  /* Spacing dam bao khong bi gan sat scroll */
+  margin-top: -8px;
+  padding-top: 14px !important;
+  padding-bottom: 8px;
+}
+
+/* Footer (avatar + Cai dat) stick bottom */
+nav.site-sidebar .sidebar-footer {
+  position: sticky !important;
+  bottom: 0;
+  z-index: 5;
+  background: white !important;
+  /* Bo top border thay bang shadow nhe de phan biet voi noi dung scroll */
+  border-top: 1px solid rgba(0,0,0,0.06) !important;
+  box-shadow: 0 -2px 6px -2px rgba(0,0,0,0.04);
+  padding-bottom: 14px !important;
+  /* Override margin-top: auto vi sticky lo viec dinh bottom roi */
+  margin-top: auto !important;
+}
+
+/* Dark mode variants — keep sticky bg matching sidebar */
+html.dark nav.site-sidebar .sidebar-brand,
+html.dark nav.site-sidebar .sidebar-footer {
+  background: #1a2332 !important;
+}
+html.glass nav.site-sidebar .sidebar-brand,
+html.glass nav.site-sidebar .sidebar-footer {
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(8px);
+}
+html.dark.glass nav.site-sidebar .sidebar-brand,
+html.dark.glass nav.site-sidebar .sidebar-footer {
+  background: rgba(26, 35, 50, 0.85) !important;
+}
