@@ -18,6 +18,9 @@ function _setTriggerChecked(trigger: HTMLElement | null, checked: boolean): void
 }
 
 function closeCurrentMenu(): void {
+  // Round 76: cancel any pending hover timers when forcibly closing
+  if (_hoverOpenTimer) { clearTimeout(_hoverOpenTimer); _hoverOpenTimer = null; }
+  if (_hoverCloseTimer) { clearTimeout(_hoverCloseTimer); _hoverCloseTimer = null; }
   if (_currentMenu) {
     _currentMenu.remove();
     _currentMenu = null;
@@ -36,6 +39,64 @@ function _outsideClickHandler(e: MouseEvent): void {
 
 function _escHandler(e: KeyboardEvent): void {
   if (e.key === 'Escape') closeCurrentMenu();
+}
+
+// ─── Round 76: Hover-to-open state ─────────────────────────
+let _hoverOpenTimer: ReturnType<typeof setTimeout> | null = null;
+let _hoverCloseTimer: ReturnType<typeof setTimeout> | null = null;
+const HOVER_OPEN_DELAY = 150;   // delay before opening (debounce)
+const HOVER_CLOSE_DELAY = 200;  // grace period before closing
+
+function _cancelHoverOpen(): void {
+  if (_hoverOpenTimer) { clearTimeout(_hoverOpenTimer); _hoverOpenTimer = null; }
+}
+function _cancelHoverClose(): void {
+  if (_hoverCloseTimer) { clearTimeout(_hoverCloseTimer); _hoverCloseTimer = null; }
+}
+
+/**
+ * Schedule opening the menu for a given anchor. If user moves away before
+ * delay expires, opening is cancelled.
+ */
+export function hoverEnterTrigger(anchor: HTMLElement, ctx: ExpActionContext): void {
+  _cancelHoverClose();
+  // If the same trigger's menu is already open, do nothing
+  if (_currentTrigger === anchor && _currentMenu) return;
+  // If a different trigger is open, close it immediately
+  if (_currentTrigger && _currentTrigger !== anchor) {
+    closeCurrentMenu();
+  }
+  _cancelHoverOpen();
+  _hoverOpenTimer = setTimeout(() => {
+    _hoverOpenTimer = null;
+    openExpActionsMenu(anchor, ctx);
+  }, HOVER_OPEN_DELAY);
+}
+
+/**
+ * User left the trigger. Wait grace period: if menu/trigger not re-entered,
+ * close. Otherwise (mouse moved to menu), the menu's mouseenter cancels.
+ */
+export function hoverLeaveTrigger(): void {
+  _cancelHoverOpen();
+  _cancelHoverClose();
+  _hoverCloseTimer = setTimeout(() => {
+    _hoverCloseTimer = null;
+    closeCurrentMenu();
+  }, HOVER_CLOSE_DELAY);
+}
+
+/** Called from page when leaving the menu element itself. */
+function _onMenuMouseEnter(): void {
+  _cancelHoverClose();
+}
+function _onMenuMouseLeave(): void {
+  _cancelHoverOpen();
+  _cancelHoverClose();
+  _hoverCloseTimer = setTimeout(() => {
+    _hoverCloseTimer = null;
+    closeCurrentMenu();
+  }, HOVER_CLOSE_DELAY);
 }
 
 /**
@@ -83,6 +144,10 @@ export function openExpActionsMenu(anchor: HTMLElement, ctx: ExpActionContext): 
 
   document.body.appendChild(menu);
   _currentMenu = menu;
+
+  // Round 76: bind hover keep-alive on menu itself
+  menu.addEventListener('mouseenter', _onMenuMouseEnter);
+  menu.addEventListener('mouseleave', _onMenuMouseLeave);
 
   // After render, adjust if overflow right edge
   const menuRect = menu.getBoundingClientRect();

@@ -1380,6 +1380,16 @@ window.openExpActionsMenu = function(anchor, ctx) {
       window.showToast?.('Không tải được menu', 'error');
     });
 };
+
+// Round 76: Hover-to-open wrappers (lazy-load same module)
+window.hoverEnterExpActionsMenu = function(anchor, ctx) {
+  _loadExpActionsMenu().then(m => m.hoverEnterTrigger(anchor, ctx))
+    .catch((e: any) => console.error('[main] hoverEnterExpActionsMenu failed:', e));
+};
+window.hoverLeaveExpActionsMenu = function() {
+  _loadExpActionsMenu().then(m => m.hoverLeaveTrigger())
+    .catch((e: any) => console.error('[main] hoverLeaveExpActionsMenu failed:', e));
+};
 window.openAttachmentsExportModal = function(opts) {
   _loadExpActionsMenu().then(m => m.openAttachmentsExportModal(opts))
     .catch(err => console.error('[exp-actions-export] load failed:', err));

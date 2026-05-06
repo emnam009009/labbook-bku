@@ -290,3 +290,47 @@ function attachExpDelegation(tbodyId) {
     }
   });
 }
+
+// ─── Round 76: Hover-to-open for exp-actions-menu (3-line button) ──────
+// Document-level delegation — works for both hydro and electrode tables.
+// Idempotent flag on document.body to avoid duplicate binding.
+function _attachExpBarHover(): void {
+  const flag = '__expBarHoverAttached';
+  if ((document.body as any)[flag]) return;
+  (document.body as any)[flag] = true;
+
+  let _lastTrigger: HTMLElement | null = null;
+
+  document.body.addEventListener('mouseover', (e: MouseEvent) => {
+    const target = (e.target as HTMLElement)?.closest<HTMLElement>('[data-action="exp-actions-menu"]');
+    if (!target || target === _lastTrigger) return;
+    _lastTrigger = target;
+    // Lazy-load module if needed via window helper, then call hoverEnter
+    const ctx = {
+      refType: target.dataset.refType || '',
+      refId: target.dataset.key || '',
+      code: target.dataset.code || target.dataset.key || '',
+    };
+    const fn = (window as any).hoverEnterExpActionsMenu;
+    if (typeof fn === 'function') fn(target, ctx);
+  });
+
+  document.body.addEventListener('mouseout', (e: MouseEvent) => {
+    const target = (e.target as HTMLElement)?.closest<HTMLElement>('[data-action="exp-actions-menu"]');
+    if (!target) return;
+    // mouseout fires when entering child elements; check relatedTarget really left
+    const related = e.relatedTarget as HTMLElement | null;
+    if (related && target.contains(related)) return;
+    if (_lastTrigger === target) _lastTrigger = null;
+    const fn = (window as any).hoverLeaveExpActionsMenu;
+    if (typeof fn === 'function') fn();
+  });
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _attachExpBarHover);
+  } else {
+    _attachExpBarHover();
+  }
+}
