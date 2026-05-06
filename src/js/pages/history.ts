@@ -1,24 +1,29 @@
 /**
- * pages/history.js
- * Render History timeline — 50 sự kiện gần nhất
+ * pages/history.ts
+ * Render History timeline — 50 su kien gan nhat
  *
  * Phase 2A — Bugfix:
- *  - sort `ts` as number (history-log.js giờ push ts: Date.now())
- *  - Hiển thị `email` thay vì `user` (rules mới yêu cầu uid+email)
- *  - Optional fallback: nếu legacy entries có `user` field thì vẫn hiển thị
- *
- * Phụ thuộc:
- *  - cache qua window.cache
- *  - vals từ utils/format.js
+ *  - sort `ts` as number (history-log.js gio push ts: Date.now())
+ *  - Hien thi `email` thay vi `user` (rules moi yeu cau uid+email)
+ *  - Optional fallback: neu legacy entries co `user` field thi van hien thi
  */
 
 import { vals, escapeHtml } from '../utils/format.js'
 
-export function renderHistory() {
-  const cache = window.cache;
+interface HistoryRow {
+  ts?: number | string;
+  email?: string;
+  user?: string;
+  action?: string;
+  detail?: string;
+  [k: string]: unknown;
+}
+
+export function renderHistory(): void {
+  const cache = window.cache as any;
   if (!cache) return;
 
-  const rows = vals(cache.history)
+  const rows = (vals(cache.history) as HistoryRow[])
     .sort((a, b) => (Number(b.ts) || 0) - (Number(a.ts) || 0))   // sort by number desc
     .slice(0, 50);
 
@@ -32,8 +37,8 @@ export function renderHistory() {
         const dt = d
           ? `${d.toLocaleDateString('vi-VN')} ${d.toLocaleTimeString('vi-VN')}`
           : '—';
-        // Display ưu tiên email (rules mới), fallback `user` cho legacy entries
-        const who = r.email || r.user || '(không xác định)';
+        // Display uu tien email (rules moi), fallback `user` cho legacy entries
+        const who = r.email || r.user || '(khong xac dinh)';
         return `<div class="timeline-item">
           <div class="timeline-dot"></div>
           <div class="timeline-date">${dt}</div>
@@ -42,5 +47,5 @@ export function renderHistory() {
           ${r.detail ? '<div class="timeline-change">' + escapeHtml(r.detail) + '</div>' : ''}
         </div>`;
       }).join('')
-    : '<div style="color:var(--teal)">Chưa có lịch sử</div>';
+    : '<div style="color:var(--teal)">Chua co lich su</div>';
 }

@@ -1,23 +1,6 @@
 /**
- * pages/auth-flow.js
+ * pages/auth-flow.ts
  * Auth UI flow handlers: login, logout, register, toggle password, switch tab
- *
- * Phạm vi:
- *  - doLogin: validate email/password → gọi login() từ auth.js → onAuthStateChanged tự xử lý
- *  - doLogout: confirm + cleanup listeners + chat → gọi logout()
- *  - doRegister: validate tên (≥2 từ, viết hoa chữ cái đầu) → gọi register()
- *  - togglePasswordVisibility: hiện/ẩn password trong login form
- *  - switchAuthTab: chuyển tab login/register
- *
- * Phụ thuộc:
- *  - login, logout, register từ auth.js
- *  - stopListeners từ services/listeners.js
- *
- * Lưu ý:
- *  - initAuth(...) callback chain VẪN ở main.js vì coupling chặt với DOMContentLoaded init flow
- *    (gọi _syncAuthStateLocal, startListeners, applyRoleUI, updateAvatarUI, cleanupChat, switchAuthTab)
- *  - Module này chỉ chứa các UI handler đơn lẻ độc lập
- *  - error mapping cho Firebase Auth codes (email-already-in-use, wrong-password, etc.)
  */
 
 import { login, logout, register } from '../auth.js'
@@ -27,31 +10,31 @@ import { stopPresence } from '../services/presence.js'
 // ═══════════════════════════════════════════════════════════
 // Login handler
 // ═══════════════════════════════════════════════════════════
-export async function doLogin() {
-  const email = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value;
-  const errEl = document.getElementById('login-error');
-  const btn = document.getElementById('login-btn');
+export async function doLogin(): Promise<void> {
+  const email = (document.getElementById('login-email') as HTMLInputElement).value.trim();
+  const password = (document.getElementById('login-password') as HTMLInputElement).value;
+  const errEl = document.getElementById('login-error') as HTMLElement;
+  const btn = document.getElementById('login-btn') as HTMLButtonElement;
 
   errEl.style.display = 'none';
-  btn.textContent = 'Đang đăng nhập...';
+  btn.textContent = 'Dang dang nhap...';
   btn.disabled = true;
 
   try {
     await login(email, password);
-    // onAuthStateChanged sẽ tự xử lý tiếp (qua initAuth callback ở main.js)
-  } catch (e) {
-    let msg = 'Đăng nhập thất bại';
+    // onAuthStateChanged se tu xu ly tiep (qua initAuth callback o main.js)
+  } catch (e: any) {
+    let msg = 'Dang nhap that bai';
     if (e.message && e.message.includes('@hcmut.edu.vn')) msg = e.message;
-    else if (e.code === 'auth/user-not-found')      msg = 'Email không tồn tại trong hệ thống';
-    else if (e.code === 'auth/wrong-password')      msg = 'Mật khẩu không đúng';
-    else if (e.code === 'auth/invalid-email')       msg = 'Email không hợp lệ';
-    else if (e.code === 'auth/too-many-requests')   msg = 'Đăng nhập sai quá nhiều lần, thử lại sau';
-    else if (e.code === 'auth/invalid-credential')  msg = 'Email hoặc mật khẩu không đúng';
+    else if (e.code === 'auth/user-not-found')      msg = 'Email khong ton tai trong he thong';
+    else if (e.code === 'auth/wrong-password')      msg = 'Mat khau khong dung';
+    else if (e.code === 'auth/invalid-email')       msg = 'Email khong hop le';
+    else if (e.code === 'auth/too-many-requests')   msg = 'Dang nhap sai qua nhieu lan, thu lai sau';
+    else if (e.code === 'auth/invalid-credential')  msg = 'Email hoac mat khau khong dung';
     errEl.textContent = msg;
     errEl.style.display = 'block';
   } finally {
-    btn.textContent = 'Đăng nhập';
+    btn.textContent = 'Dang nhap';
     btn.disabled = false;
   }
 }
@@ -59,22 +42,22 @@ export async function doLogin() {
 // ═══════════════════════════════════════════════════════════
 // Logout handler
 // ═══════════════════════════════════════════════════════════
-export async function doLogout() {
-  if (!confirm('Bạn có chắc muốn đăng xuất?')) return;
+export async function doLogout(): Promise<void> {
+  if (!confirm('Ban co chac muon dang xuat?')) return;
   await stopPresence();
   stopListeners();
-  // Ẩn FAB chat ngay khi logout
+  // An FAB chat ngay khi logout
   const fab = document.getElementById('chat-fab');
   if (fab) fab.style.display = 'none';
   await logout();
-  // onAuthStateChanged sẽ tự xử lý phần cleanup UI tiếp
+  // onAuthStateChanged se tu xu ly phan cleanup UI tiep
 }
 
 // ═══════════════════════════════════════════════════════════
 // Toggle password visibility (login form)
 // ═══════════════════════════════════════════════════════════
-export function togglePasswordVisibility() {
-  const input = document.getElementById('login-password');
+export function togglePasswordVisibility(): void {
+  const input = document.getElementById('login-password') as HTMLInputElement | null;
   const eye = document.getElementById('pw-eye');
   if (!input || !eye) return;
   if (input.type === 'password') {
@@ -87,13 +70,13 @@ export function togglePasswordVisibility() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// Switch tab login ↔ register
+// Switch tab login <-> register
 // ═══════════════════════════════════════════════════════════
-export function switchAuthTab(tab) {
-  const loginForm = document.getElementById('auth-login-form');
-  const regForm = document.getElementById('auth-register-form');
-  const loginBtn = document.getElementById('tab-login-btn');
-  const regBtn = document.getElementById('tab-register-btn');
+export function switchAuthTab(tab: string): void {
+  const loginForm = document.getElementById('auth-login-form') as HTMLElement;
+  const regForm = document.getElementById('auth-register-form') as HTMLElement;
+  const loginBtn = document.getElementById('tab-login-btn') as HTMLElement;
+  const regBtn = document.getElementById('tab-register-btn') as HTMLElement;
   const base = "flex:1;padding:9px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif";
 
   if (tab === 'login') {
@@ -112,58 +95,58 @@ export function switchAuthTab(tab) {
 // ═══════════════════════════════════════════════════════════
 // Register handler
 // ═══════════════════════════════════════════════════════════
-export async function doRegister() {
-  const name = document.getElementById('reg-name').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
-  const password = document.getElementById('reg-password').value;
-  const errEl = document.getElementById('reg-error');
-  const sucEl = document.getElementById('reg-success');
-  const btn = document.getElementById('reg-btn');
+export async function doRegister(): Promise<void> {
+  const name = (document.getElementById('reg-name') as HTMLInputElement).value.trim();
+  const email = (document.getElementById('reg-email') as HTMLInputElement).value.trim();
+  const password = (document.getElementById('reg-password') as HTMLInputElement).value;
+  const errEl = document.getElementById('reg-error') as HTMLElement;
+  const sucEl = document.getElementById('reg-success') as HTMLElement;
+  const btn = document.getElementById('reg-btn') as HTMLButtonElement;
 
   errEl.style.display = 'none';
   sucEl.style.display = 'none';
-  btn.textContent = 'Đang đăng ký...';
+  btn.textContent = 'Dang dang ky...';
 
-  // Validate tên: ít nhất 2 từ, mỗi từ viết hoa chữ cái đầu (vd: "Nguyễn Văn Linh")
+  // Validate ten: it nhat 2 tu, moi tu viet hoa chu cai dau (vd: "Nguyen Van Linh")
   if (!name) {
-    errEl.textContent = 'Vui lòng nhập họ tên!';
+    errEl.textContent = 'Vui long nhap ho ten!';
     errEl.style.display = 'block';
-    btn.textContent = 'Đăng ký';
+    btn.textContent = 'Dang ky';
     btn.disabled = false;
     return;
   }
   const words = name.split(' ').filter(w => w.length > 0);
   const validName = words.length >= 2 && words.every(w => w[0] === w[0].toUpperCase() && w[0] !== w[0].toLowerCase());
   if (!validName) {
-    errEl.textContent = 'Họ tên phải có ít nhất 2 từ, viết hoa chữ cái đầu mỗi từ (VD: Nguyễn Văn Linh)';
+    errEl.textContent = 'Ho ten phai co it nhat 2 tu, viet hoa chu cai dau moi tu (VD: Nguyen Van Linh)';
     errEl.style.display = 'block';
-    btn.textContent = 'Đăng ký';
+    btn.textContent = 'Dang ky';
     btn.disabled = false;
     return;
   }
 
   btn.disabled = true;
-  btn.textContent = 'Đang đăng ký...';
+  btn.textContent = 'Dang dang ky...';
 
   register(email, password, name).then(() => {
-    // Thành công - hiện thông báo
-    sucEl.textContent = 'Đăng ký thành công! Tài khoản đang chờ Admin duyệt.';
+    // Thanh cong - hien thong bao
+    sucEl.textContent = 'Dang ky thanh cong! Tai khoan dang cho Admin duyet.';
     sucEl.style.display = 'block';
-    document.getElementById('reg-name').value = '';
-    document.getElementById('reg-email').value = '';
-    document.getElementById('reg-password').value = '';
-    btn.textContent = 'Đăng ký';
+    (document.getElementById('reg-name') as HTMLInputElement).value = '';
+    (document.getElementById('reg-email') as HTMLInputElement).value = '';
+    (document.getElementById('reg-password') as HTMLInputElement).value = '';
+    btn.textContent = 'Dang ky';
     btn.disabled = false;
-  }).catch(e => {
-    let msg = 'Đăng ký thất bại. Vui lòng thử lại.';
-    if (e.code === 'auth/email-already-in-use') msg = 'Email này đã được đăng ký';
-    else if (e.code === 'auth/weak-password')   msg = 'Mật khẩu quá yếu, tối thiểu 6 ký tự';
-    else if (e.code === 'auth/invalid-email')   msg = 'Email không hợp lệ';
+  }).catch((e: any) => {
+    let msg = 'Dang ky that bai. Vui long thu lai.';
+    if (e.code === 'auth/email-already-in-use') msg = 'Email nay da duoc dang ky';
+    else if (e.code === 'auth/weak-password')   msg = 'Mat khau qua yeu, toi thieu 6 ky tu';
+    else if (e.code === 'auth/invalid-email')   msg = 'Email khong hop le';
     else if (e.message) msg = e.message;
     sucEl.style.display = 'none';
     errEl.textContent = msg;
     errEl.style.display = 'block';
-    btn.textContent = 'Đăng ký';
+    btn.textContent = 'Dang ky';
     btn.disabled = false;
   });
 }

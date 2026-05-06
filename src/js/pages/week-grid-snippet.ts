@@ -1,4 +1,5 @@
 // ═══════════════════════════════════════════════════
+// @ts-nocheck
 // WEEK TIME-GRID VIEW (Google Calendar style)
 // 7 cột ngày × 24h grid, có resize + drag
 // ═══════════════════════════════════════════════════
