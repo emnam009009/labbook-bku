@@ -1,5 +1,5 @@
 /**
- * services/presence.js
+ * services/presence.ts
  * Online/offline tracking dùng Firebase Realtime Database
  *
  * Cấu trúc DB:
@@ -19,12 +19,12 @@
 
 import { db, ref, onValue, set, onDisconnect, serverTimestamp } from '../firebase.js'
 
-let _currentUid = null;
-let _connectedUnsub = null;
+let _currentUid: string | null = null;
+let _connectedUnsub: (() => void) | null = null;
 // Generation counter: tăng mỗi lần startPresence/stopPresence → callback cũ tự bỏ qua nếu hết hạn
 let _gen = 0;
 
-export function startPresence(uid) {
+export function startPresence(uid: string): void {
   if (!uid) return;
   if (_currentUid === uid && _connectedUnsub) return;
 
@@ -39,7 +39,7 @@ export function startPresence(uid) {
   const presenceRef = ref(db, `presence/${uid}`);
   const connectedRef = ref(db, '.info/connected');
 
-  _connectedUnsub = onValue(connectedRef, (snap) => {
+  _connectedUnsub = onValue(connectedRef, (snap: any) => {
     // Nếu đã có generation mới (uid khác đã start) → bỏ qua callback cũ
     if (myGen !== _gen) return;
     if (snap.val() === false) return;
@@ -57,11 +57,11 @@ export function startPresence(uid) {
         if (myGen !== _gen) return;
         return set(presenceRef, { online: true, lastSeen: serverTimestamp() });
       })
-      .catch((e) => console.warn('[presence] onDisconnect setup failed', e));
+      .catch((e: unknown) => console.warn('[presence] onDisconnect setup failed', e));
   });
 }
 
-export async function stopPresence() {
+export async function stopPresence(): Promise<void> {
   if (!_currentUid) return;
   const uid = _currentUid;
   const presenceRef = ref(db, `presence/${uid}`);

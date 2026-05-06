@@ -1,5 +1,5 @@
 /**
- * services/url-router.js
+ * services/url-router.ts
  * Handle URL parameters để deep-link tới detail của 1 record
  *
  * Hỗ trợ format: ?detail=<type>:<key>
@@ -10,14 +10,14 @@
  */
 
 // Init: gọi sau khi auth + listeners đã ready
-export function initUrlRouter() {
+export function initUrlRouter(): void {
   // Đợi cache có data trước khi xử lý URL
   // Listeners trigger 'cache-update' event lần đầu khi data về
   if (window.cache && (window.cache.chemicals || window.cache.equipment)) {
     handleUrlParams()
   } else {
     // Đợi cache-update event
-    const handler = () => {
+    const handler = (): void => {
       window.removeEventListener('cache-update', handler)
       // Delay nhẹ để đảm bảo render xong
       setTimeout(handleUrlParams, 200)
@@ -26,7 +26,7 @@ export function initUrlRouter() {
   }
 }
 
-function handleUrlParams() {
+function handleUrlParams(): void {
   const params = new URLSearchParams(window.location.search)
   const detail = params.get('detail')
   if (!detail) return
@@ -60,11 +60,11 @@ function handleUrlParams() {
   }
 }
 
-function openChemicalDetail(key) {
+function openChemicalDetail(key: string): void {
   const cache = window.cache
   if (!cache?.chemicals?.[key]) {
     if (window.showToast) {
-      window.showToast('Không tìm thấy hóa chất với mã ' + key, 'danger')
+      window.showToast('Không tìm thấy hóa chất với mã ' + key, 'danger' as any)
     }
     return
   }
@@ -76,19 +76,19 @@ function openChemicalDetail(key) {
 
   // Đợi page render xong rồi gọi edit modal
   setTimeout(() => {
-    if (typeof window.editChemical === 'function') {
-      window.editChemical(key)
+    if (typeof (window as any).editChemical === 'function') {
+      (window as any).editChemical(key)
     } else {
       console.warn('[url-router] window.editChemical không tồn tại')
     }
   }, 300)
 }
 
-function openEquipmentDetail(key) {
+function openEquipmentDetail(key: string): void {
   const cache = window.cache
   if (!cache?.equipment?.[key]) {
     if (window.showToast) {
-      window.showToast('Không tìm thấy thiết bị với mã ' + key, 'danger')
+      window.showToast('Không tìm thấy thiết bị với mã ' + key, 'danger' as any)
     }
     return
   }
@@ -98,8 +98,8 @@ function openEquipmentDetail(key) {
   }
 
   setTimeout(() => {
-    if (typeof window.editEquipment === 'function') {
-      window.editEquipment(key)
+    if (typeof (window as any).editEquipment === 'function') {
+      (window as any).editEquipment(key)
     } else {
       console.warn('[url-router] window.editEquipment không tồn tại')
     }

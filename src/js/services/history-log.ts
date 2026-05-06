@@ -1,5 +1,5 @@
 /**
- * services/history-log.js
+ * services/history-log.ts
  *
  * Phase 2A — Bugfix: re-export từ firebase.js để conform với rules mới.
  *

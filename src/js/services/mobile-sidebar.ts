@@ -1,13 +1,13 @@
 /**
- * services/mobile-sidebar.js
+ * services/mobile-sidebar.ts
  * Round 58e (CSP): tach tu inline <script> cuoi index.html
  *
  * Toggle/close mobile sidebar (< 768px). Click .sidebar-item -> auto close.
  * Expose toggleMobileSidebar/closeMobileSidebar lo to window cho data-action delegation.
  */
 
-function toggleMobileSidebar() {
-  const sidebar = document.querySelector('nav.site-sidebar');
+function toggleMobileSidebar(): void {
+  const sidebar = document.querySelector<HTMLElement>('nav.site-sidebar');
   const overlay = document.getElementById('mobile-sidebar-overlay');
   if (!sidebar || !overlay) return;
   if (sidebar.classList.contains('mobile-open')) {
@@ -18,8 +18,8 @@ function toggleMobileSidebar() {
   }
 }
 
-function closeMobileSidebar() {
-  const sidebar = document.querySelector('nav.site-sidebar');
+function closeMobileSidebar(): void {
+  const sidebar = document.querySelector<HTMLElement>('nav.site-sidebar');
   const overlay = document.getElementById('mobile-sidebar-overlay');
   if (!sidebar || !overlay) return;
   sidebar.classList.remove('mobile-open');
@@ -27,9 +27,10 @@ function closeMobileSidebar() {
 }
 
 // Click sidebar item -> auto close (mobile only)
-document.addEventListener('click', function(e) {
+document.addEventListener('click', function(e: MouseEvent) {
   if (window.innerWidth > 768) return;
-  const item = e.target.closest('.sidebar-item');
+  const target = e.target as HTMLElement | null;
+  const item = target?.closest('.sidebar-item');
   if (item) closeMobileSidebar();
 });
 

@@ -1,5 +1,5 @@
 /**
- * services/render-dispatcher.js
+ * services/render-dispatcher.ts
  * Debounced render dispatcher — gọi tất cả renderXxx functions sau khi cache thay đổi
  *
  * Thiết kế:
@@ -15,11 +15,11 @@
 
 import { renderDash } from '../pages/dashboard.js'
 
-let _renderTimer = null;
+let _renderTimer: ReturnType<typeof setTimeout> | null = null;
 
 // ── Hàm public: được gọi bởi listeners khi cache thay đổi ──
 // Debounced 30ms để tránh render liên tục khi nhiều collection update gần nhau
-export function renderAll() {
+export function renderAll(): void {
   if (_renderTimer) return;
   _renderTimer = setTimeout(() => {
     _renderTimer = null;
@@ -28,13 +28,13 @@ export function renderAll() {
 }
 
 // ── Hàm internal: chạy tất cả renderers ngay lập tức ─────
-function _renderAllNow() {
+function _renderAllNow(): void {
   // Dashboard: đã được tách module, gọi trực tiếp
   renderDash();
 
   // Admin-only renderers
-  if (window.currentAuth?.isAdmin && typeof window.renderUsers === 'function') {
-    window.renderUsers();
+  if (window.currentAuth?.isAdmin && typeof (window as any).renderUsers === 'function') {
+    (window as any).renderUsers();
   }
 
   // Các renderers chưa được tách — gọi qua window.* (sẽ migrate ở Phần 4-6)
@@ -42,17 +42,17 @@ function _renderAllNow() {
   if (typeof window.renderElectrode === 'function')  window.renderElectrode();
   if (typeof window.renderElectrochem === 'function') window.renderElectrochem();
   if (typeof window.renderChemicals === 'function')  window.renderChemicals();
-  if (typeof window.renderMembers === 'function')    window.renderMembers();
-  if (typeof window.renderHistory === 'function')    window.renderHistory();
-  if (typeof window.renderReports === 'function')    window.renderReports();
-  if (typeof window.renderInk === 'function')        window.renderInk();
+  if (typeof (window as any).renderMembers === 'function')    (window as any).renderMembers();
+  if (typeof (window as any).renderHistory === 'function')    (window as any).renderHistory();
+  if (typeof (window as any).renderReports === 'function')    (window as any).renderReports();
+  if (typeof (window as any).renderInk === 'function')        (window as any).renderInk();
   if (typeof window.renderEquipment === 'function')  window.renderEquipment();
 
   // Update các dropdown phụ thuộc cache (person, group, ink, chem)
-  if (typeof window.updatePersonSelects === 'function') window.updatePersonSelects();
-  if (typeof window.updateGroupSelects === 'function')  window.updateGroupSelects();
-  if (typeof window.updateInkSelects === 'function')    window.updateInkSelects();
+  if (typeof (window as any).updatePersonSelects === 'function') (window as any).updatePersonSelects();
+  if (typeof (window as any).updateGroupSelects === 'function')  (window as any).updateGroupSelects();
+  if (typeof (window as any).updateInkSelects === 'function')    (window as any).updateInkSelects();
   // [FIX legacy] updateChemSelects gọi ở đây thay vì override window.renderAll lần 2
   // Đảm bảo đi qua debounce 30ms và không tạo thêm wrapper nào nữa
-  if (typeof window.updateChemSelects === 'function')   window.updateChemSelects();
+  if (typeof (window as any).updateChemSelects === 'function')   (window as any).updateChemSelects();
 }

@@ -1,7 +1,13 @@
-// services/theme.js v2 — Theme picker service
+// services/theme.ts v2 — Theme picker service
 // Hỗ trợ: 4 presets (teal/cyan/purple/orange) + custom theme với 4 vars riêng
 
-const PRESETS = {
+interface ThemePreset {
+  name: string;
+  swatch: string;
+  vars: Record<string, string>;
+}
+
+const PRESETS: Record<string, ThemePreset> = {
   teal: {
     name: 'Xanh teal',
     swatch: '#0d9488',
@@ -28,10 +34,10 @@ const STORAGE_KEY = 'lb_theme';            // 'teal' | 'cyan' | ... | 'custom'
 const CUSTOM_KEY = 'lb_theme_custom';      // JSON: {--teal, --teal-2, --teal-3, --teal-light}
 const DEFAULT_THEME = 'teal';
 
-function applyVars(vars) {
+function applyVars(vars: Record<string, string>): void {
   const root = document.documentElement;
   Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v));
-  
+
   // Auto-compute --teal-rgb từ --teal (cho rgba(...) box-shadow)
   if (vars['--teal']) {
     const rgb = hexToRgbString(vars['--teal']);
@@ -42,7 +48,7 @@ function applyVars(vars) {
 /**
  * Convert "#0d9488" → "13, 148, 136"
  */
-function hexToRgbString(hex) {
+function hexToRgbString(hex: string): string | null {
   hex = hex.replace('#', '');
   if (hex.length !== 6) return null;
   const r = parseInt(hex.slice(0, 2), 16);
@@ -51,11 +57,11 @@ function hexToRgbString(hex) {
   return `${r}, ${g}, ${b}`;
 }
 
-export function applyTheme(name) {
+export function applyTheme(name: string): void {
   const theme = PRESETS[name] || PRESETS[DEFAULT_THEME];
   applyVars(theme.vars);
   localStorage.setItem(STORAGE_KEY, name);
-  document.querySelectorAll('.theme-swatch').forEach(el => {
+  document.querySelectorAll<HTMLElement>('.theme-swatch').forEach(el => {
     el.classList.toggle('active', el.dataset.theme === name);
   });
   window.dispatchEvent(new CustomEvent('themechange', { detail: { name, theme } }));
@@ -63,15 +69,15 @@ export function applyTheme(name) {
 
 /**
  * Áp custom theme (4 màu tùy chỉnh)
- * @param {Object} vars - {--teal, --teal-2, --teal-3, --teal-light}
- * @param {boolean} persist - lưu localStorage không (false khi live preview)
+ * @param vars - {--teal, --teal-2, --teal-3, --teal-light}
+ * @param persist - lưu localStorage không (false khi live preview)
  */
-export function applyCustomTheme(vars, persist = true) {
+export function applyCustomTheme(vars: Record<string, string>, persist: boolean = true): void {
   applyVars(vars);
   if (persist) {
     localStorage.setItem(STORAGE_KEY, 'custom');
     localStorage.setItem(CUSTOM_KEY, JSON.stringify(vars));
-    document.querySelectorAll('.theme-swatch').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll<HTMLElement>('.theme-swatch').forEach(el => el.classList.remove('active'));
   }
   window.dispatchEvent(new CustomEvent('themechange', { detail: { name: 'custom', vars } }));
 }
@@ -79,7 +85,7 @@ export function applyCustomTheme(vars, persist = true) {
 /**
  * Tự sinh --teal-2/-3/-light từ --teal (HSL transformation)
  */
-export function generateShades(baseHex) {
+export function generateShades(baseHex: string): Record<string, string> {
   const hsl = hexToHsl(baseHex);
   return {
     '--teal':       baseHex,
@@ -89,13 +95,19 @@ export function generateShades(baseHex) {
   };
 }
 
-export function hexToHsl(hex) {
+interface HSL {
+  h: number;
+  s: number;
+  l: number;
+}
+
+export function hexToHsl(hex: string): HSL {
   hex = hex.replace('#', '');
   const r = parseInt(hex.slice(0, 2), 16) / 255;
   const g = parseInt(hex.slice(2, 4), 16) / 255;
   const b = parseInt(hex.slice(4, 6), 16) / 255;
   const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  let h, s, l = (max + min) / 2;
+  let h = 0, s: number, l = (max + min) / 2;
   if (max === min) {
     h = s = 0;
   } else {
@@ -111,31 +123,31 @@ export function hexToHsl(hex) {
   return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
 }
 
-export function hslToHex(h, s, l) {
+export function hslToHex(h: number, s: number, l: number): string {
   s = Math.max(0, Math.min(100, s)) / 100;
   l = Math.max(0, Math.min(100, l)) / 100;
   const c = (1 - Math.abs(2 * l - 1)) * s;
   const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
   const m = l - c / 2;
-  let r, g, b;
+  let r: number, g: number, b: number;
   if (h < 60)       [r, g, b] = [c, x, 0];
   else if (h < 120) [r, g, b] = [x, c, 0];
   else if (h < 180) [r, g, b] = [0, c, x];
   else if (h < 240) [r, g, b] = [0, x, c];
   else if (h < 300) [r, g, b] = [x, 0, c];
   else              [r, g, b] = [c, 0, x];
-  const toHex = (n) => {
+  const toHex = (n: number): string => {
     const v = Math.round((n + m) * 255);
     return v.toString(16).padStart(2, '0');
   };
   return '#' + toHex(r) + toHex(g) + toHex(b);
 }
 
-export function getCurrentTheme() {
+export function getCurrentTheme(): string {
   return localStorage.getItem(STORAGE_KEY) || DEFAULT_THEME;
 }
 
-export function getCustomTheme() {
+export function getCustomTheme(): Record<string, string> | null {
   try {
     return JSON.parse(localStorage.getItem(CUSTOM_KEY) || 'null');
   } catch {
@@ -143,7 +155,7 @@ export function getCustomTheme() {
   }
 }
 
-export function initTheme() {
+export function initTheme(): void {
   const saved = getCurrentTheme();
   if (saved === 'custom') {
     const custom = getCustomTheme();
@@ -156,18 +168,24 @@ export function initTheme() {
     applyTheme(saved);
   }
   document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.theme-swatch').forEach(el => {
+    document.querySelectorAll<HTMLElement>('.theme-swatch').forEach(el => {
       el.classList.toggle('active', el.dataset.theme === saved);
     });
   });
 }
 
-export function resetTheme() {
+export function resetTheme(): void {
   localStorage.removeItem(CUSTOM_KEY);
   applyTheme(DEFAULT_THEME);
 }
 
-export function getPresets() {
+export interface PresetInfo {
+  key: string;
+  name: string;
+  swatch: string;
+}
+
+export function getPresets(): PresetInfo[] {
   return Object.entries(PRESETS).map(([key, val]) => ({
     key, name: val.name, swatch: val.swatch,
   }));
@@ -175,6 +193,6 @@ export function getPresets() {
 
 // Expose ra window cho HTML inline onclick
 window.applyTheme = applyTheme;
-window.applyCustomTheme = applyCustomTheme;
-window.resetTheme = resetTheme;
-window.generateShades = generateShades;
+(window as any).applyCustomTheme = applyCustomTheme;
+(window as any).resetTheme = resetTheme;
+(window as any).generateShades = generateShades;
