@@ -3,6 +3,8 @@
 
 import { parseFileWithSpec, readFileAsText, readExcelAsRows, parseDelimited } from './parser-core.js';
 import { isJcampJasco, parseJcampJasco } from './jcamp-jasco.js';
+// Round 86: CorrWare ASCII parser for electrochem (.cor files)
+import { isCorrWareFile, parseCorrWare } from './corrware.js';
 export { detectCategory, detectionToastMessage } from './detect.js';
 export type { DetectedCategory, DetectConfidence, DetectResult } from './detect.js';
 
@@ -120,7 +122,8 @@ export function canAutoPlot(category: string): boolean {
  */
 export function isParseableFile(file: File): boolean {
   const ext = (file.name.split('.').pop() || '').toLowerCase();
-  return ['txt', 'csv', 'tsv', 'dat', 'xy', 'xlsx', 'xls', 'xlsm', 'asc', 'dpt'].includes(ext);
+  // Round 86: them .cor (CorrWare ASCII) cho dien hoa
+  return ['txt', 'csv', 'tsv', 'dat', 'xy', 'xlsx', 'xls', 'xlsm', 'asc', 'dpt', 'cor'].includes(ext);
 }
 
 /**
@@ -131,8 +134,30 @@ export async function parseDataFile(file: File, category: string): Promise<Parse
   const spec = getSpec(category);
   if (!spec) throw new Error(`Khong ho tro auto-plot cho loai: ${category}`);
 
-  // Try JCAMP-DX format first (JASCO UV-Vis output) for txt files in UV/PL categories
   const ext = (file.name.split('.').pop() || '').toLowerCase();
+
+  // Round 86: CorrWare ASCII (.cor) — phep do dien hoa CV/LSV/GCD
+  // Try this FIRST for any .cor file regardless of declared category,
+  // and also for txt/dat that begin with "CORRW ASCII".
+  const maybeCorrWare = ext === 'cor' || ext === 'txt' || ext === 'dat';
+  if (maybeCorrWare && category === 'electrochem') {
+    try {
+      const text = await readFileAsText(file);
+      if (isCorrWareFile(text)) {
+        const r = parseCorrWare(text);
+        return {
+          ...r,
+          category, spec,
+          plotXLabel: r.xLabel,
+          plotYLabel: r.yLabel,
+        };
+      }
+    } catch (e: any) {
+      console.warn('[parser] CorrWare detection failed, fallback:', e.message);
+    }
+  }
+
+  // Try JCAMP-DX format first (JASCO UV-Vis output) for txt files in UV/PL categories
   const maybeJcamp = ext === 'txt' && (
     category === 'uvvis' || category === 'uvvis-drs' || category === 'pl'
   );

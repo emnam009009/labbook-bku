@@ -41,6 +41,8 @@ function detectByExtension(filename: string): DetectResult | null {
     // Round 77a: composition / oxidation
     'emsa':  'eds',  // EMSA/MAS standard format for EDS spectra
     'vms':   'xps',  // VAMAS (ISO 14976) standard for XPS data
+    // Round 86: electrochemistry (CorrWare ASCII)
+    'cor':   'electrochem',  // CorrWare ASCII output (CV/LSV/GCD/EIS)
   };
   if (map[ext]) {
     return { category: map[ext], confidence: 'high', reason: `extension .${ext}` };
