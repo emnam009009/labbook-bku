@@ -19,6 +19,7 @@ import { escapeHtml, fmtDate } from '../utils/format.js';
 import { canAutoPlot, isParseableFile, parseDataFile, reparseWithColumns, detectCategory, detectionToastMessage } from '../services/parsers/index.js';
 import { renderPreview, renderHighResPNG } from '../services/plot/plot-preview.js';
 import { openImageLightbox } from './image-lightbox.js';
+import { showBusyOverlay, hideBusyOverlay, setBusyMessage, isBusy } from './upload-busy-overlay.js';
 import { transformToTauc, TAUC_PRESETS, formatN } from '../services/plot/tauc.js';
 import { autoFitBandgap } from '../services/plot/bandgap-fit.js';
 
@@ -402,6 +403,17 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
 
   const handleFiles = async (files) => {
     if (!files || !files.length) return;
+    // Round 87: prevent spam — block if already uploading
+    if (isBusy()) {
+      showToast('Đang xử lý file trước, vui lòng đợi...', 'warning' as any);
+      return;
+    }
+
+    const _panel = panel as HTMLElement;
+    showBusyOverlay(_panel, files.length === 1
+      ? `Đang phân tích ${files[0].name}...`
+      : `Đang xử lý ${files.length} file...`);
+    try {
 
     // ─── Round 74: Auto-detect category from first file ───
     // Run before reading current select value, so user gets badge auto-set.
@@ -432,10 +444,10 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
     if (files.length === 1 && canAutoPlot(category) && isParseableFile(files[0])) {
       const file = files[0];
       try {
-        progress.hidden = false;
-        progress.textContent = `Đang đọc ${file.name}...`;
+        setBusyMessage(`Đang đọc ${file.name}...`);
+        progress.hidden = true;  // hide legacy progress (using overlay now)
         const parsed = await parseDataFile(file, category);
-        progress.hidden = true;
+        setBusyMessage(`Đang vẽ biểu đồ...`);
         _currentPreview = { file, parsed, category, attachmentId: null };
         previewBox.hidden = false;
         if (axisCtrls) (axisCtrls as any).hidden = false;
@@ -505,26 +517,25 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
         progress.hidden = true;
         closePreview();
         showToast(`Không đọc được dữ liệu: ${err.message}. Sẽ upload nguyên file.`, 'danger');
-        // Fallback: upload normally
+        // Fallback: upload normally (overlay vẫn show vì còn trong try block)
+        setBusyMessage(`Đang tải lên ${file.name}...`);
         const results = await uploadMany({
           refType, refId, category, files: Array.from(files),
-          onItemProgress: () => {},
+          onItemProgress: (name, pct) => setBusyMessage(`Đang tải lên... ${pct}%`),
         });
         if (results.some(r => r.ok)) await refresh();
       }
       return;
     }
 
-    // Default flow: bulk upload
-    progress.hidden = false;
-    progress.textContent = `Đang tải ${files.length} file...`;
-    const itemProgress = {};
-    const onItemProgress = (name, pct) => {
+    // Default flow: bulk upload (Round 87: parallel + overlay progress)
+    setBusyMessage(`Đang tải ${files.length} file...`);
+    const itemProgress: Record<string, number> = {};
+    const onItemProgress = (name: string, pct: number) => {
       itemProgress[name] = pct;
-      const parts = Object.entries(itemProgress)
-        .map(([n, p]) => `${n}: ${p}%`)
-        .join(' · ');
-      progress.textContent = parts;
+      const allPcts = Object.values(itemProgress);
+      const avg = Math.round(allPcts.reduce((a, b) => a + b, 0) / allPcts.length);
+      setBusyMessage(`Đang tải lên... ${avg}% (${allPcts.length}/${files.length})`);
     };
 
     const results = await uploadMany({
@@ -534,20 +545,28 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
 
     const okCount = results.filter((r) => r.ok).length;
     const failCount = results.length - okCount;
-    progress.hidden = true;
     if (okCount) showToast(`Đã tải ${okCount} file`, 'success');
     if (failCount) showToast(`${failCount} file lỗi`, 'danger');
 
+    setBusyMessage('Đang làm mới danh sách...');
     await refresh();
+    } finally {
+      hideBusyOverlay(panel as HTMLElement);
+    }
   };
 
   cancelPreviewBtn.addEventListener('click', closePreview);
 
   savePlotBtn.addEventListener('click', async () => {
     if (!_currentPreview) return;
+    if (isBusy()) {
+      showToast('Đang xử lý, vui lòng đợi...', 'warning' as any);
+      return;
+    }
     const { file, parsed, category } = _currentPreview;
     savePlotBtn.disabled = true;
     savePlotBtn.querySelector('span').textContent = 'Đang xuất PNG 300 DPI...';
+    showBusyOverlay(panel as HTMLElement, 'Đang xuất PNG 300 DPI...');
     try {
       // Round 82: build same parsed object that preview is currently showing
       // (raw or tauc-transformed) so saved PNG matches preview exactly.

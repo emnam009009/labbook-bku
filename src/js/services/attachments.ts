@@ -343,22 +343,55 @@ interface UploadManyResult {
  * to avoid hammering the limit check race condition.
  */
 export async function uploadMany({ refType, refId, category, files, onItemProgress }: UploadManyParams): Promise<UploadManyResult[]> {
+  // Round 87: parallel upload with concurrency cap.
+  // Pre-fetch existing list ONCE (truoc do moi file fetch lai = N round-trips).
+  const existing = await listAttachments(refType, refId).catch(() => [] as any[]);
+
+  // Concurrency control: max 5 simultaneous uploads (avoid overwhelming network)
+  const CONCURRENT = 5;
+  const queue = [...files];
   const results: UploadManyResult[] = [];
-  for (const file of files) {
+
+  // Track local 'reserved' filenames to detect dups within THIS batch
+  // (same name in same upload: queue rejects 2nd one)
+  const reserved = new Set(existing.map((it: any) => it.fileName));
+
+  const runOne = async (file: File): Promise<UploadManyResult> => {
+    if (reserved.has(file.name)) {
+      const err = `Da co file nay: ${file.name}`;
+      showToast(err, 'danger' as any);
+      return { ok: false, file: file.name, error: err };
+    }
+    reserved.add(file.name);  // prevent intra-batch duplicate
+
     try {
       const rec = await uploadAttachment({
         refType,
         refId,
         category,
         file,
-        onProgress: (pct) => onItemProgress?.(file.name, pct),
-      });
-      results.push({ ok: true, file: file.name, record: rec });
+        onProgress: (pct: number) => onItemProgress?.(file.name, pct),
+      } as any);
+      return { ok: true, file: file.name, record: rec };
     } catch (e: any) {
-      results.push({ ok: false, file: file.name, error: e.message || String(e) });
       showToast(e.message, 'danger' as any);
+      return { ok: false, file: file.name, error: e.message || String(e) };
     }
+  };
+
+  // Worker pool pattern: keep CONCURRENT workers running, each pulls next
+  const workers: Promise<void>[] = [];
+  for (let i = 0; i < Math.min(CONCURRENT, queue.length); i++) {
+    workers.push((async () => {
+      while (queue.length > 0) {
+        const file = queue.shift();
+        if (!file) break;
+        const r = await runOne(file);
+        results.push(r);
+      }
+    })());
   }
+  await Promise.all(workers);
   return results;
 }
 
