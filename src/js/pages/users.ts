@@ -27,7 +27,7 @@ function renderDeleteBtn(uid: string, email: string | undefined, displayName: st
   if (email === SUPER_ADMIN_EMAIL) return '';
   const safeName = escapeJs(displayName || email || '');
   const safeUid = escapeJs(uid);
-  return `<button class="del-btn" onclick="deleteUserAccount('${safeUid}','${safeName}')" title="Xoa tai khoan"><svg class="w-4 h-4 fill-none stroke-white" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" stroke-linejoin="round" stroke-linecap="round"></path></svg></button>`;
+  return `<button class="del-btn" data-users-action="delete" data-uid="${safeUid}" data-name="${safeName}" title="Xoa tai khoan"><svg class="w-4 h-4 fill-none stroke-white" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" stroke-linejoin="round" stroke-linecap="round"></path></svg></button>`;
 }
 
 export function renderUsers(): void {
@@ -59,9 +59,9 @@ export function renderUsers(): void {
           <td class="mono">${escapeHtml(u.email || '—')}</td>
           <td>${fmtDate(u.createdAt as any)}</td>
           <td class="action-cell">
-            <button class="btn btn-xs btn-primary" onclick="approveUser('${escapeJs(u.uid)}','member')">✓ Member</button>
-            <button class="btn btn-xs btn-gold" onclick="approveUser('${escapeJs(u.uid)}','viewer')">👁 Viewer</button>
-            <button class="btn btn-xs btn-danger" onclick="approveUser('${escapeJs(u.uid)}','rejected')">✕ Tu choi</button>
+            <button class="btn btn-xs btn-primary" data-users-action="approve" data-uid="${escapeJs(u.uid)}" data-role="member">✓ Member</button>
+            <button class="btn btn-xs btn-gold" data-users-action="approve" data-uid="${escapeJs(u.uid)}" data-role="viewer">👁 Viewer</button>
+            <button class="btn btn-xs btn-danger" data-users-action="approve" data-uid="${escapeJs(u.uid)}" data-role="rejected">✕ Tu choi</button>
           </td>
         </tr>`).join('')
       : '<tr><td colspan="4" style="padding:24px;font-size:13px"><center style="color:#94a3b8">Khong co tai khoan cho duyet</center></td></tr>';
@@ -94,7 +94,7 @@ export function renderUsers(): void {
           <td>${badge}</td>
           <td>${fmtDate(u.createdAt as any)}</td>
           <td style="text-align:left;padding-left:8px">${isSuper ? '' : `
-            <select onchange="changeUserRole('${escapeJs(u.uid)}',this.value)"
+            <select data-users-action="change-role" data-uid="${escapeJs(u.uid)}"
                     style="border:1.5px solid var(--border);border-radius:var(--radius);font-size:12px;background:var(--surface);color:var(--text);padding:4px 0">
               <option value="admin"    ${u.role === 'admin'    ? 'selected' : ''}>Admin</option>
               <option value="member"   ${u.role === 'member'   ? 'selected' : ''}>Member</option>
@@ -105,4 +105,50 @@ export function renderUsers(): void {
         </tr>`;
       }).join('')
     : '<tr><td colspan="5" style="text-align:center;color:var(--teal);padding:24px">Chua co tai khoan nao</td></tr>';
+}
+
+// ─── Round 69: Event delegation for users page CSP fix ────────────────
+function attachUsersDelegation(): void {
+  const flag = '__usersDelegationAttached';
+  if ((document.body as any)[flag]) return;
+  (document.body as any)[flag] = true;
+
+  // Click delegation cho nut delete + approve
+  document.body.addEventListener('click', (e: Event) => {
+    const target = (e.target as HTMLElement)?.closest('[data-users-action]') as HTMLElement | null;
+    if (!target) return;
+    const action = target.dataset.usersAction;
+    const uid = target.dataset.uid || '';
+
+    if (action === 'delete') {
+      const name = target.dataset.name || '';
+      if (typeof (window as any).deleteUserAccount === 'function') {
+        (window as any).deleteUserAccount(uid, name);
+      }
+    } else if (action === 'approve') {
+      const role = target.dataset.role || '';
+      if (typeof (window as any).approveUser === 'function') {
+        (window as any).approveUser(uid, role);
+      }
+    }
+  });
+
+  // Change delegation cho role select
+  document.body.addEventListener('change', (e: Event) => {
+    const target = e.target as HTMLElement;
+    if (!target || target.dataset.usersAction !== 'change-role') return;
+    const uid = target.dataset.uid || '';
+    const value = (target as HTMLSelectElement).value;
+    if (typeof (window as any).changeUserRole === 'function') {
+      (window as any).changeUserRole(uid, value);
+    }
+  });
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachUsersDelegation);
+  } else {
+    attachUsersDelegation();
+  }
 }

@@ -242,7 +242,7 @@ function renderChatMsg(m, myUid, prevMsg) {
   const reactions = renderReactions(m);
 
   if (isMe) {
-    const recallBtn = `<button onclick="window.showRecallMenu('${m._key}', ${m.ts || 0}, true, this); event.stopPropagation()" class="msg-recall-btn" style="opacity:0;background:var(--surface-2);border:1px solid var(--border);border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-2);transition:opacity 0.15s;flex-shrink:0;padding:0" title="Tùy chọn">
+    const recallBtn = `<button data-chat-action="show-recall-menu" data-msg-key="${m._key}" data-msg-ts="${m.ts || 0}" data-is-me="1" class="msg-recall-btn" style="opacity:0;background:var(--surface-2);border:1px solid var(--border);border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-2);transition:opacity 0.15s;flex-shrink:0;padding:0" title="Tùy chọn">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg>
     </button>`;
     return `<div class="chat-msg-row" style="display:flex;flex-direction:column;align-items:flex-end;margin:${isGrouped ? "1px" : "6px"} 0 0 0" data-msgkey="${m._key}">
@@ -271,7 +271,7 @@ function renderChatMsg(m, myUid, prevMsg) {
 
   // Nếu là superadmin, thêm nút recall vào tin của user khác (admin moderation)
   const adminRecallBtn = (isSuperAdmin && !isMe)
-    ? `<button onclick="window.showRecallMenu('${m._key}', ${m.ts || 0}, true, this); event.stopPropagation()" class="msg-recall-btn" style="opacity:0;background:var(--surface-2);border:1px solid var(--border);border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-2);transition:opacity 0.15s;flex-shrink:0;padding:0;margin-top:6px" title="Tùy chọn (admin)">
+    ? `<button data-chat-action="show-recall-menu" data-msg-key="${m._key}" data-msg-ts="${m.ts || 0}" data-is-me="1" class="msg-recall-btn" style="opacity:0;background:var(--surface-2);border:1px solid var(--border);border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-2);transition:opacity 0.15s;flex-shrink:0;padding:0;margin-top:6px" title="Tùy chọn (admin)">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg>
     </button>`
     : '';
@@ -280,7 +280,7 @@ function renderChatMsg(m, myUid, prevMsg) {
     ${avatarHTML}
     <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
       ${nameHTML}
-      <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:4px 16px 16px 16px;padding:10px 14px;font-size:13px;line-height:1.5;word-break:break-word;cursor:pointer" onclick="window.showReactionPicker('${m._key}', event)">
+      <div data-chat-action="show-reaction-picker" data-msg-key="${m._key}" style="background:var(--surface-2);border:1px solid var(--border);border-radius:4px 16px 16px 16px;padding:10px 14px;font-size:13px;line-height:1.5;word-break:break-word;cursor:pointer">
         ${m.image && /^(data:image\/|https:\/\/)/.test(m.image) ? `<img src="${escapeHtml(m.image)}" style="max-width:200px;max-height:200px;border-radius:8px;display:block;margin-bottom:${m.text ? '8px' : '0'}">` : ''}
         ${text ? `<span>${text}</span>` : ''}
       </div>
@@ -300,7 +300,7 @@ function renderReactions(m) {
     ${entries.map(([emoji, uids]) => {
       const count = Object.keys(uids).length;
       const hasMe = uids[currentAuth?.uid];
-      return `<span onclick="window.toggleReaction('${m._key}','${emoji}')" style="cursor:pointer;background:${hasMe ? 'rgba(var(--teal-rgb), 0.15)' : 'var(--surface-2)'};border:1px solid ${hasMe ? 'var(--teal)' : 'var(--border)'};border-radius:20px;padding:2px 8px;font-size:12px;display:inline-flex;align-items:center;gap:3px">${emoji} ${count}</span>`;
+      return `<span data-chat-action="toggle-reaction" data-msg-key="${m._key}" data-emoji="${emoji}" style="cursor:pointer;background:${hasMe ? 'rgba(var(--teal-rgb), 0.15)' : 'var(--surface-2)'};border:1px solid ${hasMe ? 'var(--teal)' : 'var(--border)'};border-radius:20px;padding:2px 8px;font-size:12px;display:inline-flex;align-items:center;gap:3px">${emoji} ${count}</span>`;
     }).join('')}
   </div>`;
 }
@@ -407,7 +407,7 @@ function showMentionDropdown(query) {
   const filtered = _chatMembers.filter(n => n.toLowerCase().includes(query));
   if (!filtered.length) { hideMentionDropdown(); return; }
   dd.innerHTML = filtered.map(n =>
-    `<div onclick="window.insertMention('${escapeJs(n)}')" style="padding:8px 12px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--text)" onmouseover="this.style.background='var(--teal-light)'" onmouseout="this.style.background=''">@${escapeHtml(n)}</div>`
+    `<div class="chat-mention-item" data-chat-action="insert-mention" data-mention-name="${escapeJs(n)}" style="padding:8px 12px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--text)">@${escapeHtml(n)}</div>`
   ).join('');
   dd.style.display = 'block';
 }
@@ -491,7 +491,7 @@ export function showReactionPicker(msgKey, e) {
     document.addEventListener('click', () => picker.style.display = 'none', { once: false });
   }
   picker.innerHTML = REACTION_EMOJIS.map(em =>
-    `<span onclick="window.toggleReaction('${msgKey}','${em}');this.closest('#chat-reaction-picker').style.display='none'" style="cursor:pointer;font-size:20px;padding:2px;border-radius:6px;transition:transform 0.1s" onmouseover="this.style.transform='scale(1.3)'" onmouseout="this.style.transform='scale(1)'">${em}</span>`
+    `<span class="chat-reaction-emoji" data-chat-action="toggle-reaction-and-close" data-msg-key="${msgKey}" data-emoji="${em}" style="cursor:pointer;font-size:20px;padding:2px;border-radius:6px">${em}</span>`
   ).join('');
   const rect = e.currentTarget.getBoundingClientRect();
   picker.style.display = 'flex';
@@ -642,14 +642,14 @@ export function showRecallMenu(msgKey, msgTs, isMe, btn) {
   const btnStyle = (color, hoverBg) => `display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border:none;border-radius:7px;background:transparent;color:${color};font-size:12.5px;font-weight:500;cursor:pointer;text-align:left;transition:background 0.12s`;
 
   const everyoneItem = canRecallEveryone
-    ? `<button id="rcl-everyone" style="${btnStyle('#dc2626')}" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='transparent'">
+    ? `<button id="rcl-everyone" class="chat-recall-everyone" style="${btnStyle('#dc2626')}">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
         <span>Gỡ với mọi người</span>
       </button>`
     : '';
 
   const selfItem = showSelfOption
-    ? `<button id="rcl-self" style="${btnStyle('var(--text-1, #0f172a)')}" onmouseover="this.style.background='var(--surface-2, #f1f5f9)'" onmouseout="this.style.background='transparent'">
+    ? `<button id="rcl-self" class="chat-recall-self" style="${btnStyle('var(--text-1, #0f172a)')}">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
         <span>Gỡ chỉ phía bạn</span>
       </button>`
@@ -869,3 +869,65 @@ function attachChatListeners() {
   });
 }
 attachChatListeners();
+
+// ─── Round 69: Event delegation for chat CSP fix ────────────────
+function attachChatDelegation(): void {
+  const flag = '__chatDelegationAttached';
+  if ((document.body as any)[flag]) return;
+  (document.body as any)[flag] = true;
+
+  document.body.addEventListener('click', (e: Event) => {
+    const target = (e.target as HTMLElement)?.closest('[data-chat-action]') as HTMLElement | null;
+    if (!target) return;
+    const action = target.dataset.chatAction;
+    const msgKey = target.dataset.msgKey || '';
+
+    switch (action) {
+      case 'show-recall-menu': {
+        e.stopPropagation();
+        const ts = parseInt(target.dataset.msgTs || '0', 10);
+        const isMe = target.dataset.isMe === '1';
+        if (typeof (window as any).showRecallMenu === 'function') {
+          (window as any).showRecallMenu(msgKey, ts, isMe, target);
+        }
+        return;
+      }
+      case 'show-reaction-picker':
+        if (typeof (window as any).showReactionPicker === 'function') {
+          (window as any).showReactionPicker(msgKey, e);
+        }
+        return;
+      case 'toggle-reaction': {
+        const emoji = target.dataset.emoji || '';
+        if (typeof (window as any).toggleReaction === 'function') {
+          (window as any).toggleReaction(msgKey, emoji);
+        }
+        return;
+      }
+      case 'toggle-reaction-and-close': {
+        const emoji = target.dataset.emoji || '';
+        if (typeof (window as any).toggleReaction === 'function') {
+          (window as any).toggleReaction(msgKey, emoji);
+        }
+        const picker = target.closest('#chat-reaction-picker') as HTMLElement | null;
+        if (picker) picker.style.display = 'none';
+        return;
+      }
+      case 'insert-mention': {
+        const name = target.dataset.mentionName || '';
+        if (typeof (window as any).insertMention === 'function') {
+          (window as any).insertMention(name);
+        }
+        return;
+      }
+    }
+  });
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachChatDelegation);
+  } else {
+    attachChatDelegation();
+  }
+}

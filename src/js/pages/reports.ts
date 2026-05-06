@@ -207,7 +207,7 @@ function renderDatePicker() {
     const active = _filterMode === mode
     const bg = active ? 'var(--teal)' : 'var(--surface-2, #f1f5f9)'
     const fg = active ? '#fff' : '#475569'
-    return `<button onclick="window._reportsSetMode('${mode}')" style="padding:7px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:${bg};color:${fg};transition:all 0.15s">${label}</button>`
+    return `<button data-reports-action="set-mode" data-mode="${mode}" style="padding:7px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:${bg};color:${fg};transition:all 0.15s">${label}</button>`
   }
 
   let monthPicker = ''
@@ -221,7 +221,7 @@ function renderDatePicker() {
       const bg = isSelected ? 'var(--teal-light, #f0fdfa)' : 'transparent'
       const fg = isSelected ? 'var(--teal)' : '#0f172a'
       const border = isSelected ? '1.5px solid var(--teal)' : '1px solid #e2e8f0'
-      months.push(`<button onclick="window._reportsSetMonth(${d.getFullYear()}, ${d.getMonth()})" style="padding:6px 12px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:${bg};color:${fg};border:${border};transition:all 0.15s">${label}</button>`)
+      months.push(`<button data-reports-action="set-month" data-year="${d.getFullYear()}" data-month="${d.getMonth()}" style="padding:6px 12px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:${bg};color:${fg};border:${border};transition:all 0.15s">${label}</button>`)
     }
     monthPicker = `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px">${months.join('')}</div>`
   }
@@ -240,7 +240,7 @@ function renderDatePicker() {
       const bg = isSelected ? 'var(--teal-light, #f0fdfa)' : 'transparent'
       const fg = isSelected ? 'var(--teal)' : '#0f172a'
       const border = isSelected ? '1.5px solid var(--teal)' : '1px solid #e2e8f0'
-      quarters.push(`<button onclick="window._reportsSetQuarter(${year}, ${q})" style="padding:6px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:${bg};color:${fg};border:${border};transition:all 0.15s">${label}</button>`)
+      quarters.push(`<button data-reports-action="set-quarter" data-year="${year}" data-quarter="${q}" style="padding:6px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:${bg};color:${fg};border:${border};transition:all 0.15s">${label}</button>`)
     }
     quarterPicker = `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px">${quarters.join('')}</div>`
   }
@@ -252,13 +252,13 @@ function renderDatePicker() {
         <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:#64748b">
           Từ ngày
           <input type="date" id="report-date-from" value="${fmtDateInput(_filterFrom)}"
-                 onchange="window._reportsSetCustomRange()"
+                 data-reports-action="custom-range"
                  style="padding:7px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
         </label>
         <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:#64748b">
           Đến ngày
           <input type="date" id="report-date-to" value="${fmtDateInput(_filterTo)}"
-                 onchange="window._reportsSetCustomRange()"
+                 data-reports-action="custom-range"
                  style="padding:7px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
         </label>
       </div>
@@ -579,3 +579,59 @@ window.addEventListener('themechange', () => {
     renderReports()
   }
 })
+
+// ─── Round 69: Event delegation for reports page CSP fix ────────────────
+function attachReportsDelegation(): void {
+  const flag = '__reportsDelegationAttached';
+  if ((document.body as any)[flag]) return;
+  (document.body as any)[flag] = true;
+
+  document.body.addEventListener('click', (e: Event) => {
+    const target = (e.target as HTMLElement)?.closest('[data-reports-action]') as HTMLElement | null;
+    if (!target) return;
+    const action = target.dataset.reportsAction;
+
+    switch (action) {
+      case 'set-mode': {
+        const mode = target.dataset.mode || '';
+        if (typeof (window as any)._reportsSetMode === 'function') {
+          (window as any)._reportsSetMode(mode);
+        }
+        return;
+      }
+      case 'set-month': {
+        const year = parseInt(target.dataset.year || '0', 10);
+        const month = parseInt(target.dataset.month || '0', 10);
+        if (typeof (window as any)._reportsSetMonth === 'function') {
+          (window as any)._reportsSetMonth(year, month);
+        }
+        return;
+      }
+      case 'set-quarter': {
+        const year = parseInt(target.dataset.year || '0', 10);
+        const quarter = parseInt(target.dataset.quarter || '0', 10);
+        if (typeof (window as any)._reportsSetQuarter === 'function') {
+          (window as any)._reportsSetQuarter(year, quarter);
+        }
+        return;
+      }
+    }
+  });
+
+  // Change delegation cho custom date inputs
+  document.body.addEventListener('change', (e: Event) => {
+    const target = e.target as HTMLElement;
+    if (!target || target.dataset.reportsAction !== 'custom-range') return;
+    if (typeof (window as any)._reportsSetCustomRange === 'function') {
+      (window as any)._reportsSetCustomRange();
+    }
+  });
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachReportsDelegation);
+  } else {
+    attachReportsDelegation();
+  }
+}

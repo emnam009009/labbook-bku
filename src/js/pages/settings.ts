@@ -10,8 +10,8 @@ function renderStylePicker(): void {
 
   container.innerHTML = styles.map(s => `
     <div class="style-card ${s.name === current ? 'active' : ''}"
-         data-style="${s.name}"
-         onclick="window.selectStyle('${s.name}')">
+         data-settings-action="select-style"
+         data-style="${s.name}">
       <div class="style-preview style-preview-${s.name}">
         <div class="style-preview-header"></div>
         <div class="style-preview-body">
@@ -59,3 +59,31 @@ document.addEventListener('pageChange', (e: Event) => {
     renderSettings();
   }
 });
+
+// ─── Round 69: Event delegation for settings page CSP fix ────────────────
+function attachSettingsDelegation(): void {
+  const flag = '__settingsDelegationAttached';
+  if ((document.body as any)[flag]) return;
+  (document.body as any)[flag] = true;
+
+  document.body.addEventListener('click', (e: Event) => {
+    const target = (e.target as HTMLElement)?.closest('[data-settings-action]') as HTMLElement | null;
+    if (!target) return;
+    const action = target.dataset.settingsAction;
+
+    if (action === 'select-style') {
+      const name = target.dataset.style || '';
+      if (name && typeof (window as any).selectStyle === 'function') {
+        (window as any).selectStyle(name);
+      }
+    }
+  });
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachSettingsDelegation);
+  } else {
+    attachSettingsDelegation();
+  }
+}
