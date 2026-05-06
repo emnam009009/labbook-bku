@@ -317,7 +317,7 @@ export function deleteMemberSafe(key: string, name: string, uid?: string): void 
     onValue(ref(db, 'users/' + uid + '/role'), (snap: any) => {
       const role = snap.val();
       if (role && !['rejected'].includes(role)) {
-        const roleLabel = { admin: 'Admin', member: 'Member', viewer: 'Viewer', pending: 'Chờ duyệt' };
+        const roleLabel: Record<string, string> = { admin: 'Admin', member: 'Member', viewer: 'Viewer', pending: 'Chờ duyệt' };
         const ok = confirm('⚠️ Thành viên "' + name + '" vẫn còn tài khoản đang hoạt động (vai trò: ' + (roleLabel[role] || role) + ').\nBạn có chắc muốn xóa thẻ thành viên này không?');
         if (ok) delItem('members', key, name);
       } else {

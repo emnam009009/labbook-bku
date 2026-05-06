@@ -175,7 +175,7 @@
     }
   }
 
-  function applyRowBg(tr, on) {
+  function applyRowBg(tr: HTMLElement, on: boolean) {
     const isDark = document.documentElement.classList.contains('dark');
     const themeColor = getThemeColor();
     const bg = on
@@ -185,7 +185,7 @@
     if (on) tr.style.setProperty('background', bg, 'important');
     else tr.style.removeProperty('background');
 
-    tr.querySelectorAll(':scope > td').forEach(td => {
+    tr.querySelectorAll<HTMLTableCellElement>(':scope > td').forEach(td => {
       if (on) {
         td.dataset._origBg = td.style.background || '';
         td.style.setProperty('background', bg, 'important');

@@ -20,7 +20,7 @@
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
     "strict": false,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "strictNullChecks": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

@@ -12,6 +12,29 @@
 
 import { fuzzy, vals, escapeHtml } from '../utils/format.js'
 
+// ── Type for search records ────────────────────────────────────────────
+// Each cache record may have any of these fields depending on type
+// (hydro/electrode/electrochem/chemical/equipment/member/booking).
+type SearchItem = {
+  code?: string;
+  name?: string;
+  material?: string;
+  person?: string;
+  electrode?: string;
+  formula?: string;
+  cas?: string;
+  model?: string;
+  vendor?: string;
+  serial?: string;
+  email?: string;
+  equipment?: string;
+  equipmentName?: string;
+  requesterName?: string;
+  purpose?: string;
+  reaction?: string;
+  [key: string]: unknown;
+};
+
 // ── Config ────────────────────────────────────────────────────────────
 const MAX_PER_TYPE = 5;     // tối đa 5 kết quả mỗi loại
 const MAX_TOTAL = 15;       // tổng max
@@ -26,8 +49,8 @@ const SEARCHABLES = [
     pageId: 'hydrothermal',
     cacheKey: 'hydro',
     fields: ['code', 'material', 'person'],
-    titleFn: r => r.code || '—',
-    subFn: r => [r.material, r.person].filter(Boolean).join(' · '),
+    titleFn: (r: SearchItem) => r.code || '—',
+    subFn: (r: SearchItem) => [r.material, r.person].filter(Boolean).join(' · '),
   },
   {
     type: 'electrode',
@@ -36,8 +59,8 @@ const SEARCHABLES = [
     pageId: 'electrode',
     cacheKey: 'electrode',
     fields: ['code', 'material', 'person'],
-    titleFn: r => r.code || '—',
-    subFn: r => [r.material, r.person].filter(Boolean).join(' · '),
+    titleFn: (r: SearchItem) => r.code || '—',
+    subFn: (r: SearchItem) => [r.material, r.person].filter(Boolean).join(' · '),
   },
   {
     type: 'electrochem',
@@ -46,8 +69,8 @@ const SEARCHABLES = [
     pageId: 'electrochemistry',
     cacheKey: 'electrochem',
     fields: ['code', 'electrode', 'person', 'reaction'],
-    titleFn: r => r.code || '—',
-    subFn: r => [r.electrode, r.person].filter(Boolean).join(' · '),
+    titleFn: (r: SearchItem) => r.code || '—',
+    subFn: (r: SearchItem) => [r.electrode, r.person].filter(Boolean).join(' · '),
   },
   {
     type: 'chemical',
@@ -56,8 +79,8 @@ const SEARCHABLES = [
     pageId: 'chemicals',
     cacheKey: 'chemicals',
     fields: ['name', 'formula', 'cas'],
-    titleFn: r => r.name || '—',
-    subFn: r => [r.formula, r.cas].filter(Boolean).join(' · '),
+    titleFn: (r: SearchItem) => r.name || '—',
+    subFn: (r: SearchItem) => [r.formula, r.cas].filter(Boolean).join(' · '),
   },
   {
     type: 'equipment',
@@ -66,8 +89,8 @@ const SEARCHABLES = [
     pageId: 'equipment',
     cacheKey: 'equipment',
     fields: ['name', 'model', 'vendor', 'serial'],
-    titleFn: r => r.name || '—',
-    subFn: r => [r.model, r.vendor].filter(Boolean).join(' · '),
+    titleFn: (r: SearchItem) => r.name || '—',
+    subFn: (r: SearchItem) => [r.model, r.vendor].filter(Boolean).join(' · '),
   },
   {
     type: 'member',
@@ -76,8 +99,8 @@ const SEARCHABLES = [
     pageId: 'members',
     cacheKey: 'members',
     fields: ['name', 'email'],
-    titleFn: r => r.name || '—',
-    subFn: r => r.email || '',
+    titleFn: (r: SearchItem) => r.name || '—',
+    subFn: (r: SearchItem) => r.email || '',
   },
   {
     type: 'booking',
@@ -86,8 +109,8 @@ const SEARCHABLES = [
     pageId: 'booking',
     cacheKey: 'bookings',
     fields: ['equipment', 'equipmentName', 'requesterName', 'purpose'],
-    titleFn: r => r.equipmentName || r.equipment || '—',
-    subFn: r => [r.requesterName, r.purpose].filter(Boolean).join(' · '),
+    titleFn: (r: SearchItem) => r.equipmentName || r.equipment || '—',
+    subFn: (r: SearchItem) => [r.requesterName, r.purpose].filter(Boolean).join(' · '),
   },
 ];
 
