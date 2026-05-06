@@ -1,4 +1,4 @@
-// src/js/ui/pdf-export-modal.ts
+// src/ts/ui/pdf-export-modal.ts
 // @ts-nocheck
 // Modal "Xuất dữ liệu" — chọn ảnh + page size + orientation → preview → download
 

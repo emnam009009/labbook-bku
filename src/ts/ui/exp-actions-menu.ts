@@ -1,4 +1,4 @@
-// src/js/ui/exp-actions-menu.ts
+// src/ts/ui/exp-actions-menu.ts
 // Dropdown menu hien thi khi click nut ⋯ tren row hydro/electrode.
 // Muc: Nhap du lieu | Xuat du lieu
 

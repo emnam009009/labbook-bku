@@ -1,4 +1,4 @@
-// src/js/services/plot/bandgap-fit.ts
+// src/ts/services/plot/bandgap-fit.ts
 // Auto-fit bandgap (Eg) tu Tauc plot bang linear extrapolation.
 //
 // Thuat toan:

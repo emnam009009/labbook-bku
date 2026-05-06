@@ -1,4 +1,4 @@
-// src/js/services/parsers/jcamp-jasco.ts
+// src/ts/services/parsers/jcamp-jasco.ts
 // Parser cho JCAMP-DX format (JASCO UV-Vis spectrometer output).
 //
 // Cau truc file:

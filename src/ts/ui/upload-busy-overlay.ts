@@ -1,4 +1,4 @@
-// src/js/ui/upload-busy-overlay.ts
+// src/ts/ui/upload-busy-overlay.ts
 // Round 87: spinner overlay + input lock khi dang upload/parse.
 // Block user spam drop file lien tuc khi he thong dang xu ly.
 

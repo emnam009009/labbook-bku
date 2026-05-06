@@ -1,4 +1,4 @@
-// src/js/services/plot/tauc.ts
+// src/ts/services/plot/tauc.ts
 // Tauc plot transform cho UV-Vis DRS / UV-Vis.
 //
 // Input: data tho (wavelength lambda in nm, reflectance R in % or absorbance)

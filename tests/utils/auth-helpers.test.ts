@@ -1,5 +1,5 @@
 /**
- * Tests cho src/js/utils/auth-helpers.js
+ * Tests cho src/ts/utils/auth-helpers.js
  *
  * File này phụ thuộc window.currentAuth và window.cache → cần setup/teardown.
  * Đây là pattern mock cho các module sử dụng global state.
@@ -11,7 +11,7 @@ import {
   canDelete,
   canEdit,
   syncAuthState,
-} from '../../src/js/utils/auth-helpers.js'
+} from '../../src/ts/utils/auth-helpers.js'
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Helpers để setup/teardown window mocks

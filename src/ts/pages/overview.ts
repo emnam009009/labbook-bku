@@ -1,4 +1,4 @@
-// src/js/pages/overview.ts
+// src/ts/pages/overview.ts
 // Round 77c + Round 78 refactor: cross-experiment overview page.
 // Lists ALL image + saved plots from ALL hydro/electrode experiments,
 // classified into 6 analysis groups via shared classifier.

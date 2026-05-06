@@ -20,7 +20,7 @@ Tài liệu này mô tả kiến trúc, luồng dữ liệu, và quy ước code
 ## 📁 Cấu trúc thư mục / Folder structure
 
 ```
-src/js/
+src/ts/
 ├── main.js                          # Entry point — import tất cả modules, gắn lên window, khởi động app
 ├── firebase.js                      # Init Firebase + export helpers (fbSet, fbGet, fbListen, ...)
 ├── auth.js                          # Authentication core (login, register, role management)

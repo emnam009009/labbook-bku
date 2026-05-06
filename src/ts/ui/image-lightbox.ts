@@ -1,4 +1,4 @@
-// src/js/ui/image-lightbox.ts
+// src/ts/ui/image-lightbox.ts
 // Round 82: Image lightbox modal — display attached images full-size
 // inside the app (no new tab). Click overlay or ESC to close.
 

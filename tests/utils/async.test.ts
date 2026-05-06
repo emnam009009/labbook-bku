@@ -1,12 +1,12 @@
 /**
- * Tests cho src/js/utils/async.js
+ * Tests cho src/ts/utils/async.js
  *
  * safeAsync wrap async function và toast lỗi nếu có.
  * Cần mock window.showToast để verify nó được gọi đúng.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { safeAsync } from '../../src/js/utils/async.js'
+import { safeAsync } from '../../src/ts/utils/async.js'
 
 beforeEach(() => {
   globalThis.window = {}

@@ -1,8 +1,8 @@
-// src/js/services/attachment-classifier.ts
+// src/ts/services/attachment-classifier.ts
 // Round 78: shared utility cho phan loai 6 nhom + render thumbnail.
 // Duoc dung boi:
-//   - src/js/ui/overview-modal.ts (per-experiment modal)
-//   - src/js/pages/overview.ts (cross-experiment page)
+//   - src/ts/ui/overview-modal.ts (per-experiment modal)
+//   - src/ts/pages/overview.ts (cross-experiment page)
 
 import { ATTACHMENT_CATEGORIES } from './attachments.js';
 import { escapeHtml } from '../utils/format.js';

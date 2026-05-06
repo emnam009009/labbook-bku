@@ -1,5 +1,5 @@
 /// <reference lib="webworker" />
-// src/js/services/plot/highres-png.worker.ts
+// src/ts/services/plot/highres-png.worker.ts
 // Round 89: render PNG 300 DPI trong Web Worker thread
 // (KHONG block main thread).
 //

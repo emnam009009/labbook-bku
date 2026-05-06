@@ -1,4 +1,4 @@
-// src/js/ui/attachments-panel.ts
+// src/ts/ui/attachments-panel.ts
 // @ts-nocheck
 // Renders attachments management UI for one experiment.
 // Designed to be embedded inside hydro/electrode edit modal.

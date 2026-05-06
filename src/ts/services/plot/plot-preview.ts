@@ -1,4 +1,4 @@
-// src/js/services/plot/plot-preview.ts
+// src/ts/services/plot/plot-preview.ts
 // @ts-nocheck
 // Render data preview chart using Chart.js. Designed for both:
 //   - on-screen preview (small canvas)

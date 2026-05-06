@@ -1,4 +1,4 @@
-// src/js/services/parsers/corrware.ts
+// src/ts/services/parsers/corrware.ts
 // Parser cho CorrWare ASCII format (.cor) — CorrWare/Solartron output
 // dung cho cac phep do dien hoa: CV, LSV, GCD, EIS.
 //

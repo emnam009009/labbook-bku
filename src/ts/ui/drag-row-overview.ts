@@ -1,4 +1,4 @@
-// src/js/ui/drag-row-overview.ts
+// src/ts/ui/drag-row-overview.ts
 // Round 77c + Round 80: Drag-to-open Tong quan modal — drag a hydro/electrode row
 // LEFT by >= 150px to open the overview modal for that experiment.
 //

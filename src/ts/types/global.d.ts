@@ -1,5 +1,5 @@
 /**
- * src/js/types/global.d.ts
+ * src/ts/types/global.d.ts
  *
  * Khai bao type cho window object voi cac function/property duoc gan
  * trong codebase (CSP refactor Phase 55-58e su dung pattern window.X

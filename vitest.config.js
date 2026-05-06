@@ -18,8 +18,8 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
-      include: ['src/js/utils/**/*.js'],
-      exclude: ['src/js/**/*.test.js'],
+      include: ['src/ts/utils/**/*.js'],
+      exclude: ['src/ts/**/*.test.js'],
     },
   },
 })

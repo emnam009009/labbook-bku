@@ -21,7 +21,7 @@ LabBook BKU là web app quản lý phòng thí nghiệm hoá. Stack **Vite 8 + T
 ## 1. Stack & Architecture
 
 ### Build / Deploy
-- **Vite** bundle TypeScript. `index.html` là root, `src/js/main.ts` là entry.
+- **Vite** bundle TypeScript. `index.html` là root, `src/ts/main.ts` là entry.
 - **Tailwind 3** + custom CSS (xem `src/css/`).
 - **Firebase**: Auth + Realtime Database (Spark plan, không có Cloud Functions).
 - **Hosting**: Firebase Hosting (Static), có CSP header strict (xem `firebase.json`).
@@ -38,7 +38,7 @@ firebase deploy --only hosting   # deploy
 
 ### Module hệ thống
 - **TypeScript ESM** (không React/Vue). Tất cả file dùng `import/export`.
-- File ngoài `src/js/` được Vite bundle thành `dist/assets/index-*.js`.
+- File ngoài `src/ts/` được Vite bundle thành `dist/assets/index-*.js`.
 - **TypeScript strict mode**: `noImplicitAny` + `strictNullChecks` + `noUnusedLocals` + `noUnusedParameters` ON. `strict: true` chưa bật.
 - 24 file lớn render-heavy (DOM/Chart.js/jsPDF/Worker) có `@ts-nocheck` directive — strict flag không apply cho các file này.
 - Migration TS hoàn tất ở Round 71. Feature work tiếp tục Round 72-90 (xem section 12).
@@ -55,7 +55,7 @@ labbook/
 ├── tsconfig.json               # TS strict: noImplicitAny + strictNullChecks ON
 ├── src/
 │   ├── css/                    # Tailwind + custom CSS
-│   └── js/                     # 77 .ts files, 0 .js files
+│   └── ts/                     # 77 .ts files, 0 .js files
 │       ├── main.ts             # ENTRY. Init code + DOMContentLoaded (@ts-nocheck)
 │       ├── auth.ts             # Firebase Auth wrapper, exports currentAuth
 │       ├── firebase.ts         # Firebase RTDB SDK wrapper (typed)
@@ -139,7 +139,7 @@ npm test   # 62/62 passing - phải maintain
 ## 4. Patterns then chốt
 
 ### 4.1. Global delegation (CSP-safe events)
-- File chính: `src/js/services/global-delegation.js`
+- File chính: `src/ts/services/global-delegation.js`
 - Listen 7 sự kiện trên `document.body`: click, submit, change, input, keydown, dragover, dragleave, drop
 - Dispatch theo `data-action`/`data-submit-action`/`data-change-action`/`data-input-action`/`data-keydown-action`/`data-drop-zone`
 - **Idempotent** qua `document.body._globalDelegated` flag
@@ -243,7 +243,7 @@ yAxisTicksHires, egAnnotation (Tauc only).
 
 ### 4.11. Busy overlay pattern (Round 87)
 
-Tránh spam upload — `src/js/ui/upload-busy-overlay.ts`:
+Tránh spam upload — `src/ts/ui/upload-busy-overlay.ts`:
 - `showBusyOverlay(panel, msg)`: insert spinner overlay over `.att-panel`,
   disable file input + `.att-upload-btn`
 - `setBusyMessage(msg)`: update message qua các stages mà không thay đổi
@@ -360,11 +360,11 @@ Tool configs (`vite.config.js`, `tailwind.config.js`, `postcss.config.js`, `vite
 Đề xuất thứ tự:
 1. `package.json` — stack overview
 2. `index.html` (search "id=" để map page IDs) — UI structure
-3. `src/js/main.ts` — init flow + Firebase listeners (@ts-nocheck, lớn nhất)
-4. `src/js/services/global-delegation.ts` — toàn bộ event routing
-5. `src/js/state.ts` — cache schema (typed)
-6. `src/js/auth.js` — currentAuth + role checks
-7. `src/js/pages/{trang}.js` — page-specific render + actions
+3. `src/ts/main.ts` — init flow + Firebase listeners (@ts-nocheck, lớn nhất)
+4. `src/ts/services/global-delegation.ts` — toàn bộ event routing
+5. `src/ts/state.ts` — cache schema (typed)
+6. `src/ts/auth.js` — currentAuth + role checks
+7. `src/ts/pages/{trang}.js` — page-specific render + actions
 
 ---
 
@@ -401,8 +401,8 @@ Tool configs (`vite.config.js`, `tailwind.config.js`, `postcss.config.js`, `vite
 - `allowJs: true`, `checkJs: false` — vẫn để vì test files migrate xong
   nhưng tool configs vẫn là `.js`
 
-**Window types**: Khai báo trong `src/js/types/global.d.ts`. Stub modules
-(như `qrcode`) trong `src/js/types/qrcode.d.ts`. Khi thêm `window.X` mới
+**Window types**: Khai báo trong `src/ts/types/global.d.ts`. Stub modules
+(như `qrcode`) trong `src/ts/types/qrcode.d.ts`. Khi thêm `window.X` mới
 trong code → thêm declaration ở `global.d.ts`.
 
 **Commands**:
@@ -582,24 +582,24 @@ Sau khi TS migration hoàn tất ở Round 71, tập trung vào **attachments sy
 Khi sửa attachments-related, đây là mức độ ảnh hưởng:
 
 **TIER 1 — đụng tới 90% các fix**:
-- `src/js/ui/attachments-panel.ts` (~1100 lines): handleFiles, preview chart,
+- `src/ts/ui/attachments-panel.ts` (~1100 lines): handleFiles, preview chart,
   axis controls, save plot button, dropzone state management
-- `src/js/services/attachments.ts` (~457 lines): uploadAttachment, uploadMany,
+- `src/ts/services/attachments.ts` (~457 lines): uploadAttachment, uploadMany,
   validateFile, sanitizeFileName, listAttachments, deleteAttachment
 - `src/css/attachments.css` (~1572 lines): toàn bộ styling
 
 **TIER 2 — đụng khi liên quan parsing/plotting**:
-- `src/js/services/parsers/detect.ts`: 4-layer auto-detect category
-- `src/js/services/parsers/index.ts`: parseDataFile dispatcher, isParseableFile whitelist
-- `src/js/services/parsers/{jcamp-jasco,corrware,parser-core}.ts`: format-specific parsers
-- `src/js/services/plot/plot-preview.ts`: renderPreview, renderHighResPNG dispatcher
-- `src/js/services/plot/highres-png.worker.ts`: worker PNG render
+- `src/ts/services/parsers/detect.ts`: 4-layer auto-detect category
+- `src/ts/services/parsers/index.ts`: parseDataFile dispatcher, isParseableFile whitelist
+- `src/ts/services/parsers/{jcamp-jasco,corrware,parser-core}.ts`: format-specific parsers
+- `src/ts/services/plot/plot-preview.ts`: renderPreview, renderHighResPNG dispatcher
+- `src/ts/services/plot/highres-png.worker.ts`: worker PNG render
 
 **TIER 3 — đụng khi liên quan UX modals/lightbox**:
-- `src/js/ui/overview-modal.ts`: 6-group accordion modal
-- `src/js/ui/upload-busy-overlay.ts`: spinner + spam guard
-- `src/js/ui/image-lightbox.ts`: click-to-zoom thumbnails
-- `src/js/ui/modal.ts`: openModal + openModalStacked
+- `src/ts/ui/overview-modal.ts`: 6-group accordion modal
+- `src/ts/ui/upload-busy-overlay.ts`: spinner + spam guard
+- `src/ts/ui/image-lightbox.ts`: click-to-zoom thumbnails
+- `src/ts/ui/modal.ts`: openModal + openModalStacked
 
 **TIER 4 — RTDB/Storage rules** (deploy riêng `firebase deploy --only database`):
 - `database.rules.json`: attachments validate (category regex, file metadata fields)

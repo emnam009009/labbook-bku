@@ -1,4 +1,4 @@
-// src/js/services/parsers/index.ts
+// src/ts/services/parsers/index.ts
 // Dispatcher: chon spec theo category.
 
 import { parseFileWithSpec, readFileAsText, readExcelAsRows, parseDelimited } from './parser-core.js';

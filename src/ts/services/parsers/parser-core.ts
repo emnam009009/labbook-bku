@@ -1,4 +1,4 @@
-// src/js/services/parsers/parser-core.ts
+// src/ts/services/parsers/parser-core.ts
 // Helpers chung cho tat ca parsers.
 
 interface ParsedTable {

@@ -1,4 +1,4 @@
-// src/js/services/parsers/detect.ts
+// src/ts/services/parsers/detect.ts
 // Auto-detect loai phep phan tich tu file upload (XRD/Raman/FTIR/UV-Vis/PL/SEM/TEM).
 //
 // Layered detection — chay theo thu tu, dung khi tim duoc match dang tin:

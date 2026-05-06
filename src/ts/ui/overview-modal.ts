@@ -1,4 +1,4 @@
-// src/js/ui/overview-modal.ts
+// src/ts/ui/overview-modal.ts
 // Round 77b + Round 78 refactor: per-experiment overview modal.
 // Render the same 6 analysis groups using shared classifier utility.
 

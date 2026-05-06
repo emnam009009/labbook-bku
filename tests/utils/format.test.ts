@@ -1,5 +1,5 @@
 /**
- * Tests cho src/js/utils/format.js
+ * Tests cho src/ts/utils/format.js
  *
  * Chạy: npm test
  * Watch: npm test -- --watch
@@ -15,7 +15,7 @@ import {
   fuzzy,
   formatChemical,
   fmtDate,
-} from '../../src/js/utils/format.js'
+} from '../../src/ts/utils/format.js'
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  escapeHtml

@@ -5,12 +5,12 @@
 ### Bước 1: Copy file vào project
 
 ```bash
-cp labbook-extensions.js your-project/labbook/src/js/
+cp labbook-extensions.js your-project/labbook/src/ts/
 ```
 
 ### Bước 2: Import vào `main.js`
 
-Thêm dòng này ở **đầu file** `src/js/main.js`, sau các import Firebase:
+Thêm dòng này ở **đầu file** `src/ts/main.ts`, sau các import Firebase:
 
 ```js
 // Ở cuối phần imports
@@ -20,7 +20,7 @@ import './labbook-extensions.js'
 Hoặc thêm thẻ script riêng vào `index.html` (trước thẻ đóng `</body>`):
 
 ```html
-<script type="module" src="/src/js/labbook-extensions.js"></script>
+<script type="module" src="/src/ts/labbook-extensions.js"></script>
 ```
 
 ### Bước 3: Thêm CSS cho spinner (nếu chưa có)

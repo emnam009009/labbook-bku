@@ -1,4 +1,4 @@
-// src/js/services/attachments.ts
+// src/ts/services/attachments.ts
 // Core service for experiment attachments (PR #1).
 // Handles upload to Firebase Storage + metadata to RTDB.
 
