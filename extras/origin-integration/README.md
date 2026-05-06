@@ -114,3 +114,60 @@ Browser tải file vào thư mục khác (không phải `~/Downloads`). Sửa br
 - Wrapper script CHỈ pass filename argument tới Origin, không chạy lệnh khác
 - Filename được sanitize: strip path separators (`/`, `\`)
 - Browser hỏi xác nhận trước khi launch (security default)
+
+
+## Round 96 Update: Auto-plot LabTalk Script
+
+Web app generates a `.ogs` (LabTalk script) alongside data file. Origin runs the
+script via `Origin64.exe -r script.ogs` — auto-imports data + creates plot with
+axis labels and range matching the web preview.
+
+Workflow with auto-plot:
+
+```
+[User] click "Mở bằng Origin"
+  ↓
+[Web] generate ogs script (axis labels by category, ranges from preview controls)
+  ↓
+[Web] download (1) data file + (2) ogs script (both → ~/Downloads)
+  ↓
+[Web] navigate to labbook-origin://file.xlsx?withScript=1
+  ↓
+[Browser] confirm prompt → Open
+  ↓
+[Wrapper batch] detect ?withScript=1 → check for matching .ogs in Downloads
+  ↓
+[Wrapper] start Origin64.exe -r <path>/file.ogs
+  ↓
+[Origin] runs script:
+    1. Open new workbook
+    2. impMSExcel / impASC the data file
+    3. Set column long names (X label / Y label)
+    4. plotxy iy:=(1,2) plot:=200 (line plot)
+    5. Apply axis range from preview (layer.x.from / .to / .inc)
+    6. Set teal color (RGB 13,148,136 to match Chart.js preview)
+  ↓
+[Origin] graph window appears — user can edit further
+```
+
+If `.ogs` script is not found (e.g. user disabled the second download), wrapper
+falls back to plain mode (open data file in Origin without auto-plot).
+
+### LabTalk syntax quick reference (used by generator)
+
+| Command                   | Purpose                                         |
+|---------------------------|-------------------------------------------------|
+| `newbook name:="X";`      | Create new workbook named X                     |
+| `impMSExcel fname:="..."` | Import .xlsx                                    |
+| `impASC fname:="..."`     | Import .csv/.tsv/.txt/.cor                      |
+| `wks.colN.lname$ = "L";`  | Set column N's long name (label)                |
+| `wks.colN.type = 4;`      | Set column N as X (1=Y, 4=X)                    |
+| `plotxy iy:=(1,2) plot:=200;` | Line plot col1=X, col2=Y                    |
+| `layer.x.from = 0;`       | X axis min                                       |
+| `layer.x.to = 80;`        | X axis max                                       |
+| `layer.x.inc = 10;`       | X axis major step                                |
+| `layer.x.type = 2;`       | X axis log scale (1=linear, 2=log)              |
+| `xb.text$ = "X label";`   | Bottom X axis title                              |
+| `yl.text$ = "Y label";`   | Left Y axis title                                |
+| `set %C -c color(R,G,B);` | Set active plot line color                       |
+| `set %C -w 1500;`         | Line thickness 1.5pt (units: 1/1000 pt)         |

@@ -21,6 +21,7 @@ import { renderPreview, renderHighResPNG } from '../services/plot/plot-preview.j
 import { openImageLightbox } from './image-lightbox.js';
 import { showBusyOverlay, hideBusyOverlay, setBusyMessage, isBusy, resetBusyCount } from './upload-busy-overlay.js';
 import { canOpenInOrigin, downloadAndOpenInOrigin } from '../services/origin-launcher.js';
+import { generateOgsScript } from '../services/origin-labtalk.js';
 import { transformToTauc, TAUC_PRESETS, formatN } from '../services/plot/tauc.js';
 import { autoFitBandgap } from '../services/plot/bandgap-fit.js';
 
@@ -888,13 +889,15 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
       return;
     }
 
-    // Round 95: Origin launch button
+    // Round 95+96: Origin launch button (with auto-plot LabTalk script)
     const originBtn = e.target.closest('.att-origin-btn');
     if (originBtn) {
       e.preventDefault();
       e.stopPropagation();
       const url = originBtn.dataset.url;
       const fileName = originBtn.dataset.filename;
+      const itemCategory = originBtn.dataset.category;
+      const itemId = originBtn.dataset.id;
       if (!url || !fileName) return;
       try {
         originBtn.disabled = true;
@@ -902,8 +905,36 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
         const resp = await fetch(url);
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const blob = await resp.blob();
-        await downloadAndOpenInOrigin(blob, fileName);
-        showToast(`Đã tải ${fileName} · Origin sẽ mở (xác nhận trên trình duyệt nếu được hỏi)`, 'success', null, 6000);
+
+        // Round 96: generate LabTalk auto-plot script with axis settings
+        // matching what user has configured in the web preview (if available
+        // for this attachment from saved metadata)
+        let ogsScript: string | undefined = undefined;
+        try {
+          // Lookup attachment metadata to get saved axisSettings (Round 82)
+          const meta = await listAttachments(refType, refId)
+            .then((arr) => arr.find((a) => a.id === itemId));
+          const cat = itemCategory || 'other';
+          ogsScript = generateOgsScript({
+            dataFilename: fileName,
+            category: cat,
+            // Labels & ranges are derived in origin-labtalk.ts based on category;
+            // user-set axis settings (Round 82) override defaults if present
+            axisSettings: (meta as any)?.axisSettings,
+            reverseX: false,
+          });
+        } catch (e) {
+          console.warn('[origin] Failed to generate .ogs script:', e);
+          // Fall through — launch Origin without auto-plot script
+        }
+
+        await downloadAndOpenInOrigin(blob, fileName, ogsScript);
+        showToast(
+          ogsScript
+            ? `Đã tải ${fileName} + script · Origin sẽ tự mở và vẽ đồ thị`
+            : `Đã tải ${fileName} · Origin sẽ mở`,
+          'success', null, 6000,
+        );
       } catch (err: any) {
         showToast(`Lỗi: ${err.message}`, 'danger');
       } finally {

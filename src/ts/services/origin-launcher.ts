@@ -1,5 +1,7 @@
 // src/ts/services/origin-launcher.ts
-// Round 95: Origin Lab integration via custom URL protocol.
+// Round 95+96: Origin Lab integration via custom URL protocol.
+// Round 96 adds optional .ogs LabTalk script support — when provided,
+// Origin auto-imports data + plots with format matching preview.
 //
 // Architecture:
 //   1. User runs extras/origin-integration/install.bat ONCE
@@ -49,12 +51,14 @@ export function canOpenInOrigin(filename: string): boolean {
  * If protocol handler isn't registered, browser shows nothing useful
  * (silent fail). We wrap this in a check + helpful toast.
  */
-export function launchOriginWithFile(filename: string): void {
+export function launchOriginWithFile(filename: string, withScript: boolean = false): void {
   // Strip any path separators — handler expects bare filename
   const safeName = filename.replace(/[\\/]/g, '_');
   // Encode special chars (URI scheme handler will URL-decode)
   const encoded = encodeURIComponent(safeName);
-  const url = `${ORIGIN_PROTOCOL}://${encoded}`;
+  // Round 96: append withScript flag — wrapper batch checks this
+  const query = withScript ? '?withScript=1' : '';
+  const url = `${ORIGIN_PROTOCOL}://${encoded}${query}`;
   // Use a hidden iframe to trigger the protocol without navigating
   // away from the page (prevents the dreaded 'about:blank' tab)
   const iframe = document.createElement('iframe');
@@ -70,11 +74,9 @@ export function launchOriginWithFile(filename: string): void {
 }
 
 /**
- * Convenience: download blob via standard mechanism, wait briefly,
- * then trigger Origin launch. Used by 'Tai ve va mo Origin' button.
+ * Helper: trigger a single browser download for the given blob+name.
  */
-export async function downloadAndOpenInOrigin(blob: Blob, filename: string): Promise<void> {
-  // 1. Trigger download
+function triggerDownload(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -83,8 +85,37 @@ export async function downloadAndOpenInOrigin(blob: Blob, filename: string): Pro
   a.click();
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  // 2. Wait for browser to write to disk (heuristic)
-  await new Promise(resolve => setTimeout(resolve, 1200));
-  // 3. Trigger protocol handler
-  launchOriginWithFile(filename);
+}
+
+/**
+ * Convenience: download blob via standard mechanism, wait briefly,
+ * then trigger Origin launch. Used by 'Tai ve va mo Origin' button.
+ *
+ * Round 96: optional `script` parameter — if provided, also downloads
+ * a .ogs LabTalk script with matching base name. The wrapper batch
+ * detects the script and tells Origin to run it via -r flag, so the
+ * graph appears auto-plotted with web-preview-matching format.
+ */
+export async function downloadAndOpenInOrigin(
+  blob: Blob,
+  filename: string,
+  script?: string,
+): Promise<void> {
+  // 1. Trigger data file download
+  triggerDownload(blob, filename);
+
+  // 2. If script provided, trigger second download (same base name + .ogs)
+  if (script) {
+    const baseName = filename.replace(/\.[^.]+$/, '');
+    const scriptBlob = new Blob([script], { type: 'text/plain' });
+    // Slight delay so browser doesn't dedupe/race the two downloads
+    await new Promise(r => setTimeout(r, 300));
+    triggerDownload(scriptBlob, `${baseName}.ogs`);
+  }
+
+  // 3. Wait for browser to write file(s) to disk (heuristic)
+  await new Promise(r => setTimeout(r, script ? 1500 : 1200));
+
+  // 4. Trigger protocol handler — pass withScript=1 query if script
+  launchOriginWithFile(filename, !!script);
 }
