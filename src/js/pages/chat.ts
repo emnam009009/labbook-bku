@@ -1,5 +1,5 @@
 /**
- * pages/chat.js
+ * pages/chat.ts
  * Chat widget — realtime messaging giữa các user trong lab
  *
  * Features:
@@ -29,6 +29,8 @@
  * Init: tất cả document-level event listeners được attach 1 lần qua attachChatListeners()
  *  vì module được import 1 lần khi main.js load.
  */
+// @ts-nocheck
+
 
 import { escapeHtml, escapeJs } from '../utils/format.js'
 import { db, ref, fbListen, fbSet, fbPush, fbGet, update, remove } from '../firebase.js'

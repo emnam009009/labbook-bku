@@ -1,5 +1,5 @@
 /**
- * pages/reports.js
+ * pages/reports.ts
  *
  * Trang Reports — phân tích lịch sử thí nghiệm theo khoảng thời gian.
  *
@@ -22,6 +22,8 @@
  *   - _filterMode, _filterFrom, _filterTo: range filter
  *   - _typeChartInstance, _chemChartInstance: Chart.js refs
  */
+// @ts-nocheck
+
 
 import { vals, escapeHtml } from '../utils/format.js'
 
