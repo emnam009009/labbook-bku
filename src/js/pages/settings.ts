@@ -34,8 +34,8 @@ function renderStylePicker(): void {
   setStyle(name as any);
   renderStylePicker();
   if (typeof window.showToast === 'function') {
-    const labels: Record<string, string> = { default: 'Mac dinh', glass: 'Glassmorphism', neuro: 'Neumorphism' };
-    window.showToast(`Da doi style: ${labels[name]}`, 'success');
+    const labels: Record<string, string> = { default: 'Mặc định', glass: 'Glassmorphism', neuro: 'Neumorphism' };
+    window.showToast(`Đã đổi style: ${labels[name]}`, 'success');
   }
 };
 

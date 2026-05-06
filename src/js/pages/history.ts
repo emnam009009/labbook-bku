@@ -47,5 +47,5 @@ export function renderHistory(): void {
           ${r.detail ? '<div class="timeline-change">' + escapeHtml(r.detail) + '</div>' : ''}
         </div>`;
       }).join('')
-    : '<div style="color:var(--teal)">Chua co lich su</div>';
+    : '<div style="color:var(--teal)">Chưa có lịch sử</div>';
 }

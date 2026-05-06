@@ -28,11 +28,11 @@ export function renderInk(): void {
   if (!rows.length) {
     tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state">' +
       '<svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.5 2a.5.5 0 01.5.5V4h4V2.5a.5.5 0 011 0V4h1a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h1V2.5a.5.5 0 01.5-.5z"/></svg>' +
-      '<div class="empty-state-text">Chua co cong thuc muc nao</div>' +
-      '<div class="empty-state-sub">Chua co du lieu</div>' +
+      '<div class="empty-state-text">Chưa có công thức mực nào</div>' +
+      '<div class="empty-state-sub">Chưa có dữ liệu</div>' +
       '<button class="empty-state-btn member-only" data-ink-action="open-modal">' +
         '<svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>' +
-        'Them cong thuc muc' +
+        'Thêm công thức mực' +
       '</button>' +
     '</div></td></tr>';
     return;
@@ -57,7 +57,7 @@ export function renderInk(): void {
     const safeCode = escapeHtml(r.code || '');
     const safeCodeJs = escapeJs(r.code || '');
 
-    return '<tr class="clickable-row" style="vertical-align:middle"' + (!r.locked ? ' data-ink-action="edit-ink" data-ink-key="' + safeKey + '"' : '') + ' title="' + (!r.locked ? 'Nhan de sua' : 'Da khoa') + '">' +
+    return '<tr class="clickable-row" style="vertical-align:middle"' + (!r.locked ? ' data-ink-action="edit-ink" data-ink-key="' + safeKey + '"' : '') + ' title="' + (!r.locked ? 'Nhấn để sửa' : 'Đã khóa') + '">' +
       '<td data-ink-action="stop"><strong style="font-family:\'Courier New\',monospace;font-size:14px;cursor:pointer;color:var(--blue2)" data-ink-action="show-image" data-ink-key="' + safeKey + '">' + safeCode + '</strong></td>' +
       '<td style="text-align:center">' + nameCell + '</td>' +
       '<td style="text-align:center"><span class="tag">' + formatChemical(escapeHtml(r.material || '')) + '</span></td>' +
@@ -71,7 +71,7 @@ export function renderInk(): void {
             '<span class="lock-icon">' + (r.locked ? LOCK_ICON_ON : LOCK_ICON_OFF) + '</span><div class="lock-thumb"></div>' +
           '</div>' +
         '</label>' +
-        '<button class="plusButton" data-ink-action="duplicate" data-ink-key="' + safeKey + '" title="Nhan ban"><svg class="plusIcon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 5v14M5 12h14"/></svg></button>' +
+        '<button class="plusButton" data-ink-action="duplicate" data-ink-key="' + safeKey + '" title="Nhân bản"><svg class="plusIcon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 5v14M5 12h14"/></svg></button>' +
         '<button class="del-btn" data-ink-action="delete" data-ink-key="' + safeKey + '" data-ink-code="' + safeCodeJs + '" style="' + (!canDelete(r) || r.locked ? 'visibility:hidden' : '') + '">' + DEL_SVG + '</button>' +
       '</td>' +
     '</tr>';

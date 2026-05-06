@@ -17,24 +17,24 @@ export async function doLogin(): Promise<void> {
   const btn = document.getElementById('login-btn') as HTMLButtonElement;
 
   errEl.style.display = 'none';
-  btn.textContent = 'Dang dang nhap...';
+  btn.textContent = 'Đang đăng nhập...';
   btn.disabled = true;
 
   try {
     await login(email, password);
     // onAuthStateChanged se tu xu ly tiep (qua initAuth callback o main.js)
   } catch (e: any) {
-    let msg = 'Dang nhap that bai';
+    let msg = 'Đăng nhập thất bại';
     if (e.message && e.message.includes('@hcmut.edu.vn')) msg = e.message;
-    else if (e.code === 'auth/user-not-found')      msg = 'Email khong ton tai trong he thong';
-    else if (e.code === 'auth/wrong-password')      msg = 'Mat khau khong dung';
-    else if (e.code === 'auth/invalid-email')       msg = 'Email khong hop le';
-    else if (e.code === 'auth/too-many-requests')   msg = 'Dang nhap sai qua nhieu lan, thu lai sau';
-    else if (e.code === 'auth/invalid-credential')  msg = 'Email hoac mat khau khong dung';
+    else if (e.code === 'auth/user-not-found')      msg = 'Email không tồn tại trong hệ thống';
+    else if (e.code === 'auth/wrong-password')      msg = 'Mật khẩu không đúng';
+    else if (e.code === 'auth/invalid-email')       msg = 'Email không hợp lệ';
+    else if (e.code === 'auth/too-many-requests')   msg = 'Đăng nhập sai quá nhiều lần, thử lại sau';
+    else if (e.code === 'auth/invalid-credential')  msg = 'Email hoặc mật khẩu không đúng';
     errEl.textContent = msg;
     errEl.style.display = 'block';
   } finally {
-    btn.textContent = 'Dang nhap';
+    btn.textContent = 'Đăng nhập';
     btn.disabled = false;
   }
 }
@@ -43,7 +43,7 @@ export async function doLogin(): Promise<void> {
 // Logout handler
 // ═══════════════════════════════════════════════════════════
 export async function doLogout(): Promise<void> {
-  if (!confirm('Ban co chac muon dang xuat?')) return;
+  if (!confirm('Bạn có chắc muốn đăng xuất?')) return;
   await stopPresence();
   stopListeners();
   // An FAB chat ngay khi logout
@@ -105,48 +105,48 @@ export async function doRegister(): Promise<void> {
 
   errEl.style.display = 'none';
   sucEl.style.display = 'none';
-  btn.textContent = 'Dang dang ky...';
+  btn.textContent = 'Đang đăng ký...';
 
   // Validate ten: it nhat 2 tu, moi tu viet hoa chu cai dau (vd: "Nguyen Van Linh")
   if (!name) {
-    errEl.textContent = 'Vui long nhap ho ten!';
+    errEl.textContent = 'Vui lòng nhập họ tên!';
     errEl.style.display = 'block';
-    btn.textContent = 'Dang ky';
+    btn.textContent = 'Đăng ký';
     btn.disabled = false;
     return;
   }
   const words = name.split(' ').filter(w => w.length > 0);
   const validName = words.length >= 2 && words.every(w => w[0] === w[0].toUpperCase() && w[0] !== w[0].toLowerCase());
   if (!validName) {
-    errEl.textContent = 'Ho ten phai co it nhat 2 tu, viet hoa chu cai dau moi tu (VD: Nguyen Van Linh)';
+    errEl.textContent = 'Họ tên phải có ít nhất 2 từ, viết hoa chữ cái đầu mỗi từ (VD: Nguyễn Văn Linh)';
     errEl.style.display = 'block';
-    btn.textContent = 'Dang ky';
+    btn.textContent = 'Đăng ký';
     btn.disabled = false;
     return;
   }
 
   btn.disabled = true;
-  btn.textContent = 'Dang dang ky...';
+  btn.textContent = 'Đang đăng ký...';
 
   register(email, password, name).then(() => {
     // Thanh cong - hien thong bao
-    sucEl.textContent = 'Dang ky thanh cong! Tai khoan dang cho Admin duyet.';
+    sucEl.textContent = 'Đăng ký thành công! Tài khoản đang chờ Admin duyệt.';
     sucEl.style.display = 'block';
     (document.getElementById('reg-name') as HTMLInputElement).value = '';
     (document.getElementById('reg-email') as HTMLInputElement).value = '';
     (document.getElementById('reg-password') as HTMLInputElement).value = '';
-    btn.textContent = 'Dang ky';
+    btn.textContent = 'Đăng ký';
     btn.disabled = false;
   }).catch((e: any) => {
-    let msg = 'Dang ky that bai. Vui long thu lai.';
-    if (e.code === 'auth/email-already-in-use') msg = 'Email nay da duoc dang ky';
-    else if (e.code === 'auth/weak-password')   msg = 'Mat khau qua yeu, toi thieu 6 ky tu';
-    else if (e.code === 'auth/invalid-email')   msg = 'Email khong hop le';
+    let msg = 'Đăng ký thất bại. Vui lòng thử lại.';
+    if (e.code === 'auth/email-already-in-use') msg = 'Email này đã được đăng ký';
+    else if (e.code === 'auth/weak-password')   msg = 'Mật khẩu quá yếu, tối thiểu 6 ký tự';
+    else if (e.code === 'auth/invalid-email')   msg = 'Email không hợp lệ';
     else if (e.message) msg = e.message;
     sucEl.style.display = 'none';
     errEl.textContent = msg;
     errEl.style.display = 'block';
-    btn.textContent = 'Dang ky';
+    btn.textContent = 'Đăng ký';
     btn.disabled = false;
   });
 }

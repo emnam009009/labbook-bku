@@ -61,17 +61,17 @@ export function renderUsers(): void {
           <td class="action-cell">
             <button class="btn btn-xs btn-primary" data-users-action="approve" data-uid="${escapeJs(u.uid)}" data-role="member">✓ Member</button>
             <button class="btn btn-xs btn-gold" data-users-action="approve" data-uid="${escapeJs(u.uid)}" data-role="viewer">👁 Viewer</button>
-            <button class="btn btn-xs btn-danger" data-users-action="approve" data-uid="${escapeJs(u.uid)}" data-role="rejected">✕ Tu choi</button>
+            <button class="btn btn-xs btn-danger" data-users-action="approve" data-uid="${escapeJs(u.uid)}" data-role="rejected">✕ Từ chối</button>
           </td>
         </tr>`).join('')
-      : '<tr><td colspan="4" style="padding:24px;font-size:13px"><center style="color:#94a3b8">Khong co tai khoan cho duyet</center></td></tr>';
+      : '<tr><td colspan="4" style="padding:24px;font-size:13px"><center style="color:#94a3b8">Không có tài khoản chờ duyệt</center></td></tr>';
   }
 
   // ── All users table ───────────────────────────────────
   const usersTbody = document.getElementById('users-tbody');
   if (!usersTbody) return;
 
-  const roleLabel: Record<string, string> = { admin: 'Admin', member: 'Member', viewer: 'Viewer', rejected: 'Tu choi' };
+  const roleLabel: Record<string, string> = { admin: 'Admin', member: 'Member', viewer: 'Viewer', rejected: 'Từ chối' };
   const roleIcon: Record<string, string> = {
     admin:    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',
     member:   '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>',
@@ -99,12 +99,12 @@ export function renderUsers(): void {
               <option value="admin"    ${u.role === 'admin'    ? 'selected' : ''}>Admin</option>
               <option value="member"   ${u.role === 'member'   ? 'selected' : ''}>Member</option>
               <option value="viewer"   ${u.role === 'viewer'   ? 'selected' : ''}>Viewer</option>
-              <option value="rejected" ${u.role === 'rejected' ? 'selected' : ''}>Tu choi</option>
+              <option value="rejected" ${u.role === 'rejected' ? 'selected' : ''}>Từ chối</option>
             </select>`}</td>
           <td style="width:80px">${isSuper ? '' : renderDeleteBtn(u.uid, u.email, u.displayName)}</td>
         </tr>`;
       }).join('')
-    : '<tr><td colspan="5" style="text-align:center;color:var(--teal);padding:24px">Chua co tai khoan nao</td></tr>';
+    : '<tr><td colspan="5" style="text-align:center;color:var(--teal);padding:24px">Chưa có tài khoản nào</td></tr>';
 }
 
 // ─── Round 69: Event delegation for users page CSP fix ────────────────
