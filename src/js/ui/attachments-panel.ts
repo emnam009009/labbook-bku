@@ -623,14 +623,16 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
     e.target.value = ''; // allow re-uploading same file
   });
 
-  // Drag & drop — Round 85: chi accept khi state='empty' (chua co preview)
-  // de tranh thay file vo y khi user dang xem preview hien tai
+  // Drag & drop — Round 90: drop trong empty state (upload moi) HOAC
+  // preview state (thay the file dang preview). Cancel drop chi khi
+  // dang busy upload (overlay che).
   const isEmptyState = () => (dropzone as HTMLElement).dataset.state === 'empty';
+  const isPreviewState = () => (dropzone as HTMLElement).dataset.state === 'preview';
 
   ['dragenter', 'dragover'].forEach((evt) =>
     dropzone.addEventListener(evt, (e) => {
       e.preventDefault();
-      if (isEmptyState()) dropzone.classList.add('att-dropzone-active');
+      if (isEmptyState() || isPreviewState()) dropzone.classList.add('att-dropzone-active');
     }),
   );
   ['dragleave', 'drop'].forEach((evt) =>
@@ -640,8 +642,16 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
     }),
   );
   dropzone.addEventListener('drop', (e) => {
-    if (!isEmptyState()) return;  // ignore drops while previewing
-    handleFiles(e.dataTransfer?.files);
+    const files = e.dataTransfer?.files;
+    if (!files || !files.length) return;
+    // Round 90: in preview state, drop replaces current preview
+    if (isPreviewState()) {
+      // Show subtle confirmation that we're replacing
+      showToast('Đang thay file preview...', 'success' as any);
+      closePreview();  // clear current preview state
+      // After closePreview, state = 'empty' — handleFiles will work
+    }
+    handleFiles(files);
   });
 
   // Round 85: click handler — chi trigger file picker khi:

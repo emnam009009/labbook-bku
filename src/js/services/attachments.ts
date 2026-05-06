@@ -5,6 +5,7 @@
 import { storage, fbSet, fbGet, fbDel, ref, push, db } from '../firebase.js';
 import {
   ref as stRef,
+  uploadBytes,
   uploadBytesResumable,
   getDownloadURL,
   deleteObject,
@@ -145,12 +146,20 @@ interface UploadParams {
   file: File;
   note?: string;
   onProgress?: ((pct: number) => void) | null;
+  // Round 90: skip the per-call listAttachments() round-trip when caller
+  // (uploadMany) has already pre-fetched the list. Saves N-1 round-trips.
+  skipDupCheck?: boolean;
 }
 
 /**
  * Upload a single file. Returns the new attachment record.
  * onProgress: (percent: number) => void
  */
+// Round 90: file size threshold for choosing single-PUT vs resumable
+// Files <= 1MB use uploadBytes (single PUT, less overhead).
+// Larger files use uploadBytesResumable (chunked, retry on failure).
+const SMALL_FILE_THRESHOLD = 1024 * 1024;  // 1 MB
+
 export async function uploadAttachment({
   refType,
   refId,
@@ -158,23 +167,24 @@ export async function uploadAttachment({
   file,
   note = '',
   onProgress = null,
+  skipDupCheck = false,
 }: UploadParams): Promise<AttachmentWithId> {
   validateRef(refType, refId);
   validateCategory(category);
   validateFile(file);
 
-  // Enforce per-experiment limit
-  const existing = await listAttachments(refType, refId);
-  if (existing.length >= MAX_FILES_PER_EXPERIMENT) {
-    throw new Error(
-      `Da dat gioi han ${MAX_FILES_PER_EXPERIMENT} file cho thi nghiem nay.`,
-    );
-  }
-
-  // Enforce unique fileName (case-sensitive)
-  const dup = existing.find((it) => it.fileName === file.name);
-  if (dup) {
-    throw new Error(`Da co file nay: ${file.name}`);
+  // Round 90: skip listAttachments() roundtrip when caller pre-fetched
+  if (!skipDupCheck) {
+    const existing = await listAttachments(refType, refId);
+    if (existing.length >= MAX_FILES_PER_EXPERIMENT) {
+      throw new Error(
+        `Da dat gioi han ${MAX_FILES_PER_EXPERIMENT} file cho thi nghiem nay.`,
+      );
+    }
+    const dup = existing.find((it) => it.fileName === file.name);
+    if (dup) {
+      throw new Error(`Da co file nay: ${file.name}`);
+    }
   }
 
   const uid = (window.currentAuth as any)?.user?.uid;
@@ -182,26 +192,34 @@ export async function uploadAttachment({
 
   const storagePath = buildStoragePath(refType, refId, file.name);
   const fileRef = stRef(storage, storagePath);
-
-  // Upload with progress
-  const task = uploadBytesResumable(fileRef, file, {
+  const metadata = {
     contentType: file.type || 'application/octet-stream',
     customMetadata: { uid, refType, refId, category },
-  });
+  };
 
-  await new Promise<void>((resolve, reject) => {
-    task.on(
-      'state_changed',
-      (snap: any) => {
-        if (typeof onProgress === 'function') {
-          const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
-          onProgress(pct);
-        }
-      },
-      reject,
-      () => resolve(),
-    );
-  });
+  // Round 90: choose strategy by file size
+  if (file.size <= SMALL_FILE_THRESHOLD) {
+    // Small file: single PUT — less overhead, faster for typical CSV/.cor files
+    if (typeof onProgress === 'function') onProgress(10);  // approximate visual feedback
+    await uploadBytes(fileRef, file, metadata);
+    if (typeof onProgress === 'function') onProgress(100);
+  } else {
+    // Large file: resumable with progress callbacks
+    const task = uploadBytesResumable(fileRef, file, metadata);
+    await new Promise<void>((resolve, reject) => {
+      task.on(
+        'state_changed',
+        (snap: any) => {
+          if (typeof onProgress === 'function') {
+            const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+            onProgress(pct);
+          }
+        },
+        reject,
+        () => resolve(),
+      );
+    });
+  }
 
   const downloadURL = await getDownloadURL(fileRef);
 
@@ -220,17 +238,13 @@ export async function uploadAttachment({
   };
   await fbSet(`attachments/${refType}/${refId}/${attachmentId}`, record);
 
-  // Audit log
-  try {
-    await (logHistory as any)({
-      action: 'attachment_upload',
-      target: `${refType}/${refId}`,
-      detail: `${category}: ${file.name} (${(file.size / 1024).toFixed(0)} KB)`,
-    });
-  } catch (e) {
-    // History is best-effort; don't fail upload because of it.
-    console.warn('logHistory failed', e);
-  }
+  // Round 90: fire-and-forget audit log (don't block return)
+  // Saves ~150-300ms/file. Best-effort; failures logged but don't matter.
+  (logHistory as any)({
+    action: 'attachment_upload',
+    target: `${refType}/${refId}`,
+    detail: `${category}: ${file.name} (${(file.size / 1024).toFixed(0)} KB)`,
+  }).catch((e: any) => console.warn('logHistory failed', e));
 
   return { id: attachmentId, ...record };
 }
@@ -347,14 +361,20 @@ export async function uploadMany({ refType, refId, category, files, onItemProgre
   // Pre-fetch existing list ONCE (truoc do moi file fetch lai = N round-trips).
   const existing = await listAttachments(refType, refId).catch(() => [] as any[]);
 
-  // Concurrency control: max 5 simultaneous uploads (avoid overwhelming network)
-  const CONCURRENT = 5;
+  // Round 90: 5 -> 8 concurrent (most networks can handle this fine)
+  const CONCURRENT = 8;
   const queue = [...files];
   const results: UploadManyResult[] = [];
 
   // Track local 'reserved' filenames to detect dups within THIS batch
   // (same name in same upload: queue rejects 2nd one)
   const reserved = new Set(existing.map((it: any) => it.fileName));
+
+  // Round 90: also enforce per-experiment limit using pre-fetched list
+  const remainingSlots = MAX_FILES_PER_EXPERIMENT - existing.length;
+  if (files.length > remainingSlots) {
+    showToast(`Chỉ còn ${remainingSlots} slot — tải tối đa ${remainingSlots} file`, 'warning' as any);
+  }
 
   const runOne = async (file: File): Promise<UploadManyResult> => {
     if (reserved.has(file.name)) {
@@ -371,6 +391,7 @@ export async function uploadMany({ refType, refId, category, files, onItemProgre
         category,
         file,
         onProgress: (pct: number) => onItemProgress?.(file.name, pct),
+        skipDupCheck: true,  // Round 90: dedup already done above
       } as any);
       return { ok: true, file: file.name, record: rec };
     } catch (e: any) {
