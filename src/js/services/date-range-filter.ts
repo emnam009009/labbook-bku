@@ -1,5 +1,5 @@
 /**
- * services/date-range-filter.js (v4)
+ * services/date-range-filter.ts (v4)
  *
  * v4: bỏ entry 'ink' khỏi PAGES vì #page-ink không tồn tại độc lập
  *     (tab Mực nằm trong #page-electrode), nên filter ink bị inject sai
@@ -10,6 +10,8 @@
  *  - min-height: 38px khớp với .cs-modal-trigger / search-input
  *  - Padding: 6px 12px (giống select khác)
  */
+// @ts-nocheck
+
 
 (function setupDateRangeFilter() {
   'use strict';

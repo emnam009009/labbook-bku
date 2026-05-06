@@ -1,5 +1,5 @@
 /**
- * services/bulk-actions.js (v11)
+ * services/bulk-actions.ts (v11)
  *
  * v11 change:
  *  - Bỏ ResizeObserver + CSS transition `left` của bar
@@ -8,6 +8,8 @@
  *  - Trigger loop khi mouseenter/mouseleave sidebar
  *  - Loop dừng sau 500ms (đủ cho mọi sidebar animation)
  */
+// @ts-nocheck
+
 
 import { db, ref, update, remove } from '../firebase.js'
 import { printBulkLabels } from './qr-labels.js'

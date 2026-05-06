@@ -1,5 +1,5 @@
 /**
- * services/image-handlers.js
+ * services/image-handlers.ts
  * Image handlers cho 5 collection: ink, electrode, hydro, chemical, equipment
  *
  * Cấu trúc mỗi collection:
@@ -28,6 +28,8 @@
  * 2 paste listeners (chemical, equipment) là document-level + filter theo modal đang mở.
  * 3 paste listeners còn lại (ink, electrode, hydro) là on-demand (gắn khi mở modal, gỡ khi đóng).
  */
+// @ts-nocheck
+
 
 import { db, ref, update } from '../firebase.js'
 

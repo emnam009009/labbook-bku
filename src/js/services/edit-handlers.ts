@@ -1,5 +1,5 @@
 /**
- * services/edit-handlers.js
+ * services/edit-handlers.ts
  * 9 edit handlers — mở modal edit cho từng collection và populate form từ cached data
  *
  * Phạm vi:
@@ -20,6 +20,8 @@
  *  - editSubtitle/editLabTitle dùng inline contenteditable pattern (no modal)
  *  - editChemical gọi syncUnit() để đồng bộ unit dropdown ↔ unit input
  */
+// @ts-nocheck
+
 
 import { canEdit } from '../utils/auth-helpers.js'
 import { db, ref, update } from '../firebase.js'

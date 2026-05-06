@@ -1,5 +1,5 @@
 /**
- * services/pdf-report.js (v3 — pdfMake)
+ * services/pdf-report.ts (v3 — pdfMake)
  *
  * Xuất báo cáo PDF hàng tháng dùng pdfMake (text-based PDF, layout chính xác)
  *
@@ -14,6 +14,8 @@
  *  - cache.bookings, cache.equipment, cache.chemicals qua window.cache
  *  - showToast qua window.showToast
  */
+// @ts-nocheck
+
 
 import { vals } from '../utils/format.js'
 

@@ -1,5 +1,5 @@
 /**
- * services/global-delegation.js
+ * services/global-delegation.ts
  * Round 58a (CSP): event delegation cap document.body cho cac inline event
  * trong index.html da duoc thay bang data-action attributes.
  *
@@ -20,6 +20,8 @@
  *  - data-action="open-modal" da bi remove khoi experiments.js tbody listener
  *    de tranh double-call
  */
+// @ts-nocheck
+
 
 export function attachGlobalDelegation() {
   if (document.body._globalDelegated) return;

@@ -1,5 +1,5 @@
 /**
- * services/save-handlers.js
+ * services/save-handlers.ts
  * 7 save handlers cho các collection: hydro, electrode, electrochem, member, ink, chemical, equipment
  *
  * Phụ thuộc:
@@ -17,6 +17,8 @@
  *
  * Helper internal: isCodeDuplicate (kiểm tra mã trùng trong collection, bỏ qua editKey)
  */
+// @ts-nocheck
+
 
 import { db, ref, update, fbPush, fbGet } from '../firebase.js'
 import { vals } from '../utils/format.js'

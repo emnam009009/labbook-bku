@@ -1,5 +1,5 @@
 /**
- * services/notifications.js — Bell icon + notifications dropdown
+ * services/notifications.ts — Bell icon + notifications dropdown
  *
  * Phase A: Skeleton — toggle dropdown, click outside để close
  * Phase B: Tạo notifications khi save/approve/reject booking
@@ -16,6 +16,8 @@
  *
  * Bell hiển thị cho mọi role authenticated (admin, superadmin, member, viewer).
  */
+// @ts-nocheck
+
 
 import { db, ref, update, remove, fbPush } from '../firebase.js'
 import { vals } from '../utils/format.js'

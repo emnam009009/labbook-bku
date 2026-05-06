@@ -1,4 +1,5 @@
-// services/excel-export.js — Export data ra Excel với style
+// @ts-nocheck
+// services/excel-export.ts — Export data ra Excel với style
 // Dùng SheetJS (lazy import từ npm — tránh render-blocking ~270KB)
 //
 // Logic:
