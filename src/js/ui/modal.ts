@@ -149,6 +149,26 @@ function teardownFocusTrap(): void {
   _focusTrapState.triggerElement = null;
 }
 
+// ── Round 83: Mo modal STACKED (khong dong cac modal khac) ───────────────
+// Dung cho modal-overview de khi user dong overview, modal-attachments
+// (parent) van con mo, ko phai vao lai tu dau.
+export function openModalStacked(id: string): void {
+  document.body.style.overflow = 'hidden';
+  const _md = document.getElementById(id);
+  if (!_md) return;
+  _md.classList.add('open');
+  // Boost z-index above already-open modals
+  let maxZ = 1000;
+  document.querySelectorAll('.modal-overlay.open').forEach(m => {
+    if (m.id === id) return;
+    const z = parseInt(getComputedStyle(m as HTMLElement).zIndex, 10) || 1000;
+    if (z > maxZ) maxZ = z;
+  });
+  (_md as HTMLElement).style.zIndex = String(maxZ + 10);
+  setupFocusTrap(_md as HTMLElement, id);
+  fireModalHooks('afterOpen', id);
+}
+
 // ── Mo modal ─────────────────────────────────────────────────────────────
 export function openModal(id: string): void {
   document.body.style.overflow = 'hidden';
@@ -222,10 +242,16 @@ export function openModal(id: string): void {
 
 // ── Dong modal ───────────────────────────────────────────────────────────
 export function closeModal(id: string): void {
-  document.body.style.overflow = '';
+  // Round 83: only clear body overflow if NO other modals remain open
+  const stillOpen = Array.from(document.querySelectorAll('.modal-overlay.open'))
+    .filter(m => m.id !== id);
+  if (stillOpen.length === 0) {
+    document.body.style.overflow = '';
+  }
   const el = document.getElementById(id) as HTMLElement | null;
   if (!el) return;
   el.classList.remove('open');
+  el.style.zIndex = '';  // Clear inline z-index from openModalStacked
   delete el.dataset.editKey;
 
   // Reset title

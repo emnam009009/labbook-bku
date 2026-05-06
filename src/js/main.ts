@@ -351,6 +351,9 @@ window.switchAuthTab = switchAuthTab;
 // Expose form helpers + update selects lên window (Phần 8d)
 // HTML inline: onclick="addChem()", onclick="removeChem(this)", oninput="lookupCAS()", etc.
 window.statusBadge = statusBadge;
+// Round 83: stacked modal opener (used by overview-modal so parent modal-attachments stays open)
+import { openModalStacked as _openModalStacked } from './ui/modal.js';
+(window as any).openModalStacked = _openModalStacked;
 window.removeChem = removeChem;
 window.calcLoading = calcLoading;
 window.getElectrodeMaterial = getElectrodeMaterial;

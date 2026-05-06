@@ -68,7 +68,8 @@ export async function openOverviewModal({
   header.textContent = title ? `Tổng quan đồ thị — ${title}` : 'Tổng quan đồ thị';
   body.innerHTML = '<p class="att-overview-loading">Đang tải...</p>';
 
-  (window as any).openModal?.(modalId);
+  // Round 83: use stacked open so parent modal-attachments stays open
+  (window as any).openModalStacked?.(modalId) || (window as any).openModal?.(modalId);
 
   try {
     const items = await listAttachments(refType, refId) as unknown as ClassifierItem[];

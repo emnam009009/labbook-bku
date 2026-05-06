@@ -68,19 +68,24 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
         </label>
         <button type="button" class="btn btn-sm att-overview-btn" data-action="open-overview"
                 title="Xem tất cả ảnh + đồ thị đã lưu, phân loại theo nhóm">
-          📊 Tổng quan
+          <!-- Round 83: lucide-style gallery icon (3 stacked images) -->
+          <svg class="att-overview-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 7v12a2 2 0 01-2 2H6"/>
+            <rect x="3" y="3" width="15" height="15" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <path d="M18 13l-3-3-7 7"/>
+          </svg>
+          Tổng quan
         </button>
         <span class="att-counter" aria-live="polite"></span>
       </div>
 
       <div class="att-workspace">
-        <div class="att-dropzone" tabindex="0" role="button"
-             aria-label="Kéo thả file vào đây để tải lên">
-          <span>Kéo thả file vào đây hoặc bấm <strong class="att-pick-link">Chọn file</strong></span>
-          <small>Tối đa ${MAX_FILES_PER_EXPERIMENT} file, mỗi file ≤ ${formatBytes(MAX_FILE_BYTES)}</small>
-        </div>
-        <div class="att-preview" hidden>
-          <div class="att-preview-header">
+        <div class="att-preview att-preview-dropzone" tabindex="0" role="button"
+             aria-label="Kéo thả file vào đây để tải lên hoặc xem trước đồ thị">
+          <!-- Round 83: dropzone va preview cung 1 vung. Khi chua co preview,
+               .att-preview-empty hien thi hint; khi co preview thi an di. -->
+          <div class="att-preview-header att-preview-header-conditional">
             <span class="att-preview-title">Xem trước đồ thị</span>
             <span class="att-preview-meta"></span>
             <div class="att-preview-cols" hidden>
@@ -136,6 +141,16 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
             </div>
           </div>
           <div class="att-preview-canvas-wrap">
+            <!-- Round 83: empty-state hint khi chua chon file -->
+            <div class="att-preview-empty">
+              <svg class="att-preview-empty-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="10" y="14" width="44" height="36" rx="4"/>
+                <path d="M10 40l12-12 10 10 8-8 14 14"/>
+                <circle cx="22" cy="24" r="3"/>
+              </svg>
+              <div class="att-preview-empty-title">Kéo thả file vào đây hoặc bấm <strong class="att-pick-link">Chọn file</strong></div>
+              <div class="att-preview-empty-sub">Tối đa ${MAX_FILES_PER_EXPERIMENT} file, mỗi file ≤ ${formatBytes(MAX_FILE_BYTES)}</div>
+            </div>
             <canvas class="att-preview-canvas"></canvas>
           </div>
           <div class="att-preview-actions">
@@ -159,7 +174,8 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
 
   const panel = container.querySelector('.att-panel');
   const fileInput = panel.querySelector('.att-file-input');
-  const dropzone = panel.querySelector('.att-dropzone');
+  // Round 83: .att-preview is now the dropzone (replaces old .att-dropzone box)
+  const dropzone = panel.querySelector('.att-preview');
   const list = panel.querySelector('.att-list');
   const progress = panel.querySelector('.att-progress');
   const counter = panel.querySelector('.att-counter');
@@ -222,7 +238,10 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
   // ----- Upload handlers -----
 
   // State for preview
-  const previewBox = panel.querySelector('.att-preview');
+  const previewBox = panel.querySelector('.att-preview') as HTMLElement;
+  // Round 83: dropzone state by default (empty hint shown)
+  previewBox.hidden = false;
+  previewBox.dataset.state = 'empty';
   const previewCanvas = panel.querySelector('.att-preview-canvas');
   const previewMeta = panel.querySelector('.att-preview-meta');
   const savePlotBtn = panel.querySelector('.att-save-plot');
@@ -637,6 +656,7 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
       progress.hidden = true;
       _currentPreview = { file, parsed, category };
       previewBox.hidden = false;
+      previewBox.dataset.state = 'preview';  // Round 83: hide empty-state, show chart
       const heuristicNote = parsed.matchedByHeuristic
         ? `cột: ${parsed.xLabel} → ${parsed.yLabel}`
         : `cột mặc định (heuristic không match — chọn lại bên dưới)`;
