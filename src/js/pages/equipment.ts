@@ -1,5 +1,5 @@
 /**
- * pages/equipment.js
+ * pages/equipment.ts
  * Render Equipment (Thiết bị) — danh sách thiết bị với grouping
  *
  * Phạm vi Phần 5c: chỉ render + helpers (toggleEqGroup, restoreEqGroups, makeEqRow).
@@ -18,6 +18,8 @@
  *  - Drag & drop ảnh vào ô ảnh để upload (gọi window.dropImageToCell)
  *  - Edit chỉ admin (clickable-row + click cell ảnh)
  */
+// @ts-nocheck
+
 
 import { vals, fuzzy, escapeHtml, escapeJs } from '../utils/format.js'
 import { applyTableSort, initTableSort } from '../services/table-sort.js'

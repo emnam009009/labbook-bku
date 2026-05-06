@@ -1,5 +1,5 @@
 /**
- * pages/chemicals.js
+ * pages/chemicals.ts
  * Render Chemicals (Hoá chất) — danh sách hoá chất với grouping + collapse
  *
  * Phạm vi Phần 5a: chỉ render + helpers (toggleChemGroup, restoreChemGroups).
@@ -16,6 +16,8 @@
  *  - Empty group "Chưa phân nhóm" gom các chemicals chưa gán group
  *  - sessionStorage 'chemGroups' lưu trạng thái collapse
  */
+// @ts-nocheck
+
 
 import { vals, fuzzy, formatChemical, escapeHtml, escapeJs } from '../utils/format.js'
 import { applyTableSort, initTableSort } from '../services/table-sort.js'

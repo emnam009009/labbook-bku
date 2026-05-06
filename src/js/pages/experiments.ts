@@ -1,5 +1,5 @@
 /**
- * pages/experiments.js
+ * pages/experiments.ts
  * Render 3 page TN chính: Hydrothermal, Electrode, Electrochem
  *
  * Phụ thuộc:
@@ -14,6 +14,8 @@
  *  Phần 4 này CHỈ tách render functions (đọc cache → vẽ DOM, không có side-effect).
  *  Save/edit/image handlers vẫn ở main.js, sẽ tách ở Phần sau.
  */
+// @ts-nocheck
+
 
 import { escapeHtml, escapeJs, vals, fuzzy, formatChemical } from '../utils/format.js'
 import { applyTableSort, initTableSort } from '../services/table-sort.js'
