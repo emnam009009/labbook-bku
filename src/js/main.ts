@@ -1373,6 +1373,19 @@ function _loadExpActionsMenu() {
   }
   return _expActionsMenuPromise;
 }
+// Round 77b: lazy-load wrapper for window.openOverviewModal
+let _overviewModulePromise: Promise<any> | null = null;
+function _loadOverviewModule(): Promise<any> {
+  if (!_overviewModulePromise) {
+    _overviewModulePromise = import('./ui/overview-modal.js');
+  }
+  return _overviewModulePromise;
+}
+window.openOverviewModal = function(args) {
+  _loadOverviewModule().then(m => m.openOverviewModal(args))
+    .catch((e: any) => console.error('[main] openOverviewModal failed:', e));
+};
+
 window.openExpActionsMenu = function(anchor, ctx) {
   _loadExpActionsMenu().then(m => m.openExpActionsMenu(anchor, ctx))
     .catch(err => {

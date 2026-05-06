@@ -1214,3 +1214,201 @@ html.dark .exp-bar:hover {
   color: var(--text-3, #94a3b8);
   font-style: italic;
 }
+
+/* ════════════════════════════════════════════════════════════════
+   Round 77b: Overview modal — accordion 6 groups + thumbnails
+   ════════════════════════════════════════════════════════════════ */
+
+/* Toolbar button */
+.att-overview-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: var(--surface);
+  color: var(--teal);
+  border: 1px solid var(--teal);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.att-overview-btn:hover {
+  background: var(--teal);
+  color: #fff;
+}
+
+/* Modal sizing — wider than default for grid layout */
+.modal-overlay #modal-overview .modal {
+  max-width: min(1100px, 95vw);
+  max-height: 90vh;
+}
+.modal-overlay #modal-overview .modal-body {
+  overflow-y: auto;
+  max-height: calc(90vh - 60px);
+}
+
+/* Summary line at top */
+.att-overview-summary {
+  font-size: 13px;
+  color: var(--text-2, #475569);
+  padding: 6px 12px;
+  background: var(--surface-2, #f8fafc);
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+.att-overview-summary-total {
+  font-weight: 700;
+  color: var(--teal);
+  font-size: 15px;
+}
+
+/* Loading / error states */
+.att-overview-loading,
+.att-overview-error {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-2, #64748b);
+}
+.att-overview-error { color: #dc2626; }
+
+/* Accordion container */
+.att-overview-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Group section */
+.att-overview-group {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.att-overview-group-empty {
+  opacity: 0.6;
+}
+
+/* Group header (clickable) */
+.att-overview-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--surface-2, #f8fafc);
+  border: none;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  transition: background 0.15s;
+}
+.att-overview-group-header:hover {
+  background: var(--surface-3, #f1f5f9);
+}
+
+.att-overview-chevron {
+  display: inline-block;
+  font-size: 12px;
+  transition: transform 0.2s;
+  color: var(--teal);
+  width: 14px;
+}
+.att-overview-group[data-state="open"] .att-overview-chevron {
+  transform: rotate(90deg);
+}
+
+.att-overview-group-label {
+  flex: 1;
+}
+.att-overview-group-count {
+  color: var(--text-3, #94a3b8);
+  font-weight: 500;
+  font-size: 13px;
+}
+
+/* Group body — collapsible via max-height */
+.att-overview-group-body {
+  max-height: 2000px;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  padding: 12px;
+}
+.att-overview-group[data-state="closed"] .att-overview-group-body {
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.att-overview-empty-msg {
+  margin: 0;
+  padding: 8px 4px;
+  font-size: 12px;
+  color: var(--text-3, #94a3b8);
+  font-style: italic;
+}
+
+/* Grid of thumbnails */
+.att-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.att-overview-thumb {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--surface);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  cursor: pointer;
+}
+.att-overview-thumb:hover {
+  transform: translateY(-2px);
+  border-color: var(--teal);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.15);
+}
+
+.att-overview-thumb img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background: #f8fafc;
+}
+
+.att-overview-thumb-meta {
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-top: 1px solid var(--border);
+}
+.att-overview-thumb-name {
+  font-size: 11px;
+  color: var(--text-2, #475569);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.att-overview-thumb-meta .att-badge {
+  align-self: flex-start;
+}
+
+/* Mobile: 2 columns */
+@media (max-width: 640px) {
+  .att-overview-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .att-overview-thumb-name { font-size: 10px; }
+}

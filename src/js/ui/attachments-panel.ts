@@ -65,6 +65,10 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
           <input type="file" class="att-file-input" multiple hidden />
           <span>Chọn file</span>
         </label>
+        <button type="button" class="btn btn-sm att-overview-btn" data-action="open-overview"
+                title="Xem tất cả ảnh + đồ thị đã lưu, phân loại theo nhóm">
+          📊 Tổng quan
+        </button>
         <span class="att-counter" aria-live="polite"></span>
       </div>
 
@@ -910,6 +914,21 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
         showToast(`Lỗi lưu: ${e.message}`, 'danger');
       } finally {
         (axSaveBtn as any).disabled = false;
+      }
+    });
+  }
+
+  // Round 77b: "Tổng quan" button → open overview modal
+  const overviewBtn = panel.querySelector('.att-overview-btn');
+  if (overviewBtn) {
+    overviewBtn.addEventListener('click', () => {
+      const fn = (window as any).openOverviewModal;
+      if (typeof fn === 'function') {
+        // Pull title from parent attachments modal title if available
+        const attTitle = document.querySelector('#modal-attachments-title')?.textContent || '';
+        fn({ refType, refId, title: attTitle.replace(/^Tài liệu\s*[—-]\s*/, '') });
+      } else {
+        console.warn('[panel] openOverviewModal not available');
       }
     });
   }
