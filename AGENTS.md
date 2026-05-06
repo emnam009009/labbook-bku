@@ -304,3 +304,22 @@ npm test                  # 62/62 phải maintain
 5. Test pass + build pass trước khi commit
 6. **Mỗi round chỉ migrate 1 nhóm file liên quan** để dễ rollback nếu lỗi
 
+## Migration Status (Round 67d completion note)
+
+The TypeScript migration is COMPLETE through Round 67c:
+- Round 62-66: All .js files renamed to .ts (77 .ts files, 0 .js files)
+- Round 67a: noUnusedLocals/Parameters + vite/client types + 9 dead-code fixes
+- Round 67b: strictNullChecks + 6 fixes
+- Round 67c: noImplicitAny + 21 fixes + qrcode.d.ts stub
+- Round 67d: Removed orphan pages/week-grid-snippet.ts (verified unused)
+
+23 files retain `@ts-nocheck` directive intentionally — they are large
+render-heavy files (DOM manipulation, Chart.js, jsPDF) where removing
+the directive would require 200+ type assertions per file with little
+practical safety benefit. The strict flags (noImplicitAny,
+strictNullChecks) ARE active for the rest of the codebase.
+
+The strict flags do not apply to files with `@ts-nocheck`. To remove
+`@ts-nocheck` from a specific file later, expect to add HTMLInputElement
+casts, possibly-null guards, and `as any` for window.X dispatching.
+
