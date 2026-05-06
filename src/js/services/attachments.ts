@@ -54,6 +54,13 @@ interface AttachmentRecord {
   uploadedBy: string;
   uploadedAt: number;
   note: string;
+  axisSettings?: AxisSettingsRecord;  // Round 75b: optional persistent axis customization
+}
+
+// Round 75b: Persistent axis customization for parsed-data plots.
+interface AxisSettingsRecord {
+  x?: { min?: number; max?: number; stepMajor?: number; minorPerMajor?: number };
+  y?: { min?: number; max?: number; stepMajor?: number; minorPerMajor?: number };
 }
 
 interface AttachmentWithId extends AttachmentRecord {
@@ -347,3 +354,63 @@ export async function uploadMany({ refType, refId, category, files, onItemProgre
   }
   return results;
 }
+
+interface AxisSettings {
+  x?: { min?: number | null; max?: number | null; stepMajor?: number | null; minorPerMajor?: number | null };
+  y?: { min?: number | null; max?: number | null; stepMajor?: number | null; minorPerMajor?: number | null };
+}
+
+interface UpdateAxisSettingsParams {
+  refType: string;
+  refId: string;
+  attachmentId: string;
+  axisSettings: AxisSettings | null;  // null = clear/reset
+}
+
+/**
+ * Update axisSettings cua mot attachment.
+ * Pass axisSettings = null de xoa (reset ve auto-scale).
+ * Log history voi action 'attachment_axis_change'.
+ */
+export async function updateAttachmentAxisSettings({
+  refType, refId, attachmentId, axisSettings,
+}: UpdateAxisSettingsParams): Promise<void> {
+  validateRef(refType, refId);
+  if (!attachmentId) throw new Error('Thieu attachmentId');
+
+  const path = `attachments/${refType}/${refId}/${attachmentId}`;
+  const meta = await fbGet(path) as AttachmentRecord | null;
+  if (!meta) throw new Error('Attachment khong ton tai');
+
+  // RTDB stores undefined as missing; normalize null -> undefined
+  // Use fbSet on sub-path so we don't disturb other fields.
+  if (axisSettings === null) {
+    // Remove the field entirely
+    await fbDel(`${path}/axisSettings`);
+  } else {
+    // Sanitize: ensure only number or null values
+    const clean: AxisSettings = { x: {}, y: {} };
+    for (const ax of ['x', 'y'] as const) {
+      const src = axisSettings[ax] || {};
+      const dst = clean[ax]!;
+      if (typeof src.min === 'number' && isFinite(src.min)) dst.min = src.min;
+      if (typeof src.max === 'number' && isFinite(src.max)) dst.max = src.max;
+      if (typeof src.stepMajor === 'number' && isFinite(src.stepMajor) && src.stepMajor > 0)
+        dst.stepMajor = src.stepMajor;
+      if (typeof src.minorPerMajor === 'number' && isFinite(src.minorPerMajor) && src.minorPerMajor >= 1 && src.minorPerMajor <= 10)
+        dst.minorPerMajor = Math.round(src.minorPerMajor);
+    }
+    await fbSet(`${path}/axisSettings`, clean);
+  }
+
+  try {
+    await (logHistory as any)({
+      action: 'attachment_axis_change',
+      target: `${refType}/${refId}`,
+      detail: `${meta.fileName}: ${axisSettings ? 'updated' : 'reset'}`,
+    });
+  } catch (e) {
+    console.warn('logHistory failed', e);
+  }
+}
+

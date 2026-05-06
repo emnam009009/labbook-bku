@@ -11,6 +11,7 @@ import {
   uploadMany,
   deleteAttachment,
   updateAttachmentCategory,
+  updateAttachmentAxisSettings,
 } from '../services/attachments.js';
 import { showToast } from './toast.js';
 import { canDelete } from '../utils/auth-helpers.js';
@@ -108,6 +109,27 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
               <span class="att-tauc-eg-display" hidden></span>
             </div>
           </div>
+          <div class="att-axis-controls" hidden>
+            <div class="att-axis-row">
+              <span class="att-axis-label">X:</span>
+              <label>min <input type="number" class="att-ax-x-min" step="any" placeholder="auto" /></label>
+              <label>max <input type="number" class="att-ax-x-max" step="any" placeholder="auto" /></label>
+              <label>step lớn <input type="number" class="att-ax-x-step" step="any" min="0" placeholder="auto" /></label>
+              <label>minor <input type="number" class="att-ax-x-minor" step="1" min="1" max="10" placeholder="2" /></label>
+            </div>
+            <div class="att-axis-row">
+              <span class="att-axis-label">Y:</span>
+              <label>min <input type="number" class="att-ax-y-min" step="any" placeholder="auto" /></label>
+              <label>max <input type="number" class="att-ax-y-max" step="any" placeholder="auto" /></label>
+              <label>step lớn <input type="number" class="att-ax-y-step" step="any" min="0" placeholder="auto" /></label>
+              <label>minor <input type="number" class="att-ax-y-minor" step="1" min="1" max="10" placeholder="2" /></label>
+            </div>
+            <div class="att-axis-actions">
+              <button type="button" class="btn btn-xs att-ax-reset" title="Đặt lại auto-scale">Reset</button>
+              <button type="button" class="btn btn-xs btn-primary att-ax-save" title="Lưu cài đặt cho file này">Lưu cài đặt</button>
+              <span class="att-ax-status"></span>
+            </div>
+          </div>
           <div class="att-preview-canvas-wrap">
             <canvas class="att-preview-canvas"></canvas>
           </div>
@@ -200,7 +222,12 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
   const previewMeta = panel.querySelector('.att-preview-meta');
   const savePlotBtn = panel.querySelector('.att-save-plot');
   const cancelPreviewBtn = panel.querySelector('.att-cancel-preview');
-  let _currentPreview = null; // { file, parsed, category }
+  let _currentPreview = null; // { file, parsed, category, attachmentId? }
+  let _axisLiveTimer: any = null;  // Round 75b: debounce timer for live update
+  const axisCtrls = panel.querySelector('.att-axis-controls');
+  const axStatus = panel.querySelector('.att-ax-status');
+  const axSaveBtn = panel.querySelector('.att-ax-save');
+  const axResetBtn = panel.querySelector('.att-ax-reset');
   let _currentChart = null;
   let _taucState = { on: false, n: 0.5, displayed: null }; // displayed: 'raw' | 'tauc'
 
@@ -222,7 +249,9 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
 
     if (!_taucState.on) {
       _taucState.displayed = 'raw';
-      _currentChart = await renderPreview(previewCanvas, parsed, { title: titleBase });
+      _currentChart = await renderPreview(previewCanvas, parsed, { title: titleBase,
+  axisSettings: readAxisSettings(),
+});
       return;
     }
 
@@ -248,6 +277,7 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
       }, {
         title: `${titleBase} (Tauc, n=${formatN(n)})`,
         bandgapFit: _bandgapFit,
+        axisSettings: readAxisSettings(),
       });
     } catch (err) {
       showToast(`Tauc transform lỗi: ${err.message}`, 'danger');
@@ -339,6 +369,9 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
     if (_currentChart) { try { _currentChart.destroy(); } catch (e) {} _currentChart = null; }
     _currentPreview = null;
     previewBox.hidden = true;
+    if (axisCtrls) (axisCtrls as any).hidden = true;
+    if (axStatus) axStatus.textContent = '';
+    clearAxisDOM();
   };
 
   const handleFiles = async (files) => {
@@ -377,8 +410,10 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
         progress.textContent = `Đang đọc ${file.name}...`;
         const parsed = await parseDataFile(file, category);
         progress.hidden = true;
-        _currentPreview = { file, parsed, category };
+        _currentPreview = { file, parsed, category, attachmentId: null };
         previewBox.hidden = false;
+        if (axisCtrls) (axisCtrls as any).hidden = false;
+        clearAxisDOM();  // New file: no saved settings
         const heuristicNote = parsed.matchedByHeuristic
           ? `cột: ${parsed.xLabel} → ${parsed.yLabel}`
           : `cột mặc định (heuristic không match — chọn lại bên dưới)`;
@@ -415,6 +450,7 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
             if (_currentChart) { try { _currentChart.destroy(); } catch (e) {} }
             _currentChart = await renderPreview(previewCanvas, np, {
               title: `${category.toUpperCase()} — ${file.name}`,
+              axisSettings: readAxisSettings(),
             });
           } catch (e) {
             showToast(`Không re-parse được: ${e.message}`, 'danger');
@@ -428,6 +464,7 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
         taucOn.checked = false;
         _currentChart = await renderPreview(previewCanvas, parsed, {
           title: `${category.toUpperCase()} — ${file.name}`,
+          axisSettings: readAxisSettings(),
         });
         // Cũng upload file gốc luôn (background) — đồ thị save riêng khi user bấm "Lưu"
         const results = await uploadMany({
@@ -604,6 +641,7 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
           if (_currentChart) { try { _currentChart.destroy(); } catch (e) {} }
           _currentChart = await renderPreview(previewCanvas, np, {
             title: `${category.toUpperCase()} — ${fileName}`,
+            axisSettings: readAxisSettings(),
           });
         } catch (e) {
           showToast(`Không re-parse được: ${e.message}`, 'danger');
@@ -618,6 +656,7 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
       if (_currentChart) { try { _currentChart.destroy(); } catch (e) {} }
       _currentChart = await renderPreview(previewCanvas, parsed, {
         title: `${category.toUpperCase()} — ${fileName}`,
+        axisSettings: readAxisSettings(),
       });
       previewBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     } catch (err) {
@@ -752,6 +791,128 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
       window.open(url, '_blank', 'noopener');
     }
   });
+
+  // ─── Round 75b: Custom axis controls helpers ─────────────────────
+  const axInputs = {
+    xMin:   panel.querySelector('.att-ax-x-min'),
+    xMax:   panel.querySelector('.att-ax-x-max'),
+    xStep:  panel.querySelector('.att-ax-x-step'),
+    xMinor: panel.querySelector('.att-ax-x-minor'),
+    yMin:   panel.querySelector('.att-ax-y-min'),
+    yMax:   panel.querySelector('.att-ax-y-max'),
+    yStep:  panel.querySelector('.att-ax-y-step'),
+    yMinor: panel.querySelector('.att-ax-y-minor'),
+  };
+
+  const _readNum = (el: any) => {
+    const v = el?.value;
+    if (v === '' || v === null || v === undefined) return null;
+    const n = parseFloat(v);
+    return isFinite(n) ? n : null;
+  };
+
+  const readAxisSettings = () => {
+    return {
+      x: {
+        min: _readNum(axInputs.xMin),
+        max: _readNum(axInputs.xMax),
+        stepMajor: _readNum(axInputs.xStep),
+        minorPerMajor: _readNum(axInputs.xMinor),
+      },
+      y: {
+        min: _readNum(axInputs.yMin),
+        max: _readNum(axInputs.yMax),
+        stepMajor: _readNum(axInputs.yStep),
+        minorPerMajor: _readNum(axInputs.yMinor),
+      },
+    };
+  };
+
+  // Set form inputs from a saved axisSettings object (for previewExisting)
+  const writeAxisToDOM = (s: any) => {
+    const setVal = (el: any, v: any) => {
+      if (el) el.value = (v === null || v === undefined) ? '' : String(v);
+    };
+    setVal(axInputs.xMin,   s?.x?.min);
+    setVal(axInputs.xMax,   s?.x?.max);
+    setVal(axInputs.xStep,  s?.x?.stepMajor);
+    setVal(axInputs.xMinor, s?.x?.minorPerMajor);
+    setVal(axInputs.yMin,   s?.y?.min);
+    setVal(axInputs.yMax,   s?.y?.max);
+    setVal(axInputs.yStep,  s?.y?.stepMajor);
+    setVal(axInputs.yMinor, s?.y?.minorPerMajor);
+  };
+
+  const clearAxisDOM = () => writeAxisToDOM(null);
+
+  // Re-render the current chart with current axis settings.
+  // Called after input change (debounced) and from save/reset.
+  const reRenderWithAxis = async () => {
+    if (!_currentPreview) return;
+    const { parsed } = _currentPreview;
+    const axisSettings = readAxisSettings();
+    if (_currentChart) { try { _currentChart.destroy(); } catch (e) {} _currentChart = null; }
+    const previewCanvas = panel.querySelector('.att-preview-canvas');
+    _currentChart = await renderPreview(previewCanvas, parsed, {
+      title: '', axisSettings,
+    });
+  };
+
+  // Wire input listeners (debounce 200ms)
+  Object.values(axInputs).forEach((inp: any) => {
+    if (!inp) return;
+    inp.addEventListener('input', () => {
+      if (_axisLiveTimer) clearTimeout(_axisLiveTimer);
+      _axisLiveTimer = setTimeout(reRenderWithAxis, 200);
+    });
+  });
+
+  // Reset button: clear all inputs + re-render auto + clear DB if persisted
+  if (axResetBtn) {
+    axResetBtn.addEventListener('click', async () => {
+      clearAxisDOM();
+      if (axStatus) axStatus.textContent = '';
+      await reRenderWithAxis();
+      // Persist reset only if file already saved (has attachmentId)
+      const aid = _currentPreview?.attachmentId;
+      if (aid) {
+        try {
+          (axResetBtn as any).disabled = true;
+          await updateAttachmentAxisSettings({ refType, refId, attachmentId: aid, axisSettings: null });
+          showToast('Đã reset cài đặt trục', 'success');
+          if (axStatus) axStatus.textContent = '✓ đã reset';
+        } catch (e: any) {
+          showToast(`Lỗi reset: ${e.message}`, 'danger');
+        } finally {
+          (axResetBtn as any).disabled = false;
+        }
+      }
+    });
+  }
+
+  // Save button: persist current settings to RTDB
+  if (axSaveBtn) {
+    axSaveBtn.addEventListener('click', async () => {
+      const aid = _currentPreview?.attachmentId;
+      if (!aid) {
+        showToast('Hãy lưu file trước rồi mới lưu cài đặt trục', 'warn' as any);
+        return;
+      }
+      const settings = readAxisSettings();
+      try {
+        (axSaveBtn as any).disabled = true;
+        await updateAttachmentAxisSettings({
+          refType, refId, attachmentId: aid, axisSettings: settings,
+        });
+        showToast('Đã lưu cài đặt trục', 'success');
+        if (axStatus) axStatus.textContent = '✓ đã lưu';
+      } catch (e: any) {
+        showToast(`Lỗi lưu: ${e.message}`, 'danger');
+      } finally {
+        (axSaveBtn as any).disabled = false;
+      }
+    });
+  }
 
   // Listen for cache updates pushed from listeners.js
   const onCacheUpdate = (e) => {

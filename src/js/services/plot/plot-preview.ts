@@ -25,7 +25,7 @@ function _axisStartFromZero(category, xLabel) {
 /**
  * Build Chart.js config from parsed data.
  */
-function buildChartConfig({ x, y, xLabel, yLabel, title, spec, bandgapFit, category }) {
+function buildChartConfig({ x, y, xLabel, yLabel, title, spec, bandgapFit, category, axisSettings }) {
   const points = x.map((xv, i) => ({ x: xv, y: y[i] }));
 
   const datasets = [{
@@ -88,7 +88,13 @@ function buildChartConfig({ x, y, xLabel, yLabel, title, spec, bandgapFit, categ
             color: '#000000',
             font: { size: 20, weight: 'bold', family: 'Arial, sans-serif' },
           },
-          ...(_axisStartFromZero(category, xLabel) ? { min: 0 } : {}),
+          // axisSettings.x overrides; otherwise fall back to category-based default
+          ...(axisSettings?.x?.min !== undefined && axisSettings?.x?.min !== null
+            ? { min: axisSettings.x.min }
+            : (_axisStartFromZero(category, xLabel) ? { min: 0 } : {})),
+          ...(axisSettings?.x?.max !== undefined && axisSettings?.x?.max !== null
+            ? { max: axisSettings.x.max }
+            : {}),
           reverse: !!spec?.reverseX,
           grid: { display: false, drawTicks: true, tickLength: 8, tickWidth: 1.5, tickColor: '#000000' },
           border: { color: '#000000', width: 1.5 },
@@ -96,6 +102,9 @@ function buildChartConfig({ x, y, xLabel, yLabel, title, spec, bandgapFit, categ
             color: '#000000',
             font: { size: 18, weight: 'bold', family: 'Arial, sans-serif' },
             padding: 6,
+            ...(axisSettings?.x?.stepMajor && axisSettings.x.stepMajor > 0
+              ? { stepSize: axisSettings.x.stepMajor }
+              : {}),
           },
         },
         y: {
@@ -105,12 +114,20 @@ function buildChartConfig({ x, y, xLabel, yLabel, title, spec, bandgapFit, categ
             color: '#000000',
             font: { size: 20, weight: 'bold', family: 'Arial, sans-serif' },
           },
-          ...(_axisStartFromZero(category, xLabel) ? { min: 0 } : {}),
-          grid: { display: false },
+          ...(axisSettings?.y?.min !== undefined && axisSettings?.y?.min !== null
+            ? { min: axisSettings.y.min }
+            : (_axisStartFromZero(category, xLabel) ? { min: 0 } : {})),
+          ...(axisSettings?.y?.max !== undefined && axisSettings?.y?.max !== null
+            ? { max: axisSettings.y.max }
+            : {}),
+          grid: { display: false, drawTicks: true, tickLength: 8, tickWidth: 1.5, tickColor: '#000000' },
           border: { color: '#000000', width: 1.5 },
           ticks: {
             color: '#000000',
             font: { size: 18, weight: 'bold', family: 'Arial, sans-serif' },
+            ...(axisSettings?.y?.stepMajor && axisSettings.y.stepMajor > 0
+              ? { stepSize: axisSettings.y.stepMajor }
+              : {}),
           },
         },
       },
@@ -137,6 +154,7 @@ export async function renderPreview(canvas, parsed, opts = {}) {
     spec: parsed.spec,
     category: parsed.category,
     bandgapFit: opts.bandgapFit || null,
+    axisSettings: opts.axisSettings || null,
   });
 
   // Plugin: vẽ frame 4 cạnh quanh chart area
@@ -158,43 +176,78 @@ export async function renderPreview(canvas, parsed, opts = {}) {
     },
   });
 
-  // Plugin: vẽ major + minor ticks trên trục X (style paper)
-  cfg.plugins.push({
-    id: 'xAxisTicks',
-    afterDraw: (chart) => {
-      const xScale = chart.scales.x;
-      if (!xScale) return;
-      const { ctx, chartArea } = chart;
-      const ticks = xScale.ticks;
-      if (!ticks || ticks.length < 2) return;
-      ctx.save();
-      ctx.strokeStyle = '#000000';
+  // Helper de ve major + minor ticks tren 1 truc (X hoac Y)
+  // minorPerMajor: so subdivision giua 2 major. Vd 4 -> 3 minor ticks giua, 2 -> 1 minor o midpoint.
+  const _drawAxisTicks = (chart, axisName, minorPerMajor) => {
+    const scale = chart.scales[axisName];
+    if (!scale) return;
+    const { ctx, chartArea } = chart;
+    const ticks = scale.ticks;
+    if (!ticks || ticks.length < 2) return;
+    ctx.save();
+    ctx.strokeStyle = '#000000';
 
-      // Major ticks: dài 8px ở mỗi giá trị label
-      ctx.lineWidth = 1.5;
-      const majorLen = 8;
-      for (const t of ticks) {
-        const x = xScale.getPixelForValue(t.value);
+    const isX = axisName === 'x';
+    const subdivisions = Math.max(1, Math.min(10, minorPerMajor || 2));
+
+    // Major ticks
+    ctx.lineWidth = 1.5;
+    const majorLen = 8;
+    for (const t of ticks) {
+      if (isX) {
+        const x = scale.getPixelForValue(t.value);
         if (x < chartArea.left || x > chartArea.right) continue;
         ctx.beginPath();
         ctx.moveTo(x, chartArea.bottom);
         ctx.lineTo(x, chartArea.bottom + majorLen);
         ctx.stroke();
-      }
-
-      // Minor ticks: ngắn 4px ở midpoint giữa các major
-      ctx.lineWidth = 1;
-      const minorLen = 4;
-      for (let i = 0; i < ticks.length - 1; i++) {
-        const midValue = (ticks[i].value + ticks[i + 1].value) / 2;
-        const x = xScale.getPixelForValue(midValue);
-        if (x < chartArea.left || x > chartArea.right) continue;
+      } else {
+        const y = scale.getPixelForValue(t.value);
+        if (y < chartArea.top || y > chartArea.bottom) continue;
         ctx.beginPath();
-        ctx.moveTo(x, chartArea.bottom);
-        ctx.lineTo(x, chartArea.bottom + minorLen);
+        ctx.moveTo(chartArea.left, y);
+        ctx.lineTo(chartArea.left - majorLen, y);
         ctx.stroke();
       }
-      ctx.restore();
+    }
+
+    // Minor ticks: chia [tick_i, tick_{i+1}] thanh `subdivisions` phan -> (subdivisions-1) minor ticks
+    ctx.lineWidth = 1;
+    const minorLen = 4;
+    for (let i = 0; i < ticks.length - 1; i++) {
+      const v0 = ticks[i].value;
+      const v1 = ticks[i + 1].value;
+      const dv = (v1 - v0) / subdivisions;
+      for (let k = 1; k < subdivisions; k++) {
+        const v = v0 + dv * k;
+        if (isX) {
+          const x = scale.getPixelForValue(v);
+          if (x < chartArea.left || x > chartArea.right) continue;
+          ctx.beginPath();
+          ctx.moveTo(x, chartArea.bottom);
+          ctx.lineTo(x, chartArea.bottom + minorLen);
+          ctx.stroke();
+        } else {
+          const y = scale.getPixelForValue(v);
+          if (y < chartArea.top || y > chartArea.bottom) continue;
+          ctx.beginPath();
+          ctx.moveTo(chartArea.left, y);
+          ctx.lineTo(chartArea.left - minorLen, y);
+          ctx.stroke();
+        }
+      }
+    }
+    ctx.restore();
+  };
+
+  // Plugin: ve major + minor ticks tren ca 2 truc X va Y
+  const _xMinor = opts.axisSettings?.x?.minorPerMajor ?? 2;
+  const _yMinor = opts.axisSettings?.y?.minorPerMajor ?? 2;
+  cfg.plugins.push({
+    id: 'axisTicks',
+    afterDraw: (chart) => {
+      _drawAxisTicks(chart, 'x', _xMinor);
+      _drawAxisTicks(chart, 'y', _yMinor);
     },
   });
 
@@ -274,6 +327,7 @@ export async function renderHighResPNG(parsed, opts = {}) {
     spec: parsed.spec,
     category: parsed.category,
     bandgapFit: opts.bandgapFit || null,
+    axisSettings: opts.axisSettings || null,
   });
   // Boost font sizes for high-res so text is legible
   const scale = dpi / 96; // CSS px to 300dpi
