@@ -1,5 +1,5 @@
 /**
- * services/bulk-multi-select.js
+ * services/bulk-multi-select.ts
  *
  * Thao tác chọn nâng cao cho bulk action:
  *  1. Ctrl + drag chuột trái: kéo qua nhiều row
@@ -18,29 +18,37 @@
 (function setupBulkMultiSelect() {
   'use strict';
 
+  interface RowInfo {
+    tr: HTMLTableRowElement;
+    cb: HTMLInputElement;
+  }
+  interface RowData extends RowInfo {
+    key: string;
+  }
+
   // ── State ────────────────────────────────────────────────────────
   let _isDragging = false;
-  let _dragMode = null;        // 'check' | 'uncheck' — xác định bởi action trên row đầu
-  let _dragTbodyId = null;     // Chỉ drag trong cùng 1 tbody
-  let _dragVisited = new Set(); // Tránh toggle 1 row nhiều lần khi rê qua lại
-  let _lastClickedRowKey = null;
-  let _lastClickedTbodyId = null;
+  let _dragMode: 'check' | 'uncheck' | null = null;
+  let _dragTbodyId: string | null = null;
+  let _dragVisited = new Set<string>();
+  let _lastClickedRowKey: string | null = null;
+  let _lastClickedTbodyId: string | null = null;
 
   // ── Helpers ──────────────────────────────────────────────────────
 
-  function getRowFromEvent(e) {
-    let el = e.target;
+  function getRowFromEvent(e: MouseEvent): RowInfo | null {
+    let el = e.target as HTMLElement | null;
     while (el && el !== document.body) {
       if (el.tagName === 'TR') {
-        const cb = el.querySelector('.bulk-cb');
-        if (cb) return { tr: el, cb };
+        const cb = el.querySelector<HTMLInputElement>('.bulk-cb');
+        if (cb) return { tr: el as HTMLTableRowElement, cb };
       }
       el = el.parentElement;
     }
     return null;
   }
 
-  function setCheckbox(cb, checked) {
+  function setCheckbox(cb: HTMLInputElement, checked: boolean): boolean {
     if (cb.checked === checked) return false;
     cb.checked = checked;
 
@@ -51,24 +59,24 @@
   }
 
   // Lấy danh sách row data trong cùng tbody, theo thứ tự DOM
-  function getRowsInTbody(tbodyId) {
+  function getRowsInTbody(tbodyId: string): RowData[] {
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return [];
-    const result = [];
-    tbody.querySelectorAll('tr').forEach(tr => {
-      const cb = tr.querySelector('.bulk-cb');
-      if (cb) result.push({ tr, cb, key: cb.dataset.key });
+    const result: RowData[] = [];
+    tbody.querySelectorAll<HTMLTableRowElement>('tr').forEach(tr => {
+      const cb = tr.querySelector<HTMLInputElement>('.bulk-cb');
+      if (cb) result.push({ tr, cb, key: cb.dataset.key! });
     });
     return result;
   }
 
-  function findRowIndex(rows, key) {
+  function findRowIndex(rows: RowData[], key: string): number {
     return rows.findIndex(r => r.key === key);
   }
 
   // ── 1. CTRL + DRAG ───────────────────────────────────────────────
 
-  document.addEventListener('mousedown', (e) => {
+  document.addEventListener('mousedown', (e: MouseEvent) => {
     // Chỉ kích hoạt khi: Ctrl/Cmd held + chuột trái + trên 1 row có checkbox
     if (e.button !== 0) return;
     if (!e.ctrlKey && !e.metaKey) return;
@@ -77,28 +85,29 @@
     if (!info) return;
 
     // Tránh trigger khi click trực tiếp vào checkbox (để check thường vẫn work)
-    if (e.target.classList?.contains('bulk-cb')) return;
+    const target = e.target as HTMLElement | null;
+    if (target?.classList?.contains('bulk-cb')) return;
     // Tránh khi click vào button trong action cell
-    if (e.target.closest('.action-cell, button, a, label')) return;
+    if (target?.closest('.action-cell, button, a, label')) return;
 
     e.preventDefault(); // Ngăn select text khi drag
 
     _isDragging = true;
-    _dragTbodyId = info.cb.dataset.tbody;
+    _dragTbodyId = info.cb.dataset.tbody!;
     _dragVisited = new Set();
 
     // Toggle row đầu để xác định mode
     const newState = !info.cb.checked;
     _dragMode = newState ? 'check' : 'uncheck';
     setCheckbox(info.cb, newState);
-    _dragVisited.add(info.cb.dataset.key);
+    _dragVisited.add(info.cb.dataset.key!);
 
     // Visual feedback: cursor crosshair
     document.body.style.userSelect = 'none';
     document.body.style.cursor = 'crosshair';
   });
 
-  document.addEventListener('mousemove', (e) => {
+  document.addEventListener('mousemove', (e: MouseEvent) => {
     if (!_isDragging) return;
 
     const info = getRowFromEvent(e);
@@ -107,7 +116,7 @@
     // Chỉ áp dụng trong cùng tbody
     if (info.cb.dataset.tbody !== _dragTbodyId) return;
 
-    const key = info.cb.dataset.key;
+    const key = info.cb.dataset.key!;
     if (_dragVisited.has(key)) return;
     _dragVisited.add(key);
 
@@ -141,18 +150,18 @@
   // ── 2. CTRL + SHIFT + CLICK = RANGE SELECT ────────────────────────
 
   // Lưu row được click cuối cùng (qua checkbox click thường hoặc click vào row)
-  document.addEventListener('click', (e) => {
+  document.addEventListener('click', (e: MouseEvent) => {
     // Khi user Ctrl+Shift+Click → tính range
     if (e.ctrlKey && e.shiftKey) {
       const info = getRowFromEvent(e);
       if (!info) return;
 
-      const tbodyId = info.cb.dataset.tbody;
+      const tbodyId = info.cb.dataset.tbody!;
 
       // Cần có row được click trước đó trong cùng tbody
       if (!_lastClickedRowKey || _lastClickedTbodyId !== tbodyId) {
         // Không có anchor → coi như click thường
-        _lastClickedRowKey = info.cb.dataset.key;
+        _lastClickedRowKey = info.cb.dataset.key!;
         _lastClickedTbodyId = tbodyId;
         return;
       }
@@ -162,7 +171,7 @@
 
       const rows = getRowsInTbody(tbodyId);
       const startIdx = findRowIndex(rows, _lastClickedRowKey);
-      const endIdx = findRowIndex(rows, info.cb.dataset.key);
+      const endIdx = findRowIndex(rows, info.cb.dataset.key!);
 
       if (startIdx === -1 || endIdx === -1) return;
 
@@ -176,17 +185,21 @@
       }
 
       // Update anchor sang row mới click
-      _lastClickedRowKey = info.cb.dataset.key;
+      _lastClickedRowKey = info.cb.dataset.key!;
       _lastClickedTbodyId = tbodyId;
       return;
     }
 
     // Click thường (không Ctrl+Shift) → cập nhật anchor nếu click vào checkbox
-    if (e.target.classList?.contains('bulk-cb')) {
-      _lastClickedRowKey = e.target.dataset.key;
-      _lastClickedTbodyId = e.target.dataset.tbody;
+    const target = e.target as HTMLElement | null;
+    if (target?.classList?.contains('bulk-cb')) {
+      _lastClickedRowKey = (target as HTMLInputElement).dataset.key!;
+      _lastClickedTbodyId = (target as HTMLInputElement).dataset.tbody!;
     }
   }, true); // capture phase để intercept trước khi event lan
 
   console.log('[bulk-multi-select] loaded — ctrl+drag, ctrl+shift+click range');
 })();
+
+// Module marker
+export {};

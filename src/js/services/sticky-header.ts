@@ -1,5 +1,5 @@
 /**
- * services/sticky-header.js
+ * services/sticky-header.ts
  *
  * Tự động wrap "page header" (title row + toolbar row) của các page
  * vào 1 div .page-sticky-header → CSS làm sticky.
@@ -60,11 +60,11 @@ const SENTINEL_ATTR = 'data-sticky-wrapped'
  *
  * Default cho các page khác: wrap 2 phần đầu (title + toolbar).
  */
-function wrapPageHeader(pageEl) {
+function wrapPageHeader(pageEl: HTMLElement | null): void {
   if (!pageEl) return
   if (pageEl.getAttribute(SENTINEL_ATTR)) return // đã wrap rồi
 
-  const children = Array.from(pageEl.children)
+  const children = Array.from(pageEl.children) as HTMLElement[]
   if (children.length < 2) return // page không có đủ 2 row đầu
 
   // Special case: electrode có tab-bar ở row 2, search ở row 3 (trong tab-content)
@@ -106,7 +106,7 @@ function wrapPageHeader(pageEl) {
  * Khi sentinel cuộn ra khỏi viewport (intersection ratio = 0)
  *   → wrapper đã stuck.
  */
-function attachStuckDetector(wrapper) {
+function attachStuckDetector(wrapper: HTMLElement): void {
   if (!wrapper || wrapper.getAttribute('data-stuck-attached')) return
   wrapper.setAttribute('data-stuck-attached', '1')
 
@@ -114,7 +114,7 @@ function attachStuckDetector(wrapper) {
   const sentinel = document.createElement('div')
   sentinel.style.cssText = 'height:1px;margin-top:-1px;pointer-events:none'
   sentinel.setAttribute('data-stuck-sentinel', '1')
-  wrapper.parentNode.insertBefore(sentinel, wrapper)
+  wrapper.parentNode!.insertBefore(sentinel, wrapper)
 
   if (!('IntersectionObserver' in window)) {
     // Fallback: luôn show stuck shadow
@@ -145,8 +145,8 @@ function attachStuckDetector(wrapper) {
  *   - Window resize (sticky bar có thể wrap khác nhau)
  *   - Page change (sidebar click)
  */
-function updateStickyBarHeight() {
-  const activePages = document.querySelectorAll('.page.active .page-sticky-header')
+function updateStickyBarHeight(): void {
+  const activePages = document.querySelectorAll<HTMLElement>('.page.active .page-sticky-header')
   activePages.forEach((bar) => {
     const h = bar.getBoundingClientRect().height
     if (h > 0) {
@@ -160,12 +160,12 @@ function updateStickyBarHeight() {
  * Init: wrap tất cả page có trong PAGES_WITH_STICKY.
  * Gọi 1 lần khi DOMContentLoaded.
  */
-export function initStickyHeaders() {
+export function initStickyHeaders(): void {
   PAGES_WITH_STICKY.forEach((pageId) => {
     const pageEl = document.getElementById(pageId)
     if (!pageEl) return
     wrapPageHeader(pageEl)
-    const wrapper = pageEl.querySelector('.page-sticky-header')
+    const wrapper = pageEl.querySelector<HTMLElement>('.page-sticky-header')
     if (wrapper) attachStuckDetector(wrapper)
   })
   console.log('[sticky-header] initialized for', PAGES_WITH_STICKY.length, 'pages')
@@ -175,9 +175,9 @@ export function initStickyHeaders() {
   setTimeout(updateStickyBarHeight, 300) // phòng trường hợp font chưa load
 
   // Re-measure khi resize window
-  let resizeTimer = null
+  let resizeTimer: ReturnType<typeof setTimeout> | null = null
   window.addEventListener('resize', () => {
-    clearTimeout(resizeTimer)
+    if (resizeTimer) clearTimeout(resizeTimer)
     resizeTimer = setTimeout(updateStickyBarHeight, 150)
   })
 

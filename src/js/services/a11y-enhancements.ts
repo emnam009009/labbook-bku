@@ -1,5 +1,5 @@
 /**
- * services/a11y-enhancements.js
+ * services/a11y-enhancements.ts
  *
  * Tự động thêm ARIA attributes cho các widget dynamic được render bởi JS,
  * mà không cần sửa từng file render riêng lẻ.
@@ -17,7 +17,7 @@
 (function setupA11yEnhancements() {
 
   // ── 1. Lock toggle ARIA ──────────────────────────────────────────────
-  function enhanceLockToggle(btn) {
+  function enhanceLockToggle(btn: HTMLElement): void {
     if (btn.dataset.a11yDone) return;
     btn.dataset.a11yDone = '1';
 
@@ -48,7 +48,7 @@
   }
 
   // ── 2. Action buttons (del-btn, edit-btn) ARIA ───────────────────────
-  function enhanceActionButton(btn) {
+  function enhanceActionButton(btn: HTMLElement): void {
     if (btn.dataset.a11yDone) return;
     btn.dataset.a11yDone = '1';
 
@@ -71,7 +71,7 @@
   }
 
   // ── 3. Sortable table headers (aria-sort) ────────────────────────────
-  function enhanceSortableHeader(th) {
+  function enhanceSortableHeader(th: HTMLElement): void {
     if (th.dataset.a11yDone) return;
     th.dataset.a11yDone = '1';
 
@@ -82,7 +82,7 @@
   }
 
   // ── 4. Custom select (cs-modal-trigger) — placeholder for H1 ─────────
-  function enhanceCustomSelect(trigger) {
+  function enhanceCustomSelect(trigger: HTMLElement): void {
     if (trigger.dataset.a11yDone) return;
     trigger.dataset.a11yDone = '1';
 
@@ -97,7 +97,7 @@
   }
 
   // ── 5. Avatar menu — placeholder for M4 ──────────────────────────────
-  function enhanceAvatarMenu(btn) {
+  function enhanceAvatarMenu(btn: HTMLElement): void {
     if (btn.dataset.a11yDone) return;
     btn.dataset.a11yDone = '1';
 
@@ -111,30 +111,30 @@
   }
 
   // ── Main scan ────────────────────────────────────────────────────────
-  function scan(root) {
+  function scan(root: Document | HTMLElement): void {
     if (!root || !root.querySelectorAll) return;
 
     // Lock toggles: button có class lock-toggle hoặc onclick chứa lockItem/unlockItem
-    root.querySelectorAll('button.lock-toggle, button[onclick*="lockItem"], button[onclick*="unlockItem"], button[onclick*="lockInk"], button[onclick*="unlockInk"]')
+    root.querySelectorAll<HTMLElement>('button.lock-toggle, button[onclick*="lockItem"], button[onclick*="unlockItem"], button[onclick*="lockInk"], button[onclick*="unlockInk"]')
       .forEach(enhanceLockToggle);
 
     // Action buttons
-    root.querySelectorAll('button.del-btn, button.edit-btn, button.duplicate-btn, button.approve-btn, button.reject-btn, button.member-del-btn')
+    root.querySelectorAll<HTMLElement>('button.del-btn, button.edit-btn, button.duplicate-btn, button.approve-btn, button.reject-btn, button.member-del-btn')
       .forEach(enhanceActionButton);
 
     // Sortable headers
-    root.querySelectorAll('th.sortable').forEach(enhanceSortableHeader);
+    root.querySelectorAll<HTMLElement>('th.sortable').forEach(enhanceSortableHeader);
 
     // Custom selects (modal dropdowns)
-    root.querySelectorAll('.cs-modal-trigger, .custom-select-trigger')
+    root.querySelectorAll<HTMLElement>('.cs-modal-trigger, .custom-select-trigger')
       .forEach(enhanceCustomSelect);
 
     // Avatar menu button
-    root.querySelectorAll('.avatar-menu-btn').forEach(enhanceAvatarMenu);
+    root.querySelectorAll<HTMLElement>('.avatar-menu-btn').forEach(enhanceAvatarMenu);
   }
 
   // Initial scan
-  function init() {
+  function init(): void {
     scan(document);
     setTimeout(() => scan(document), 1000);  // re-scan sau khi data load
     setTimeout(() => scan(document), 3000);
@@ -147,7 +147,7 @@
   }
 
   // MutationObserver để bắt elements mới được thêm vào DOM
-  const observer = new MutationObserver(mutations => {
+  const observer: any = new MutationObserver(mutations => {
     let needScan = false;
     for (const m of mutations) {
       if (m.addedNodes.length > 0) { needScan = true; break; }
@@ -160,7 +160,7 @@
   });
 
   // Bắt đầu observe khi DOM ready
-  function startObserving() {
+  function startObserving(): void {
     if (document.body) {
       observer.observe(document.body, { childList: true, subtree: true });
     }
@@ -173,3 +173,6 @@
 
   console.log('[a11y-enhancements] loaded');
 })();
+
+// Module marker
+export {};

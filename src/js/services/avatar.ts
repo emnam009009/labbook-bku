@@ -1,5 +1,5 @@
 /**
- * services/avatar.js
+ * services/avatar.ts
  * Avatar UI: toggle menu, change avatar (upload + resize), reset, update UI from currentAuth
  *
  * Phụ thuộc:
@@ -17,7 +17,7 @@
 import { db, ref, update, onValue } from '../firebase.js'
 
 // ── Toggle hiển thị menu avatar ───────────────────────────
-export function toggleAvatarMenu() {
+export function toggleAvatarMenu(): void {
   const menu = document.getElementById('avatar-menu');
   if (!menu) return;
   menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
@@ -25,12 +25,13 @@ export function toggleAvatarMenu() {
 
 // ── Click outside menu → đóng menu (gắn 1 lần ở init) ─────
 let _outsideHandlerAttached = false;
-function attachOutsideHandler() {
+function attachOutsideHandler(): void {
   if (_outsideHandlerAttached) return;
   _outsideHandlerAttached = true;
-  document.addEventListener('click', function(e) {
+  document.addEventListener('click', function(e: MouseEvent) {
     const wrapper = document.getElementById('avatar-wrapper');
-    if (wrapper && !wrapper.contains(e.target)) {
+    const target = e.target as Node | null;
+    if (wrapper && target && !wrapper.contains(target)) {
       const menu = document.getElementById('avatar-menu');
       if (menu) menu.style.display = 'none';
     }
@@ -39,24 +40,24 @@ function attachOutsideHandler() {
 attachOutsideHandler();
 
 // ── Change avatar: resize 100×100 + lưu base64 vào DB ─────
-export async function changeAvatar(input) {
-  const file = input.files[0];
+export async function changeAvatar(input: HTMLInputElement): Promise<void> {
+  const file = input.files?.[0];
   if (!file) return;
-  const currentAuth = window.currentAuth || {};
-  const showToast = window.showToast || ((msg) => console.log(msg));
+  const currentAuth = (window.currentAuth || {}) as any;
+  const showToast = window.showToast || ((msg: string) => console.log(msg));
 
   const reader = new FileReader();
-  reader.onload = (e) => {
+  reader.onload = (e: ProgressEvent<FileReader>) => {
     const img = new Image();
     img.onload = async () => {
       const canvas = document.createElement('canvas');
       canvas.width = 100;
       canvas.height = 100;
-      canvas.getContext('2d').drawImage(img, 0, 0, 100, 100);
+      canvas.getContext('2d')!.drawImage(img, 0, 0, 100, 100);
       const base64 = canvas.toDataURL('image/jpeg', 0.6);
-      if (window.devLog) window.devLog('Avatar size:', Math.round(base64.length / 1024), 'KB');
+      if ((window as any).devLog) (window as any).devLog('Avatar size:', Math.round(base64.length / 1024), 'KB');
 
-      const avatarImg = document.getElementById('avatar-img');
+      const avatarImg = document.getElementById('avatar-img') as HTMLImageElement | null;
       const initials = document.getElementById('avatar-initials');
       if (avatarImg) {
         avatarImg.src = base64;
@@ -67,28 +68,28 @@ export async function changeAvatar(input) {
       if (currentAuth.uid) {
         try {
           await update(ref(db, 'users/' + currentAuth.uid), { avatar: base64 });
-          showToast('Đã cập nhật ảnh đại diện!', 'success');
-        } catch (err) {
-          showToast('Lỗi lưu ảnh: ' + err.message, 'danger');
+          showToast('Đã cập nhật ảnh đại diện!', 'success' as any);
+        } catch (err: any) {
+          showToast('Lỗi lưu ảnh: ' + err.message, 'danger' as any);
           console.error(err);
         }
       } else {
-        showToast('Chưa đăng nhập!', 'danger');
+        showToast('Chưa đăng nhập!', 'danger' as any);
       }
     };
-    img.src = e.target.result;
+    img.src = e.target?.result as string;
   };
   reader.readAsDataURL(file);
 }
 
 // ── Reset avatar về initials ─────────────────────────────
-export async function resetAvatar() {
-  const currentAuth = window.currentAuth || {};
-  const showToast = window.showToast || ((msg) => console.log(msg));
+export async function resetAvatar(): Promise<void> {
+  const currentAuth = (window.currentAuth || {}) as any;
+  const showToast = window.showToast || ((msg: string) => console.log(msg));
 
   if (currentAuth.uid) {
     await update(ref(db, 'users/' + currentAuth.uid), { avatar: null });
-    const img = document.getElementById('avatar-img');
+    const img = document.getElementById('avatar-img') as HTMLImageElement | null;
     const initials = document.getElementById('avatar-initials');
     if (img) {
       img.src = '';
@@ -97,19 +98,19 @@ export async function resetAvatar() {
     if (initials) initials.style.display = 'flex';
     const menu = document.getElementById('avatar-menu');
     if (menu) menu.style.display = 'none';
-    showToast('Đã đặt lại ảnh mặc định!', 'success');
+    showToast('Đã đặt lại ảnh mặc định!', 'success' as any);
   }
 }
 
 // ── Sync avatar UI từ currentAuth (gọi sau initAuth onLogin) ─
-export function updateAvatarUI() {
-  const currentAuth = window.currentAuth || {};
+export function updateAvatarUI(): void {
+  const currentAuth = (window.currentAuth || {}) as any;
   const initials = document.getElementById('avatar-initials');
-  const img = document.getElementById('avatar-img');
+  const img = document.getElementById('avatar-img') as HTMLImageElement | null;
   const menuName = document.getElementById('menu-name');
   const menuEmail = document.getElementById('menu-email');
 
-  const name = currentAuth.displayName || currentAuth.email?.split('@')[0] || 'U';
+  const name: string = currentAuth.displayName || currentAuth.email?.split('@')[0] || 'U';
 
   // Lấy ký tự đầu của TỪ CUỐI trong tên (ưu tiên VN: "Nguyễn Văn Linh" → "L")
   const tokens = name.trim().split(/\s+/).filter(Boolean);
@@ -126,7 +127,7 @@ export function updateAvatarUI() {
 
   // Load avatar từ Firebase 1 lần (không listen liên tục để tránh leak)
   if (currentAuth.uid) {
-    onValue(ref(db, 'users/' + currentAuth.uid + '/avatar'), snap => {
+    onValue(ref(db, 'users/' + currentAuth.uid + '/avatar'), (snap: any) => {
       const avatar = snap.val();
       if (avatar && img) {
         img.src = avatar;

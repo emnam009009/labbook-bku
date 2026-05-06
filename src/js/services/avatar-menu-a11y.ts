@@ -1,5 +1,5 @@
 /**
- * services/avatar-menu-a11y.js
+ * services/avatar-menu-a11y.ts
  *
  * Cải thiện a11y cho avatar menu (M4 fix):
  *  - Add ARIA: role="menu", role="menuitem", aria-expanded, aria-haspopup
@@ -13,11 +13,17 @@
  * Không sửa source file avatar.js — patch qua DOM observer + wrap toggleAvatarMenu.
  */
 
+interface AriaSetup {
+  btn: HTMLElement;
+  menu: HTMLElement;
+  items: HTMLElement[];
+}
+
 (function setupAvatarMenuA11y() {
 
   // ── ARIA setup ────────────────────────────────────────────────────────
-  function setupAria() {
-    const btn = document.querySelector('.avatar-menu-btn, #avatar-btn, [onclick*="toggleAvatarMenu"]');
+  function setupAria(): AriaSetup | undefined {
+    const btn = document.querySelector<HTMLElement>('.avatar-menu-btn, #avatar-btn, [onclick*="toggleAvatarMenu"]');
     const menu = document.getElementById('avatar-menu');
     if (!btn || !menu || btn.dataset.a11yMenu) return;
     btn.dataset.a11yMenu = '1';
@@ -37,8 +43,8 @@
     menu.setAttribute('aria-labelledby', btn.id || 'avatar-btn');
 
     // Menu items: tìm các interactive child
-    const items = menu.querySelectorAll('a, button, [onclick]:not(input)');
-    items.forEach((item, i) => {
+    const items = menu.querySelectorAll<HTMLElement>('a, button, [onclick]:not(input)');
+    items.forEach((item) => {
       if (!item.hasAttribute('role')) item.setAttribute('role', 'menuitem');
       if (!item.hasAttribute('tabindex')) item.setAttribute('tabindex', '-1');
     });
@@ -47,40 +53,40 @@
   }
 
   // ── Keyboard handler ─────────────────────────────────────────────────
-  function setupKeyboard() {
+  function setupKeyboard(): void {
     const setup = setupAria();
     if (!setup) return;
     const { btn, menu } = setup;
 
     // Sync aria-expanded với visual state
-    function syncExpanded() {
+    function syncExpanded(): void {
       const isOpen = menu.style.display === 'block' || getComputedStyle(menu).display !== 'none';
       btn.setAttribute('aria-expanded', String(isOpen));
     }
     const obs = new MutationObserver(syncExpanded);
     obs.observe(menu, { attributes: true, attributeFilter: ['style', 'class'] });
 
-    function isOpen() {
+    function isOpen(): boolean {
       return menu.style.display === 'block';
     }
 
-    function openMenu() {
-      if (typeof window.toggleAvatarMenu === 'function') {
-        if (!isOpen()) window.toggleAvatarMenu();
+    function openMenu(): void {
+      if (typeof (window as any).toggleAvatarMenu === 'function') {
+        if (!isOpen()) (window as any).toggleAvatarMenu();
       } else {
         menu.style.display = 'block';
       }
       syncExpanded();
       // Focus first menuitem
       setTimeout(() => {
-        const items = [...menu.querySelectorAll('[role="menuitem"]')];
+        const items = [...menu.querySelectorAll<HTMLElement>('[role="menuitem"]')];
         if (items[0]) items[0].focus();
       }, 50);
     }
 
-    function closeMenu() {
-      if (typeof window.toggleAvatarMenu === 'function') {
-        if (isOpen()) window.toggleAvatarMenu();
+    function closeMenu(): void {
+      if (typeof (window as any).toggleAvatarMenu === 'function') {
+        if (isOpen()) (window as any).toggleAvatarMenu();
       } else {
         menu.style.display = 'none';
       }
@@ -88,13 +94,13 @@
       btn.focus();
     }
 
-    function focusItem(items, idx) {
+    function focusItem(items: HTMLElement[], idx: number): void {
       idx = Math.max(0, Math.min(items.length - 1, idx));
       items[idx]?.focus();
     }
 
     // Avatar button keyboard
-    btn.addEventListener('keydown', (e) => {
+    btn.addEventListener('keydown', (e: KeyboardEvent) => {
       switch (e.key) {
         case 'Enter':
         case ' ':
@@ -106,7 +112,7 @@
           e.preventDefault();
           if (!isOpen()) openMenu();
           else {
-            const items = [...menu.querySelectorAll('[role="menuitem"]')];
+            const items = [...menu.querySelectorAll<HTMLElement>('[role="menuitem"]')];
             focusItem(items, 0);
           }
           break;
@@ -114,7 +120,7 @@
           e.preventDefault();
           if (!isOpen()) openMenu();
           else {
-            const items = [...menu.querySelectorAll('[role="menuitem"]')];
+            const items = [...menu.querySelectorAll<HTMLElement>('[role="menuitem"]')];
             focusItem(items, items.length - 1);
           }
           break;
@@ -128,9 +134,9 @@
     });
 
     // Menu items keyboard
-    menu.addEventListener('keydown', (e) => {
-      const items = [...menu.querySelectorAll('[role="menuitem"]')];
-      const currentIdx = items.indexOf(document.activeElement);
+    menu.addEventListener('keydown', (e: KeyboardEvent) => {
+      const items = [...menu.querySelectorAll<HTMLElement>('[role="menuitem"]')];
+      const currentIdx = items.indexOf(document.activeElement as HTMLElement);
 
       switch (e.key) {
         case 'ArrowDown':
@@ -162,7 +168,7 @@
   }
 
   // Init: setup khi DOM ready + retry cho elements load chậm
-  function init() {
+  function init(): void {
     setupKeyboard();
     setTimeout(setupKeyboard, 1000);
     setTimeout(setupKeyboard, 3000);
@@ -175,7 +181,7 @@
 
   // Watch for menu being added later
   const obs = new MutationObserver(() => setupKeyboard());
-  function startObs() {
+  function startObs(): void {
     if (document.body) obs.observe(document.body, { childList: true, subtree: true });
   }
   if (document.readyState === 'loading') {
@@ -186,3 +192,6 @@
 
   console.log('[avatar-menu-a11y] loaded');
 })();
+
+// Module marker
+export {};

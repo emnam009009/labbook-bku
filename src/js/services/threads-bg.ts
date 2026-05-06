@@ -1,14 +1,14 @@
 /**
- * services/threads-bg.js
+ * services/threads-bg.ts
  * Round 58e (CSP): tach tu inline <script id="threads-bg"> trong index.html
- * 
+ *
  * WebGL animation hieu ung "threads" cho background cua login screen.
  * Su dung MutationObserver de chi init khi login screen visible.
  * Render at half resolution + throttle 30fps de tiet kiem GPU.
  */
 
 (function() {
-  function initThreads(container) {
+  function initThreads(container: HTMLElement): void {
     const canvas = document.createElement('canvas');
     canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0';
     container.style.position = 'relative';
@@ -77,11 +77,11 @@ void main(){
   gl_FragColor=vec4(uColor*c,c*0.85);
 }`;
 
-    function compile(type, src) {
-      const sh = gl.createShader(type);
-      gl.shaderSource(sh, src); gl.compileShader(sh); return sh;
+    function compile(type: number, src: string): WebGLShader {
+      const sh = gl!.createShader(type)!;
+      gl!.shaderSource(sh, src); gl!.compileShader(sh); return sh;
     }
-    const prog = gl.createProgram();
+    const prog = gl.createProgram()!;
     gl.attachShader(prog, compile(gl.VERTEX_SHADER, vert));
     gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, frag));
     gl.linkProgram(prog); gl.useProgram(prog);
@@ -104,19 +104,19 @@ void main(){
     gl.uniform1f(uAmp, 1.2);
     gl.uniform1f(uDist, 0.0);
 
-    let mx=0.5,my=0.5,tmx=0.5,tmy=0.5,raf,dpr=1;
+    let mx=0.5,my=0.5,tmx=0.5,tmy=0.5,raf: number,dpr=1;
 
-    function resize() {
+    function resize(): void {
       dpr = Math.min(window.devicePixelRatio || 1, 1.5) * 0.6;
       const w = Math.floor(container.clientWidth  * dpr);
       const h = Math.floor(container.clientHeight * dpr);
       canvas.width = w; canvas.height = h;
-      gl.viewport(0, 0, w, h);
-      gl.uniform2f(uRes, w, h);
+      gl!.viewport(0, 0, w, h);
+      gl!.uniform2f(uRes, w, h);
     }
     window.addEventListener('resize', resize); resize();
 
-    container.addEventListener('mousemove', e => {
+    container.addEventListener('mousemove', (e: MouseEvent) => {
       const r = container.getBoundingClientRect();
       tmx = (e.clientX - r.left) / r.width;
       tmy = 1-(e.clientY - r.top) / r.height;
@@ -124,18 +124,18 @@ void main(){
     container.addEventListener('mouseleave', () => { tmx=0.5; tmy=0.5; });
 
     let last = 0;
-    function draw(t) {
+    function draw(t: number): void {
       raf = requestAnimationFrame(draw);
       if (t - last < 33) return;
       last = t;
 
       mx += 0.04*(tmx-mx);
       my += 0.04*(tmy-my);
-      gl.uniform2f(uMouse, mx, my);
-      gl.uniform1f(uTime, t*0.002);
-      gl.clearColor(0,0,0,0);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      gl!.uniform2f(uMouse, mx, my);
+      gl!.uniform1f(uTime, t*0.002);
+      gl!.clearColor(0,0,0,0);
+      gl!.clear(gl!.COLOR_BUFFER_BIT);
+      gl!.drawArrays(gl!.TRIANGLES, 0, 3);
     }
     raf = requestAnimationFrame(draw);
 
@@ -149,8 +149,8 @@ void main(){
   }
 
   // Doi DOM ready truoc khi tim login-screen
-  function setup() {
-    const loginScreen = document.getElementById('login-screen');
+  function setup(): void {
+    const loginScreen = document.getElementById('login-screen') as HTMLElement | null;
     if (!loginScreen) return;
     const mo = new MutationObserver(() => {
       if (loginScreen.style.display !== 'none' && !loginScreen.dataset.threadsInit) {
@@ -172,3 +172,6 @@ void main(){
     setup();
   }
 })();
+
+// Module marker
+export {};

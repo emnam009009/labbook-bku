@@ -1,5 +1,5 @@
 /**
- * services/custom-select-keyboard.js
+ * services/custom-select-keyboard.ts
  *
  * Thêm keyboard support cho 3 loại custom select trong app:
  *  - .cs-modal-trigger (modal selects, vd: c-unit, eq-group)
@@ -22,7 +22,7 @@
 (function setupCustomSelectKeyboard() {
 
   // ── Attach keyboard handler to a trigger ──────────────────────────────
-  function enhanceTrigger(trigger) {
+  function enhanceTrigger(trigger: HTMLElement): void {
     if (trigger.dataset.kbDone) return;
     trigger.dataset.kbDone = '1';
 
@@ -35,7 +35,7 @@
     // Find dropdown (sibling of trigger inside wrap)
     const wrap = trigger.parentElement;
     if (!wrap) return;
-    const dropdown = wrap.querySelector('.cs-modal-dropdown, .cs-filter-dropdown, .custom-select-dropdown');
+    const dropdown = wrap.querySelector<HTMLElement>('.cs-modal-dropdown, .cs-filter-dropdown, .custom-select-dropdown');
     if (!dropdown) return;
 
     if (!dropdown.id) {
@@ -45,10 +45,10 @@
     if (!dropdown.hasAttribute('role')) dropdown.setAttribute('role', 'listbox');
 
     // Set role="option" for items
-    function ensureOptionRoles() {
-      dropdown.querySelectorAll('.cs-modal-opt, .cs-filter-opt, .custom-select-option').forEach((opt, i) => {
+    function ensureOptionRoles(): void {
+      dropdown!.querySelectorAll<HTMLElement>('.cs-modal-opt, .cs-filter-opt, .custom-select-option').forEach((opt, i) => {
         if (!opt.hasAttribute('role')) opt.setAttribute('role', 'option');
-        if (!opt.id) opt.id = dropdown.id + '-opt-' + i;
+        if (!opt.id) opt.id = dropdown!.id + '-opt-' + i;
         opt.setAttribute('aria-selected', opt.classList.contains('selected') ? 'true' : 'false');
       });
     }
@@ -59,8 +59,8 @@
     optObserver.observe(dropdown, { childList: true });
 
     // Sync aria-expanded with visual state
-    function syncExpanded() {
-      const isOpen = dropdown.classList.contains('open') || dropdown.style.display === 'block';
+    function syncExpanded(): void {
+      const isOpen = dropdown!.classList.contains('open') || dropdown!.style.display === 'block';
       trigger.setAttribute('aria-expanded', String(isOpen));
     }
     const stateObserver = new MutationObserver(syncExpanded);
@@ -70,11 +70,11 @@
     // ── Keyboard handler ────────────────────────────────────────────
     let _activeIdx = -1;
 
-    function getOptions() {
-      return [...dropdown.querySelectorAll('.cs-modal-opt, .cs-filter-opt, .custom-select-option')];
+    function getOptions(): HTMLElement[] {
+      return [...dropdown!.querySelectorAll<HTMLElement>('.cs-modal-opt, .cs-filter-opt, .custom-select-option')];
     }
 
-    function highlightOption(idx) {
+    function highlightOption(idx: number): void {
       const opts = getOptions();
       if (opts.length === 0) return;
       // Clamp
@@ -92,17 +92,17 @@
       });
     }
 
-    function clearHighlight() {
+    function clearHighlight(): void {
       _activeIdx = -1;
       getOptions().forEach(o => o.classList.remove('kb-active'));
       trigger.removeAttribute('aria-activedescendant');
     }
 
-    function isOpen() {
-      return dropdown.classList.contains('open') || dropdown.style.display === 'block';
+    function isOpen(): boolean {
+      return dropdown!.classList.contains('open') || dropdown!.style.display === 'block';
     }
 
-    function openDropdown() {
+    function openDropdown(): void {
       // Trigger native click để dùng logic open có sẵn của custom-selects.js
       if (!isOpen()) trigger.click();
       // Highlight selected option (nếu có) hoặc option đầu
@@ -113,7 +113,7 @@
       }, 50);
     }
 
-    function closeDropdown() {
+    function closeDropdown(): void {
       if (isOpen()) {
         // Emulate click outside
         document.body.click();
@@ -121,7 +121,7 @@
       }
     }
 
-    function selectActive() {
+    function selectActive(): void {
       if (_activeIdx < 0) return;
       const opts = getOptions();
       if (opts[_activeIdx]) {
@@ -131,7 +131,7 @@
       }
     }
 
-    trigger.addEventListener('keydown', (e) => {
+    trigger.addEventListener('keydown', (e: KeyboardEvent) => {
       const opts = getOptions();
       if (opts.length === 0) return;
 
@@ -194,14 +194,14 @@
   }
 
   // ── Scan + observe DOM ──────────────────────────────────────────────
-  function scan(root) {
+  function scan(root: Document | HTMLElement): void {
     if (!root || !root.querySelectorAll) return;
-    root.querySelectorAll('.cs-modal-trigger, .cs-filter-trigger, .custom-select-trigger')
+    root.querySelectorAll<HTMLElement>('.cs-modal-trigger, .cs-filter-trigger, .custom-select-trigger')
         .forEach(enhanceTrigger);
   }
 
   // Initial + retries (vì custom selects được build dynamic)
-  function init() {
+  function init(): void {
     scan(document);
     setTimeout(() => scan(document), 500);
     setTimeout(() => scan(document), 2000);
@@ -213,7 +213,7 @@
   }
 
   // Watch for new triggers being added
-  const obs = new MutationObserver(muts => {
+  const obs: any = new MutationObserver(muts => {
     let needScan = false;
     for (const m of muts) {
       if (m.addedNodes.length) { needScan = true; break; }
@@ -223,7 +223,7 @@
       obs._t = setTimeout(() => scan(document), 200);
     }
   });
-  function startObs() {
+  function startObs(): void {
     if (document.body) obs.observe(document.body, { childList: true, subtree: true });
   }
   if (document.readyState === 'loading') {
@@ -248,3 +248,6 @@
 
   console.log('[custom-select-keyboard] loaded');
 })();
+
+// Module marker
+export {};
