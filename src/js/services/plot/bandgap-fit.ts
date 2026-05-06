@@ -1,13 +1,30 @@
-// src/js/services/plot/bandgap-fit.js
-// Auto-fit bandgap (Eg) từ Tauc plot bằng linear extrapolation.
+// src/js/services/plot/bandgap-fit.ts
+// Auto-fit bandgap (Eg) tu Tauc plot bang linear extrapolation.
 //
-// Thuật toán:
-//   1. Smooth Y bằng moving average (window 5)
-//   2. Tính dY/dX → tìm điểm có slope dương lớn nhất (= "knee point")
-//   3. Lấy window ~25 điểm quanh đó (vùng tuyến tính)
-//   4. Linear regression → m, b
+// Thuat toan:
+//   1. Smooth Y bang moving average (window 5)
+//   2. Tinh dY/dX -> tim diem co slope duong lon nhat (= "knee point")
+//   3. Lay window ~25 diem quanh do (vung tuyen tinh)
+//   4. Linear regression -> m, b
 //   5. Eg = -b/m
-//   6. Trả về { Eg, slope, intercept, fitStart, fitEnd } để vẽ extrapolation
+//   6. Tra ve { Eg, slope, intercept, fitStart, fitEnd } de ve extrapolation
+
+interface RegressionResult {
+  slope: number;
+  intercept: number;
+  r2: number;
+}
+
+interface BandgapFitResult {
+  Eg: number;
+  slope: number;
+  intercept: number;
+  r2: number;
+  fitStart: number;
+  fitEnd: number;
+  peakIdx?: number;
+  peakX: number;
+}
 
 const SMOOTH_WINDOW = 5;
 const FIT_WINDOW = 25;
@@ -15,7 +32,7 @@ const FIT_WINDOW = 25;
 /**
  * Moving average smoothing.
  */
-function smooth(y, w) {
+function smooth(y: number[], w: number): number[] {
   const half = Math.floor(w / 2);
   const out = new Array(y.length);
   for (let i = 0; i < y.length; i++) {
@@ -32,7 +49,7 @@ function smooth(y, w) {
 /**
  * Numerical derivative dY/dX.
  */
-function derivative(x, y) {
+function derivative(x: number[], y: number[]): number[] {
   const dy = new Array(x.length);
   for (let i = 1; i < x.length - 1; i++) {
     dy[i] = (y[i + 1] - y[i - 1]) / (x[i + 1] - x[i - 1]);
@@ -46,17 +63,21 @@ function derivative(x, y) {
  * Linear regression on points (x[i0..i1], y[i0..i1]).
  * Returns { slope, intercept, r2 }.
  */
-function linearRegression(x, y, i0, i1) {
+function linearRegression(x: number[], y: number[], i0: number, i1: number): RegressionResult {
   const n = i1 - i0 + 1;
-  let sx = 0, sy = 0, sxy = 0, sxx = 0, syy = 0;
+  if (n < 2) return { slope: 0, intercept: 0, r2: 0 };
+
+  let sx = 0, sy = 0, sxx = 0, sxy = 0;
   for (let i = i0; i <= i1; i++) {
     sx += x[i];
     sy += y[i];
-    sxy += x[i] * y[i];
     sxx += x[i] * x[i];
-    syy += y[i] * y[i];
+    sxy += x[i] * y[i];
   }
-  const slope = (n * sxy - sx * sy) / (n * sxx - sx * sx);
+  const denom = n * sxx - sx * sx;
+  if (Math.abs(denom) < 1e-12) return { slope: 0, intercept: sy / n, r2: 0 };
+
+  const slope = (n * sxy - sx * sy) / denom;
   const intercept = (sy - slope * sx) / n;
   // R² for confidence
   const meanY = sy / n;
@@ -72,11 +93,8 @@ function linearRegression(x, y, i0, i1) {
 
 /**
  * Auto-fit bandgap from Tauc plot data.
- * @param {number[]} x - photon energy (eV), ascending
- * @param {number[]} y - Tauc Y values
- * @returns {object} { Eg, slope, intercept, r2, fitStart, fitEnd, peakIdx } or null on failure
  */
-export function autoFitBandgap(x, y) {
+export function autoFitBandgap(x: number[], y: number[]): BandgapFitResult | null {
   if (!x || !y || x.length < FIT_WINDOW * 2) {
     return null;
   }
@@ -128,7 +146,7 @@ export function autoFitBandgap(x, y) {
 /**
  * Fit using user-selected x range.
  */
-export function fitBandgapInRange(x, y, xMin, xMax) {
+export function fitBandgapInRange(x: number[], y: number[], xMin: number, xMax: number): BandgapFitResult | null {
   if (!x || !y) return null;
   let i0 = -1, i1 = -1;
   for (let i = 0; i < x.length; i++) {

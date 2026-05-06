@@ -1,4 +1,5 @@
-// src/js/services/pdf/pdf-report.js
+// src/js/services/pdf/pdf-report.ts
+// @ts-nocheck
 // Generate PDF report cho thí nghiệm hydro/electrode.
 //
 // Layout (multi-page):

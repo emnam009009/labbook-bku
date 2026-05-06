@@ -1,11 +1,37 @@
-// src/js/services/parsers/index.js
-// Dispatcher: chọn spec theo category.
+// src/js/services/parsers/index.ts
+// Dispatcher: chon spec theo category.
 
-import { parseFileWithSpec } from './parser-core.js';
+import { parseFileWithSpec, readFileAsText, readExcelAsRows, parseDelimited } from './parser-core.js';
 import { isJcampJasco, parseJcampJasco } from './jcamp-jasco.js';
-import { readFileAsText } from './parser-core.js';
 
-export const PARSER_SPECS = Object.freeze({
+export interface ParserSpec {
+  xKeywords: string[];
+  yKeywords: string[];
+  xLabel: string;
+  yLabel: string;
+  chartType: string;
+  reverseX?: boolean;
+  [k: string]: unknown;
+}
+
+export interface ParseResult {
+  x: number[];
+  y: number[];
+  xLabel: string;
+  yLabel: string;
+  xIdx: number;
+  yIdx: number;
+  headers: string[];
+  matchedByHeuristic: boolean;
+  category?: string;
+  spec?: ParserSpec;
+  plotXLabel?: string;
+  plotYLabel?: string;
+  _jcamp?: boolean;
+  _meta?: Record<string, string>;
+}
+
+export const PARSER_SPECS: Readonly<Record<string, ParserSpec>> = Object.freeze({
   xrd: {
     xKeywords: ['2theta', '2-theta', '2 theta', '2θ', 'angle', 'position', 'theta'],
     yKeywords: ['intensity', 'count', 'cps', 'int.', 'i'],
@@ -51,21 +77,21 @@ export const PARSER_SPECS = Object.freeze({
   },
 });
 
-export function getSpec(category) {
+export function getSpec(category: string): ParserSpec | null {
   return PARSER_SPECS[category] || null;
 }
 
 /**
  * Check if category supports auto-plot.
  */
-export function canAutoPlot(category) {
+export function canAutoPlot(category: string): boolean {
   return category in PARSER_SPECS;
 }
 
 /**
  * Check if file extension is parseable as text/excel data.
  */
-export function isParseableFile(file) {
+export function isParseableFile(file: File): boolean {
   const ext = (file.name.split('.').pop() || '').toLowerCase();
   return ['txt', 'csv', 'tsv', 'dat', 'xy', 'xlsx', 'xls', 'xlsm', 'asc', 'dpt'].includes(ext);
 }
@@ -74,9 +100,9 @@ export function isParseableFile(file) {
  * Parse file according to category spec.
  * Returns enriched result with spec info attached.
  */
-export async function parseDataFile(file, category) {
+export async function parseDataFile(file: File, category: string): Promise<ParseResult> {
   const spec = getSpec(category);
-  if (!spec) throw new Error(`Không hỗ trợ auto-plot cho loại: ${category}`);
+  if (!spec) throw new Error(`Khong ho tro auto-plot cho loai: ${category}`);
 
   // Try JCAMP-DX format first (JASCO UV-Vis output) for txt files in UV/PL categories
   const ext = (file.name.split('.').pop() || '').toLowerCase();
@@ -95,7 +121,7 @@ export async function parseDataFile(file, category) {
           plotYLabel: r.yLabel || spec.yLabel,
         };
       }
-    } catch (e) {
+    } catch (e: any) {
       // Fall through to generic parser
       console.warn('[parser] JCAMP detection failed, fallback:', e.message);
     }
@@ -114,20 +140,20 @@ export async function parseDataFile(file, category) {
 /**
  * Re-parse already-loaded data with manually selected columns.
  * Used when heuristic gets it wrong and user picks columns from dropdown.
- * @param {object} parsed - previous parseDataFile result (must include `headers` and raw rows)
- * @param {File} file - same file
- * @param {number} xIdx
- * @param {number} yIdx
  */
-export async function reparseWithColumns(file, category, xIdx, yIdx) {
+export async function reparseWithColumns(
+  file: File,
+  category: string,
+  xIdx: number,
+  yIdx: number
+): Promise<ParseResult> {
   const spec = getSpec(category);
-  if (!spec) throw new Error(`Không hỗ trợ: ${category}`);
+  if (!spec) throw new Error(`Khong ho tro: ${category}`);
 
   const ext = (file.name.split('.').pop() || '').toLowerCase();
   const isExcel = ['xlsx', 'xls', 'xlsm'].includes(ext);
 
-  const { readFileAsText, readExcelAsRows, parseDelimited } = await import('./parser-core.js');
-  let parsed;
+  let parsed: { headers: string[]; rows: string[][] };
   if (isExcel) {
     parsed = await readExcelAsRows(file);
   } else {
@@ -135,14 +161,15 @@ export async function reparseWithColumns(file, category, xIdx, yIdx) {
     parsed = parseDelimited(text);
   }
   const { headers, rows } = parsed;
-  const x = [], y = [];
+  const x: number[] = [];
+  const y: number[] = [];
   for (const r of rows) {
     const vx = parseFloat(String(r[xIdx] ?? '').replace(',', '.'));
     const vy = parseFloat(String(r[yIdx] ?? '').replace(',', '.'));
     if (isNaN(vx) || isNaN(vy)) continue;
     x.push(vx); y.push(vy);
   }
-  if (x.length < 2) throw new Error('Cột đã chọn không có dữ liệu số');
+  if (x.length < 2) throw new Error('Cot da chon khong co du lieu so');
 
   return {
     x, y,
@@ -156,4 +183,3 @@ export async function reparseWithColumns(file, category, xIdx, yIdx) {
     plotYLabel: spec.yLabel,
   };
 }
-

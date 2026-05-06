@@ -1,7 +1,7 @@
-// src/js/services/parsers/jcamp-jasco.js
+// src/js/services/parsers/jcamp-jasco.ts
 // Parser cho JCAMP-DX format (JASCO UV-Vis spectrometer output).
 //
-// Cấu trúc file:
+// Cau truc file:
 //   TITLE\t<value>
 //   DATA TYPE\tULTRAVIOLET SPECTRUM
 //   ...
@@ -15,12 +15,25 @@
 //   ...
 //   [footer metadata: Light source, Filter exchange, ...]
 //
-// Detect: file bắt đầu bằng "TITLE\t" hoặc chứa "XYDATA" marker.
+// Detect: file bat dau bang "TITLE\t" hoac chua "XYDATA" marker.
+
+interface JcampResult {
+  x: number[];
+  y: number[];
+  xLabel: string;
+  yLabel: string;
+  xIdx: number;
+  yIdx: number;
+  headers: string[];
+  matchedByHeuristic: boolean;
+  _jcamp: boolean;
+  _meta: Record<string, string>;
+}
 
 /**
  * Quick check if text content looks like JCAMP-DX format.
  */
-export function isJcampJasco(text) {
+export function isJcampJasco(text: string): boolean {
   if (!text) return false;
   const head = text.slice(0, 200);
   // Must have TITLE at start AND XYDATA marker somewhere
@@ -30,12 +43,12 @@ export function isJcampJasco(text) {
 /**
  * Parse JCAMP-DX text. Returns the same shape as parseFileWithSpec result.
  */
-export function parseJcampJasco(text) {
+export function parseJcampJasco(text: string): JcampResult {
   // Normalize line endings
   const lines = text.split(/\r?\n/);
 
   // Parse header until XYDATA
-  const meta = {};
+  const meta: Record<string, string> = {};
   let dataStart = -1;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
@@ -51,12 +64,12 @@ export function parseJcampJasco(text) {
     }
   }
   if (dataStart === -1) {
-    throw new Error('Không tìm thấy marker XYDATA trong file JCAMP-DX');
+    throw new Error('Khong tim thay marker XYDATA trong file JCAMP-DX');
   }
 
   // Parse data rows until non-numeric line (footer starts)
-  const x = [];
-  const y = [];
+  const x: number[] = [];
+  const y: number[] = [];
   for (let i = dataStart; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
@@ -76,7 +89,7 @@ export function parseJcampJasco(text) {
   }
 
   if (x.length < 2) {
-    throw new Error('JCAMP-DX: không đọc được dữ liệu số');
+    throw new Error('JCAMP-DX: khong doc duoc du lieu so');
   }
 
   // Determine labels from metadata
