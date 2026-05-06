@@ -203,6 +203,12 @@ declare global {
     _resetElectrodePage?: () => void;
     _resetElectrochemPage?: () => void;
 
+    // ── Round 63: auth.ts dependencies ──
+    __currentUserEmail?: string | null;
+    __superAdminUid?: string;
+    stopRoleSidebarWatch?: () => void;
+    cleanupChat?: () => void;
+
     // ── Generic catchall (de tranh type error trong qua trinh migrate) ──
     [key: string]: unknown;
   }

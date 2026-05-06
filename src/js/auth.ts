@@ -5,12 +5,25 @@ import {
   ref, onValue, update, push,
 } from './firebase.js'
 import { browserLocalPersistence, setPersistence, updateProfile } from 'firebase/auth'
+import type { User } from 'firebase/auth'
+
+// ── Type for currentAuth ────────────────────────────────────────────────
+export interface CurrentAuthState {
+  user: User | null;
+  uid: string | null;
+  email: string | null;
+  displayName: string | null;
+  role: string;
+  isAdmin: boolean;
+  isMember: boolean;
+  isSuperAdmin: boolean;
+}
 
 // ── State ───────────────────────────────────────────────────────────────
 // isAdmin     = role thuộc nhóm có quyền quản trị (admin OR superadmin)
 // isMember    = role thuộc nhóm có quyền ghi data (member OR admin OR superadmin)
 // isSuperAdmin = role superadmin (quyền cao nhất, được phép gán/thu hồi role superadmin khác)
-export const currentAuth = {
+export const currentAuth: CurrentAuthState = {
   user: null, uid: null, email: null, displayName: null,
   role: 'viewer',
   isAdmin: false,
@@ -19,17 +32,17 @@ export const currentAuth = {
 }
 
 // ── Role helpers (export để các module khác dùng nhất quán) ─────────────
-export const isAdminRole       = (role) => role === 'admin' || role === 'superadmin'
-export const isMemberRole      = (role) => role === 'member' || role === 'admin' || role === 'superadmin'
-export const isSuperAdminRole  = (role) => role === 'superadmin'
-export const isActiveRole      = (role) => role && role !== 'pending' && role !== 'rejected'
+export const isAdminRole       = (role: string | null | undefined): boolean => role === 'admin' || role === 'superadmin'
+export const isMemberRole      = (role: string | null | undefined): boolean => role === 'member' || role === 'admin' || role === 'superadmin'
+export const isSuperAdminRole  = (role: string | null | undefined): boolean => role === 'superadmin'
+export const isActiveRole      = (role: string | null | undefined): boolean => !!role && role !== 'pending' && role !== 'rejected'
 
 // ── Internal flags (khai báo trước register/initAuth để tránh TDZ) ──────
 let _isRegistering = false
-export function setRegistering(v) { _isRegistering = v }
+export function setRegistering(v: boolean): void { _isRegistering = v }
 
 // ── Đăng nhập ───────────────────────────────────────────────────────────
-export async function login(email, password) {
+export async function login(email: string, password: string): Promise<User> {
   const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRe.test(email)) throw new Error('Email không hợp lệ')
   const ok = email.endsWith('@hcmut.edu.vn') || email.endsWith('@gmail.com')
@@ -40,7 +53,7 @@ export async function login(email, password) {
 }
 
 // ── Đăng ký ─────────────────────────────────────────────────────────────
-export async function register(email, password, fullName) {
+export async function register(email: string, password: string, fullName: string): Promise<User> {
   const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRe.test(email)) throw new Error('Email không hợp lệ')
   const ok = email.endsWith('@hcmut.edu.vn') || email.endsWith('@gmail.com')
@@ -66,7 +79,7 @@ export async function register(email, password, fullName) {
 }
 
 // ── Đăng xuất ───────────────────────────────────────────────────────────
-export async function logout() {
+export async function logout(): Promise<void> {
   await signOut(auth)
   Object.assign(currentAuth, {
     user: null, uid: null, email: null, displayName: null, role: 'viewer',
@@ -79,8 +92,10 @@ export async function logout() {
 }
 
 // ── Load role từ Firebase (realtime) ────────────────────────────────────
-export function loadUserRole(uid, callback) {
-  onValue(ref(db, 'users/' + uid + '/role'), async snap => {
+export type RoleCallback = (role: string) => void
+
+export function loadUserRole(uid: string, callback?: RoleCallback): void {
+  onValue(ref(db, 'users/' + uid + '/role'), async (snap: any) => {
     const role = snap.val() || 'viewer'
     currentAuth.role         = role
     currentAuth.isAdmin      = isAdminRole(role)
@@ -91,15 +106,18 @@ export function loadUserRole(uid, callback) {
 }
 
 // ── Init Auth ───────────────────────────────────────────────────────────
-export function initAuth(onLogin, onLogout) {
-  onAuthStateChanged(auth, user => {
+export type LoginCallback = (user: User, role: string) => void
+export type LogoutCallback = () => void
+
+export function initAuth(onLogin?: LoginCallback, onLogout?: LogoutCallback): void {
+  onAuthStateChanged(auth, (user: User | null) => {
     if (_isRegistering) return
     if (user) {
       currentAuth.user        = user
       currentAuth.uid         = user.uid
       currentAuth.email       = user.email
       window.__currentUserEmail = user.email
-      currentAuth.displayName = user.displayName || user.email.split('@')[0]
+      currentAuth.displayName = user.displayName || (user.email ? user.email.split('@')[0] : null)
       // window.__superAdminUid sẽ được set trong loadUserRole/applyRoleUI
       // dựa trên role thay vì hardcode email
       let _firstCall = true
@@ -123,15 +141,15 @@ export function initAuth(onLogin, onLogout) {
 }
 
 // ── Apply UI theo role ──────────────────────────────────────────────────
-export function applyRoleUI(role) {
+export function applyRoleUI(role: string): void {
   const isAdmin  = isAdminRole(role)
   const isMember = isMemberRole(role)
   const isSuper  = isSuperAdminRole(role)
 
-  document.querySelectorAll('.admin-only').forEach(el => {
+  document.querySelectorAll<HTMLElement>('.admin-only').forEach(el => {
     el.style.display = isAdmin ? 'flex' : 'none'
   })
-  document.querySelectorAll('.member-only').forEach(el => {
+  document.querySelectorAll<HTMLElement>('.member-only').forEach(el => {
     el.style.display = isMember ? 'flex' : 'none'
   })
   // Viewer mode
@@ -141,15 +159,15 @@ export function applyRoleUI(role) {
     const chatPage = document.getElementById('page-chat')
     if (chatPage && chatPage.classList.contains('active')) {
       try { window.cleanupChat && window.cleanupChat() } catch(e) {}
-      const dashItem = document.querySelector('.sidebar-item[onclick*="dashboard"]')
+      const dashItem = document.querySelector<HTMLElement>('.sidebar-item[onclick*="dashboard"]')
       if (typeof window.showPage === 'function') {
-        window.showPage('dashboard', dashItem)
+        window.showPage('dashboard', dashItem || undefined)
       }
     }
   } else {
     document.body.classList.remove('viewer-mode')
   }
-  document.querySelectorAll('.chem-admin-btn, .eq-admin-btn').forEach(btn => {
+  document.querySelectorAll<HTMLElement>('.chem-admin-btn, .eq-admin-btn').forEach(btn => {
     btn.style.display = isAdmin ? 'inline-flex' : 'none'
   })
 
@@ -181,7 +199,7 @@ export function applyRoleUI(role) {
   if (ud) ud.textContent = currentAuth.displayName || currentAuth.email
 }
 
-export async function updateDisplayName(newName) {
+export async function updateDisplayName(newName: string): Promise<string> {
   if (!auth.currentUser) throw new Error('Chưa đăng nhập')
   if (!newName || newName.trim().length < 2) throw new Error('Tên phải có ít nhất 2 ký tự')
   const name = newName.trim()
