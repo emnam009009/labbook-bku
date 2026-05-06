@@ -69,6 +69,17 @@ export async function renderOverview(): Promise<void> {
     _delegationBound = true;
     page.addEventListener('click', (e: MouseEvent) => {
       const target = e.target as HTMLElement;
+      // Round 82: Lightbox open
+      const thumb = target.closest<HTMLElement>('[data-action="open-lightbox"]');
+      if (thumb) {
+        e.preventDefault();
+        const url = thumb.dataset.url || '';
+        const fn = (window as any).openImageLightbox;
+        if (typeof fn === 'function' && url) {
+          fn({ url, fileName: thumb.dataset.filename || '', caption: thumb.dataset.caption || '' });
+        }
+        return;
+      }
       // Toggle accordion
       const toggle = target.closest<HTMLButtonElement>('[data-action="overview-toggle"]');
       if (toggle) {

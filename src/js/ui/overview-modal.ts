@@ -39,9 +39,21 @@ export async function openOverviewModal({
       if ((e.target as HTMLElement).closest('.modal')) return;
       (window as any).closeModal?.(modalId);
     });
-    // Accordion toggle delegation
+    // Accordion toggle delegation + Round 82: lightbox click
     modal.addEventListener('click', (e: MouseEvent) => {
-      const btn = (e.target as HTMLElement)?.closest<HTMLButtonElement>('[data-action="overview-toggle"]');
+      const target = e.target as HTMLElement;
+      // Lightbox open
+      const thumb = target.closest<HTMLElement>('[data-action="open-lightbox"]');
+      if (thumb) {
+        e.preventDefault();
+        const url = thumb.dataset.url || '';
+        const fn = (window as any).openImageLightbox;
+        if (typeof fn === 'function' && url) {
+          fn({ url, fileName: thumb.dataset.filename || '', caption: thumb.dataset.caption || '' });
+        }
+        return;
+      }
+      const btn = target.closest<HTMLButtonElement>('[data-action="overview-toggle"]');
       if (!btn) return;
       const section = btn.closest<HTMLElement>('.att-overview-group');
       if (!section) return;

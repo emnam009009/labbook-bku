@@ -18,6 +18,7 @@ import { canDelete } from '../utils/auth-helpers.js';
 import { escapeHtml, fmtDate } from '../utils/format.js';
 import { canAutoPlot, isParseableFile, parseDataFile, reparseWithColumns, detectCategory, detectionToastMessage } from '../services/parsers/index.js';
 import { renderPreview, renderHighResPNG } from '../services/plot/plot-preview.js';
+import { openImageLightbox } from './image-lightbox.js';
 import { transformToTauc, TAUC_PRESETS, formatN } from '../services/plot/tauc.js';
 import { autoFitBandgap } from '../services/plot/bandgap-fit.js';
 
@@ -527,8 +528,32 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
     savePlotBtn.disabled = true;
     savePlotBtn.querySelector('span').textContent = 'Đang xuất PNG 300 DPI...';
     try {
-      const blob = await renderHighResPNG(parsed, {
-        title: `${category.toUpperCase()} — ${file.name.replace(/\.[^.]+$/, '')}`,
+      // Round 82: build same parsed object that preview is currently showing
+      // (raw or tauc-transformed) so saved PNG matches preview exactly.
+      let parsedToRender: any = parsed;
+      let plotTitle = `${category.toUpperCase()} — ${file.name.replace(/\.[^.]+$/, '')}`;
+      let bandgapForRender: any = undefined;
+      if (_taucState.on && _taucState.displayed === 'tauc') {
+        try {
+          const tauc = transformToTauc(parsed, _taucState.n,
+            (taucModeSelect as HTMLSelectElement | null)?.value || 'direct');
+          parsedToRender = {
+            ...tauc,
+            spec: parsed.spec,
+            plotXLabel: tauc.xLabel,
+            plotYLabel: tauc.yLabel,
+            category: parsed.category,
+          };
+          plotTitle = `${plotTitle} (Tauc, n=${formatN(_taucState.n)})`;
+          bandgapForRender = _bandgapFit;
+        } catch (e) {
+          console.warn('[savePlot] tauc transform failed, fallback raw:', e);
+        }
+      }
+      const blob = await renderHighResPNG(parsedToRender, {
+        title: plotTitle,
+        axisSettings: readAxisSettings(),
+        bandgapFit: bandgapForRender,
       });
       const baseName = file.name.replace(/\.[^.]+$/, '');
       const pngName = `${baseName}_plot.png`;
@@ -599,7 +624,9 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
   const previewExisting = async (attachmentId, url, fileName, category) => {
     const fakeFile = { name: fileName };
     if (!canAutoPlot(category) || !isParseableFile(fakeFile)) {
-      window.open(url, '_blank', 'noopener');
+      // Round 82: open in-app lightbox (was window.open _blank)
+      const catLabel = ATTACHMENT_CATEGORIES[category]?.label || category;
+      openImageLightbox({ url, fileName, caption: catLabel });
       return;
     }
     try {
@@ -792,7 +819,9 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
     if (action === 'preview') {
       await previewExisting(attachmentId, url, fileName, category);
     } else {
-      window.open(url, '_blank', 'noopener');
+      // Round 82: open in-app lightbox (was window.open _blank)
+      const catLabel = ATTACHMENT_CATEGORIES[category]?.label || category;
+      openImageLightbox({ url, fileName, caption: catLabel });
     }
   });
 

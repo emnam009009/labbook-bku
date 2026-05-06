@@ -103,17 +103,20 @@ export interface RenderThumbOpts {
 export function renderThumb(item: ClassifierItem, opts: RenderThumbOpts = {}): string {
   const catLabel = ATTACHMENT_CATEGORIES[item.category]?.label || item.category;
   const sizeStr = formatBytes(item.size);
+  // Round 82: button instead of <a target=_blank> -> open in-app lightbox
   const inner = `
-    <a class="att-overview-thumb"
-       href="${escapeHtml(item.downloadURL)}"
-       target="_blank" rel="noopener"
-       title="${escapeHtml(item.fileName)} • ${escapeHtml(catLabel)} • ${sizeStr}">
+    <button type="button" class="att-overview-thumb"
+            data-action="open-lightbox"
+            data-url="${escapeHtml(item.downloadURL)}"
+            data-filename="${escapeHtml(item.fileName)}"
+            data-caption="${escapeHtml(catLabel)} • ${sizeStr}"
+            title="${escapeHtml(item.fileName)} • ${escapeHtml(catLabel)} • ${sizeStr}">
       <img src="${escapeHtml(item.downloadURL)}" alt="${escapeHtml(item.fileName)}" loading="lazy" />
       <div class="att-overview-thumb-meta">
         <span class="att-overview-thumb-name">${escapeHtml(item.fileName)}</span>
         <span class="att-badge att-badge-${escapeHtml(item.category)}">${escapeHtml(catLabel)}</span>
       </div>
-    </a>
+    </button>
   `;
   if (!opts.codeBadge) return inner;
 

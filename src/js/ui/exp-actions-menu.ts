@@ -111,7 +111,7 @@ export function openExpActionsMenu(anchor: HTMLElement, ctx: ExpActionContext): 
   const { refType, refId, code } = ctx;
   _currentTrigger = anchor;
   _setTriggerChecked(anchor, true);
-  const title = `Tai lieu — ${code || refId}`;
+  const title = `Tài liệu — ${code || refId}`;
 
   const menu = document.createElement('div');
   menu.className = 'exp-actions-menu';
@@ -123,7 +123,7 @@ export function openExpActionsMenu(anchor: HTMLElement, ctx: ExpActionContext): 
         <polyline points="7 10 12 15 17 10"/>
         <line x1="12" y1="15" x2="12" y2="3"/>
       </svg>
-      <span>Nhap du lieu</span>
+      <span>Nhập dữ liệu</span>
     </button>
     <button type="button" class="exp-actions-item" role="menuitem" data-action="export">
       <svg class="exp-actions-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -131,7 +131,7 @@ export function openExpActionsMenu(anchor: HTMLElement, ctx: ExpActionContext): 
         <polyline points="17 8 12 3 7 8"/>
         <line x1="12" y1="3" x2="12" y2="15"/>
       </svg>
-      <span>Xuat du lieu</span>
+      <span>Xuất dữ liệu</span>
     </button>
   `;
 
@@ -178,7 +178,7 @@ export function openExpActionsMenu(anchor: HTMLElement, ctx: ExpActionContext): 
 }
 
 /**
- * Mo modal Xuat du lieu — lazy-load PDF export module.
+ * Mở modal Xuất dữ liệu — lazy-load PDF export module.
  */
 export async function openAttachmentsExportModal({ refType, refId }: { refType: string; refId: string; title?: string }): Promise<unknown> {
   try {

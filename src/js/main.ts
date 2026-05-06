@@ -1484,3 +1484,16 @@ window.renderOverviewPage = function() {
   }
 })();
 
+// Round 82: lazy-load wrapper for in-app image lightbox
+let _imgLightboxPromise: Promise<any> | null = null;
+function _loadImgLightbox(): Promise<any> {
+  if (!_imgLightboxPromise) {
+    _imgLightboxPromise = import('./ui/image-lightbox.js');
+  }
+  return _imgLightboxPromise;
+}
+window.openImageLightbox = function(opts: any) {
+  _loadImgLightbox().then(m => m.openImageLightbox(opts))
+    .catch((e: any) => console.error('[main] openImageLightbox failed:', e));
+};
+

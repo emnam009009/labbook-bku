@@ -1172,3 +1172,93 @@ tr.row-highlight-flash {
   background: var(--teal);
   transform: scale(1.05);
 }
+
+/* ════════════════════════════════════════════════════════════════
+   Round 82: Image lightbox overlay
+   ════════════════════════════════════════════════════════════════ */
+.img-lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.92);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 24px;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+.img-lightbox-overlay.img-lightbox-visible {
+  display: flex;
+  opacity: 1;
+}
+body.img-lightbox-locked {
+  overflow: hidden;
+}
+
+.img-lightbox-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  max-width: 92vw;
+  max-height: 92vh;
+}
+
+.img-lightbox-img {
+  max-width: 92vw;
+  max-height: 84vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.5);
+  background: #fff;
+  display: block;
+}
+
+.img-lightbox-overlay.img-lightbox-loading .img-lightbox-img {
+  opacity: 0;
+}
+.img-lightbox-overlay.img-lightbox-loading::after {
+  content: 'Đang tải...';
+  position: absolute;
+  color: #fff;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+.img-lightbox-caption {
+  color: #e2e8f0;
+  font-size: 13px;
+  text-align: center;
+  max-width: 92vw;
+  word-break: break-all;
+  padding: 4px 8px;
+}
+
+.img-lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, transform 0.1s;
+  z-index: 1;
+}
+.img-lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: scale(1.05);
+}
