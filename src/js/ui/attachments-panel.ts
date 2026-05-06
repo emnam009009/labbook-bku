@@ -143,13 +143,15 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
           <div class="att-preview-canvas-wrap">
             <!-- Round 83: empty-state hint khi chua chon file -->
             <div class="att-preview-empty">
-              <svg class="att-preview-empty-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <rect x="10" y="14" width="44" height="36" rx="4"/>
-                <path d="M10 40l12-12 10 10 8-8 14 14"/>
-                <circle cx="22" cy="24" r="3"/>
-              </svg>
-              <div class="att-preview-empty-title">Kéo thả file vào đây hoặc bấm <strong class="att-pick-link">Chọn file</strong></div>
-              <div class="att-preview-empty-sub">Tối đa ${MAX_FILES_PER_EXPERIMENT} file, mỗi file ≤ ${formatBytes(MAX_FILE_BYTES)}</div>
+              <div class="att-preview-empty-icon-wrap">
+                <svg class="att-preview-empty-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="10" y="14" width="44" height="36" rx="4"/>
+                  <path d="M10 40l12-12 10 10 8-8 14 14"/>
+                  <circle cx="22" cy="24" r="3"/>
+                </svg>
+              </div>
+              <div class="att-preview-empty-title">Kéo thả file vào đây để bắt đầu</div>
+              <div class="att-preview-empty-sub">Tối đa ${MAX_FILES_PER_EXPERIMENT} file · mỗi file ≤ ${formatBytes(MAX_FILE_BYTES)}</div>
             </div>
             <canvas class="att-preview-canvas"></canvas>
           </div>

@@ -169,9 +169,11 @@ export function renderAccordionGroup(
         <span class="att-overview-group-count">(${count})</span>
       </button>
       <div class="att-overview-group-body">
-        ${isEmpty
-          ? `<p class="att-overview-empty-msg">${escapeHtml(emptyMsg)}</p>`
-          : `<div class="att-overview-grid">${thumbsHTML}</div>`}
+        <div class="att-overview-group-inner">
+          ${isEmpty
+            ? `<p class="att-overview-empty-msg">${escapeHtml(emptyMsg)}</p>`
+            : `<div class="att-overview-grid">${thumbsHTML}</div>`}
+        </div>
       </div>
     </section>
   `;

@@ -1219,24 +1219,28 @@ html.dark .exp-bar:hover {
    Round 77b: Overview modal — accordion 6 groups + thumbnails
    ════════════════════════════════════════════════════════════════ */
 
-/* Toolbar button */
+/* Toolbar button — Round 84: solid fill (primary style) */
 .att-overview-btn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  background: var(--surface);
-  color: var(--teal);
+  gap: 6px;
+  padding: 7px 14px;
+  background: var(--teal);
+  color: #fff;
   border: 1px solid var(--teal);
   border-radius: 6px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: filter 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+  box-shadow: 0 1px 2px rgba(13, 148, 136, 0.15);
 }
 .att-overview-btn:hover {
-  background: var(--teal);
-  color: #fff;
+  filter: brightness(0.95);
+  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.25);
+}
+.att-overview-btn:active {
+  transform: translateY(1px);
 }
 
 /* Modal sizing — wider than default for grid layout */
@@ -1423,43 +1427,55 @@ html.dark .exp-bar:hover {
 .att-preview[data-state="empty"] .att-preview-canvas {
   display: none !important;
 }
-/* Empty hint visible only in empty state */
+/* Round 84: Empty hint — centered, polished, no inline link */
 .att-preview-empty {
   display: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 14px;
   text-align: center;
-  padding: 32px 16px;
+  padding: 60px 24px;
   color: var(--text-2, #64748b);
   pointer-events: none;
   user-select: none;
+  min-height: 240px;
 }
 .att-preview[data-state="empty"] .att-preview-empty {
   display: flex;
 }
+.att-preview-empty-icon-wrap {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.10), rgba(13, 148, 136, 0.04));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+.att-preview[data-state="empty"]:hover .att-preview-empty-icon-wrap,
+.att-preview[data-state="empty"].att-dropzone-active .att-preview-empty-icon-wrap {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.18), rgba(13, 148, 136, 0.08));
+}
 .att-preview-empty-icon {
-  width: 56px;
-  height: 56px;
+  width: 44px;
+  height: 44px;
   color: var(--teal, #0d9488);
-  opacity: 0.55;
+  opacity: 0.85;
 }
 .att-preview-empty-title {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
   color: var(--text, #0f172a);
-}
-.att-preview-empty-title .att-pick-link {
-  pointer-events: auto;
-  color: var(--teal, #0d9488);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
+  letter-spacing: 0.005em;
 }
 .att-preview-empty-sub {
-  font-size: 12px;
-  color: var(--text-2, #64748b);
+  font-size: 12.5px;
+  color: var(--text-2, #94a3b8);
+  letter-spacing: 0.01em;
 }
 
 /* Dropzone visual when in 'empty' state — give same dashed look as old dropzone */
@@ -1484,23 +1500,32 @@ html.dark .exp-bar:hover {
 }
 
 /* ════════════════════════════════════════════════════════════════
-   Round 83: Accordion smooth animation via grid-template-rows trick
-   Replaces max-height transition (was laggy with grid of thumbnails).
-   This is GPU-accelerated and avoids layout reflow.
+   Round 83 + 84: Accordion smooth animation via grid-template-rows trick.
+   Round 84 fix: padding bi leak ra ngoai khi closed -> wrap content vao
+   .att-overview-group-inner, padding chuyen xuong inner.
    ════════════════════════════════════════════════════════════════ */
 .att-overview-group-body {
   display: grid !important;
   grid-template-rows: 1fr;
-  /* Override max-height rule from earlier in file */
+  /* Round 84: bo padding o body (chuyen xuong inner), override rule cu */
   max-height: none !important;
+  padding: 0 !important;
   overflow: hidden;
   transition: grid-template-rows 0.25s ease;
 }
 .att-overview-group[data-state="closed"] .att-overview-group-body {
   grid-template-rows: 0fr;
 }
-/* Required for grid 0fr<->1fr trick to work — child must be allowed to shrink */
-.att-overview-group-body > * {
+/* Inner wrapper — collapse cung body, padding o day */
+.att-overview-group-inner {
+  min-height: 0;
+  overflow: hidden;
+  padding: 12px;
+}
+/* Backwards compat — neu render cu khong co inner wrapper */
+.att-overview-group-body > p,
+.att-overview-group-body > .att-overview-grid {
+  padding: 12px;
   min-height: 0;
   overflow: hidden;
 }
