@@ -208,8 +208,10 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
       ? `<button class="att-del" data-id="${escapeHtml(it.id)}" title="Xoá" aria-label="Xoá ${escapeHtml(it.fileName)}">🗑</button>`
       : '';
     // Round 95: 'Mở bằng Origin' button for Origin-compatible files
+    // Round 97: data-category added — Round 96 handler needs it for ogs
+    //           script generation (axis label lookup by category)
     const originBtn = canOpenInOrigin(it.fileName)
-      ? `<button class="att-origin-btn" data-id="${escapeHtml(it.id)}" data-url="${escapeHtml(it.downloadURL)}" data-filename="${escapeHtml(it.fileName)}" title="Tải về và mở bằng Origin Lab" aria-label="Mở ${escapeHtml(it.fileName)} bằng Origin">
+      ? `<button class="att-origin-btn" data-id="${escapeHtml(it.id)}" data-url="${escapeHtml(it.downloadURL)}" data-filename="${escapeHtml(it.fileName)}" data-category="${escapeHtml(it.category)}" title="Tải về và mở bằng Origin Lab" aria-label="Mở ${escapeHtml(it.fileName)} bằng Origin">
            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
              <path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/>
            </svg>

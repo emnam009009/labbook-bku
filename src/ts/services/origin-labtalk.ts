@@ -106,8 +106,9 @@ export function generateOgsScript(opts: OgsScriptOpts): string {
 // ====================================================================
 //
 // This LabTalk script is run by Origin via:
-//   Origin64.exe -r path\\to\\this.ogs
+//   Origin64.exe -rs run.section(path\\to\\this.OGS, Main)
 //
+// The [Main] section below is the entry point.
 // It will:
 //   1. Open a new workbook
 //   2. Import the data file from %USERPROFILE%\\Downloads
@@ -117,6 +118,7 @@ export function generateOgsScript(opts: OgsScriptOpts): string {
 //
 // User can then edit the plot freely in Origin.
 
+[Main]
 // === Path to data file ===
 // %YUFF% expands to User Files Folder. We use %USERPROFILE%\\Downloads.
 string downloads$ = "%(USERPROFILE)\\Downloads";

@@ -171,3 +171,56 @@ falls back to plain mode (open data file in Origin without auto-plot).
 | `yl.text$ = "Y label";`   | Left Y axis title                                |
 | `set %C -c color(R,G,B);` | Set active plot line color                       |
 | `set %C -w 1500;`         | Line thickness 1.5pt (units: 1/1000 pt)         |
+
+
+## Round 97 Update: Use `-rs run.section(...)` for execution
+
+Round 96 used `Origin64.exe -r script.ogs` which is **wrong** — `-r` per
+OriginLab docs means "run script following OPJ path-name AFTER the OPJ is
+open". Without a project (.opj) file specified, Origin falls back to opening
+the .ogs file in Code Builder (script editor) instead of executing it.
+
+Round 97 fix:
+
+```cmd
+Origin64.exe -rs "run.section(<path-to-script.ogs>, Main)"
+```
+
+This is the official method documented by OriginLab in their Task Scheduler
+blog post:
+https://blog.originlab.com/how-to-run-origin-periodically
+
+Two requirements for `-rs run.section(...)` to work:
+
+1. The `.ogs` script must have a `[Main]` section header at the top of the
+   executable code:
+   ```
+   [Main]
+   newbook;
+   impMSExcel ...;
+   plotxy ...;
+   ```
+
+2. The wrapper batch script must use `-rs` (run string) flag, not `-r`.
+
+`run.section(file.OGS, Main)` is a LabTalk command that:
+1. Loads `file.OGS` from disk
+2. Finds the `[Main]` section
+3. Executes statements in that section
+
+If user updates from Round 95/96 to Round 97, they MUST re-run install.bat
+on Windows to update the wrapper script. Old wrapper still uses `-r` and
+will continue to open Code Builder.
+
+### Why was Code Builder opening?
+
+Title bar from user screenshot: `Untitled - Code Builder - 2-WO3_29122025.ogs`
+
+When Origin receives `Origin64.exe -r somefile.ogs` (without preceding
+project file), it interprets the path as a file to OPEN, not RUN. Origin
+recognizes `.ogs` extension as LabTalk source code → opens in built-in
+script editor (Code Builder) for inspection. No execution, no plot.
+
+Fix: `-rs` (run string) tells Origin "the next argument is a LabTalk
+COMMAND to execute" — and `run.section(file.OGS, Main)` is the command
+that loads + runs the script.
