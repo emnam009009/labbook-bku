@@ -20,6 +20,7 @@ import { canAutoPlot, isParseableFile, parseDataFile, reparseWithColumns, detect
 import { renderPreview, renderHighResPNG } from '../services/plot/plot-preview.js';
 import { openImageLightbox } from './image-lightbox.js';
 import { showBusyOverlay, hideBusyOverlay, setBusyMessage, isBusy, resetBusyCount } from './upload-busy-overlay.js';
+import { canOpenInOrigin, downloadAndOpenInOrigin } from '../services/origin-launcher.js';
 import { transformToTauc, TAUC_PRESETS, formatN } from '../services/plot/tauc.js';
 import { autoFitBandgap } from '../services/plot/bandgap-fit.js';
 
@@ -205,6 +206,14 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
     const delBtn = canDel
       ? `<button class="att-del" data-id="${escapeHtml(it.id)}" title="Xoá" aria-label="Xoá ${escapeHtml(it.fileName)}">🗑</button>`
       : '';
+    // Round 95: 'Mở bằng Origin' button for Origin-compatible files
+    const originBtn = canOpenInOrigin(it.fileName)
+      ? `<button class="att-origin-btn" data-id="${escapeHtml(it.id)}" data-url="${escapeHtml(it.downloadURL)}" data-filename="${escapeHtml(it.fileName)}" title="Tải về và mở bằng Origin Lab" aria-label="Mở ${escapeHtml(it.fileName)} bằng Origin">
+           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+             <path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/>
+           </svg>
+         </button>`
+      : '';
     // Decide click behavior: parseable raw data → preview; else → open in new tab
     const isPlot = /_plot\.png$/i.test(it.fileName);
     const fakeFile = { name: it.fileName };
@@ -233,7 +242,7 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
             </small>
           </div>
         </button>
-        ${delBtn}
+        ${originBtn}${delBtn}
       </li>
     `;
   };
@@ -876,6 +885,30 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
       e.preventDefault();
       e.stopPropagation();
       openEditBadge(editBadge);
+      return;
+    }
+
+    // Round 95: Origin launch button
+    const originBtn = e.target.closest('.att-origin-btn');
+    if (originBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const url = originBtn.dataset.url;
+      const fileName = originBtn.dataset.filename;
+      if (!url || !fileName) return;
+      try {
+        originBtn.disabled = true;
+        showToast(`Đang tải ${fileName} về Downloads...`, 'info' as any);
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const blob = await resp.blob();
+        await downloadAndOpenInOrigin(blob, fileName);
+        showToast(`Đã tải ${fileName} · Origin sẽ mở (xác nhận trên trình duyệt nếu được hỏi)`, 'success', null, 6000);
+      } catch (err: any) {
+        showToast(`Lỗi: ${err.message}`, 'danger');
+      } finally {
+        originBtn.disabled = false;
+      }
       return;
     }
 

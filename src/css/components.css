@@ -1262,3 +1262,134 @@ body.img-lightbox-locked {
   background: rgba(255, 255, 255, 0.22);
   transform: scale(1.05);
 }
+
+
+/* ─────────────────────────────────────────────────────────
+   Round 95: PDF preview lightbox — full-screen overlay
+   Mimics image-lightbox style (Round 82) for consistency.
+   Iframe gets generous viewport (92vw x 78vh) so user has
+   room to use PDF.js's built-in zoom/page-nav toolbar.
+   ───────────────────────────────────────────────────────── */
+.pdf-lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.92);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 24px;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+.pdf-lightbox-overlay.pdf-lightbox-visible {
+  display: flex;
+  opacity: 1;
+}
+body.pdf-lightbox-locked {
+  overflow: hidden;
+}
+
+.pdf-lightbox-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  width: min(1400px, 92vw);
+  max-height: 92vh;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+}
+
+.pdf-lightbox-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  background: rgba(13, 148, 136, 0.06);
+  border-radius: 8px;
+  border-left: 3px solid var(--teal, #0d9488);
+  font-size: 13px;
+}
+.pdf-lightbox-info strong {
+  font-size: 14px;
+  color: var(--text, #0f172a);
+  word-break: break-all;
+}
+.pdf-lightbox-info span {
+  color: var(--text-2, #6b7280);
+  font-size: 12px;
+}
+
+.pdf-lightbox-frame {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 65vh;
+  height: 78vh;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  background: #525659;
+}
+
+.pdf-lightbox-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.pdf-lightbox-back-btn,
+.pdf-lightbox-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border, #e5e7eb);
+  transition: background 0.15s, border-color 0.15s;
+}
+.pdf-lightbox-back-btn {
+  background: #fff;
+  color: var(--text, #0f172a);
+}
+.pdf-lightbox-back-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+.pdf-lightbox-download-btn {
+  background: var(--teal, #0d9488);
+  color: #fff;
+  border-color: var(--teal, #0d9488);
+}
+.pdf-lightbox-download-btn:hover {
+  background: #0f766e;
+  border-color: #0f766e;
+}
+
+.pdf-lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, transform 0.1s;
+  z-index: 1;
+}
+.pdf-lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: scale(1.05);
+}

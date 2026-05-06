@@ -1648,3 +1648,31 @@ html.dark .att-busy-card {
 html.dark .att-busy-msg {
   color: #e2e8f0;
 }
+
+
+/* ─────────────────────────────────────────────────────────
+   Round 95: 'Mở bằng Origin' button on attachment list items
+   ───────────────────────────────────────────────────────── */
+.att-origin-btn {
+  background: transparent;
+  border: 1px solid var(--border, #e5e7eb);
+  color: var(--teal, #0d9488);
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+.att-origin-btn:hover {
+  background: rgba(13, 148, 136, 0.08);
+  border-color: var(--teal, #0d9488);
+}
+.att-origin-btn:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}

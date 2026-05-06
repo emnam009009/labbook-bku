@@ -5,6 +5,7 @@
 import { listAttachments, ATTACHMENT_CATEGORIES } from '../services/attachments.js';
 import { generatePdfReport, downloadBlob, PAGE_SIZES } from '../services/pdf/pdf-report.js';
 import { showToast } from './toast.js';
+import { openPdfLightbox } from './pdf-preview-lightbox.js';
 
 const MODAL_ID = 'modal-attachments-export';
 
@@ -174,32 +175,24 @@ function updateGenerateButton(panel, count) {
 }
 
 function showPreview(host, filename) {
-  cleanupBlob.__keep = true;  // dummy, ignore
-  host.innerHTML = buildPreviewPanel(filename);
-
-  const frame = host.querySelector('.pdf-preview-frame');
-  _currentBlobURL = URL.createObjectURL(_currentBlob);
-  frame.src = _currentBlobURL;
-
-  const downloadBtn = host.querySelector('.pdf-download-btn');
-  const closeBtn = host.querySelector('.pdf-close-preview-btn');
-  const backBtn = host.querySelector('.pdf-back-btn');
-
-  downloadBtn.addEventListener('click', () => {
-    downloadBlob(_currentBlob, _currentFilename);
-    showToast(`Đã tải xuống: ${_currentFilename}`, 'success');
-  });
-
-  closeBtn.addEventListener('click', () => {
-    cleanupBlob();
-    window.closeModal?.(MODAL_ID);
-  });
-
-  backBtn.addEventListener('click', () => {
-    cleanupBlob();
-    // Remount config panel (re-fetch attachments để reset state)
-    host.dataset.remount = '1';
-    host.dispatchEvent(new CustomEvent('pdf:back', { bubbles: true }));
+  // Round 95: close the dim 'modal-attachments-export' modal first
+  // and open the full-screen lightbox instead
+  try { window.closeModal?.(MODAL_ID); } catch (e) {}
+  openPdfLightbox({
+    blob: _currentBlob!,
+    filename: _currentFilename,
+    onDownload: () => {
+      downloadBlob(_currentBlob, _currentFilename);
+      showToast(`Đã tải xuống: ${_currentFilename}`, 'success');
+    },
+    onBack: () => {
+      // Close lightbox and re-open the config modal
+      cleanupBlob();
+      host.dataset.remount = '1';
+      host.dispatchEvent(new CustomEvent('pdf:back', { bubbles: true }));
+      // Re-open the export modal to mount config stage
+      try { window.openModal?.(MODAL_ID); } catch (e) {}
+    },
   });
 }
 
