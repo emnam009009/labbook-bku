@@ -5,8 +5,6 @@
 
 import { vals, escapeHtml, escapeJs } from '../utils/format.js'
 
-const SUPER_ADMIN_EMAIL = 'nvhn.7202@gmail.com';
-
 interface MemberRecord {
   _key: string;
   name?: string;

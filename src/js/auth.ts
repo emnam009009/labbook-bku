@@ -2,7 +2,7 @@ import {
   auth, db,
   signInWithEmailAndPassword, signOut, onAuthStateChanged,
   createUserWithEmailAndPassword,
-  ref, onValue, update, push,
+  ref, onValue, update,
 } from './firebase.js'
 import { browserLocalPersistence, setPersistence, updateProfile } from 'firebase/auth'
 import type { User } from 'firebase/auth'

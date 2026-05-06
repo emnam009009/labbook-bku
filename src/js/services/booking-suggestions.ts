@@ -14,7 +14,7 @@
  *  - showToast qua window.showToast
  */
 
-import { vals, escapeHtml } from '../utils/format.js'
+import { vals } from '../utils/format.js'
 
 // Giờ làm việc (mặc định, có thể chuyển sang config sau)
 const WORK_HOUR_START = 7   // 07:00

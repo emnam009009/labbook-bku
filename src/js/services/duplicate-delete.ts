@@ -32,7 +32,6 @@ import { logHistory as logHistoryRaw } from './history-log.js'
 const logHistory = logHistoryRaw as any
 import { db, ref, update, onValue, fbDel, fbPush, fbGet } from '../firebase.js'
 
-const SUPER_ADMIN_EMAIL = 'nvhn.7202@gmail.com';
 
 // ═══════════════════════════════════════════════════════════
 // DEL ITEM — generic delete với undo + reverse stock

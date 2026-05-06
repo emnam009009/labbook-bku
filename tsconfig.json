@@ -22,10 +22,13 @@
     "strict": false,
     "noImplicitAny": false,
     "strictNullChecks": false,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "outDir": "./dist-types"
+    "outDir": "./dist-types",
+    "types": [
+      "vite/client"
+    ]
   },
   "include": [
     "src/**/*.ts",

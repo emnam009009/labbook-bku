@@ -121,7 +121,7 @@ export function detectColumns(
     return stripped === a;
   };
 
-  const findExact = (axis: string): number => lower.findIndex((h, i) => !isExcluded(h) && isExactAxis(h, axis));
+  const findExact = (axis: string): number => lower.findIndex((h) => !isExcluded(h) && isExactAxis(h, axis));
 
   const findByKeyword = (keywords: string[], skipIdx = -1): number => {
     for (let i = 0; i < lower.length; i++) {

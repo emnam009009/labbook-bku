@@ -2,7 +2,7 @@
 // Core service for experiment attachments (PR #1).
 // Handles upload to Firebase Storage + metadata to RTDB.
 
-import { storage, fbSet, fbGet, fbDel, fbPush, ref, push, db } from '../firebase.js';
+import { storage, fbSet, fbGet, fbDel, ref, push, db } from '../firebase.js';
 import {
   ref as stRef,
   uploadBytesResumable,

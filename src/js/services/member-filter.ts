@@ -2,7 +2,6 @@
 // Replace nút "Chỉ của tôi" thành dropdown chọn member
 
 const PAGES = ['hydro', 'electrode', 'ec'] as const;
-type PageName = typeof PAGES[number];
 
 interface MemberRecord {
   name?: string;

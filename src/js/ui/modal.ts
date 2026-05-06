@@ -171,8 +171,7 @@ export function openModal(id: string): void {
       const unitSel = document.getElementById('c-unit') as HTMLSelectElement | null;
       if (unitSel && typeof (window as any).makeCustomSelect === 'function') {
         (window as any).makeCustomSelect(unitSel);
-        const wrap = unitSel.closest('.cs-modal-wrap');
-        const trigger = wrap?.querySelector('.cs-modal-trigger');
+        // Note: previously declared 'wrap' + 'trigger' here, both unused.
       }
     }, 50);
   }

@@ -115,7 +115,7 @@ export function openExpActionsMenu(anchor: HTMLElement, ctx: ExpActionContext): 
 /**
  * Mo modal Xuat du lieu — lazy-load PDF export module.
  */
-export async function openAttachmentsExportModal({ refType, refId, title = '' }: { refType: string; refId: string; title?: string }): Promise<unknown> {
+export async function openAttachmentsExportModal({ refType, refId }: { refType: string; refId: string; title?: string }): Promise<unknown> {
   try {
     const mod: any = await import('./pdf-export-modal.js');
     return mod.openPdfExportModal(refType, refId);
