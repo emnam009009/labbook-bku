@@ -12,7 +12,7 @@ import { isJcampJasco } from './jcamp-jasco.js';
 
 export type DetectedCategory =
   | 'xrd' | 'raman' | 'ftir' | 'uvvis' | 'uvvis-drs' | 'pl'
-  | 'sem' | 'tem' | 'other';
+  | 'sem' | 'tem' | 'eds' | 'xps' | 'electrochem' | 'other';
 
 export type DetectConfidence = 'high' | 'medium' | 'low' | 'none';
 
@@ -38,6 +38,9 @@ function detectByExtension(filename: string): DetectResult | null {
     // TEM
     'dm3':   'tem',
     'dm4':   'tem',
+    // Round 77a: composition / oxidation
+    'emsa':  'eds',  // EMSA/MAS standard format for EDS spectra
+    'vms':   'xps',  // VAMAS (ISO 14976) standard for XPS data
   };
   if (map[ext]) {
     return { category: map[ext], confidence: 'high', reason: `extension .${ext}` };
@@ -63,6 +66,15 @@ function detectByFilename(filename: string): DetectResult | null {
     [/(?:^|[^a-z])(sem)(?:[^a-z]|$)/i,                    'sem'],
     [/(?:^|[^a-z])(tem)(?:[^a-z]|$)/i,                    'tem'],
     [/(?:^|[^a-z])(infrared|infra-?red)(?:[^a-z]|$)/i,    'ftir'],
+    // Round 77a: composition + oxidation
+    [/(?:^|[^a-z])(eds|edx)(?:[^a-z]|$)/i,                'eds'],
+    [/(?:^|[^a-z])(xps)(?:[^a-z]|$)/i,                    'xps'],
+    // Round 77a: electrochemistry — keywords for CV / EIS / LSV
+    [/(?:^|[^a-z])(electrochem|electro-?chem)(?:[^a-z]|$)/i, 'electrochem'],
+    [/(?:^|[^a-z])(cv|cyclic-?voltam|voltammetry)(?:[^a-z]|$)/i, 'electrochem'],
+    [/(?:^|[^a-z])(eis|impedance|nyquist|bode)(?:[^a-z]|$)/i, 'electrochem'],
+    [/(?:^|[^a-z])(lsv|linear-?sweep)(?:[^a-z]|$)/i,      'electrochem'],
+    [/(?:^|[^a-z])(tafel)(?:[^a-z]|$)/i,                  'electrochem'],
   ];
   for (const [re, cat] of patterns) {
     const m = lower.match(re);
@@ -120,6 +132,23 @@ function detectFromHeaders(headers: string[]): DetectResult | null {
   // 2-theta -> XRD (very strong)
   if (/\b2\s*[-]?\s*theta\b|2[θθ]/i.test(joined)) return { category: 'xrd', confidence: 'high', reason: 'header "2-theta"' };
   if (/\braman\s+shift\b/i.test(joined))           return { category: 'raman', confidence: 'high', reason: 'header "Raman shift"' };
+
+  // Round 77a: XPS — 'binding energy' is highly specific to XPS
+  if (/\bbinding\s+energy\b|\bbe\s*\(?\s*ev\b/i.test(joined))
+    return { category: 'xps', confidence: 'high', reason: 'header "Binding energy"' };
+
+  // Round 77a: EDS — energy in keV with counts
+  if (/energy\s*\(?\s*kev\b/i.test(joined))
+    return { category: 'eds', confidence: 'high', reason: 'header "Energy (keV)"' };
+
+  // Round 77a: Electrochem — EIS-specific (Z' / Z'' / impedance)
+  if (/\b(z\s*['\u2032]\s*\(?\s*ohm|z\s*['\u2033]|nyquist|impedance|frequency\s*\(?\s*hz)/i.test(joined))
+    return { category: 'electrochem', confidence: 'high', reason: 'header impedance/EIS' };
+  // Electrochem — CV/LSV (potential + current)
+  if (/\bpotential\b/i.test(joined) && /\bcurrent\b/i.test(joined))
+    return { category: 'electrochem', confidence: 'high', reason: 'header potential + current' };
+  if (/\be\s*\(?\s*v\b/i.test(joined) && /\bi\s*\(?\s*[ma]/i.test(joined))
+    return { category: 'electrochem', confidence: 'high', reason: 'header E(V) + I(A/mA)' };
 
   // Wavenumber + Transmit/Absorb -> FTIR
   const hasWavenumber = /\b(wavenumber|cm\s*[-⁻]\s*1|cm⁻¹)\b/i.test(joined);

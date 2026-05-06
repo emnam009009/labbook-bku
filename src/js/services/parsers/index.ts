@@ -77,6 +77,31 @@ export const PARSER_SPECS: Readonly<Record<string, ParserSpec>> = Object.freeze(
     yLabel: 'PL Intensity (a.u.)',
     chartType: 'line',
   },
+  // Round 77a: composition + oxidation state
+  eds: {
+    xKeywords: ['energy', 'kev', 'ev'],
+    yKeywords: ['counts', 'intensity', 'cps'],
+    xLabel: 'Energy (keV)',
+    yLabel: 'Counts',
+    chartType: 'line',
+  },
+  xps: {
+    xKeywords: ['binding energy', 'be', 'energy', 'ev'],
+    yKeywords: ['intensity', 'cps', 'counts', 'count'],
+    xLabel: 'Binding Energy (eV)',
+    yLabel: 'Intensity (CPS)',
+    chartType: 'line',
+    reverseX: true, // XPS convention: X axis decreasing (high BE on left)
+  },
+  // Round 77a: electrochemistry — generic spec covering CV/EIS/LSV.
+  // X/Y labels intentionally generic; user can pick correct cols in preview.
+  electrochem: {
+    xKeywords: ['potential', 'voltage', 'e/v', 'frequency', 'freq', 'time', 'z\'\'', "z''"],
+    yKeywords: ['current', 'i/a', 'i/ma', 'z\'', "z'", 'phase', 'magnitude'],
+    xLabel: 'Potential (V) / Frequency (Hz)',
+    yLabel: 'Current (A) / Impedance',
+    chartType: 'line',
+  },
 });
 
 export function getSpec(category: string): ParserSpec | null {

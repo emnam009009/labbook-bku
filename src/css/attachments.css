@@ -193,6 +193,10 @@
 .att-badge-uvvis { background: #ca8a04; }
 .att-badge-uvvis-drs { background: #b45309; }
 .att-badge-pl { background: #0891b2; }
+/* Round 77a: composition + oxidation + electrochem */
+.att-badge-eds { background: #ec4899; }
+.att-badge-xps { background: #14b8a6; }
+.att-badge-electrochem { background: #6366f1; }
 .att-badge-other { background: #64748b; }
 
 .att-del {

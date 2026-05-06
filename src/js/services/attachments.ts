@@ -31,12 +31,19 @@ export const ATTACHMENT_CATEGORIES: Readonly<Record<string, AttachmentCategory>>
   xrd: { label: 'XRD', accept: 'image/*,.xy,.xrdml,.csv,.txt,.dat' },
   sem: { label: 'SEM', accept: 'image/*,.tif,.tiff' },
   tem: { label: 'TEM', accept: 'image/*,.tif,.tiff,.dm3,.dm4' },
+  // Round 77a: composition + oxidation state group
+  eds: { label: 'EDS', accept: 'image/*,.csv,.txt,.dat,.emsa' },
+  xps: { label: 'XPS', accept: '.csv,.txt,.dat,.vms,image/*' },
+  // Vibrational spectra group
   raman: { label: 'Raman', accept: 'image/*,.csv,.txt,.spc,.dat' },
   ftir: { label: 'FTIR', accept: 'image/*,.csv,.txt,.spa,.dpt,.dat' },
+  // Optical properties group
   uvvis: { label: 'UV-Vis', accept: 'image/*,.csv,.txt,.dat' },
   'uvvis-drs': { label: 'UV-Vis DRS', accept: 'image/*,.csv,.txt,.dat' },
   pl: { label: 'PL', accept: 'image/*,.csv,.txt,.dat' },
-  other: { label: 'Khac', accept: '*' },
+  // Round 77a: electrochemistry group (CV/EIS/LSV pooled)
+  electrochem: { label: 'Điện hóa', accept: 'image/*,.csv,.txt,.dat' },
+  other: { label: 'Khác', accept: '*' },
 });
 
 export const SUPPORTED_REF_TYPES = Object.freeze(['hydro', 'electrode']) as readonly string[];
