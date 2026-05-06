@@ -1,5 +1,5 @@
 /**
- * pages/dashboard.js
+ * pages/dashboard.ts
  * v3 — Layout 3 hàng: KPI + Hàng 1 (booking 2col / members / chemicals)
  *                     + Hàng 2 (chart cột 6 tháng / pie / top members)
  *                     + Hàng 3 (recent experiments full width)
@@ -7,6 +7,8 @@
  * Tận dụng window.cache.{hydro, electrode, electrochem, ink, bookings, members, equipment, chemicals}
  * Theme-reactive: re-render khi đổi theme (event 'themechange')
  */
+// @ts-nocheck
+
 
 import { vals, escapeHtml, formatChemical } from '../utils/format.js'
 

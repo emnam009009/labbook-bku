@@ -1,5 +1,5 @@
 /**
- * pages/booking.js — Đăng ký sử dụng thiết bị (v2)
+ * pages/booking.ts — Đăng ký sử dụng thiết bị (v2)
  *
  * Phase 1: Render list, empty state, view toggle ✓
  * Phase 2: Save booking, conflict check, populate equipment dropdown ✓
@@ -9,6 +9,8 @@
  *  pending → rejected
  *  pending/approved → cancelled
  */
+// @ts-nocheck
+
 
 import { vals, fuzzy, escapeHtml } from '../utils/format.js'
 import { db, ref, update, remove, fbPush } from '../firebase.js'
