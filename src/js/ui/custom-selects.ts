@@ -1,5 +1,5 @@
 /**
- * ui/custom-selects.js
+ * ui/custom-selects.ts
  * Custom select UI wrappers + search-as-you-type dropdowns + form helpers nhỏ
  *
  * Phạm vi:
@@ -24,6 +24,8 @@
  *  - 3 click outside listeners + 1 input listener attach 1 lần khi module được import
  *  - initCustomFilters phải được caller gọi từ DOMContentLoaded của main.js
  */
+// @ts-nocheck
+
 
 import { vals } from '../utils/format.js'
 

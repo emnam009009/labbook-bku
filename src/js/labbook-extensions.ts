@@ -1,5 +1,5 @@
 /**
- * labbook-extensions.js
+ * labbook-extensions.ts
  * Module mở rộng cho LabBook — thêm vào src/js/
  * Bao gồm:
  *   1. Xuất Excel (SheetJS CDN)
@@ -7,9 +7,11 @@
  *   3. AI phân tích kết quả điện hóa (Claude API)
  *
  * Cách tích hợp:
- *   - Thêm vào index.html: <script type="module" src="/src/js/labbook-extensions.js"></script>
- *   - Hoặc import vào main.js: import './labbook-extensions.js'
+ *   - Thêm vào index.html: <script type="module" src="/src/js/labbook-extensions.ts"></script>
+ *   - Hoặc import vào main.js: import './labbook-extensions.ts'
  */
+// @ts-nocheck
+
 
 
 function chartOptions(extra = {}) {

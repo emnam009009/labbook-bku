@@ -1,30 +1,28 @@
 /**
- * ui/navigation.js
- * Điều hướng trang: showPage, sidebar section toggle, electrode tabs
+ * ui/navigation.ts
+ * Dieu huong trang: showPage, sidebar section toggle, electrode tabs
  *
- * Thiết kế:
- *  - showPage dispatch CustomEvent 'pageChange' để các hook khác lắng nghe
- *    (thay vì monkey-patch window.showPage nhiều lần như trước Round 6)
+ * Thiet ke:
+ *  - showPage dispatch CustomEvent 'pageChange' de cac hook khac lang nghe
  */
 
-// ── Chuyển trang ───────────────────────────────────────
-// id: tên page (vd 'dashboard', 'hydro', 'chemicals'); el: sidebar item được click
-export function showPage(id, el) {
+// ── Chuyen trang ───────────────────────────────────────
+// id: ten page (vd 'dashboard', 'hydro', 'chemicals'); el: sidebar item duoc click
+export function showPage(id: string, el?: HTMLElement | null): void {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
   const _pg = document.getElementById('page-' + id);
   if (_pg) _pg.classList.add('active');
   if (el) el.classList.add('active');
-  // Equipment có render riêng — gọi nếu hàm tồn tại
+  // Equipment co render rieng — goi neu ham ton tai
   if (id === 'equipment' && typeof window.renderEquipment === 'function') {
     window.renderEquipment();
   }
-  // Booking có render riêng
+  // Booking co render rieng
   if (id === 'booking' && typeof window.renderBooking === 'function') {
     window.renderBooking();
   }
-  // Hydro / Electrode / Electrochem: re-render từ cache hiện tại để tránh
-  // kẹt skeleton "Đang tải..." khi data rỗng hoặc listener fire trước render.
+  // Hydro / Electrode / Electrochem: re-render tu cache hien tai
   if (id === 'hydrothermal' && typeof window.renderHydro === 'function') {
     window.renderHydro();
   }
@@ -34,24 +32,24 @@ export function showPage(id, el) {
   if (id === 'electrochemistry' && typeof window.renderElectrochem === 'function') {
     window.renderElectrochem();
   }
-  // Dispatch event để các hook khác (chat, dashboard class, ...) lắng nghe
+  // Dispatch event de cac hook khac (chat, dashboard class, ...) lang nghe
   document.dispatchEvent(new CustomEvent('pageChange', { detail: { id } }));
 }
 
 // ── Toggle collapse sidebar section ────────────────────
-export function toggleSidebarSection(labelEl) {
+export function toggleSidebarSection(labelEl: HTMLElement): void {
   const section = labelEl.closest('.sidebar-section');
   if (section) section.classList.toggle('collapsed');
 }
 
-// ── Mở trang lịch sử (admin only) ──────────────────────
-export function toggleHistory() {
-  showPage('history', document.querySelector('.admin-only'));
+// ── Mo trang lich su (admin only) ──────────────────────
+export function toggleHistory(): void {
+  showPage('history', document.querySelector<HTMLElement>('.admin-only'));
 }
 
-// ── Chuyển tab Electrode ↔ Ink ──────────────────────────
-// tab: 'electrode' hoặc 'ink'; btn: button được click
-export function switchElectrodeTab(tab, btn) {
+// ── Chuyen tab Electrode <-> Ink ──────────────────────
+// tab: 'electrode' hoac 'ink'; btn: button duoc click
+export function switchElectrodeTab(tab: string, btn?: HTMLElement | null): void {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   if (btn) btn.classList.add('active');

@@ -1,11 +1,11 @@
 /**
- * firebase.js
- * Khởi tạo Firebase, Database và Authentication
+ * firebase.ts
+ * Khoi tao Firebase, Database va Authentication
  *
  * Phase 1 changes:
- * - logHistory: dùng serverTimestamp + auth.uid (không trust client)
- * - Thêm helpers: fbQuery (limitToLast + orderByChild) cho Phase 2
- * - Hỗ trợ emulator qua VITE_USE_EMULATOR
+ * - logHistory: dung serverTimestamp + auth.uid (khong trust client)
+ * - Them helpers: fbQuery (limitToLast + orderByChild) cho Phase 2
+ * - Ho tro emulator qua VITE_USE_EMULATOR
  */
 
 import { initializeApp } from 'firebase/app'
@@ -40,13 +40,13 @@ import {
 } from 'firebase/auth'
 
 const firebaseConfig = {
-  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  databaseURL:       import.meta.env.VITE_FIREBASE_DATABASE_URL,
-  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId:             import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey:            (import.meta as any).env.VITE_FIREBASE_API_KEY,
+  authDomain:        (import.meta as any).env.VITE_FIREBASE_AUTH_DOMAIN,
+  databaseURL:       (import.meta as any).env.VITE_FIREBASE_DATABASE_URL,
+  projectId:         (import.meta as any).env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket:     (import.meta as any).env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: (import.meta as any).env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId:             (import.meta as any).env.VITE_FIREBASE_APP_ID,
 }
 
 const app  = initializeApp(firebaseConfig)
@@ -54,9 +54,8 @@ export const db   = getDatabase(app)
 export const auth = getAuth(app)
 export const storage = getStorage(app)
 
-// ── Connect to emulator nếu chạy với VITE_USE_EMULATOR=true ──
-// Chỉ dùng cho dev local, không ảnh hưởng production build
-if (import.meta.env.VITE_USE_EMULATOR === 'true') {
+// ── Connect to emulator neu chay voi VITE_USE_EMULATOR=true ──
+if ((import.meta as any).env.VITE_USE_EMULATOR === 'true') {
   // eslint-disable-next-line no-console
   console.log('[firebase] Connecting to LOCAL EMULATORS')
   connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true })
@@ -75,35 +74,42 @@ export {
 }
 
 // ── Basic CRUD helpers ─────────────────────────────────────────
-export const fbSet    = (path, data) => set(ref(db, path), data)
-export const fbPush   = (path, data) => push(ref(db, path), data)
-export const fbDel    = (path)       => remove(ref(db, path))
-export const fbListen = (path, cb)   => onValue(ref(db, path), snap => cb(snap.val()))
-export const fbGet    = (path)       => get(ref(db, path)).then(snap => snap.val())
+export const fbSet    = (path: string, data: unknown): Promise<void> => set(ref(db, path), data)
+export const fbPush   = (path: string, data: unknown): any => push(ref(db, path), data)
+export const fbDel    = (path: string): Promise<void>       => remove(ref(db, path))
+export const fbListen = (path: string, cb: (val: any) => void): (() => void) => onValue(ref(db, path), (snap: any) => cb(snap.val()))
+export const fbGet    = (path: string): Promise<any>       => get(ref(db, path)).then((snap: any) => snap.val())
 
-// ── Query helpers (Phase 2 sẽ dùng nhiều) ──────────────────────
-// fbListenQuery(path, {orderBy, limitLast, equalTo}, cb)
-//   ví dụ: fbListenQuery('hydro', {orderBy: 'createdAt', limitLast: 200}, cb)
-export function fbListenQuery(path, opts, cb) {
-  let q = ref(db, path)
-  const constraints = []
+// ── Query helpers (Phase 2 se dung nhieu) ──────────────────────
+export interface QueryOpts {
+  orderBy?: string;
+  equalTo?: unknown;
+  startAt?: unknown;
+  endAt?: unknown;
+  limitLast?: number;
+  limitFirst?: number;
+}
+
+export function fbListenQuery(path: string, opts: QueryOpts, cb: (val: any) => void): (() => void) {
+  let q: any = ref(db, path)
+  const constraints: any[] = []
   if (opts.orderBy)   constraints.push(orderByChild(opts.orderBy))
-  if (opts.equalTo !== undefined) constraints.push(equalTo(opts.equalTo))
-  if (opts.startAt !== undefined) constraints.push(startAt(opts.startAt))
-  if (opts.endAt   !== undefined) constraints.push(endAt(opts.endAt))
+  if (opts.equalTo !== undefined) constraints.push(equalTo(opts.equalTo as any))
+  if (opts.startAt !== undefined) constraints.push(startAt(opts.startAt as any))
+  if (opts.endAt   !== undefined) constraints.push(endAt(opts.endAt as any))
   if (opts.limitLast)  constraints.push(limitToLast(opts.limitLast))
   if (opts.limitFirst) constraints.push(limitToFirst(opts.limitFirst))
   if (constraints.length) q = query(q, ...constraints)
-  return onValue(q, snap => cb(snap.val()))
+  return onValue(q, (snap: any) => cb(snap.val()))
 }
 
-export async function fbGetQuery(path, opts) {
-  let q = ref(db, path)
-  const constraints = []
+export async function fbGetQuery(path: string, opts: QueryOpts): Promise<any> {
+  let q: any = ref(db, path)
+  const constraints: any[] = []
   if (opts.orderBy)   constraints.push(orderByChild(opts.orderBy))
-  if (opts.equalTo !== undefined) constraints.push(equalTo(opts.equalTo))
-  if (opts.startAt !== undefined) constraints.push(startAt(opts.startAt))
-  if (opts.endAt   !== undefined) constraints.push(endAt(opts.endAt))
+  if (opts.equalTo !== undefined) constraints.push(equalTo(opts.equalTo as any))
+  if (opts.startAt !== undefined) constraints.push(startAt(opts.startAt as any))
+  if (opts.endAt   !== undefined) constraints.push(endAt(opts.endAt as any))
   if (opts.limitLast)  constraints.push(limitToLast(opts.limitLast))
   if (opts.limitFirst) constraints.push(limitToFirst(opts.limitFirst))
   if (constraints.length) q = query(q, ...constraints)
@@ -112,15 +118,7 @@ export async function fbGetQuery(path, opts) {
 }
 
 // ── Audit log: SECURE version ──────────────────────────────────
-// SECURITY: ts và uid được xác thực bởi rules (không trust client value).
-// Client chỉ được truyền action + detail; uid/email lấy từ auth.currentUser
-// còn ts dùng Date.now() và rules check ts <= now && ts >= now - 60s.
-//
-// Lưu ý: Ta vẫn truyền ts: Date.now() (không phải serverTimestamp) vì
-// serverTimestamp() trả về object {.sv: 'timestamp'} sẽ bị rule
-// `newData.child('ts').isNumber()` reject TẠI THỜI ĐIỂM client gửi.
-// Workaround chuẩn của Firebase: gửi Date.now(), rule check khoảng ±60s.
-export function logHistory(action, detail = '') {
+export function logHistory(action: string, detail: string = ''): Promise<any> {
   const u = auth.currentUser
   if (!u) {
     console.warn('[logHistory] no auth.currentUser, skip')
@@ -136,9 +134,9 @@ export function logHistory(action, detail = '') {
     email: u.email || '',
     action: safeAction,
     detail: safeDetail,
-  }).catch(err => {
+  }).catch((err: any) => {
     console.error('[logHistory] write failed:', err)
-    // Không throw lên trên — log thất bại không nên break flow chính
+    // Khong throw len tren — log that bai khong nen break flow chinh
     return null
   })
 }

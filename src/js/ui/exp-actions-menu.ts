@@ -1,17 +1,23 @@
-// src/js/ui/exp-actions-menu.js
-// Dropdown menu hiển thị khi click nút ⋯ trên row hydro/electrode.
-// Mục: Nhập dữ liệu | Xuất dữ liệu
+// src/js/ui/exp-actions-menu.ts
+// Dropdown menu hien thi khi click nut ⋯ tren row hydro/electrode.
+// Muc: Nhap du lieu | Xuat du lieu
 
-let _currentMenu = null;
-let _currentTrigger = null;
+interface ExpActionContext {
+  refType: string;
+  refId: string;
+  code?: string;
+}
 
-function _setTriggerChecked(trigger, checked) {
+let _currentMenu: HTMLElement | null = null;
+let _currentTrigger: HTMLElement | null = null;
+
+function _setTriggerChecked(trigger: HTMLElement | null, checked: boolean): void {
   if (!trigger) return;
-  const cb = trigger.querySelector('input[type="checkbox"]');
+  const cb = trigger.querySelector<HTMLInputElement>('input[type="checkbox"]');
   if (cb) cb.checked = checked;
 }
 
-function closeCurrentMenu() {
+function closeCurrentMenu(): void {
   if (_currentMenu) {
     _currentMenu.remove();
     _currentMenu = null;
@@ -22,23 +28,21 @@ function closeCurrentMenu() {
   }
 }
 
-function _outsideClickHandler(e) {
-  if (_currentMenu && !_currentMenu.contains(e.target)) {
+function _outsideClickHandler(e: MouseEvent): void {
+  if (_currentMenu && !_currentMenu.contains(e.target as Node)) {
     closeCurrentMenu();
   }
 }
 
-function _escHandler(e) {
+function _escHandler(e: KeyboardEvent): void {
   if (e.key === 'Escape') closeCurrentMenu();
 }
 
 /**
- * Hiển thị dropdown menu cạnh nút trigger.
- * @param {HTMLElement} anchor - nút ⋯ được click
- * @param {object} ctx - { refType: 'hydro'|'electrode', refId, code }
+ * Hien thi dropdown menu canh nut trigger.
  */
-export function openExpActionsMenu(anchor, ctx) {
-  // If clicking same trigger that opened the menu → close (toggle off)
+export function openExpActionsMenu(anchor: HTMLElement, ctx: ExpActionContext): void {
+  // If clicking same trigger that opened the menu -> close (toggle off)
   const sameTrigger = _currentTrigger === anchor;
   closeCurrentMenu();
   if (sameTrigger) return;
@@ -46,7 +50,7 @@ export function openExpActionsMenu(anchor, ctx) {
   const { refType, refId, code } = ctx;
   _currentTrigger = anchor;
   _setTriggerChecked(anchor, true);
-  const title = `Tài liệu — ${code || refId}`;
+  const title = `Tai lieu — ${code || refId}`;
 
   const menu = document.createElement('div');
   menu.className = 'exp-actions-menu';
@@ -58,7 +62,7 @@ export function openExpActionsMenu(anchor, ctx) {
         <polyline points="7 10 12 15 17 10"/>
         <line x1="12" y1="15" x2="12" y2="3"/>
       </svg>
-      <span>Nhập dữ liệu</span>
+      <span>Nhap du lieu</span>
     </button>
     <button type="button" class="exp-actions-item" role="menuitem" data-action="export">
       <svg class="exp-actions-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -66,7 +70,7 @@ export function openExpActionsMenu(anchor, ctx) {
         <polyline points="17 8 12 3 7 8"/>
         <line x1="12" y1="3" x2="12" y2="15"/>
       </svg>
-      <span>Xuất dữ liệu</span>
+      <span>Xuat du lieu</span>
     </button>
   `;
 
@@ -87,17 +91,17 @@ export function openExpActionsMenu(anchor, ctx) {
   }
 
   // Bind clicks
-  menu.addEventListener('click', (e) => {
-    const item = e.target.closest('.exp-actions-item');
+  menu.addEventListener('click', (e: MouseEvent) => {
+    const item = (e.target as HTMLElement)?.closest('.exp-actions-item') as HTMLElement | null;
     if (!item) return;
     const action = item.dataset.action;
     closeCurrentMenu();
 
     if (action === 'import') {
-      // Mở modal upload (giữ nguyên modal đã có)
-      window.openAttachmentsModal?.({ refType, refId, title });
+      // Mo modal upload (giu nguyen modal da co)
+      (window as any).openAttachmentsModal?.({ refType, refId, title });
     } else if (action === 'export') {
-      window.openAttachmentsExportModal?.({ refType, refId, title });
+      (window as any).openAttachmentsExportModal?.({ refType, refId, title });
     }
   });
 
@@ -109,18 +113,18 @@ export function openExpActionsMenu(anchor, ctx) {
 }
 
 /**
- * Mở modal Xuất dữ liệu — lazy-load PDF export module.
+ * Mo modal Xuat du lieu — lazy-load PDF export module.
  */
-export async function openAttachmentsExportModal({ refType, refId, title = '' }) {
+export async function openAttachmentsExportModal({ refType, refId, title = '' }: { refType: string; refId: string; title?: string }): Promise<unknown> {
   try {
-    const mod = await import('./pdf-export-modal.js');
+    const mod: any = await import('./pdf-export-modal.js');
     return mod.openPdfExportModal(refType, refId);
-  } catch (e) {
+  } catch (e: any) {
     console.error('[exp-actions-menu] PDF export load failed:', e);
     if (typeof window.showToast === 'function') {
-      window.showToast(`Lỗi mở modal: ${e.message}`, 'danger');
+      window.showToast(`Loi mo modal: ${e.message}`, 'danger');
     } else {
-      alert(`Lỗi mở modal: ${e.message}`);
+      alert(`Loi mo modal: ${e.message}`);
     }
   }
 }

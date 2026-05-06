@@ -1,8 +1,10 @@
 /**
- * main.js
+ * main.ts
  * Entry point — import CSS, Firebase, và chạy toàn bộ ứng dụng
  * Vite sẽ bundle file này cùng tất cả imports thành 1 file tối ưu
  */
+// @ts-nocheck
+
 
 // ── Import CSS ───────────────────────────────────────────
 import '../css/main.css'
@@ -380,7 +382,7 @@ const SUPER_ADMIN_EMAIL = 'nvhn.7202@gmail.com';
 
 // ── Sync wrapper: cập nhật cả local var lẫn window globals ──
 // (Phần 1: utils/auth-helpers.syncAuthState chỉ set window globals.
-//  Một số chỗ trong main.js dùng `currentUser` / `isAdmin` local — wrapper này sync cả hai.)
+//  Một số chỗ trong main.ts dùng `currentUser` / `isAdmin` local — wrapper này sync cả hai.)
 function _syncAuthStateLocal() {
   syncAuthState();
   isAdmin = !!currentAuth.isAdmin;

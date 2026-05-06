@@ -1,4 +1,5 @@
-// src/js/ui/pdf-export-modal.js
+// src/js/ui/pdf-export-modal.ts
+// @ts-nocheck
 // Modal "Xuất dữ liệu" — chọn ảnh + page size + orientation → preview → download
 
 import { listAttachments, ATTACHMENT_CATEGORIES } from '../services/attachments.js';
