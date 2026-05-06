@@ -151,7 +151,7 @@ declare global {
     // ── Toast ──
     undoDelete?: () => void;
     hideToast?: () => void;
-    showToast?: (msg: string, type?: 'success' | 'error' | 'info') => void;
+    showToast?: (msg: string, type?: 'success' | 'error' | 'info' | 'danger' | 'warn', undoCallback?: (() => void) | null, duration?: number) => void;
 
     // ── Theme ──
     applyTheme?: (theme: string) => void;

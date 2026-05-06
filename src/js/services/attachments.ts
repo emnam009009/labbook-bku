@@ -1,4 +1,4 @@
-// src/js/services/attachments.js
+// src/js/services/attachments.ts
 // Core service for experiment attachments (PR #1).
 // Handles upload to Firebase Storage + metadata to RTDB.
 
@@ -12,17 +12,22 @@ import {
 import { showToast } from '../ui/toast.js';
 import { logHistory } from './history-log.js';
 
-// Helper: tạo push key mà không ghi data
-function fbPushKey(path) {
-  return push(ref(db, path)).key;
+// Helper: tao push key ma khong ghi data
+function fbPushKey(path: string): string {
+  return push(ref(db, path)).key!;
 }
 
-// Alias cho rõ nghĩa
+// Alias cho ro nghia
 const fbRemove = fbDel;
 
 // ---------- Constants ----------
 
-export const ATTACHMENT_CATEGORIES = Object.freeze({
+interface AttachmentCategory {
+  label: string;
+  accept: string;
+}
+
+export const ATTACHMENT_CATEGORIES: Readonly<Record<string, AttachmentCategory>> = Object.freeze({
   xrd: { label: 'XRD', accept: 'image/*,.xy,.xrdml,.csv,.txt,.dat' },
   sem: { label: 'SEM', accept: 'image/*,.tif,.tiff' },
   tem: { label: 'TEM', accept: 'image/*,.tif,.tiff,.dm3,.dm4' },
@@ -31,49 +36,65 @@ export const ATTACHMENT_CATEGORIES = Object.freeze({
   uvvis: { label: 'UV-Vis', accept: 'image/*,.csv,.txt,.dat' },
   'uvvis-drs': { label: 'UV-Vis DRS', accept: 'image/*,.csv,.txt,.dat' },
   pl: { label: 'PL', accept: 'image/*,.csv,.txt,.dat' },
-  other: { label: 'Khác', accept: '*' },
+  other: { label: 'Khac', accept: '*' },
 });
 
-export const SUPPORTED_REF_TYPES = Object.freeze(['hydro', 'electrode']);
+export const SUPPORTED_REF_TYPES = Object.freeze(['hydro', 'electrode']) as readonly string[];
 
 export const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25 MB
 export const MAX_FILES_PER_EXPERIMENT = 20;
 
+interface AttachmentRecord {
+  category: string;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  storagePath: string;
+  downloadURL: string;
+  uploadedBy: string;
+  uploadedAt: number;
+  note: string;
+}
+
+interface AttachmentWithId extends AttachmentRecord {
+  id: string;
+}
+
 // ---------- Helpers ----------
 
-const sanitizeFileName = (name) =>
+const sanitizeFileName = (name: string): string =>
   String(name || 'file')
     .normalize('NFKD')
     .replace(/[^\w.\-]+/g, '_')
     .replace(/_+/g, '_')
     .slice(0, 120);
 
-const buildStoragePath = (refType, refId, fileName) => {
+const buildStoragePath = (refType: string, refId: string, fileName: string): string => {
   const ts = Date.now();
   const safe = sanitizeFileName(fileName);
   return `attachments/${refType}/${refId}/${ts}_${safe}`;
 };
 
-const validateRef = (refType, refId) => {
+const validateRef = (refType: string, refId: string): void => {
   if (!SUPPORTED_REF_TYPES.includes(refType)) {
-    throw new Error(`refType không hỗ trợ: ${refType}`);
+    throw new Error(`refType khong ho tro: ${refType}`);
   }
   if (!refId || typeof refId !== 'string') {
-    throw new Error('refId không hợp lệ');
+    throw new Error('refId khong hop le');
   }
 };
 
-const validateCategory = (cat) => {
+const validateCategory = (cat: string): void => {
   if (!Object.prototype.hasOwnProperty.call(ATTACHMENT_CATEGORIES, cat)) {
-    throw new Error(`category không hợp lệ: ${cat}`);
+    throw new Error(`category khong hop le: ${cat}`);
   }
 };
 
-const validateFile = (file) => {
-  if (!file) throw new Error('Chưa chọn file');
+const validateFile = (file: File | null | undefined): void => {
+  if (!file) throw new Error('Chua chon file');
   if (file.size > MAX_FILE_BYTES) {
     throw new Error(
-      `File quá lớn (${(file.size / 1024 / 1024).toFixed(1)} MB). Tối đa 25 MB.`,
+      `File qua lon (${(file.size / 1024 / 1024).toFixed(1)} MB). Toi da 25 MB.`,
     );
   }
 };
@@ -84,23 +105,32 @@ const validateFile = (file) => {
  * List attachments for an experiment from RTDB cache (no extra fetch).
  * Falls back to fbGet if cache empty.
  */
-export async function listAttachments(refType, refId) {
+export async function listAttachments(refType: string, refId: string): Promise<AttachmentWithId[]> {
   validateRef(refType, refId);
-  const fromCache = window.cache?.attachments?.[refType]?.[refId];
+  const fromCache = (window.cache as any)?.attachments?.[refType]?.[refId];
   if (fromCache && typeof fromCache === 'object') {
-    return Object.entries(fromCache).map(([id, v]) => ({ id, ...v }));
+    return Object.entries(fromCache).map(([id, v]) => ({ id, ...(v as AttachmentRecord) }));
   }
   const snap = await fbGet(`attachments/${refType}/${refId}`);
   if (!snap) return [];
-  return Object.entries(snap).map(([id, v]) => ({ id, ...v }));
+  return Object.entries(snap).map(([id, v]) => ({ id, ...(v as AttachmentRecord) }));
 }
 
 /**
  * Count attachments per experiment (used to enforce limit & show badge).
  */
-export async function countAttachments(refType, refId) {
+export async function countAttachments(refType: string, refId: string): Promise<number> {
   const list = await listAttachments(refType, refId);
   return list.length;
+}
+
+interface UploadParams {
+  refType: string;
+  refId: string;
+  category: string;
+  file: File;
+  note?: string;
+  onProgress?: ((pct: number) => void) | null;
 }
 
 /**
@@ -114,7 +144,7 @@ export async function uploadAttachment({
   file,
   note = '',
   onProgress = null,
-}) {
+}: UploadParams): Promise<AttachmentWithId> {
   validateRef(refType, refId);
   validateCategory(category);
   validateFile(file);
@@ -123,18 +153,18 @@ export async function uploadAttachment({
   const existing = await listAttachments(refType, refId);
   if (existing.length >= MAX_FILES_PER_EXPERIMENT) {
     throw new Error(
-      `Đã đạt giới hạn ${MAX_FILES_PER_EXPERIMENT} file cho thí nghiệm này.`,
+      `Da dat gioi han ${MAX_FILES_PER_EXPERIMENT} file cho thi nghiem nay.`,
     );
   }
 
   // Enforce unique fileName (case-sensitive)
   const dup = existing.find((it) => it.fileName === file.name);
   if (dup) {
-    throw new Error(`Đã có file này: ${file.name}`);
+    throw new Error(`Da co file nay: ${file.name}`);
   }
 
-  const uid = window.currentAuth?.user?.uid;
-  if (!uid) throw new Error('Chưa đăng nhập');
+  const uid = (window.currentAuth as any)?.user?.uid;
+  if (!uid) throw new Error('Chua dang nhap');
 
   const storagePath = buildStoragePath(refType, refId, file.name);
   const fileRef = stRef(storage, storagePath);
@@ -145,17 +175,17 @@ export async function uploadAttachment({
     customMetadata: { uid, refType, refId, category },
   });
 
-  await new Promise((resolve, reject) => {
+  await new Promise<void>((resolve, reject) => {
     task.on(
       'state_changed',
-      (snap) => {
+      (snap: any) => {
         if (typeof onProgress === 'function') {
           const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
           onProgress(pct);
         }
       },
       reject,
-      resolve,
+      () => resolve(),
     );
   });
 
@@ -163,7 +193,7 @@ export async function uploadAttachment({
 
   // Write metadata to RTDB
   const attachmentId = fbPushKey(`attachments/${refType}/${refId}`);
-  const record = {
+  const record: AttachmentRecord = {
     category,
     fileName: file.name,
     mimeType: file.type || 'application/octet-stream',
@@ -178,7 +208,7 @@ export async function uploadAttachment({
 
   // Audit log
   try {
-    await logHistory({
+    await (logHistory as any)({
       action: 'attachment_upload',
       target: `${refType}/${refId}`,
       detail: `${category}: ${file.name} (${(file.size / 1024).toFixed(0)} KB)`,
@@ -191,22 +221,28 @@ export async function uploadAttachment({
   return { id: attachmentId, ...record };
 }
 
+interface DeleteParams {
+  refType: string;
+  refId: string;
+  attachmentId: string;
+}
+
 /**
  * Delete an attachment (Storage object + RTDB metadata).
  * Caller must check permission before calling.
  */
-export async function deleteAttachment({ refType, refId, attachmentId }) {
+export async function deleteAttachment({ refType, refId, attachmentId }: DeleteParams): Promise<void> {
   validateRef(refType, refId);
-  if (!attachmentId) throw new Error('Thiếu attachmentId');
+  if (!attachmentId) throw new Error('Thieu attachmentId');
 
-  const meta = await fbGet(`attachments/${refType}/${refId}/${attachmentId}`);
-  if (!meta) throw new Error('Attachment không tồn tại');
+  const meta = await fbGet(`attachments/${refType}/${refId}/${attachmentId}`) as AttachmentRecord | null;
+  if (!meta) throw new Error('Attachment khong ton tai');
 
   // Delete Storage object first (if fails, metadata stays so user can retry).
   try {
     const fileRef = stRef(storage, meta.storagePath);
     await deleteObject(fileRef);
-  } catch (e) {
+  } catch (e: any) {
     // If file already missing (404), continue to clean metadata.
     if (e?.code !== 'storage/object-not-found') {
       throw e;
@@ -216,7 +252,7 @@ export async function deleteAttachment({ refType, refId, attachmentId }) {
   await fbRemove(`attachments/${refType}/${refId}/${attachmentId}`);
 
   try {
-    await logHistory({
+    await (logHistory as any)({
       action: 'attachment_delete',
       target: `${refType}/${refId}`,
       detail: `${meta.category}: ${meta.fileName}`,
@@ -226,13 +262,28 @@ export async function deleteAttachment({ refType, refId, attachmentId }) {
   }
 }
 
+interface UploadManyParams {
+  refType: string;
+  refId: string;
+  category: string;
+  files: File[];
+  onItemProgress?: (fileName: string, pct: number) => void;
+}
+
+interface UploadManyResult {
+  ok: boolean;
+  file: string;
+  record?: AttachmentWithId;
+  error?: string;
+}
+
 /**
  * Bulk upload (called by drag-drop multi-file).
  * Each file uploaded sequentially to keep progress UX simple and
  * to avoid hammering the limit check race condition.
  */
-export async function uploadMany({ refType, refId, category, files, onItemProgress }) {
-  const results = [];
+export async function uploadMany({ refType, refId, category, files, onItemProgress }: UploadManyParams): Promise<UploadManyResult[]> {
+  const results: UploadManyResult[] = [];
   for (const file of files) {
     try {
       const rec = await uploadAttachment({
@@ -243,9 +294,9 @@ export async function uploadMany({ refType, refId, category, files, onItemProgre
         onProgress: (pct) => onItemProgress?.(file.name, pct),
       });
       results.push({ ok: true, file: file.name, record: rec });
-    } catch (e) {
+    } catch (e: any) {
       results.push({ ok: false, file: file.name, error: e.message || String(e) });
-      showToast(e.message, 'danger');
+      showToast(e.message, 'danger' as any);
     }
   }
   return results;

@@ -1,5 +1,5 @@
 /**
- * services/booking-suggestions.js
+ * services/booking-suggestions.ts
  * Gợi ý slot trống tự động cho booking
  *
  * Tính năng:
@@ -22,9 +22,9 @@ const WORK_HOUR_END = 22    // 22:00
 const SLOT_GRANULARITY = 30 // phút - bước nhảy slot
 
 // ─── Init: hook vào openBookingModal ──────────────────────────────
-export function initBookingSuggestions() {
+export function initBookingSuggestions(): void {
   // Wait for openBookingModal to exist on window
-  const wait = setInterval(() => {
+  const wait: any = setInterval(() => {
     if (typeof window.openBookingModal === 'function') {
       clearInterval(wait)
       wrapOpenBookingModal()
@@ -34,9 +34,9 @@ export function initBookingSuggestions() {
   setTimeout(() => clearInterval(wait), 10000)
 }
 
-function wrapOpenBookingModal() {
-  const original = window.openBookingModal
-  window.openBookingModal = function() {
+function wrapOpenBookingModal(): void {
+  const original = window.openBookingModal as any
+  window.openBookingModal = function(): void {
     original.apply(this, arguments)
     // Sau khi modal mở, inject suggestions UI
     setTimeout(injectSuggestionsUI, 100)
@@ -45,7 +45,7 @@ function wrapOpenBookingModal() {
 }
 
 // ─── Inject UI vào đầu modal ──────────────────────────────────────
-function injectSuggestionsUI() {
+function injectSuggestionsUI(): void {
   const modal = document.getElementById('modal-booking')
   if (!modal) return
 
@@ -129,7 +129,7 @@ function injectSuggestionsUI() {
   document.getElementById('bk-suggest-toggle').addEventListener('click', toggleBody)
 }
 
-function toggleBody() {
+function toggleBody(): void {
   const body = document.getElementById('bk-suggest-body')
   const btn = document.getElementById('bk-suggest-toggle')
   if (!body || !btn) return
@@ -143,10 +143,10 @@ function toggleBody() {
 }
 
 // ─── Handle: Find slots button click ──────────────────────────────
-function handleFindSlots() {
-  const equipmentKey = document.getElementById('bk-equipment')?.value
-  const duration = parseInt(document.getElementById('bk-suggest-duration')?.value || '60', 10)
-  const rangeDays = parseInt(document.getElementById('bk-suggest-range')?.value || '7', 10)
+function handleFindSlots(): void {
+  const equipmentKey = (document.getElementById('bk-equipment') as HTMLInputElement)?.value
+  const duration = parseInt((document.getElementById('bk-suggest-duration') as HTMLInputElement)?.value || '60', 10)
+  const rangeDays = parseInt((document.getElementById('bk-suggest-range') as HTMLInputElement)?.value || '7', 10)
   const resultsEl = document.getElementById('bk-suggest-results')
 
   if (!equipmentKey) {
@@ -187,19 +187,19 @@ function handleFindSlots() {
   resultsEl.innerHTML = html
 
   // Wire click → fill form
-  resultsEl.querySelectorAll('.bk-suggest-slot').forEach(btn => {
+  resultsEl.querySelectorAll<HTMLElement>('.bk-suggest-slot').forEach(btn => {
     btn.addEventListener('click', () => {
-      const idx = parseInt(btn.dataset.slotIdx, 10)
+      const idx = parseInt((btn as HTMLElement).dataset.slotIdx!, 10)
       applySlot(top[idx])
     })
   })
 }
 
 // ─── Apply slot to form ───────────────────────────────────────────
-function applySlot(slot) {
-  const dateInput = document.getElementById('bk-date')
-  const startInput = document.getElementById('bk-start')
-  const endInput = document.getElementById('bk-end')
+function applySlot(slot: { date: string; startTime: string; endTime: string }): void {
+  const dateInput = document.getElementById('bk-date') as HTMLInputElement | null
+  const startInput = document.getElementById('bk-start') as HTMLInputElement | null
+  const endInput = document.getElementById('bk-end') as HTMLInputElement | null
 
   if (dateInput) dateInput.value = slot.date
   if (startInput) startInput.value = slot.startTime
@@ -222,15 +222,15 @@ function applySlot(slot) {
 }
 
 // ─── Algorithm: Find available slots ──────────────────────────────
-function findAvailableSlots(equipmentKey, durationMin, rangeDays) {
-  const cache = window.cache || {}
-  const allBookings = vals(cache.bookings || {})
-    .filter(b =>
+function findAvailableSlots(equipmentKey: string, durationMin: number, rangeDays: number): Array<{ date: string; startTime: string; endTime: string }> {
+  const cache = (window.cache || {}) as any
+  const allBookings = (vals((cache as any).bookings || {}) as any[])
+    .filter((b: any) =>
       b.equipmentKey === equipmentKey &&
       !['rejected', 'cancelled'].includes(b.status)
     )
 
-  const slots = []
+  const slots: Array<{ date: string; startTime: string; endTime: string }> = []
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
@@ -241,12 +241,12 @@ function findAvailableSlots(equipmentKey, durationMin, rangeDays) {
 
     // Bookings của ngày này, sort theo startTime
     const dayBookings = allBookings
-      .filter(b => b.date === iso)
-      .map(b => ({
+      .filter((b: any) => b.date === iso)
+      .map((b: any) => ({
         startMin: timeToMinutes(b.startTime),
         endMin: timeToMinutes(b.endTime),
       }))
-      .sort((a, b) => a.startMin - b.startMin)
+      .sort((a: any, b: any) => a.startMin - b.startMin)
 
     // Tìm khoảng trống trong giờ làm việc
     const workStart = WORK_HOUR_START * 60
@@ -282,7 +282,7 @@ function findAvailableSlots(equipmentKey, durationMin, rangeDays) {
 }
 
 // Thêm slot vào list (có thể nhiều slot trong cùng 1 gap)
-function addSlotIfFits(slots, iso, cursorMin, durationMin, gapEndMin) {
+function addSlotIfFits(slots: Array<{ date: string; startTime: string; endTime: string }>, iso: string, cursorMin: number, durationMin: number, gapEndMin: number): void {
   // Tạo 1 slot bắt đầu tại cursor (slot tốt nhất trong gap)
   if (cursorMin + durationMin <= gapEndMin) {
     slots.push({
@@ -294,40 +294,40 @@ function addSlotIfFits(slots, iso, cursorMin, durationMin, gapEndMin) {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────
-function timeToMinutes(t) {
+function timeToMinutes(t: string): number {
   if (!t) return 0
   const [h, m] = t.split(':').map(Number)
   return h * 60 + (m || 0)
 }
 
-function minutesToTime(min) {
+function minutesToTime(min: number): string {
   const h = String(Math.floor(min / 60)).padStart(2, '0')
   const m = String(min % 60).padStart(2, '0')
   return `${h}:${m}`
 }
 
-function dateToISO(d) {
+function dateToISO(d: Date): string {
   return d.getFullYear() + '-' +
     String(d.getMonth() + 1).padStart(2, '0') + '-' +
     String(d.getDate()).padStart(2, '0')
 }
 
-function todayISO() {
+function todayISO(): string {
   return dateToISO(new Date())
 }
 
-function formatDuration(min) {
+function formatDuration(min: number): string {
   if (min < 60) return min + ' phút'
   if (min % 60 === 0) return (min / 60) + ' giờ'
   return Math.floor(min / 60) + 'h' + (min % 60) + 'p'
 }
 
-function formatDayLabel(iso) {
+function formatDayLabel(iso: string): string {
   if (!iso) return ''
   const d = new Date(iso + 'T00:00:00')
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  const diff = Math.floor((d - today) / (1000 * 60 * 60 * 24))
+  const diff = Math.floor((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
 
   if (diff === 0) return 'Hôm nay'
   if (diff === 1) return 'Mai'

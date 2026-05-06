@@ -1,93 +1,98 @@
-// services/theme-picker-ui.js — Custom theme picker UI
-// Modal popup với 4 HSL spectrum pickers + live preview + Apply/Reset
+// services/theme-picker-ui.ts — Custom theme picker UI
+// Modal popup voi 4 HSL spectrum pickers + live preview + Apply/Reset
 
-import { 
-  applyCustomTheme, 
-  applyTheme, 
+import {
+  applyCustomTheme,
+  applyTheme,
   getCustomTheme,
   getCurrentTheme,
   generateShades,
-  hexToHsl, 
-  hslToHex, 
-  resetTheme 
+  hexToHsl,
+  hslToHex,
+  resetTheme
 } from './theme.js';
 
-let modalEl = null;
-let originalVars = null;  // backup để cancel
+let modalEl: HTMLElement | null = null;
+let originalVars: Record<string, string> | null = null;  // backup de cancel
 
-const VAR_LABELS = {
-  '--teal':       { label: 'Màu chính',     desc: 'Buttons, sidebar active, accent' },
-  '--teal-2':     { label: 'Màu hover',     desc: 'Hover states, gradient 2nd' },
-  '--teal-3':     { label: 'Màu sáng',      desc: 'Borders, gradient endpoint' },
-  '--teal-light': { label: 'Nền nhạt',      desc: 'Hover row, badge background' },
+interface VarLabel {
+  label: string;
+  desc: string;
+}
+
+const VAR_LABELS: Record<string, VarLabel> = {
+  '--teal':       { label: 'Mau chinh',     desc: 'Buttons, sidebar active, accent' },
+  '--teal-2':     { label: 'Mau hover',     desc: 'Hover states, gradient 2nd' },
+  '--teal-3':     { label: 'Mau sang',      desc: 'Borders, gradient endpoint' },
+  '--teal-light': { label: 'Nen nhat',      desc: 'Hover row, badge background' },
 };
 
 const VAR_KEYS = ['--teal', '--teal-2', '--teal-3', '--teal-light'];
 
 /**
- * Mở modal custom theme picker
+ * Mo modal custom theme picker
  */
-export function openCustomThemePicker() {
+export function openCustomThemePicker(): void {
   // Backup current vars
   originalVars = {};
   VAR_KEYS.forEach(k => {
-    originalVars[k] = getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+    originalVars![k] = getComputedStyle(document.documentElement).getPropertyValue(k).trim();
   });
-  
-  // Init values: nếu đang custom dùng saved, ko thì lấy current computed
+
+  // Init values: neu dang custom dung saved, ko thi lay current computed
   const saved = getCustomTheme();
-  const initVars = saved || { ...originalVars };
-  
+  const initVars: Record<string, string> = saved || { ...originalVars };
+
   if (modalEl) modalEl.remove();
   modalEl = document.createElement('div');
   modalEl.className = 'tp-modal-overlay open';
   modalEl.innerHTML = renderModal(initVars);
   document.body.appendChild(modalEl);
-  
+
   // Bind events
   bindEvents(initVars);
 }
 
-function renderModal(initVars) {
+function renderModal(initVars: Record<string, string>): string {
   const pickers = VAR_KEYS.map(key => renderPicker(key, initVars[key])).join('');
   return `
     <div class="tp-modal" onclick="event.stopPropagation()">
       <div class="tp-modal-header">
-        <div class="tp-modal-title">Tùy chỉnh màu giao diện</div>
-        <button class="tp-modal-close" onclick="window.__tpClose()">✕</button>
+        <div class="tp-modal-title">Tuy chinh mau giao dien</div>
+        <button class="tp-modal-close" onclick="window.__tpClose()">x</button>
       </div>
-      
+
       <div class="tp-pickers">
         ${pickers}
       </div>
-      
+
       <div class="tp-actions-row">
         <button class="tp-btn-auto" onclick="window.__tpAutoGen()">
-          ⚡ Tự sinh từ màu chính
+          Tu sinh tu mau chinh
         </button>
-        <span class="tp-hint">Đổi màu chính → tự sinh 3 màu phụ hài hòa</span>
+        <span class="tp-hint">Doi mau chinh -> tu sinh 3 mau phu hai hoa</span>
       </div>
-      
+
       <div class="tp-preview">
-        <div class="tp-preview-title">Xem trước</div>
+        <div class="tp-preview-title">Xem truoc</div>
         <div class="tp-preview-content">
-          <button class="btn btn-primary" style="background: var(--teal); border-color: var(--teal); color:white;">Nút chính</button>
+          <button class="btn btn-primary" style="background: var(--teal); border-color: var(--teal); color:white;">Nut chinh</button>
           <button class="btn" style="background: var(--teal-light); color: var(--teal); border:1px solid var(--teal-3);">Badge</button>
           <div style="background: linear-gradient(135deg, var(--teal), var(--teal-2)); width:48px; height:24px; border-radius:6px;"></div>
           <div style="background: var(--teal-light); padding:6px 12px; border-radius:6px; font-size:12px; color: var(--teal);">Hover row</div>
         </div>
       </div>
-      
+
       <div class="tp-modal-footer">
-        <button class="btn" onclick="window.__tpReset()">Reset về teal</button>
-        <button class="btn" onclick="window.__tpCancel()">Hủy</button>
-        <button class="btn btn-primary" onclick="window.__tpApply()">Áp dụng</button>
+        <button class="btn" onclick="window.__tpReset()">Reset ve teal</button>
+        <button class="btn" onclick="window.__tpCancel()">Huy</button>
+        <button class="btn btn-primary" onclick="window.__tpApply()">Ap dung</button>
       </div>
     </div>
   `;
 }
 
-function renderPicker(varKey, currentHex) {
+function renderPicker(varKey: string, currentHex: string): string {
   const meta = VAR_LABELS[varKey];
   const hsl = hexToHsl(currentHex);
   return `
@@ -100,7 +105,7 @@ function renderPicker(varKey, currentHex) {
         </div>
         <input type="text" class="tp-hex-input" data-hex value="${currentHex}" maxlength="7" />
       </div>
-      
+
       <div class="tp-spectrum-wrap">
         <div class="tp-hue-bar" data-hue-bar>
           <div class="tp-hue-thumb" data-hue-thumb style="left:${(hsl.h / 360) * 100}%"></div>
@@ -113,105 +118,107 @@ function renderPicker(varKey, currentHex) {
   `;
 }
 
-function bindEvents(initVars) {
+function bindEvents(_initVars: Record<string, string>): void {
+  const w = window as any;
+
   // Close handlers
-  window.__tpClose = () => {
+  w.__tpClose = () => {
     // Restore original vars
-    applyCustomTheme(originalVars, false);
+    applyCustomTheme(originalVars!, false);
     // Restore preset state if any
     const cur = getCurrentTheme();
     if (cur !== 'custom') applyTheme(cur);
-    modalEl.remove();
+    modalEl?.remove();
     modalEl = null;
   };
-  window.__tpCancel = window.__tpClose;
-  
-  window.__tpReset = () => {
+  w.__tpCancel = w.__tpClose;
+
+  w.__tpReset = () => {
     resetTheme();
-    modalEl.remove();
+    modalEl?.remove();
     modalEl = null;
   };
-  
-  window.__tpApply = () => {
-    // Lấy hex hiện tại của 4 var và persist
-    const vars = {};
+
+  w.__tpApply = () => {
+    // Lay hex hien tai cua 4 var va persist
+    const vars: Record<string, string> = {};
     VAR_KEYS.forEach(k => {
-      const swatch = modalEl.querySelector(`[data-var="${k}"] [data-swatch]`);
+      const swatch = modalEl!.querySelector(`[data-var="${k}"] [data-swatch]`) as HTMLElement;
       vars[k] = swatch.style.background || swatch.style.backgroundColor;
       // Convert rgb() to hex if needed
       vars[k] = rgbToHex(vars[k]);
     });
     applyCustomTheme(vars, true);
-    modalEl.remove();
+    modalEl?.remove();
     modalEl = null;
   };
-  
+
   // Esc key + click overlay to close
-  modalEl.addEventListener('click', (e) => {
-    if (e.target === modalEl) window.__tpClose();
+  modalEl!.addEventListener('click', (e: Event) => {
+    if (e.target === modalEl) w.__tpClose();
   });
   document.addEventListener('keydown', escHandler);
-  function escHandler(e) {
+  function escHandler(e: KeyboardEvent): void {
     if (e.key === 'Escape' && modalEl) {
-      window.__tpClose();
+      w.__tpClose();
       document.removeEventListener('keydown', escHandler);
     }
   }
-  
-  // Auto-gen từ màu chính
-  window.__tpAutoGen = () => {
-    const tealSwatch = modalEl.querySelector('[data-var="--teal"] [data-swatch]');
+
+  // Auto-gen tu mau chinh
+  w.__tpAutoGen = () => {
+    const tealSwatch = modalEl!.querySelector('[data-var="--teal"] [data-swatch]') as HTMLElement;
     const baseHex = rgbToHex(tealSwatch.style.background || tealSwatch.style.backgroundColor);
     const shades = generateShades(baseHex);
     Object.entries(shades).forEach(([k, hex]) => updatePickerColor(k, hex, true));
   };
-  
-  // Bind từng picker
+
+  // Bind tung picker
   VAR_KEYS.forEach(key => {
-    const picker = modalEl.querySelector(`[data-var="${key}"]`);
+    const picker = modalEl!.querySelector(`[data-var="${key}"]`) as HTMLElement;
     bindPicker(picker, key);
   });
-  
-  // Live apply ngay khi mở
+
+  // Live apply ngay khi mo
   liveApply();
 }
 
-function bindPicker(picker, varKey) {
-  const hueBar = picker.querySelector('[data-hue-bar]');
-  const hueThumb = picker.querySelector('[data-hue-thumb]');
-  const slArea = picker.querySelector('[data-sl-area]');
-  const slThumb = picker.querySelector('[data-sl-thumb]');
-  const hexInput = picker.querySelector('[data-hex]');
-  
+function bindPicker(picker: HTMLElement, varKey: string): void {
+  const hueBar = picker.querySelector('[data-hue-bar]') as HTMLElement;
+  const hueThumb = picker.querySelector('[data-hue-thumb]') as HTMLElement;
+  const slArea = picker.querySelector('[data-sl-area]') as HTMLElement;
+  const slThumb = picker.querySelector('[data-sl-thumb]') as HTMLElement;
+  const hexInput = picker.querySelector('[data-hex]') as HTMLInputElement;
+
   // Hue drag
   let draggingHue = false;
-  hueBar.addEventListener('mousedown', e => { draggingHue = true; updateHue(e); });
-  hueBar.addEventListener('touchstart', e => { draggingHue = true; updateHue(e.touches[0]); });
-  document.addEventListener('mousemove', e => { if (draggingHue) updateHue(e); });
-  document.addEventListener('touchmove', e => { if (draggingHue) updateHue(e.touches[0]); });
+  hueBar.addEventListener('mousedown', (e: MouseEvent) => { draggingHue = true; updateHue(e); });
+  hueBar.addEventListener('touchstart', (e: TouchEvent) => { draggingHue = true; updateHue(e.touches[0] as any); });
+  document.addEventListener('mousemove', (e: MouseEvent) => { if (draggingHue) updateHue(e); });
+  document.addEventListener('touchmove', (e: TouchEvent) => { if (draggingHue) updateHue(e.touches[0] as any); });
   document.addEventListener('mouseup', () => draggingHue = false);
   document.addEventListener('touchend', () => draggingHue = false);
-  
-  function updateHue(e) {
+
+  function updateHue(e: { clientX: number }): void {
     const rect = hueBar.getBoundingClientRect();
     const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
     const h = Math.round((x / rect.width) * 360);
     hueThumb.style.left = `${(h / 360) * 100}%`;
-    slArea.dataset.hue = h;
+    slArea.dataset.hue = String(h);
     updateSLArea(slArea, h);
     syncFromUI(picker, varKey);
   }
-  
+
   // S/L drag
   let draggingSL = false;
-  slArea.addEventListener('mousedown', e => { draggingSL = true; updateSL(e); });
-  slArea.addEventListener('touchstart', e => { draggingSL = true; updateSL(e.touches[0]); });
-  document.addEventListener('mousemove', e => { if (draggingSL) updateSL(e); });
-  document.addEventListener('touchmove', e => { if (draggingSL) updateSL(e.touches[0]); });
+  slArea.addEventListener('mousedown', (e: MouseEvent) => { draggingSL = true; updateSL(e); });
+  slArea.addEventListener('touchstart', (e: TouchEvent) => { draggingSL = true; updateSL(e.touches[0] as any); });
+  document.addEventListener('mousemove', (e: MouseEvent) => { if (draggingSL) updateSL(e); });
+  document.addEventListener('touchmove', (e: TouchEvent) => { if (draggingSL) updateSL(e.touches[0] as any); });
   document.addEventListener('mouseup', () => draggingSL = false);
   document.addEventListener('touchend', () => draggingSL = false);
-  
-  function updateSL(e) {
+
+  function updateSL(e: { clientX: number; clientY: number }): void {
     const rect = slArea.getBoundingClientRect();
     const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
     const y = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
@@ -221,10 +228,10 @@ function bindPicker(picker, varKey) {
     slThumb.style.top = `${100 - l}%`;
     syncFromUI(picker, varKey);
   }
-  
+
   // Set initial S/L gradient
-  updateSLArea(slArea, parseInt(slArea.dataset.hue));
-  
+  updateSLArea(slArea, parseInt(slArea.dataset.hue!));
+
   // Hex input
   hexInput.addEventListener('input', () => {
     let v = hexInput.value.trim();
@@ -236,71 +243,71 @@ function bindPicker(picker, varKey) {
   });
   hexInput.addEventListener('blur', () => {
     // Reformat
-    const swatch = picker.querySelector('[data-swatch]');
+    const swatch = picker.querySelector('[data-swatch]') as HTMLElement;
     hexInput.value = rgbToHex(swatch.style.background || swatch.style.backgroundColor);
   });
 }
 
-function updateSLArea(slArea, hue) {
-  // Background = white-to-color gradient horizontal × black overlay vertical
+function updateSLArea(slArea: HTMLElement, hue: number): void {
+  // Background = white-to-color gradient horizontal x black overlay vertical
   slArea.style.background = `
     linear-gradient(to top, #000, transparent),
     linear-gradient(to right, #fff, hsl(${hue}, 100%, 50%))
   `;
 }
 
-function syncFromUI(picker, varKey) {
-  const slArea = picker.querySelector('[data-sl-area]');
-  const slThumb = picker.querySelector('[data-sl-thumb]');
-  const swatch = picker.querySelector('[data-swatch]');
-  const hexInput = picker.querySelector('[data-hex]');
-  
-  const h = parseInt(slArea.dataset.hue);
+function syncFromUI(picker: HTMLElement, _varKey: string): void {
+  const slArea = picker.querySelector('[data-sl-area]') as HTMLElement;
+  const slThumb = picker.querySelector('[data-sl-thumb]') as HTMLElement;
+  const swatch = picker.querySelector('[data-swatch]') as HTMLElement;
+  const hexInput = picker.querySelector('[data-hex]') as HTMLInputElement;
+
+  const h = parseInt(slArea.dataset.hue!);
   const s = parseFloat(slThumb.style.left);
   const l = 100 - parseFloat(slThumb.style.top);
   const hex = hslToHex(h, s, l);
-  
+
   swatch.style.background = hex;
   hexInput.value = hex;
-  
+
   liveApply();
 }
 
-function updatePickerColor(varKey, hex, animate) {
-  const picker = modalEl.querySelector(`[data-var="${varKey}"]`);
+function updatePickerColor(varKey: string, hex: string, _animate: boolean): void {
+  const picker = modalEl!.querySelector(`[data-var="${varKey}"]`) as HTMLElement | null;
   if (!picker) return;
-  const swatch = picker.querySelector('[data-swatch]');
-  const hexInput = picker.querySelector('[data-hex]');
-  const hueThumb = picker.querySelector('[data-hue-thumb]');
-  const slThumb = picker.querySelector('[data-sl-thumb]');
-  const slArea = picker.querySelector('[data-sl-area]');
-  
+  const swatch = picker.querySelector('[data-swatch]') as HTMLElement;
+  const hexInput = picker.querySelector('[data-hex]') as HTMLInputElement;
+  const hueThumb = picker.querySelector('[data-hue-thumb]') as HTMLElement;
+  const slThumb = picker.querySelector('[data-sl-thumb]') as HTMLElement;
+  const slArea = picker.querySelector('[data-sl-area]') as HTMLElement;
+
   const hsl = hexToHsl(hex);
   swatch.style.background = hex;
   hexInput.value = hex;
   hueThumb.style.left = `${(hsl.h / 360) * 100}%`;
-  slArea.dataset.hue = hsl.h;
+  slArea.dataset.hue = String(hsl.h);
   updateSLArea(slArea, hsl.h);
   slThumb.style.left = `${hsl.s}%`;
   slThumb.style.top = `${100 - hsl.l}%`;
-  
+
   liveApply();
 }
 
-function liveApply() {
-  // Đọc 4 màu hiện tại từ UI và apply (không persist)
-  const vars = {};
+function liveApply(): void {
+  // Doc 4 mau hien tai tu UI va apply (khong persist)
+  const vars: Record<string, string> = {};
   VAR_KEYS.forEach(k => {
-    const swatch = modalEl.querySelector(`[data-var="${k}"] [data-swatch]`);
+    const swatch = modalEl!.querySelector(`[data-var="${k}"] [data-swatch]`) as HTMLElement;
     vars[k] = rgbToHex(swatch.style.background || swatch.style.backgroundColor);
   });
   applyCustomTheme(vars, false);
 }
 
 /**
- * Convert "rgb(13, 148, 136)" or "#xxx" → "#xxxxxx"
+ * Convert "rgb(13, 148, 136)" or "#xxx" -> "#xxxxxx"
  */
-function rgbToHex(input) {
+function rgbToHex(input: string): string {
   if (!input) return '#000000';
   if (input.startsWith('#')) return input.length === 7 ? input : input;
   const m = input.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);

@@ -1,5 +1,5 @@
 /**
- * services/global-search.js
+ * services/global-search.ts
  * Global search trên header — search xuyên qua mọi loại dữ liệu trong cache.
  *
  * Match: Thí nghiệm (hydro/electrode/electrochem), Hóa chất, Thiết bị, Thành viên, Booking.
@@ -92,16 +92,16 @@ const SEARCHABLES = [
 ];
 
 // ── Search logic ──────────────────────────────────────────────────────
-function searchAll(query) {
+function searchAll(query: string): Array<{ def: any; item: any }> {
   const q = (query || '').trim();
   if (!q) return [];
-  const cache = window.cache || {};
-  const results = [];
+  const cache = (window.cache || {}) as any;
+  const results: Array<{ def: any; item: any }> = [];
 
   for (const def of SEARCHABLES) {
     const items = vals(cache[def.cacheKey] || {});
-    const matched = [];
-    for (const r of items) {
+    const matched: Array<{ def: any; item: any }> = [];
+    for (const r of items as any[]) {
       if (def.fields.some(f => fuzzy(r[f] || '', q))) {
         matched.push({ def, item: r });
         if (matched.length >= MAX_PER_TYPE) break;
@@ -113,7 +113,7 @@ function searchAll(query) {
 }
 
 // ── Render dropdown panel ─────────────────────────────────────────────
-function renderDropdown(results, query) {
+function renderDropdown(results: Array<{ def: any; item: any }>, query: string): void {
   const dd = document.getElementById('header-search-dropdown');
   if (!dd) return;
 
@@ -135,7 +135,7 @@ function renderDropdown(results, query) {
   }
 
   // Group results by type
-  const grouped = {};
+  const grouped: Record<string, { def: any; items: any[] }> = {};
   for (const r of results) {
     if (!grouped[r.def.type]) grouped[r.def.type] = { def: r.def, items: [] };
     grouped[r.def.type].items.push(r.item);
@@ -166,13 +166,13 @@ function renderDropdown(results, query) {
   dd.style.display = 'block';
 
   // Bind clicks
-  dd.querySelectorAll('.gs-item').forEach(el => {
+  dd.querySelectorAll<HTMLElement>('.gs-item').forEach(el => {
     el.addEventListener('click', () => navigateToResult(el));
   });
 }
 
 // Highlight match — case-insensitive, ascii-fold
-function highlight(text, query) {
+function highlight(text: string, query: string): string {
   if (!text || !query) return text || '';
   const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   try {
@@ -184,9 +184,9 @@ function highlight(text, query) {
 }
 
 // ── Navigate ──────────────────────────────────────────────────────────
-function navigateToResult(el) {
-  const page = el.dataset.page;
-  const key = el.dataset.key;
+function navigateToResult(el: HTMLElement): void {
+  const page = el.dataset.page!;
+  const key = el.dataset.key!;
   if (!page) return;
 
   // Đóng dropdown
@@ -195,8 +195,8 @@ function navigateToResult(el) {
   // Navigate
   if (typeof window.showPage === 'function') {
     // Click vào sidebar item tương ứng (để có active state)
-    const sidebarItem = document.querySelector(`.sidebar-item[onclick*="'${page}'"]`);
-    window.showPage(page, sidebarItem);
+    const sidebarItem = document.querySelector<HTMLElement>(`.sidebar-item[onclick*="'${page}'"]`);
+    window.showPage(page, sidebarItem || undefined);
   }
 
   // Sau khi page render xong, scroll + flash row
@@ -205,7 +205,7 @@ function navigateToResult(el) {
   }, 250);
 }
 
-function flashItemRow(key) {
+function flashItemRow(key: string): void {
   // Tìm row có data-key hoặc onclick chứa key
   const escapedKey = key.replace(/'/g, "\\'");
   const selectors = [
@@ -213,15 +213,15 @@ function flashItemRow(key) {
     `tr[onclick*="'${escapedKey}'"]`,
     `[data-id="${escapedKey}"]`,
   ];
-  let target = null;
+  let target: HTMLElement | null = null;
   for (const sel of selectors) {
-    target = document.querySelector(sel);
+    target = document.querySelector<HTMLElement>(sel);
     if (target) break;
   }
   if (target) {
     target.scrollIntoView({ behavior: 'smooth', block: 'center' });
     if (typeof window.flashRow === 'function') {
-      window.flashRow(target);
+      (window as any).flashRow(target);
     } else {
       target.classList.add('row-flash');
       setTimeout(() => target.classList.remove('row-flash'), 2500);
@@ -232,8 +232,8 @@ function flashItemRow(key) {
 // ── Keyboard navigation ───────────────────────────────────────────────
 let _selectedIdx = -1;
 
-function moveSelection(delta) {
-  const items = document.querySelectorAll('#header-search-dropdown .gs-item');
+function moveSelection(delta: number): void {
+  const items = document.querySelectorAll<HTMLElement>('#header-search-dropdown .gs-item');
   if (!items.length) return;
   _selectedIdx = (_selectedIdx + delta + items.length) % items.length;
   items.forEach((el, i) => {
@@ -246,8 +246,8 @@ function moveSelection(delta) {
   });
 }
 
-function activateSelection() {
-  const items = document.querySelectorAll('#header-search-dropdown .gs-item');
+function activateSelection(): void {
+  const items = document.querySelectorAll<HTMLElement>('#header-search-dropdown .gs-item');
   if (_selectedIdx >= 0 && items[_selectedIdx]) {
     navigateToResult(items[_selectedIdx]);
   } else if (items[0]) {
@@ -255,7 +255,7 @@ function activateSelection() {
   }
 }
 
-function closeDropdown() {
+function closeDropdown(): void {
   const dd = document.getElementById('header-search-dropdown');
   if (dd) {
     dd.style.display = 'none';
@@ -263,11 +263,11 @@ function closeDropdown() {
   }
   _selectedIdx = -1;
   // Collapse search box back nếu input rỗng
-  const input = document.getElementById('header-search-input');
+  const input = document.getElementById('header-search-input') as HTMLInputElement | null;
   if (input) {
     input.value = '';
     input.blur();
-    const box = document.getElementById('header-search-box');
+    const box = document.getElementById('header-search-box') as HTMLElement | null;
     if (box) {
       // fix-search-stuck-v2: dùng removeProperty để CSS :hover/:focus-within
       // lại kiểm soát width/border. Nếu set inline style, sẽ override CSS
@@ -282,15 +282,15 @@ function closeDropdown() {
 }
 
 // ── Init ─────────────────────────────────────────────────────────────
-let _debounceTimer = null;
+let _debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-export function initGlobalSearch() {
-  const input = document.getElementById('header-search-input');
+export function initGlobalSearch(): void {
+  const input = document.getElementById('header-search-input') as HTMLInputElement | null;
   if (!input || input.dataset.gsInit) return;
   input.dataset.gsInit = '1';
 
   // Tạo dropdown panel nếu chưa có
-  let dd = document.getElementById('header-search-dropdown');
+  let dd: HTMLElement | null = document.getElementById('header-search-dropdown');
   if (!dd) {
     dd = document.createElement('div');
     dd.id = 'header-search-dropdown';
@@ -304,7 +304,7 @@ export function initGlobalSearch() {
 
   // Input handler — debounced
   input.addEventListener('input', () => {
-    clearTimeout(_debounceTimer);
+    if (_debounceTimer) clearTimeout(_debounceTimer);
     _debounceTimer = setTimeout(() => {
       const q = input.value;
       const results = searchAll(q);
@@ -314,7 +314,7 @@ export function initGlobalSearch() {
   });
 
   // Keyboard
-  input.addEventListener('keydown', e => {
+  input.addEventListener('keydown', (e: KeyboardEvent) => {
     if (e.key === 'ArrowDown') { e.preventDefault(); moveSelection(1); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); moveSelection(-1); }
     else if (e.key === 'Enter') { e.preventDefault(); activateSelection(); }
@@ -322,9 +322,9 @@ export function initGlobalSearch() {
   });
 
   // Click outside → close
-  document.addEventListener('click', e => {
+  document.addEventListener('click', (e: MouseEvent) => {
     const wrap = document.getElementById('header-search-wrap');
-    if (wrap && !wrap.contains(e.target)) closeDropdown();
+    if (wrap && e.target && !wrap.contains(e.target as Node)) closeDropdown();
   });
 
   // ARIA roles cho input
@@ -344,4 +344,4 @@ if (document.readyState === 'loading') {
 setTimeout(initGlobalSearch, 1500);
 
 // Expose for debugging
-window.initGlobalSearch = initGlobalSearch;
+(window as any).initGlobalSearch = initGlobalSearch;

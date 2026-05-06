@@ -1,5 +1,5 @@
 /**
- * services/bulk-row-style.js (v10)
+ * services/bulk-row-style.ts (v10)
  *
  * v10 — Theme-aware checkbox + row highlight
  *  - Đọc CSS variable --teal tại runtime, không hardcode màu
@@ -11,7 +11,7 @@
   'use strict';
 
   // ── Read theme color from CSS variable ─────────────────────────────
-  function getThemeColor() {
+  function getThemeColor(): { primary: string; light: string } {
     const root = getComputedStyle(document.documentElement);
     const teal = root.getPropertyValue('--teal').trim() || '#0d9488';
     const tealLight = root.getPropertyValue('--teal-light').trim() || 'rgba(13, 148, 136, 0.1)';
@@ -19,7 +19,7 @@
   }
 
   // Convert hex to rgba
-  function hexToRgba(hex, alpha) {
+  function hexToRgba(hex: string, alpha: number): string {
     if (!hex || !hex.startsWith('#')) return `rgba(13, 148, 136, ${alpha})`;
     const h = hex.replace('#', '');
     const r = parseInt(h.substring(0, 2), 16);
@@ -135,7 +135,7 @@
   `;
   document.head.appendChild(style);
 
-  function forceCheckboxStyle(cb) {
+  function forceCheckboxStyle(cb: HTMLInputElement): void {
     if (!cb) return;
     cb.style.setProperty('-webkit-appearance', 'none', 'important');
     cb.style.setProperty('-moz-appearance', 'none', 'important');
@@ -200,7 +200,7 @@
     });
   }
 
-  function syncRowState(cb) {
+  function syncRowState(cb: HTMLInputElement): void {
     forceCheckboxStyle(cb);
     const tr = cb.closest('tr');
     if (!tr) return;
@@ -213,23 +213,23 @@
     }
   }
 
-  document.addEventListener('change', (e) => {
-    const t = e.target;
+  document.addEventListener('change', (e: Event) => {
+    const t = e.target as HTMLInputElement;
     if (t.classList?.contains('bulk-cb')) {
       syncRowState(t);
-      const allCb = document.querySelector(`.bulk-cb-all[data-tbody="${t.dataset.tbody}"]`);
+      const allCb = document.querySelector<HTMLInputElement>(`.bulk-cb-all[data-tbody="${t.dataset.tbody}"]`);
       if (allCb) forceCheckboxStyle(allCb);
     } else if (t.classList?.contains('bulk-cb-all')) {
       forceCheckboxStyle(t);
       const tbodyId = t.dataset.tbody;
       const tbody = document.getElementById(tbodyId);
       if (!tbody) return;
-      tbody.querySelectorAll('.bulk-cb').forEach(syncRowState);
+      tbody.querySelectorAll<HTMLInputElement>('.bulk-cb').forEach(syncRowState);
     }
   });
 
-  document.addEventListener('click', (e) => {
-    const t = e.target;
+  document.addEventListener('click', (e: Event) => {
+    const t = e.target as HTMLInputElement;
     if (t.classList?.contains('bulk-cb') || t.classList?.contains('bulk-cb-all')) {
       forceCheckboxStyle(t);
       requestAnimationFrame(() => forceCheckboxStyle(t));
@@ -238,13 +238,13 @@
     }
   }, true);
 
-  function syncAllCheckboxes() {
-    document.querySelectorAll('.bulk-cb, .bulk-cb-all').forEach(forceCheckboxStyle);
+  function syncAllCheckboxes(): void {
+    document.querySelectorAll<HTMLInputElement>('.bulk-cb, .bulk-cb-all').forEach(forceCheckboxStyle);
   }
 
-  function syncAllRows() {
+  function syncAllRows(): void {
     syncAllCheckboxes();
-    document.querySelectorAll('.bulk-cb').forEach(cb => {
+    document.querySelectorAll<HTMLInputElement>('.bulk-cb').forEach(cb => {
       const tr = cb.closest('tr');
       if (!tr) return;
       if (cb.checked) {
@@ -257,7 +257,7 @@
     });
   }
 
-  function init() {
+  function init(): void {
     syncAllRows();
     let count = 0;
     const interval = setInterval(() => {
@@ -273,7 +273,7 @@
     init();
   }
 
-  const obs = new MutationObserver(() => {
+  const obs: any = new MutationObserver(() => {
     if (!obs._pending) {
       obs._pending = true;
       queueMicrotask(() => {
@@ -282,7 +282,7 @@
       });
     }
   });
-  function startObs() {
+  function startObs(): void {
     if (document.body) obs.observe(document.body, { childList: true, subtree: true });
   }
   if (document.readyState === 'loading') {
@@ -307,7 +307,7 @@
   const barObs = new MutationObserver(() => {
     syncAllRows();
   });
-  function watchBar() {
+  function watchBar(): void {
     const bar = document.getElementById('bulk-action-bar');
     if (bar) {
       barObs.observe(bar, { attributes: true, attributeFilter: ['style'] });
@@ -318,7 +318,10 @@
   setTimeout(watchBar, 1000);
 
   // Expose để debug
-  window._bulkRowStyleSync = syncAllRows;
+  (window as any)._bulkRowStyleSync = syncAllRows;
 
   console.log('[bulk-row-style v10] loaded — theme-aware');
 })();
+
+// Module marker
+export {};

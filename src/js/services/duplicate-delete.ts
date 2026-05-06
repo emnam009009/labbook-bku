@@ -1,5 +1,5 @@
 /**
- * services/duplicate-delete.js
+ * services/duplicate-delete.ts
  * Duplicate item + Delete item + User account management
  *
  * Phạm vi:
@@ -28,7 +28,8 @@
 
 import { canEdit, getPersonName } from '../utils/auth-helpers.js'
 import { vals } from '../utils/format.js'
-import { logHistory } from './history-log.js'
+import { logHistory as logHistoryRaw } from './history-log.js'
+const logHistory = logHistoryRaw as any
 import { db, ref, update, onValue, fbDel, fbPush, fbGet } from '../firebase.js'
 
 const SUPER_ADMIN_EMAIL = 'nvhn.7202@gmail.com';
@@ -36,9 +37,9 @@ const SUPER_ADMIN_EMAIL = 'nvhn.7202@gmail.com';
 // ═══════════════════════════════════════════════════════════
 // DEL ITEM — generic delete với undo + reverse stock
 // ═══════════════════════════════════════════════════════════
-export async function delItem(col, key, name) {
-  const cache = window.cache;
-  const showToast = window.showToast;
+export async function delItem(col: string, key: string, name: string): Promise<void> {
+  const cache = window.cache as any;
+  const showToast = window.showToast as any;
 
   const _rec = cache[col] && cache[col][key];
   if (!canEdit(_rec)) { showToast('Bạn không có quyền xóa mục này', 'danger'); return; }
@@ -73,7 +74,7 @@ export async function delItem(col, key, name) {
 
   const backup = { ...cache[col][key] };
   // Track stock changes so undo can reverse them (Round 7 fix #24)
-  const stockChanges = []; // { chemKey, delta }  delta = amount we ADDED back during delete
+  const stockChanges: Array<{ chemKey: string; delta: number }> = []; // { chemKey, delta }  delta = amount we ADDED back during delete
 
   try {
     // Hoàn lại tồn kho nếu là thủy nhiệt
@@ -130,7 +131,7 @@ export async function delItem(col, key, name) {
         showToast('Lỗi hoàn tác: ' + (err.message || err), 'danger');
       }
     });
-  } catch (err) {
+  } catch (err: any) {
     console.error('[delItem]', err);
     showToast('Lỗi xóa: ' + (err.message || err), 'danger');
   }
@@ -139,11 +140,11 @@ export async function delItem(col, key, name) {
 // ═══════════════════════════════════════════════════════════
 // DUPLICATE ITEM — nhân bản với mã -COPY tự tăng + trừ kho
 // ═══════════════════════════════════════════════════════════
-export async function duplicateItem(col, key) {
-  const cache = window.cache;
-  const currentAuth = window.currentAuth || {};
-  const currentUser = window.currentUser || 'Khách';
-  const showToast = window.showToast;
+export async function duplicateItem(col: string, key: string): Promise<void> {
+  const cache = window.cache as any;
+  const currentAuth = (window.currentAuth as any) || {};
+  const currentUser = (window as any).currentUser || 'Khach';
+  const showToast = window.showToast as any;
 
   const r = cache[col][key];
   if (!r) return;
@@ -168,7 +169,7 @@ export async function duplicateItem(col, key) {
   const base = (r.code || '').replace(/-COPY\d*$/, '');
   let newCode = `${base}-COPY`;
   let count = 1;
-  while (window.isCodeDuplicate(col, newCode)) {
+  while ((window as any).isCodeDuplicate(col, newCode)) {
     newCode = `${base}-COPY${count}`;
     count++;
   }
@@ -178,7 +179,7 @@ export async function duplicateItem(col, key) {
   if (col === 'electrode' && !newR.isSample) {
     const inkKey = newR.inkFormula;
     const inkData = inkKey ? cache.ink[inkKey] : null;
-    const usedInkChems = [];
+    const usedInkChems: Array<{ key: string; mass: number; unit?: string }> = [];
     if (inkData) {
       for (const s of (inkData.solids || [])) {
         usedInkChems.push({ key: s.key, mass: parseFloat((s.mass / 1000).toFixed(5)) });
@@ -210,7 +211,7 @@ export async function duplicateItem(col, key) {
 
   // Trừ tồn kho nếu là thủy nhiệt (chỉ admin mới được phép)
   if (col === 'hydro') {
-    const usedChems = [];
+    const usedChems: Array<{ key: string; mass: number }> = [];
     if (r.usedChems && r.usedChems.length > 0) {
       if (!currentAuth.isAdmin) {
         showToast('Đã tạo bản sao nhưng không trừ tồn kho (cần quyền Admin)', 'info');
@@ -249,9 +250,9 @@ export async function duplicateItem(col, key) {
 // ═══════════════════════════════════════════════════════════
 
 // Approve user pending → set role + tạo member card nếu là member/viewer
-export async function approveUser(uid, role) {
-  const cache = window.cache;
-  const showToast = window.showToast;
+export async function approveUser(uid: string, role: string): Promise<void> {
+  const cache = window.cache as any;
+  const showToast = window.showToast as any;
 
   await update(ref(db, 'users/' + uid), { role });
   logHistory('Phân quyền user: ' + uid, role);
@@ -281,10 +282,10 @@ export async function approveUser(uid, role) {
 }
 
 // Soft-delete user account (chỉ super admin)
-export async function deleteUserAccount(uid, name) {
-  const currentAuth = window.currentAuth || {};
-  const currentUser = window.currentUser || 'Khách';
-  const showToast = window.showToast;
+export async function deleteUserAccount(uid: string, name: string): Promise<void> {
+  const currentAuth = (window.currentAuth as any) || {};
+  const currentUser = (window as any).currentUser || 'Khach';
+  const showToast = window.showToast as any;
 
   if (currentAuth.role !== 'superadmin') {
     showToast('Không có quyền!', 'danger');
@@ -303,8 +304,8 @@ export async function deleteUserAccount(uid, name) {
 }
 
 // Đổi role user
-export async function changeUserRole(uid, role) {
-  const showToast = window.showToast;
+export async function changeUserRole(uid: string, role: string): Promise<void> {
+  const showToast = window.showToast as any;
 
   await update(ref(db, 'users/' + uid), { role });
   logHistory('Đổi quyền user: ' + uid, role);
@@ -312,9 +313,9 @@ export async function changeUserRole(uid, role) {
 }
 
 // Xoá member card với confirm nếu user còn role active
-export function deleteMemberSafe(key, name, uid) {
+export function deleteMemberSafe(key: string, name: string, uid?: string): void {
   if (uid) {
-    onValue(ref(db, 'users/' + uid + '/role'), snap => {
+    onValue(ref(db, 'users/' + uid + '/role'), (snap: any) => {
       const role = snap.val();
       if (role && !['rejected'].includes(role)) {
         const roleLabel = { admin: 'Admin', member: 'Member', viewer: 'Viewer', pending: 'Chờ duyệt' };
