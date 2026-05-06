@@ -74,7 +74,7 @@ function injectSuggestionsUI(): void {
         <line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
       <div style="font-size:13px;font-weight:600;color:var(--teal);flex:1">Tìm slot trống tự động</div>
-      <button type="button" id="bk-suggest-toggle" style="background:transparent;border:none;color:var(--text-3);cursor:pointer;font-size:11px;padding:4px 8px;border-radius:6px" onmouseover="this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.background='transparent'">
+      <button type="button" id="bk-suggest-toggle" class="bk-suggest-toggle-hover" style="background:transparent;border:none;color:var(--text-3);cursor:pointer;font-size:11px;padding:4px 8px;border-radius:6px">
         Ẩn ▲
       </button>
     </div>
@@ -105,7 +105,7 @@ function injectSuggestionsUI(): void {
         </div>
       </div>
 
-      <button type="button" id="bk-suggest-find" style="width:100%;background:linear-gradient(135deg,var(--teal),var(--teal-2));color:white;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(13,148,136,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+      <button type="button" id="bk-suggest-find" class="bk-suggest-find-hover" style="width:100%;background:linear-gradient(135deg,var(--teal),var(--teal-2));color:white;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
           <circle cx="11" cy="11" r="8"/>
           <line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -177,7 +177,7 @@ function handleFindSlots(): void {
     const dayLabel = formatDayLabel(slot.date)
     const isToday = slot.date === todayISO()
     html += `
-      <button type="button" data-slot-idx="${idx}" class="bk-suggest-slot" style="text-align:left;background:white;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all 0.15s;font-family:inherit;font-size:12.5px;color:var(--text)" onmouseover="this.style.borderColor='var(--teal)';this.style.background='var(--teal-light)';this.style.transform='translateX(2px)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='white';this.style.transform=''">
+      <button type="button" data-slot-idx="${idx}" class="bk-suggest-slot" style="text-align:left;background:white;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:10px;font-family:inherit;font-size:12.5px;color:var(--text)">
         <div style="background:${isToday ? 'var(--teal)' : 'var(--surface-3)'};color:${isToday ? 'white' : 'var(--text-2)'};padding:3px 8px;border-radius:6px;font-size:10.5px;font-weight:600;flex-shrink:0;min-width:60px;text-align:center">${dayLabel}</div>
         <div style="flex:1;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500">${slot.startTime} - ${slot.endTime}</div>
         <div style="font-size:10px;color:var(--text-3)">▶</div>

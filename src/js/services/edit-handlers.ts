@@ -155,7 +155,7 @@ export function editHydro(key) {
     r.usedChems.forEach(uc => {
       const chem = cache.chemicals[uc.key];
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td style="position:relative"><input type="text" class="chem-search" value="${chem?.name || ''}" data-chem-key="${uc.key}" autocomplete="off"><div class="chem-dropdown" style="position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:50;width:220px;max-height:180px;overflow-y:auto;display:none"></div></td><td><input type="number" class="chem-mw" value="${chem?.mw || ''}" readonly style="background:var(--surface-alt,var(--teal-light))"></td><td><input type="number" step="0.001" value="${uc.mass || ''}" oninput="calcMol(this)"></td><td><input type="number" step="0.0001" readonly style="background:var(--surface-alt,var(--teal-light))"></td><td><button class="btn btn-xs btn-danger" onclick="removeChem(this)">✕</button></td>`;
+      tr.innerHTML = `<td style="position:relative"><input type="text" class="chem-search" value="${chem?.name || ''}" data-chem-key="${uc.key}" autocomplete="off"><div class="chem-dropdown" style="position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:50;width:220px;max-height:180px;overflow-y:auto;display:none"></div></td><td><input type="number" class="chem-mw" value="${chem?.mw || ''}" readonly style="background:var(--surface-alt,var(--teal-light))"></td><td><input type="number" step="0.001" value="${uc.mass || ''}" data-form-action="calc-mol"></td><td><input type="number" step="0.0001" readonly style="background:var(--surface-alt,var(--teal-light))"></td><td><button class="btn btn-xs btn-danger" data-form-action="remove-chem">✕</button></td>`;
       tbody.appendChild(tr);
     });
   } else {
@@ -196,7 +196,7 @@ export function editInk(key) {
     r.solids.forEach(s => {
       const chem = cache.chemicals[s.key];
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td style="position:relative"><input type="text" class="chem-search" value="${s.name || ''}" data-chem-key="${s.key}" autocomplete="off"><div class="chem-dropdown" style="position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:50;width:220px;max-height:180px;overflow-y:auto;display:none"></div></td><td><input type="number" class="chem-mw" value="${chem?.mw || ''}" readonly style="background:var(--surface-alt,var(--teal-light))"></td><td><input type="number" min="0" step="0.01" value="${s.mass || ''}"></td><td><button class="btn btn-xs btn-danger" onclick="removeChem(this)">✕</button></td>`;
+      tr.innerHTML = `<td style="position:relative"><input type="text" class="chem-search" value="${s.name || ''}" data-chem-key="${s.key}" autocomplete="off"><div class="chem-dropdown" style="position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:50;width:220px;max-height:180px;overflow-y:auto;display:none"></div></td><td><input type="number" class="chem-mw" value="${chem?.mw || ''}" readonly style="background:var(--surface-alt,var(--teal-light))"></td><td><input type="number" min="0" step="0.01" value="${s.mass || ''}"></td><td><button class="btn btn-xs btn-danger" data-form-action="remove-chem">✕</button></td>`;
       solidTbody.appendChild(tr);
     });
   } else {
@@ -209,7 +209,7 @@ export function editInk(key) {
   if (r.liquids && r.liquids.length > 0) {
     r.liquids.forEach(l => {
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td style="position:relative"><input type="text" class="chem-search" value="${l.name || ''}" data-chem-key="${l.key}" autocomplete="off"><div class="chem-dropdown" style="position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:50;width:220px;max-height:180px;overflow-y:auto;display:none"></div></td><td><input type="number" min="0" step="1" value="${l.vol || ''}"></td><td><button class="btn btn-xs btn-danger" onclick="removeChem(this)">✕</button></td>`;
+      tr.innerHTML = `<td style="position:relative"><input type="text" class="chem-search" value="${l.name || ''}" data-chem-key="${l.key}" autocomplete="off"><div class="chem-dropdown" style="position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:50;width:220px;max-height:180px;overflow-y:auto;display:none"></div></td><td><input type="number" min="0" step="1" value="${l.vol || ''}"></td><td><button class="btn btn-xs btn-danger" data-form-action="remove-chem">✕</button></td>`;
       liquidTbody.appendChild(tr);
     });
   } else {

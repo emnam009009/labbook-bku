@@ -56,7 +56,7 @@ export function addChem(): void {
   const tbody = document.getElementById('h-chem-tbody');
   if (!tbody) return;
   const tr = document.createElement('tr');
-  tr.innerHTML = `<td style="position:relative"><input type="text" class="chem-search" placeholder="Tim hoa chat..." oninput="searchChem(this)" autocomplete="off"><div class="chem-dropdown" style="position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:50;width:220px;max-height:180px;overflow-y:auto;display:none"></div></td><td><input type="number" min="0" placeholder="M" class="chem-mw" readonly style="background:var(--surface-alt,var(--teal-light))"></td><td><input type="number" min="0" step="0.001" placeholder="g; mL" oninput="calcMol(this)"></td><td><input type="number" min="0" step="0.0001" readonly style="background:var(--surface-alt,var(--teal-light))"></td><td><button class="btn btn-xs btn-danger" onclick="removeChem(this)">x</button></td>`;
+  tr.innerHTML = `<td style="position:relative"><input type="text" class="chem-search" placeholder="Tim hoa chat..." data-form-action="search-chem" autocomplete="off"><div class="chem-dropdown" style="position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:50;width:220px;max-height:180px;overflow-y:auto;display:none"></div></td><td><input type="number" min="0" placeholder="M" class="chem-mw" readonly style="background:var(--surface-alt,var(--teal-light))"></td><td><input type="number" min="0" step="0.001" placeholder="g; mL" data-form-action="calc-mol"></td><td><input type="number" min="0" step="0.0001" readonly style="background:var(--surface-alt,var(--teal-light))"></td><td><button class="btn btn-xs btn-danger" data-form-action="remove-chem">x</button></td>`;
   tbody.appendChild(tr);
 }
 
@@ -67,9 +67,9 @@ export function addInkRow(tbodyId: string): void {
   const isSolid = tbodyId === 'ink-solid-tbody';
   const tr = document.createElement('tr');
   if (isSolid) {
-    tr.innerHTML = `<td style="position:relative"><input type="text" class="chem-search" placeholder="Tim hoa chat..." oninput="searchChem(this)" autocomplete="off"><div class="chem-dropdown" style="position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:50;width:220px;max-height:180px;overflow-y:auto;display:none"></div></td><td><input type="number" class="chem-mw" placeholder="M" readonly style="background:var(--surface-alt,var(--teal-light))"></td><td><input type="number" min="0" step="0.01" placeholder="mg"></td><td><button class="btn btn-xs btn-danger" onclick="removeChem(this)">x</button></td>`;
+    tr.innerHTML = `<td style="position:relative"><input type="text" class="chem-search" placeholder="Tim hoa chat..." data-form-action="search-chem" autocomplete="off"><div class="chem-dropdown" style="position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:50;width:220px;max-height:180px;overflow-y:auto;display:none"></div></td><td><input type="number" class="chem-mw" placeholder="M" readonly style="background:var(--surface-alt,var(--teal-light))"></td><td><input type="number" min="0" step="0.01" placeholder="mg"></td><td><button class="btn btn-xs btn-danger" data-form-action="remove-chem">x</button></td>`;
   } else {
-    tr.innerHTML = `<td style="position:relative"><input type="text" class="chem-search" placeholder="Tim dung moi..." oninput="searchChem(this)" autocomplete="off"><div class="chem-dropdown" style="position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:50;width:220px;max-height:180px;overflow-y:auto;display:none"></div></td><td><input type="number" min="0" step="1" placeholder="uL"></td><td><button class="btn btn-xs btn-danger" onclick="removeChem(this)">x</button></td>`;
+    tr.innerHTML = `<td style="position:relative"><input type="text" class="chem-search" placeholder="Tim dung moi..." data-form-action="search-chem" autocomplete="off"><div class="chem-dropdown" style="position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:50;width:220px;max-height:180px;overflow-y:auto;display:none"></div></td><td><input type="number" min="0" step="1" placeholder="uL"></td><td><button class="btn btn-xs btn-danger" data-form-action="remove-chem">x</button></td>`;
   }
   tbody.appendChild(tr);
 }
@@ -243,4 +243,48 @@ export function updateChemSelects(): void {
       chems.map((c: any) => `<option value="${c._key}" data-formula="${c.formula}" data-mw="${c.mw}">${c.name} (${c.formula})</option>`).join('');
     sel.value = cur;
   });
+}
+
+// ─── Round 70: GLOBAL form delegation (chem search/calc/remove) ────────────
+// Used by form-helpers + edit-handlers. Single listener on body.
+function attachFormDelegation(): void {
+  const flag = '__formDelegationAttached';
+  if ((document.body as any)[flag]) return;
+  (document.body as any)[flag] = true;
+
+  // Click for buttons (remove-chem)
+  document.body.addEventListener('click', (e: Event) => {
+    const target = (e.target as HTMLElement)?.closest('[data-form-action]') as HTMLElement | null;
+    if (!target) return;
+    const action = target.dataset.formAction;
+    if (action === 'remove-chem') {
+      if (typeof (window as any).removeChem === 'function') {
+        (window as any).removeChem(target);
+      }
+    }
+  });
+
+  // Input for live-typing inputs (search-chem + calc-mol)
+  document.body.addEventListener('input', (e: Event) => {
+    const target = e.target as HTMLElement;
+    if (!target || !target.dataset.formAction) return;
+    const action = target.dataset.formAction;
+    if (action === 'search-chem') {
+      if (typeof (window as any).searchChem === 'function') {
+        (window as any).searchChem(target);
+      }
+    } else if (action === 'calc-mol') {
+      if (typeof (window as any).calcMol === 'function') {
+        (window as any).calcMol(target);
+      }
+    }
+  });
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachFormDelegation);
+  } else {
+    attachFormDelegation();
+  }
 }

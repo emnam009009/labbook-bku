@@ -168,7 +168,7 @@ export function renderGroupList(): void {
     <div style="display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;background:var(--surface)">
       <span style="width:22px;height:22px;border-radius:50%;background:var(--teal);color:white;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">${i + 1}</span>
       <span style="flex:1;font-size:13px;font-weight:500;color:var(--text)">${g.name}</span>
-      <button class="btn btn-xs btn-danger" onclick="delChemGroup('${g._key}')">x</button>
+      <button class="btn btn-xs btn-danger" data-grp-action="del-chem-group" data-group-key="${g._key}">x</button>
     </div>`).join('');
 }
 
@@ -221,7 +221,7 @@ export function renderEqGroupList(): void {
     <div style="display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;background:var(--surface)">
       <span style="width:22px;height:22px;border-radius:50%;background:var(--teal);color:white;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">${i + 1}</span>
       <span style="flex:1;font-size:13px;font-weight:500;color:var(--text)">${g.name}</span>
-      <button class="btn btn-xs btn-danger" onclick="delEqGroup('${g._key}')">x</button>
+      <button class="btn btn-xs btn-danger" data-grp-action="del-eq-group" data-group-key="${g._key}">x</button>
     </div>`).join('');
 }
 
@@ -280,4 +280,36 @@ export async function delEqGroup(key: string): Promise<void> {
     if (typeof renderEquipment === 'function') renderEquipment();
     showToast('Da hoan tac!', 'success');
   });
+}
+
+// ─── Round 70: Event delegation for group delete buttons ────────────────
+function attachGroupDelegation(): void {
+  const flag = '__grpDelegationAttached';
+  if ((document.body as any)[flag]) return;
+  (document.body as any)[flag] = true;
+
+  document.body.addEventListener('click', (e: Event) => {
+    const target = (e.target as HTMLElement)?.closest('[data-grp-action]') as HTMLElement | null;
+    if (!target) return;
+    const action = target.dataset.grpAction;
+    const key = target.dataset.groupKey || '';
+
+    if (action === 'del-chem-group') {
+      if (typeof (window as any).delChemGroup === 'function') {
+        (window as any).delChemGroup(key);
+      }
+    } else if (action === 'del-eq-group') {
+      if (typeof (window as any).delEqGroup === 'function') {
+        (window as any).delEqGroup(key);
+      }
+    }
+  });
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachGroupDelegation);
+  } else {
+    attachGroupDelegation();
+  }
 }

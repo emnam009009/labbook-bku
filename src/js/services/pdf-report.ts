@@ -144,8 +144,8 @@ function buildModalHTML(isAdmin) {
       </div>
 
       <div class="modal-footer">
-        <button class="btn" type="button" onclick="document.getElementById('modal-pdf-report').classList.remove('open')">Đóng</button>
-        <button class="btn btn-primary" type="button" id="pdf-export-btn" onclick="window.generatePdfReport()">
+        <button class="btn" type="button" data-pdf-action="close-modal">Đóng</button>
+        <button class="btn btn-primary" type="button" id="pdf-export-btn" data-pdf-action="generate">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right:4px">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
             <polyline points="7 10 12 15 17 10"/>
@@ -709,5 +709,35 @@ function zebraTableLayout() {
     paddingBottom: () => 5,
     paddingLeft: () => 8,
     paddingRight: () => 8,
+  }
+}
+
+// ─── Round 70: Event delegation for PDF report modal ────────────────
+function attachPdfReportDelegation(): void {
+  const flag = '__pdfReportDelegationAttached';
+  if ((document.body as any)[flag]) return;
+  (document.body as any)[flag] = true;
+
+  document.body.addEventListener('click', (e: Event) => {
+    const target = (e.target as HTMLElement)?.closest('[data-pdf-action]') as HTMLElement | null;
+    if (!target) return;
+    const action = target.dataset.pdfAction;
+
+    if (action === 'close-modal') {
+      const modal = document.getElementById('modal-pdf-report');
+      if (modal) modal.classList.remove('open');
+    } else if (action === 'generate') {
+      if (typeof (window as any).generatePdfReport === 'function') {
+        (window as any).generatePdfReport();
+      }
+    }
+  });
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachPdfReportDelegation);
+  } else {
+    attachPdfReportDelegation();
   }
 }

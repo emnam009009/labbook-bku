@@ -56,10 +56,10 @@ export function openCustomThemePicker(): void {
 function renderModal(initVars: Record<string, string>): string {
   const pickers = VAR_KEYS.map(key => renderPicker(key, initVars[key])).join('');
   return `
-    <div class="tp-modal" onclick="event.stopPropagation()">
+    <div class="tp-modal" data-tp-action="stop">
       <div class="tp-modal-header">
         <div class="tp-modal-title">Tuy chinh mau giao dien</div>
-        <button class="tp-modal-close" onclick="window.__tpClose()">x</button>
+        <button class="tp-modal-close" data-tp-action="close">x</button>
       </div>
 
       <div class="tp-pickers">
@@ -67,7 +67,7 @@ function renderModal(initVars: Record<string, string>): string {
       </div>
 
       <div class="tp-actions-row">
-        <button class="tp-btn-auto" onclick="window.__tpAutoGen()">
+        <button class="tp-btn-auto" data-tp-action="auto-gen">
           Tu sinh tu mau chinh
         </button>
         <span class="tp-hint">Doi mau chinh -> tu sinh 3 mau phu hai hoa</span>
@@ -84,9 +84,9 @@ function renderModal(initVars: Record<string, string>): string {
       </div>
 
       <div class="tp-modal-footer">
-        <button class="btn" onclick="window.__tpReset()">Reset ve teal</button>
-        <button class="btn" onclick="window.__tpCancel()">Huy</button>
-        <button class="btn btn-primary" onclick="window.__tpApply()">Ap dung</button>
+        <button class="btn" data-tp-action="reset">Reset ve teal</button>
+        <button class="btn" data-tp-action="cancel">Huy</button>
+        <button class="btn btn-primary" data-tp-action="apply">Ap dung</button>
       </div>
     </div>
   `;
@@ -319,3 +319,40 @@ function rgbToHex(input: string): string {
 
 // Expose
 window.openCustomThemePicker = openCustomThemePicker;
+
+// ─── Round 70: Event delegation for theme picker modal ────────────────
+function attachThemePickerDelegation(): void {
+  const flag = '__tpDelegationAttached';
+  if ((document.body as any)[flag]) return;
+  (document.body as any)[flag] = true;
+
+  document.body.addEventListener('click', (e: Event) => {
+    const target = (e.target as HTMLElement)?.closest('[data-tp-action]') as HTMLElement | null;
+    if (!target) return;
+    const action = target.dataset.tpAction;
+
+    if (action === 'stop') {
+      e.stopPropagation();
+      return;
+    }
+    const fnMap: Record<string, string> = {
+      'close': '__tpClose',
+      'auto-gen': '__tpAutoGen',
+      'reset': '__tpReset',
+      'cancel': '__tpCancel',
+      'apply': '__tpApply',
+    };
+    const fnName = fnMap[action || ''];
+    if (fnName && typeof (window as any)[fnName] === 'function') {
+      (window as any)[fnName]();
+    }
+  });
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachThemePickerDelegation);
+  } else {
+    attachThemePickerDelegation();
+  }
+}

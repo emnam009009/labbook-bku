@@ -672,7 +672,7 @@ export function openAttachmentsModal({ refType, refId, title = '' }) {
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="${modalId}-title">
         <div class="modal-header">
           <div class="modal-title" id="${modalId}-title">Tài liệu thí nghiệm</div>
-          <button class="modal-close" type="button" aria-label="Đóng" onclick="closeModal('${modalId}')">✕</button>
+          <button class="modal-close" type="button" aria-label="Đóng" data-att-action="close-modal" data-modal-id="${modalId}">✕</button>
         </div>
         <div class="modal-body" style="padding:16px">
           <div class="att-host"></div>
@@ -719,4 +719,31 @@ export function openAttachmentsModal({ refType, refId, title = '' }) {
   }
 
   window.openModal?.(modalId);
+}
+
+// ─── Round 70: Event delegation for attachments-panel close button ────────
+function attachAttachmentsPanelDelegation(): void {
+  const flag = '__attDelegationAttached';
+  if ((document.body as any)[flag]) return;
+  (document.body as any)[flag] = true;
+
+  document.body.addEventListener('click', (e: Event) => {
+    const target = (e.target as HTMLElement)?.closest('[data-att-action]') as HTMLElement | null;
+    if (!target) return;
+    const action = target.dataset.attAction;
+    if (action === 'close-modal') {
+      const modalId = target.dataset.modalId || '';
+      if (modalId && typeof (window as any).closeModal === 'function') {
+        (window as any).closeModal(modalId);
+      }
+    }
+  });
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachAttachmentsPanelDelegation);
+  } else {
+    attachAttachmentsPanelDelegation();
+  }
 }

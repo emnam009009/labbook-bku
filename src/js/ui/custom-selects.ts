@@ -69,7 +69,7 @@ export function searchChem(inp) {
   if (!matches.length) { dropdown.style.display = 'none'; return; }
 
   dropdown.innerHTML = matches.map(c =>
-    `<div onclick="selectChem(this,'${c._key}','${c.name}','${c.formula}',${c.mw})">${c.name} <span style="color:var(--teal);font-size:11px">${c.formula}</span></div>`
+    `<div data-cs-action="select-chem" data-chem-key="${c._key}" data-chem-name="${c.name}" data-chem-formula="${c.formula}" data-chem-mw="${c.mw}">${c.name} <span style="color:var(--teal);font-size:11px">${c.formula}</span></div>`
   ).join('');
   dropdown.style.display = 'block';
 }
@@ -103,7 +103,7 @@ export function searchElectrode(inp) {
   if (!matches.length) { dropdown.style.display = 'none'; return; }
 
   dropdown.innerHTML = matches.map(e =>
-    `<div style="padding:7px 10px;font-size:13px;cursor:pointer" onmouseover="this.style.background='var(--blue-light)'" onmouseout="this.style.background=''" onclick="selectElectrode(this,'${e.code}')">${e.code} <span style="color:var(--teal);font-size:11px">${e.material} / ${e.substrate}</span></div>`
+    `<div class="cs-electrode-item" style="padding:7px 10px;font-size:13px;cursor:pointer" data-cs-action="select-electrode" data-electrode-code="${e.code}">${e.code} <span style="color:var(--teal);font-size:11px">${e.material} / ${e.substrate}</span></div>`
   ).join('');
   dropdown.style.display = 'block';
 }
@@ -394,3 +394,39 @@ export function rebuildCustomFilter(selOrId) {
 
 // Expose
 window.rebuildCustomFilter = rebuildCustomFilter;
+
+// ─── Round 70: Event delegation for custom-selects dropdowns ────────────
+function attachCustomSelectsDelegation(): void {
+  const flag = '__csDelegationAttached';
+  if ((document.body as any)[flag]) return;
+  (document.body as any)[flag] = true;
+
+  document.body.addEventListener('click', (e: Event) => {
+    const target = (e.target as HTMLElement)?.closest('[data-cs-action]') as HTMLElement | null;
+    if (!target) return;
+    const action = target.dataset.csAction;
+
+    if (action === 'select-chem') {
+      const key = target.dataset.chemKey || '';
+      const name = target.dataset.chemName || '';
+      const formula = target.dataset.chemFormula || '';
+      const mw = parseFloat(target.dataset.chemMw || '0');
+      if (typeof (window as any).selectChem === 'function') {
+        (window as any).selectChem(target, key, name, formula, mw);
+      }
+    } else if (action === 'select-electrode') {
+      const code = target.dataset.electrodeCode || '';
+      if (typeof (window as any).selectElectrode === 'function') {
+        (window as any).selectElectrode(target, code);
+      }
+    }
+  });
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachCustomSelectsDelegation);
+  } else {
+    attachCustomSelectsDelegation();
+  }
+}

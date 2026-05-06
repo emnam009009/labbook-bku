@@ -95,23 +95,23 @@ function ensureAIModal() {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 16v-4M12 8h.01"/></svg>
           <span id="ai-modal-title">Phân tích AI</span>
         </div>
-        <button class="modal-close" onclick="closeModal('modal-ai-analysis')">✕</button>
+        <button class="modal-close" data-ext-action="close-ai-modal">✕</button>
       </div>
 
       <div id="ai-data-summary" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:16px;font-size:13px"></div>
 
       <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-        <button class="btn btn-primary" onclick="window.runAIAnalysis('standard')" style="gap:6px">
+        <button class="btn btn-primary" data-ext-action="run-ai" data-ai-mode="standard" style="gap:6px">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           Phân tích tổng quan
         </button>
-        <button class="btn" onclick="window.runAIAnalysis('compare')" style="gap:6px">
+        <button class="btn" data-ext-action="run-ai" data-ai-mode="compare" style="gap:6px">
           📊 So sánh tài liệu
         </button>
-        <button class="btn" onclick="window.runAIAnalysis('suggest')" style="gap:6px">
+        <button class="btn" data-ext-action="run-ai" data-ai-mode="suggest" style="gap:6px">
           💡 Đề xuất cải thiện
         </button>
-        <button class="btn" onclick="window.runAIAnalysis('report')" style="gap:6px">
+        <button class="btn" data-ext-action="run-ai" data-ai-mode="report" style="gap:6px">
           📄 Soạn đoạn kết quả
         </button>
       </div>
@@ -125,8 +125,8 @@ function ensureAIModal() {
       </div>
 
       <div class="modal-footer" style="margin-top:12px">
-        <button class="btn" onclick="closeModal('modal-ai-analysis')">Đóng</button>
-        <button class="btn btn-primary" onclick="window.copyAIOutput()" style="gap:6px">
+        <button class="btn" data-ext-action="close-ai-modal">Đóng</button>
+        <button class="btn btn-primary" data-ext-action="copy-ai" style="gap:6px">
           📋 Sao chép kết quả
         </button>
       </div>
@@ -450,4 +450,43 @@ setTimeout(() => clearInterval(_hookInterval), 15000);
 
 console.log('[LabBook Extensions] ✅ Module loaded — Excel Export + Charts + AI Analysis');
 
+// ─── Round 70: Event delegation for AI analysis modal ────────────────
+function attachAIModalDelegation(): void {
+  const flag = '__aiModalDelegationAttached';
+  if ((document.body as any)[flag]) return;
+  (document.body as any)[flag] = true;
 
+  document.body.addEventListener('click', (e: Event) => {
+    const target = (e.target as HTMLElement)?.closest('[data-ext-action]') as HTMLElement | null;
+    if (!target) return;
+    const action = target.dataset.extAction;
+
+    switch (action) {
+      case 'close-ai-modal':
+        if (typeof (window as any).closeModal === 'function') {
+          (window as any).closeModal('modal-ai-analysis');
+        }
+        return;
+      case 'run-ai': {
+        const mode = target.dataset.aiMode || 'standard';
+        if (typeof (window as any).runAIAnalysis === 'function') {
+          (window as any).runAIAnalysis(mode);
+        }
+        return;
+      }
+      case 'copy-ai':
+        if (typeof (window as any).copyAIOutput === 'function') {
+          (window as any).copyAIOutput();
+        }
+        return;
+    }
+  });
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachAIModalDelegation);
+  } else {
+    attachAIModalDelegation();
+  }
+}

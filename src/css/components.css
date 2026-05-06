@@ -1022,3 +1022,45 @@
 .ink-doi-link:hover {
   color: var(--blue2);
 }
+
+/* Round 70: CSP-safe hover effects */
+
+/* booking-suggestions toggle button */
+.bk-suggest-toggle-hover {
+  transition: background 0.15s;
+}
+.bk-suggest-toggle-hover:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* booking-suggestions find button (gradient) */
+.bk-suggest-find-hover {
+  transition: all 0.15s;
+}
+.bk-suggest-find-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+}
+
+/* booking-suggestions slot button */
+.bk-suggest-slot {
+  transition: all 0.15s;
+}
+.bk-suggest-slot:hover {
+  border-color: var(--teal) !important;
+  background: var(--teal-light) !important;
+  transform: translateX(2px);
+}
+
+/* custom-selects: electrode dropdown item hover */
+.cs-electrode-item:hover {
+  background: var(--blue-light);
+}
+
+/* notifications row hover (with isUnread variants) */
+.notif-row {
+  transition: background 0.15s;
+}
+.notif-row:hover {
+  background: var(--surface-2) !important;
+}
