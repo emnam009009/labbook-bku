@@ -1457,3 +1457,30 @@ if ('serviceWorker' in navigator) {
     }
   });
 }
+
+// Round 77c: lazy-load wrappers for cross-experiment overview page + row-drag
+let _overviewPagePromise: Promise<any> | null = null;
+function _loadOverviewPage(): Promise<any> {
+  if (!_overviewPagePromise) {
+    _overviewPagePromise = import('./pages/overview.js');
+  }
+  return _overviewPagePromise;
+}
+window.renderOverviewPage = function() {
+  _loadOverviewPage().then(m => m.renderOverview())
+    .catch((e: any) => console.error('[main] renderOverviewPage failed:', e));
+};
+
+// Bind row-drag-overview on first DOM ready (idempotent inside module)
+(function _initRowDragOverview() {
+  const start = () => {
+    import('./ui/drag-row-overview.js').then(m => m.bindRowDragOverview())
+      .catch((e: any) => console.error('[main] drag-row-overview load failed:', e));
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start);
+  } else {
+    start();
+  }
+})();
+

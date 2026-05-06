@@ -32,6 +32,10 @@ export function showPage(id: string, el?: HTMLElement | null): void {
   if (id === 'electrochemistry' && typeof window.renderElectrochem === 'function') {
     window.renderElectrochem();
   }
+  // Round 77c: Cross-experiment overview page
+  if (id === 'overview' && typeof (window as any).renderOverviewPage === 'function') {
+    (window as any).renderOverviewPage();
+  }
   // Dispatch event de cac hook khac (chat, dashboard class, ...) lang nghe
   document.dispatchEvent(new CustomEvent('pageChange', { detail: { id } }));
 }

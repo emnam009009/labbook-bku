@@ -1074,3 +1074,87 @@
   60%  { box-shadow: 0 0 0 6px rgba(13, 148, 136, 0); }
   100% { box-shadow: 0 0 0 0 rgba(13, 148, 136, 0); }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   Round 77c: Drag-to-open + cross-experiment overview page
+   ════════════════════════════════════════════════════════════════ */
+
+/* Row being actively dragged */
+tr.dragging-overview {
+  cursor: grabbing !important;
+  position: relative;
+  z-index: 5;
+  background: var(--surface-2, #f8fafc);
+  user-select: none;
+}
+
+/* Highlight when past 150px threshold — release to open */
+tr.dragging-overview.drag-overview-trigger {
+  background: rgba(13, 148, 136, 0.12);
+  box-shadow: -4px 0 0 0 var(--teal), 0 4px 12px rgba(13, 148, 136, 0.3);
+}
+tr.dragging-overview.drag-overview-trigger::before {
+  content: '📊 Thả để xem tổng quan';
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-right: 12px;
+  padding: 6px 12px;
+  background: var(--teal);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Flash highlight when jumping back to a row from overview page */
+@keyframes row-highlight-flash {
+  0%   { background: rgba(13, 148, 136, 0.4); }
+  100% { background: transparent; }
+}
+tr.row-highlight-flash {
+  animation: row-highlight-flash 2s ease-out;
+}
+
+/* Cross-experiment overview page */
+#page-overview .page-header {
+  margin-bottom: 16px;
+}
+#page-overview .page-header h1 {
+  font-size: 22px;
+  margin: 0 0 6px;
+  color: var(--text);
+}
+#page-overview .page-header-sub {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-2, #475569);
+}
+
+/* Card wrapper for thumb + code button (overlay) */
+.att-overview-thumb-card {
+  position: relative;
+}
+.att-overview-thumb-code {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 3px 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 1;
+  transition: background 0.15s, transform 0.1s;
+}
+.att-overview-thumb-code:hover {
+  background: var(--teal);
+  transform: scale(1.05);
+}
