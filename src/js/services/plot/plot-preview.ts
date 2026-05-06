@@ -328,12 +328,114 @@ export async function renderPreview(canvas, parsed, opts = {}) {
  *
  * Math: 300 DPI × 8 in = 2400 px wide, × 6 in = 1800 px tall.
  */
+// Round 89: lazy import worker (Vite '?worker' syntax produces a Worker
+// constructor; the bundle is loaded on first call to renderHighResPNG).
+let _hiresWorkerCtor = null;
+async function _loadHiresWorker() {
+  if (_hiresWorkerCtor) return _hiresWorkerCtor;
+  // Vite handles this import as a worker bundle automatically
+  const mod = await import('./highres-png.worker.ts?worker');
+  _hiresWorkerCtor = mod.default;
+  return _hiresWorkerCtor;
+}
+
+/**
+ * Round 89: feature-detect OffscreenCanvas + Worker. If supported,
+ * render in worker thread (no main-thread block). Else fall back to
+ * synchronous render path.
+ */
 export async function renderHighResPNG(parsed, opts = {}) {
+  // Try worker path first
+  const canUseWorker = typeof OffscreenCanvas !== 'undefined'
+    && typeof Worker !== 'undefined'
+    && typeof HTMLCanvasElement !== 'undefined'
+    && typeof HTMLCanvasElement.prototype.transferControlToOffscreen === 'function';
+
+  if (canUseWorker) {
+    try {
+      return await _renderHighResPNGWorker(parsed, opts);
+    } catch (e) {
+      console.warn('[hires] worker path failed, fallback sync:', e);
+      // Fall through to sync path below
+    }
+  }
+  return _renderHighResPNGSync(parsed, opts);
+}
+
+/**
+ * Worker render path (Round 89). Renders via OffscreenCanvas + Web Worker
+ * — main thread completely free. Returns PNG blob.
+ */
+async function _renderHighResPNGWorker(parsed, opts = {}) {
+  const widthIn = opts.widthIn || 8;
+  const heightIn = opts.heightIn || 6;
+  const dpi = opts.dpi || 300;
+  const w = Math.round(widthIn * dpi);
+  const h = Math.round(heightIn * dpi);
+
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = w;
+  tempCanvas.height = h;
+  const offscreen = tempCanvas.transferControlToOffscreen();
+
+  const WorkerCtor = await _loadHiresWorker();
+  const worker = new WorkerCtor();
+
+  // Strip non-serializable fields from parsed (spec may have functions, etc.)
+  const sanitizedParsed = {
+    x: parsed.x,
+    y: parsed.y,
+    xLabel: parsed.xLabel,
+    yLabel: parsed.yLabel,
+    plotXLabel: parsed.plotXLabel,
+    plotYLabel: parsed.plotYLabel,
+    category: parsed.category,
+    spec: parsed.spec ? {
+      reverseX: !!(parsed.spec as any).reverseX,
+    } : null,
+  };
+  const sanitizedOpts = {
+    widthIn, heightIn, dpi,
+    title: opts.title || '',
+    axisSettings: opts.axisSettings || null,
+    bandgapFit: opts.bandgapFit || null,
+  };
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      worker.terminate();
+      reject(new Error('Worker render timeout (10s)'));
+    }, 10000);
+
+    worker.onmessage = (e) => {
+      clearTimeout(timeout);
+      worker.terminate();
+      const { ok, blob, error } = e.data || {};
+      if (ok && blob) resolve(blob);
+      else reject(new Error(error || 'Worker render failed'));
+    };
+    worker.onerror = (e) => {
+      clearTimeout(timeout);
+      worker.terminate();
+      reject(new Error(e.message || 'Worker error'));
+    };
+
+    // Transfer ownership of OffscreenCanvas to worker
+    worker.postMessage(
+      { parsed: sanitizedParsed, opts: sanitizedOpts, canvas: offscreen },
+      [offscreen]
+    );
+  });
+}
+
+/**
+ * Sync render path (legacy, fallback for browsers w/o OffscreenCanvas).
+ */
+async function _renderHighResPNGSync(parsed, opts = {}) {
   const Chart = await loadChart();
   const widthIn = opts.widthIn || 8;
   const heightIn = opts.heightIn || 6;
-  // Round 88: default DPI 300 -> 220 (van la print-quality cho bao cao A4,
-  // giam ~46% pixel count -> ~50% nhanh hon)
+  // Sync path: keep DPI 220 since we still block main thread
   const dpi = opts.dpi || 220;
   const w = Math.round(widthIn * dpi);
   const h = Math.round(heightIn * dpi);
