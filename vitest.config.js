@@ -3,7 +3,7 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     // Test file pattern — chạy file *.test.js trong thư mục tests/
-    include: ['tests/**/*.test.js'],
+    include: ['tests/**/*.test.js', 'tests/**/*.test.ts'],
 
     // Environment 'node' đủ cho utils thuần. Nếu test code touch DOM thật
     // (querySelector, document, etc.) thì đổi sang 'jsdom' và cài jsdom:

@@ -264,3 +264,43 @@ Windows D:\labbook-patches  →  copy  →  ~/labbook-patches/  →  bash apply-
 - Test instructions bằng tiếng Việt, đánh số rõ ràng
 - Sau patch luôn verify build + tests pass (62/62)
 - Khi user paste output multi-block, cẩn thận: user thường chỉ paste BLOCK CUỐI → đặt mọi command vào 1 block ở đầu response
+
+---
+
+## 11. TypeScript Migration (đang diễn ra)
+
+**Status**: Round 61 (toolchain setup) đã hoàn tất. Bắt đầu migrate các file dần.
+
+**Strategy**: Pure TypeScript migration (rename `.js` → `.ts` từng file một).
+
+**Thứ tự migrate** (đã thỏa thuận):
+1. ✅/⏳ `src/js/utils/*` — hàm thuần, dễ type nhất
+2. ⏳ `src/js/state.js` + `auth.js` — state chính
+3. ⏳ `src/js/services/*` — bulk-actions, render-dispatcher, save-handlers, ...
+4. ⏳ `src/js/pages/*` — booking.js, dashboard.js, etc.
+5. ⏳ `src/js/main.js` — file lớn nhất, cuối cùng
+
+**Config quan trọng** (xem `tsconfig.json`):
+- `allowJs: true`, `checkJs: false` — `.js` và `.ts` cùng tồn tại trong migrate phase
+- `strict: false` ban đầu, **sẽ tighten dần** sau khi migrate xong các phần
+- `noEmit: true` — Vite tự handle compile, TS chỉ type-check
+- `isolatedModules: true` — Vite requirement
+
+**Window types**: Khai báo trong `src/js/types/global.d.ts`. Khi thêm `window.X` mới trong code → thêm declaration ở đây.
+
+**Commands**:
+```bash
+npm run typecheck         # check types (không fail build)
+npm run typecheck:watch   # watch mode
+npm run build             # build vẫn work bình thường (Vite ignore type errors)
+npm test                  # 62/62 phải maintain
+```
+
+**Quy tắc khi migrate 1 file `.js` → `.ts`**:
+1. Rename file: `git mv x.js x.ts`
+2. Chạy `npm run typecheck` → fix các type error
+3. Imports KHÔNG cần thêm `.ts` extension (Vite resolve cả 2)
+4. Tránh dùng `any` rộng rãi — ưu tiên proper types
+5. Test pass + build pass trước khi commit
+6. **Mỗi round chỉ migrate 1 nhóm file liên quan** để dễ rollback nếu lỗi
+
