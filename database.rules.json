@@ -213,7 +213,7 @@
             ".write": "auth != null && (!data.exists() || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')",
             ".validate": "newData.hasChildren(['category','fileName','mimeType','size','storagePath','downloadURL','uploadedBy','uploadedAt'])",
             "category": {
-              ".validate": "newData.isString() && newData.val().matches(/^(xrd|sem|tem|raman|ftir|uvvis|uvvis-drs|pl|other)$/)"
+              ".validate": "newData.isString() && newData.val().matches(/^(xrd|sem|tem|raman|ftir|uvvis|uvvis-drs|pl|eds|xps|electrochem|other)$/)"
             },
             "fileName": {
               ".validate": "newData.isString() && newData.val().length <= 200"

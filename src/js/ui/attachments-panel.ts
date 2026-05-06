@@ -449,6 +449,7 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
         const parsed = await parseDataFile(file, category);
         setBusyMessage(`Đang vẽ biểu đồ...`);
         _currentPreview = { file, parsed, category, attachmentId: null };
+        updateAxSaveBtnState();  // Round 88: new file -> disable save axis
         previewBox.hidden = false;
         if (axisCtrls) (axisCtrls as any).hidden = false;
         clearAxisDOM();  // New file: no saved settings
@@ -981,12 +982,33 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
     });
   }
 
+  // Round 88: helper to update axSaveBtn enable/disable state based on
+  // whether the current preview is for an already-uploaded attachment.
+  // For new files (preview before upload), nut nay disabled — user dung
+  // 'Luu do thi (PNG 300 DPI)' de luu PNG voi axis hien tai.
+  const updateAxSaveBtnState = () => {
+    if (!axSaveBtn) return;
+    const aid = _currentPreview?.attachmentId;
+    if (aid) {
+      (axSaveBtn as HTMLButtonElement).disabled = false;
+      axSaveBtn.setAttribute('title', 'Lưu cài đặt trục cho file này (xem lại sẽ giữ đúng cài đặt)');
+    } else {
+      (axSaveBtn as HTMLButtonElement).disabled = true;
+      axSaveBtn.setAttribute('title', 'Cài đặt sẽ áp dụng vào PNG khi bấm "Lưu đồ thị" (file mới)');
+    }
+  };
+  // Round 88: expose helper so preview-init code can call it
+  (panel as any)._updateAxSaveBtnState = updateAxSaveBtnState;
+  // Initial state
+  updateAxSaveBtnState();
+
   // Save button: persist current settings to RTDB
   if (axSaveBtn) {
     axSaveBtn.addEventListener('click', async () => {
       const aid = _currentPreview?.attachmentId;
       if (!aid) {
-        showToast('Hãy lưu file trước rồi mới lưu cài đặt trục', 'warn' as any);
+        // Defensive: shouldn't happen since button is disabled, but keep guard
+        showToast('Cài đặt này sẽ tự áp dụng khi bấm "Lưu đồ thị"', 'success' as any);
         return;
       }
       const settings = readAxisSettings();

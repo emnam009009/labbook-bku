@@ -145,9 +145,33 @@ export async function renderPreview(canvas, parsed, opts = {}) {
   const existing = Chart.getChart?.(canvas);
   if (existing) existing.destroy();
 
+  // Round 88: decimate data if very dense to speed up render
+  // Strategy: LTTB (Largest-Triangle-Three-Buckets) preserves visual shape
+  // We use simple stride sampling for speed (LTTB requires extra dep)
+  let xData = parsed.x;
+  let yData = parsed.y;
+  const MAX_POINTS_FOR_HIRES = 4000;
+  if (xData.length > MAX_POINTS_FOR_HIRES) {
+    const stride = Math.ceil(xData.length / MAX_POINTS_FOR_HIRES);
+    const xs: number[] = [];
+    const ys: number[] = [];
+    for (let i = 0; i < xData.length; i += stride) {
+      xs.push(xData[i]);
+      ys.push(yData[i]);
+    }
+    // Always include last point
+    if (xs[xs.length - 1] !== xData[xData.length - 1]) {
+      xs.push(xData[xData.length - 1]);
+      ys.push(yData[yData.length - 1]);
+    }
+    xData = xs;
+    yData = ys;
+    console.log(`[hires] decimated ${parsed.x.length} -> ${xs.length} points (stride ${stride})`);
+  }
+
   const cfg = buildChartConfig({
-    x: parsed.x,
-    y: parsed.y,
+    x: xData,
+    y: yData,
     xLabel: parsed.plotXLabel || parsed.xLabel,
     yLabel: parsed.plotYLabel || parsed.yLabel,
     title: opts.title || '',
@@ -308,9 +332,15 @@ export async function renderHighResPNG(parsed, opts = {}) {
   const Chart = await loadChart();
   const widthIn = opts.widthIn || 8;
   const heightIn = opts.heightIn || 6;
-  const dpi = opts.dpi || 300;
+  // Round 88: default DPI 300 -> 220 (van la print-quality cho bao cao A4,
+  // giam ~46% pixel count -> ~50% nhanh hon)
+  const dpi = opts.dpi || 220;
   const w = Math.round(widthIn * dpi);
   const h = Math.round(heightIn * dpi);
+
+  // Round 88: yield event loop truoc khi block render
+  // de browser ve overlay message moi nhat ('Đang xuất PNG...')
+  await new Promise(resolve => setTimeout(resolve, 16));
 
   // Offscreen canvas
   const canvas = document.createElement('canvas');
@@ -318,9 +348,33 @@ export async function renderHighResPNG(parsed, opts = {}) {
   canvas.height = h;
   // Avoid attaching to DOM; Chart.js works on detached canvas with explicit size.
 
+  // Round 88: decimate data if very dense to speed up render
+  // Strategy: LTTB (Largest-Triangle-Three-Buckets) preserves visual shape
+  // We use simple stride sampling for speed (LTTB requires extra dep)
+  let xData = parsed.x;
+  let yData = parsed.y;
+  const MAX_POINTS_FOR_HIRES = 4000;
+  if (xData.length > MAX_POINTS_FOR_HIRES) {
+    const stride = Math.ceil(xData.length / MAX_POINTS_FOR_HIRES);
+    const xs: number[] = [];
+    const ys: number[] = [];
+    for (let i = 0; i < xData.length; i += stride) {
+      xs.push(xData[i]);
+      ys.push(yData[i]);
+    }
+    // Always include last point
+    if (xs[xs.length - 1] !== xData[xData.length - 1]) {
+      xs.push(xData[xData.length - 1]);
+      ys.push(yData[yData.length - 1]);
+    }
+    xData = xs;
+    yData = ys;
+    console.log(`[hires] decimated ${parsed.x.length} -> ${xs.length} points (stride ${stride})`);
+  }
+
   const cfg = buildChartConfig({
-    x: parsed.x,
-    y: parsed.y,
+    x: xData,
+    y: yData,
     xLabel: parsed.plotXLabel || parsed.xLabel,
     yLabel: parsed.plotYLabel || parsed.yLabel,
     title: opts.title || '',
