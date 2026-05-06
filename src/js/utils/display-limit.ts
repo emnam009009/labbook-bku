@@ -1,5 +1,5 @@
 /**
- * utils/display-limit.js
+ * utils/display-limit.ts
  *
  * Helper giới hạn số rows hiển thị trên table để tránh DOM bloat.
  * Cache vẫn giữ full data — chỉ display top N rows mới nhất.
@@ -22,7 +22,7 @@
 const DEFAULT_LIMIT = 100;
 
 // Per-collection override (nếu cần một số bảng hiển thị nhiều hơn/ít hơn)
-const PER_COLLECTION_LIMIT = {
+const PER_COLLECTION_LIMIT: Record<string, number> = {
   hydro:       100,
   electrode:   100,
   electrochem: 100,
@@ -34,12 +34,8 @@ const PER_COLLECTION_LIMIT = {
 /**
  * Cắt mảng rows xuống N rows mới nhất.
  * Giả định rows đã được sort theo thứ tự desc (mới nhất ở đầu).
- *
- * @param {Array} rows - Mảng đã sort
- * @param {string} collection - Tên collection để lookup limit
- * @returns {Array} - Mảng cắt
  */
-export function limitDisplayRows(rows, collection) {
+export function limitDisplayRows<T>(rows: T[], collection: string): T[] {
   if (!Array.isArray(rows)) return rows;
   const limit = PER_COLLECTION_LIMIT[collection] ?? DEFAULT_LIMIT;
   return rows.length > limit ? rows.slice(0, limit) : rows;
@@ -49,13 +45,13 @@ export function limitDisplayRows(rows, collection) {
  * Cập nhật element hint "đang hiển thị N/M records".
  * Tự ẩn nếu N === M (không cần hint).
  * Tự tạo hint element nếu chưa có (insert trước table)
- *
- * @param {string} hintId - ID của element hint (vd 'hydro-limit-hint')
- * @param {number} displayed - Số rows đang hiển thị
- * @param {number} total - Tổng số rows trong cache
- * @param {string} tableId - (optional) ID của table/tbody để auto-insert hint
  */
-export function updateLimitHint(hintId, displayed, total, tableId = null) {
+export function updateLimitHint(
+  hintId: string,
+  displayed: number,
+  total: number,
+  tableId: string | null = null
+): void {
   let hint = document.getElementById(hintId);
 
   // Auto-create hint nếu chưa có (insert trước table)
@@ -84,14 +80,13 @@ export function updateLimitHint(hintId, displayed, total, tableId = null) {
 /**
  * Combined helper: vừa cắt rows vừa update hint trong 1 call.
  * Tiện cho các renderXxx muốn fix nhanh.
- *
- * @param {Array} rows - Mảng đã sort
- * @param {string} collection - Tên collection
- * @param {string} hintId - ID hint element
- * @param {string} tableId - (optional) ID table để auto-create hint
- * @returns {Array} - Mảng đã cắt
  */
-export function applyDisplayLimit(rows, collection, hintId, tableId = null) {
+export function applyDisplayLimit<T>(
+  rows: T[],
+  collection: string,
+  hintId: string,
+  tableId: string | null = null
+): T[] {
   const total = rows?.length || 0;
   const limited = limitDisplayRows(rows, collection);
   updateLimitHint(hintId, limited.length, total, tableId);

@@ -1,5 +1,5 @@
 /**
- * utils/auth-helpers.js
+ * utils/auth-helpers.ts
  * Helpers liên quan đến currentAuth + cache (membership, permissions)
  *
  * Lưu ý:
@@ -8,24 +8,35 @@
  *  → Tránh circular import vì auth.js / state.js / main.js đều có thể import file này.
  */
 
+// Record có thể có owner — dùng cho canDelete/canEdit
+interface OwnedRecord {
+  uid?: string;
+  person?: string;
+  createdBy?: string;
+  createdByName?: string;
+  [key: string]: unknown;
+}
+
 // ── Tên hiển thị của user hiện tại ──────────────────────
 // Ưu tiên: member.name (nếu có map uid trong cache.members) → displayName → email
-export function getPersonName() {
+export function getPersonName(): string {
   const auth = window.currentAuth;
   const cache = window.cache;
   if (!auth || !auth.uid) {
-    return (auth && (auth.displayName || auth.email)) || '';
+    return (auth && ((auth as any).displayName || auth.email)) || '';
   }
   if (cache && cache.members) {
-    const member = Object.values(cache.members).find(m => m && m.uid === auth.uid);
-    if (member && member.name) return member.name;
+    const member = Object.values(cache.members).find(
+      (m: any) => m && m.uid === auth.uid
+    );
+    if (member && (member as any).name) return (member as any).name;
   }
-  return auth.displayName || auth.email || '';
+  return (auth as any).displayName || auth.email || '';
 }
 
 // ── Phân quyền xóa ──────────────────────────────────────
 // Admin được xóa hết. Member chỉ xóa được record của chính mình.
-export function canDelete(r) {
+export function canDelete(r: OwnedRecord | null | undefined): boolean {
   const auth = window.currentAuth;
   if (!r || !auth) return false;
   if (auth.isAdmin) return true;
@@ -39,14 +50,14 @@ export function canDelete(r) {
 // ── Phân quyền sửa ──────────────────────────────────────
 // Logic legacy: kiểm tra nhiều field (uid, createdBy, person, createdByName)
 // vì dữ liệu cũ lưu owner theo nhiều dạng khác nhau.
-export function canEdit(record) {
+export function canEdit(record: OwnedRecord | null | undefined): boolean {
   const auth = window.currentAuth;
   if (!record) return true;
   if (!auth) return false;
   if (auth.isAdmin) return true;
   if (!auth.uid) return false;
   if (record.uid && record.uid === auth.uid) return true;
-  const me = auth.displayName || auth.email || '';
+  const me = (auth as any).displayName || auth.email || '';
   return record.createdBy === me
       || record.person === me
       || record.createdByName === me;
@@ -55,10 +66,10 @@ export function canEdit(record) {
 // ── Sync biến global cũ (backward-compat) ───────────────
 // Một số chỗ trong codebase legacy đọc window.isAdmin / window.currentUser.
 // Hàm này được gọi sau mỗi lần auth state thay đổi.
-export function syncAuthState() {
+export function syncAuthState(): void {
   const auth = window.currentAuth;
   if (!auth) return;
-  window.isAdmin = !!auth.isAdmin;
-  window.__currentUserUid = auth.uid || '';
-  window.currentUser = auth.displayName || auth.email || 'Khách';
+  (window as any).isAdmin = !!auth.isAdmin;
+  (window as any).__currentUserUid = auth.uid || '';
+  (window as any).currentUser = (auth as any).displayName || auth.email || 'Khách';
 }

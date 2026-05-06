@@ -1,5 +1,5 @@
 /**
- * utils/pagination.js
+ * utils/pagination.ts
  *
  * Client-side pagination cho mọi table.
  *
@@ -19,14 +19,19 @@
  *   resetPage('hydro')  // gọi trước renderXxx khi search input change
  */
 
-const PAGE_SIZE_OPTIONS = [50, 100, 200, 500];
+const PAGE_SIZE_OPTIONS = [50, 100, 200, 500] as const;
 const DEFAULT_PAGE_SIZE = 50;
 const STORAGE_KEY = 'labbook.pagination.pageSize';
 
-// State per-collection
-const _state = {};
+interface PageState {
+  page: number;
+  pageSize: number;
+}
 
-function _loadPageSize() {
+// State per-collection
+const _state: Record<string, PageState> = {};
+
+function _loadPageSize(): Record<string, number> {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -37,13 +42,13 @@ function _loadPageSize() {
   return {};
 }
 
-function _savePageSize(stateMap) {
+function _savePageSize(stateMap: Record<string, number>): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(stateMap));
   } catch (e) { /* quota exceeded, ignore */ }
 }
 
-function _getState(collection) {
+function _getState(collection: string): PageState {
   if (!_state[collection]) {
     const persisted = _loadPageSize();
     _state[collection] = {
@@ -57,12 +62,8 @@ function _getState(collection) {
 /**
  * Cắt rows theo page hiện tại.
  * Tự clamp page nếu total đã giảm (vd sau search).
- *
- * @param {Array} rows - Mảng đã sort
- * @param {string} collection - Tên collection
- * @returns {Array} - Slice của rows cho page hiện tại
  */
-export function paginate(rows, collection) {
+export function paginate<T>(rows: T[], collection: string): T[] {
   if (!Array.isArray(rows)) return rows;
   const state = _getState(collection);
   const total = rows.length;
@@ -80,13 +81,13 @@ export function paginate(rows, collection) {
 /**
  * Render UI pagination control (dropdown pageSize + prev/next + label).
  * Tự attach event handlers gọi onChange (thường là renderXxx).
- *
- * @param {string} collection - Tên collection
- * @param {string} containerId - ID của <div> để inject UI
- * @param {Function} onChange - Callback khi user đổi page hoặc pageSize
- * @param {number} total - Tổng records (chưa cắt). Tính từ caller để tránh re-call paginate
  */
-export function renderPaginationUI(collection, containerId, onChange, total) {
+export function renderPaginationUI(
+  collection: string,
+  containerId: string,
+  onChange: () => void,
+  total: number
+): void {
   const container = document.getElementById(containerId);
   if (!container) return;
 
@@ -126,7 +127,7 @@ export function renderPaginationUI(collection, containerId, onChange, total) {
   `;
 
   // Wire handlers
-  const sel = document.getElementById(containerId + '-size');
+  const sel = document.getElementById(containerId + '-size') as HTMLSelectElement | null;
   if (sel) {
     sel.onchange = () => {
       state.pageSize = parseInt(sel.value, 10) || DEFAULT_PAGE_SIZE;
@@ -140,7 +141,7 @@ export function renderPaginationUI(collection, containerId, onChange, total) {
       if (typeof onChange === 'function') onChange();
     };
   }
-  const prev = document.getElementById(containerId + '-prev');
+  const prev = document.getElementById(containerId + '-prev') as HTMLButtonElement | null;
   if (prev) {
     prev.onclick = () => {
       if (state.page > 1) {
@@ -149,7 +150,7 @@ export function renderPaginationUI(collection, containerId, onChange, total) {
       }
     };
   }
-  const next = document.getElementById(containerId + '-next');
+  const next = document.getElementById(containerId + '-next') as HTMLButtonElement | null;
   if (next) {
     next.onclick = () => {
       if (state.page < totalPages) {
@@ -162,24 +163,21 @@ export function renderPaginationUI(collection, containerId, onChange, total) {
 
 /**
  * Reset về trang 1 — gọi khi search/filter thay đổi.
- *
- * @param {string} collection
  */
-export function resetPage(collection) {
+export function resetPage(collection: string): void {
   const state = _getState(collection);
   state.page = 1;
 }
 
 /**
  * Combined helper: paginate + render UI trong 1 call.
- *
- * @param {Array} rows - Đã sort
- * @param {string} collection
- * @param {string} paginationContainerId - ID <div> để chứa pagination UI
- * @param {Function} onChange - Re-render callback
- * @returns {Array} - Visible rows cho page hiện tại
  */
-export function applyPagination(rows, collection, paginationContainerId, onChange) {
+export function applyPagination<T>(
+  rows: T[],
+  collection: string,
+  paginationContainerId: string,
+  onChange: () => void
+): T[] {
   const total = rows?.length || 0;
   const visible = paginate(rows, collection);
   renderPaginationUI(collection, paginationContainerId, onChange, total);
