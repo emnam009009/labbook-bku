@@ -334,7 +334,7 @@ function renderBookingWeek(bookings, members) {
     const fg = isSelected ? teal : '#0f172a';
     const fgLabel = isSelected ? teal : '#94a3b8';
     const ring = isToday && !isSelected ? `box-shadow:inset 0 0 0 1.5px ${teal}` : '';
-    return `<div onclick="window._dashSelectBookingDay(${d.getTime()})" style="cursor:pointer;flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 0;border-radius:8px;background:${bg};${ring};transition:all 0.15s">
+    return `<div data-dash-action="select-booking-day" data-day-ts="${d.getTime()}" style="cursor:pointer;flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 0;border-radius:8px;background:${bg};${ring};transition:all 0.15s">
       <div style="font-size:10px;color:${fgLabel};text-transform:uppercase;font-weight:500">${dayLabel}</div>
       <div style="font-size:14px;font-weight:600;color:${fg}">${String(d.getDate()).padStart(2, '0')}</div>
     </div>`;
@@ -350,7 +350,7 @@ function renderBookingWeek(bookings, members) {
     const init = avatarInitial(userName);
 
     const bookingKey = b._key || '';
-    return `<div onclick="window._dashGoToBooking('${bookingKey}')" style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:0.5px solid var(--border);cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='var(--surface-2)'" onmouseout="this.style.background=''" title="Xem chi tiết yêu cầu đăng ký">
+    return `<div class="dash-hover-row dash-hover-row--booking" data-dash-action="go-to-booking" data-booking-key="${bookingKey}" style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:0.5px solid var(--border);cursor:pointer" title="Xem chi tiết yêu cầu đăng ký">
       <div style="font-size:11px;color:#64748b;font-family:'JetBrains Mono',monospace;min-width:80px;padding-top:2px;font-weight:500">${time}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600;color:#0f172a;line-height:1.3">${escapeHtml(eqName)}</div>
@@ -367,11 +367,11 @@ function renderBookingWeek(bookings, members) {
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <h3 style="margin:0;font-size:15px;font-weight:700;color:#344767;letter-spacing:-0.01em">Lịch đăng ký thiết bị</h3>
       <div style="display:flex;gap:4px;align-items:center">
-        <button onclick="window._dashNavBookingWeek(-1)" style="width:24px;height:24px;border-radius:50%;border:0.5px solid var(--border);background:transparent;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#64748b" title="Tuần trước">
+        <button data-dash-action="nav-booking-week" data-week-delta="-1" style="width:24px;height:24px;border-radius:50%;border:0.5px solid var(--border);background:transparent;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#64748b" title="Tuần trước">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
         <span style="font-size:12.5px;font-weight:600;color:#0f172a;min-width:140px;text-align:center">${fmtMonthYear(weekStart)}</span>
-        <button onclick="window._dashNavBookingWeek(1)" style="width:24px;height:24px;border-radius:50%;border:0.5px solid var(--border);background:transparent;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#64748b" title="Tuần sau">
+        <button data-dash-action="nav-booking-week" data-week-delta="1" style="width:24px;height:24px;border-radius:50%;border:0.5px solid var(--border);background:transparent;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#64748b" title="Tuần sau">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
         </button>
       </div>
@@ -437,7 +437,7 @@ function renderMembersKPI(members) {
     const isOnline = matchUid && presence[matchUid]?.online === true;
     const dotColor = isOnline ? '#10b981' : '#cbd5e1';
 
-    return `<div class="dash-member-row" data-uid="${escapeHtml(uid)}" style="display:flex;align-items:center;gap:11px;padding:7px 0;cursor:pointer;border-radius:10px;transition:background 0.12s" onclick="window._dashShowMemberPopover('${escapeHtml(uid)}', this)">
+    return `<div class="dash-member-row" data-dash-action="show-member-popover" data-uid="${escapeHtml(uid)}" style="display:flex;align-items:center;gap:11px;padding:7px 0;cursor:pointer;border-radius:10px;transition:background 0.12s">
       ${avatarHTML(name, 38)}
       <div style="flex:1;min-width:0">
         <div style="font-size:13.5px;font-weight:700;color:#0f172a;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(name)}</div>
@@ -584,7 +584,7 @@ function renderChemStatus(chemicals) {
     const isUrgent = c._status.level === 'out' || c._status.level === 'low';
 
     return `
-      <div onclick="window.showPage && window.showPage('chemicals')" style="cursor:pointer;padding:8px 10px;margin:0 -10px;border-radius:8px;transition:background 0.15s" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+      <div class="dash-hover-row" data-dash-action="go-to-page" data-page="chemicals" style="cursor:pointer;padding:8px 10px;margin:0 -10px;border-radius:8px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:5px">
           <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0">
             <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:${color}22;color:${color};font-size:10px;font-weight:700;flex-shrink:0">${icon}</span>
@@ -612,7 +612,7 @@ function renderChemStatus(chemicals) {
         <h3 style="margin:0 0 6px;font-size:15px;font-weight:700;color:#344767;letter-spacing:-0.01em">Tình trạng hóa chất</h3>
         ${chipsHTML}
       </div>
-      <button onclick="window.showPage && window.showPage('chemicals')" style="background:transparent;border:none;color:${themeTeal};font-size:11.5px;font-weight:600;cursor:pointer;padding:4px 0;display:inline-flex;align-items:center;gap:3px;flex-shrink:0">Xem tất cả
+      <button data-dash-action="go-to-page" data-page="chemicals" style="background:transparent;border:none;color:${themeTeal};font-size:11.5px;font-weight:600;cursor:pointer;padding:4px 0;display:inline-flex;align-items:center;gap:3px;flex-shrink:0">Xem tất cả
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
       </button>
     </div>
@@ -1091,7 +1091,7 @@ function renderRecentTable(h, e, ec, members) {
   }
 
   tbody.innerHTML = sorted.length ? sorted.map(r => `
-    <div class="recent-row recent-grid" data-exp-key="${escapeHtml(r._key)}" data-exp-type="${r._type}" onclick="window._dashGoToExp('${escapeHtml(r._key)}', '${r._type}')" style="cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'" title="Xem chi tiết">
+    <div class="recent-row recent-grid dash-hover-row" data-dash-action="go-to-exp" data-exp-key="${escapeHtml(r._key)}" data-exp-type="${r._type}" style="cursor:pointer" title="Xem chi tiết">
       <div>${personCell(r.person)}</div>
       <div><strong style="font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:700;color:#344767">${escapeHtml(r.code || '')}</strong></div>
       <div style="font-size:13px;color:#344767">${formatChemical(r.material || '—')}</div>
@@ -1220,7 +1220,7 @@ window._dashShowMemberPopover = function(uid, anchorEl) {
   pop.id = 'dash-active-member-popover';
 
   pop.innerHTML = `
-    <button type="button" class="pop-close" onclick="window._dashCloseMemberPopover()" aria-label="Đóng">
+    <button type="button" class="pop-close" data-dash-action="close-member-popover" aria-label="Đóng">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
       </svg>
@@ -1389,3 +1389,78 @@ function _dashFlashBookingRow(bookingKey, code) {
   setTimeout(() => target.classList.remove('row-flash'), 2200);
 }
 
+// ─── Round 68: Event delegation for dashboard CSP fix ────────────────
+// Replaces all inline onclick/onmouseover handlers in dashboard cards.
+// Attaches once on first call (idempotent via flag on document.body).
+function attachDashboardDelegation(): void {
+  const flag = '__dashDelegationAttached';
+  if ((document.body as any)[flag]) return;
+  (document.body as any)[flag] = true;
+
+  document.body.addEventListener('click', (e: Event) => {
+    const target = (e.target as HTMLElement)?.closest('[data-dash-action]') as HTMLElement | null;
+    if (!target) return;
+    const action = target.dataset.dashAction;
+
+    switch (action) {
+      case 'select-booking-day': {
+        const ts = parseInt(target.dataset.dayTs || '0', 10);
+        if (ts && typeof (window as any)._dashSelectBookingDay === 'function') {
+          (window as any)._dashSelectBookingDay(ts);
+        }
+        break;
+      }
+      case 'go-to-booking': {
+        const key = target.dataset.bookingKey || '';
+        if (typeof (window as any)._dashGoToBooking === 'function') {
+          (window as any)._dashGoToBooking(key);
+        }
+        break;
+      }
+      case 'nav-booking-week': {
+        const delta = parseInt(target.dataset.weekDelta || '0', 10);
+        if (typeof (window as any)._dashNavBookingWeek === 'function') {
+          (window as any)._dashNavBookingWeek(delta);
+        }
+        break;
+      }
+      case 'show-member-popover': {
+        const uid = target.dataset.uid || '';
+        if (uid && typeof (window as any)._dashShowMemberPopover === 'function') {
+          (window as any)._dashShowMemberPopover(uid, target);
+        }
+        break;
+      }
+      case 'go-to-page': {
+        const page = target.dataset.page || '';
+        if (page && typeof (window as any).showPage === 'function') {
+          (window as any).showPage(page);
+        }
+        break;
+      }
+      case 'go-to-exp': {
+        const key = target.dataset.expKey || '';
+        const type = target.dataset.expType || '';
+        if (typeof (window as any)._dashGoToExp === 'function') {
+          (window as any)._dashGoToExp(key, type);
+        }
+        break;
+      }
+      case 'close-member-popover': {
+        if (typeof (window as any)._dashCloseMemberPopover === 'function') {
+          (window as any)._dashCloseMemberPopover();
+        }
+        break;
+      }
+    }
+  });
+}
+
+// Attach delegation as soon as module loads (idempotent).
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachDashboardDelegation);
+  } else {
+    attachDashboardDelegation();
+  }
+}

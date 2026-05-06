@@ -500,3 +500,15 @@ html.dark .dash-skel-recent-row {
 #page-dashboard .recent-empty .spinner {
   margin-right: 8px;
 }
+
+/* Round 68: Replace inline onmouseover/onmouseout with CSS class.
+   Used in dashboard cards (booking row, recent exp row, chemical row). */
+.dash-hover-row {
+  transition: background 0.15s;
+}
+.dash-hover-row:hover {
+  background: #f8fafc !important;
+}
+.dash-hover-row.dash-hover-row--booking:hover {
+  background: var(--surface-2) !important;
+}
