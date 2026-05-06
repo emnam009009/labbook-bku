@@ -603,11 +603,14 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
     e.target.value = ''; // allow re-uploading same file
   });
 
-  // Drag & drop
+  // Drag & drop — Round 85: chi accept khi state='empty' (chua co preview)
+  // de tranh thay file vo y khi user dang xem preview hien tai
+  const isEmptyState = () => (dropzone as HTMLElement).dataset.state === 'empty';
+
   ['dragenter', 'dragover'].forEach((evt) =>
     dropzone.addEventListener(evt, (e) => {
       e.preventDefault();
-      dropzone.classList.add('att-dropzone-active');
+      if (isEmptyState()) dropzone.classList.add('att-dropzone-active');
     }),
   );
   ['dragleave', 'drop'].forEach((evt) =>
@@ -617,11 +620,25 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
     }),
   );
   dropzone.addEventListener('drop', (e) => {
+    if (!isEmptyState()) return;  // ignore drops while previewing
     handleFiles(e.dataTransfer?.files);
   });
-  dropzone.addEventListener('click', () => fileInput.click());
+
+  // Round 85: click handler — chi trigger file picker khi:
+  //   a) state='empty' (chua co preview)
+  //   b) target khong phai interactive child (axis input, select dropdown,
+  //      buttons trong header/preview-actions/etc)
+  dropzone.addEventListener('click', (e) => {
+    if (!isEmptyState()) return;
+    const t = e.target as HTMLElement;
+    // Skip if click came from any interactive element
+    if (t.closest('button, input, textarea, select, a, label, .cs-filter-trigger, .cs-filter-dropdown, [data-action], [data-att-action]')) {
+      return;
+    }
+    fileInput.click();
+  });
   dropzone.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
+    if ((e.key === 'Enter' || e.key === ' ') && isEmptyState()) {
       e.preventDefault();
       fileInput.click();
     }

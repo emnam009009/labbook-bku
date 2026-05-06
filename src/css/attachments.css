@@ -35,7 +35,10 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px;
+  /* Round 85: cao bang trigger Loai dropdown (38.45px) */
+  height: 38px;
+  box-sizing: border-box;
+  padding: 0 14px;
   border: 1px solid var(--teal);
   border-radius: 6px;
   background: var(--teal);
@@ -43,6 +46,7 @@
   cursor: pointer;
   font-weight: 500;
   user-select: none;
+  white-space: nowrap;
 }
 .att-upload-btn:hover {
   filter: brightness(0.95);
@@ -1219,12 +1223,15 @@ html.dark .exp-bar:hover {
    Round 77b: Overview modal — accordion 6 groups + thumbnails
    ════════════════════════════════════════════════════════════════ */
 
-/* Toolbar button — Round 84: solid fill (primary style) */
+/* Toolbar button — Round 84: solid fill, Round 85: height 38.45px */
 .att-overview-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 14px;
+  /* Round 85: cao bang trigger Loai dropdown (38.45px) */
+  height: 38px;
+  box-sizing: border-box;
+  padding: 0 14px;
   background: var(--teal);
   color: #fff;
   border: 1px solid var(--teal);
@@ -1234,6 +1241,7 @@ html.dark .exp-bar:hover {
   cursor: pointer;
   transition: filter 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
   box-shadow: 0 1px 2px rgba(13, 148, 136, 0.15);
+  white-space: nowrap;
 }
 .att-overview-btn:hover {
   filter: brightness(0.95);

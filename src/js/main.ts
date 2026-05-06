@@ -943,8 +943,20 @@ const _pageSearchMap = {
 };
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
-    const openModal = document.querySelector('.modal-overlay.open');
-    if (openModal) { window.closeModal(openModal.id); return; }
+    // Round 85: chon modal TOP cua stack (highest z-index) thay vi first
+    // theo DOM order. Khi co modal stacked (vd: overview tren attachments),
+    // nhan ESC phai dong overview truoc, khong phai parent modal.
+    const opens = Array.from(document.querySelectorAll('.modal-overlay.open')) as HTMLElement[];
+    if (opens.length > 0) {
+      let top = opens[0];
+      let topZ = parseInt(getComputedStyle(top).zIndex, 10) || 0;
+      for (const m of opens) {
+        const z = parseInt(getComputedStyle(m).zIndex, 10) || 0;
+        if (z > topZ) { topZ = z; top = m; }
+      }
+      window.closeModal(top.id);
+      return;
+    }
   }
   if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
     const activePage = document.querySelector('.page.active');

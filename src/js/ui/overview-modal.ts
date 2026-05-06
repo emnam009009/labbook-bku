@@ -34,9 +34,12 @@ export async function openOverviewModal({
       </div>
     `;
     document.body.appendChild(modal);
-    // Click overlay → close
+    // Click overlay → close (Round 85: only if click is direct on THIS overlay)
     modal.addEventListener('click', (e: MouseEvent) => {
-      if ((e.target as HTMLElement).closest('.modal')) return;
+      // Only trigger if click was directly on the overlay element itself,
+      // not on any descendant modal/content. Prevents closing modal-attachments
+      // when overview overlay is being interacted with.
+      if (e.target !== modal) return;
       (window as any).closeModal?.(modalId);
     });
     // Accordion toggle delegation + Round 82: lightbox click
