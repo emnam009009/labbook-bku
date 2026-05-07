@@ -22,7 +22,7 @@ export { secretTest } from "./handlers/secret-test";
 
 // LLM proxies — uncomment as implemented:
 // export { claudeProxy } from "./handlers/claude-proxy";    // Round 111+
-// export { geminiProxy } from "./handlers/gemini-proxy";    // Round 111+
+export { geminiProxy } from "./handlers/gemini-proxy";    // Round 111+
 // export { voyageProxy } from "./handlers/voyage-proxy";    // Round 121+
 // export { chandraProxy } from "./handlers/chandra-proxy";  // Round 117+
 

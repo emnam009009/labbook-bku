@@ -23,7 +23,9 @@ import {
   clearMessages,
   scrollToBottom,
 } from "./message-bubble";
-import { mockStream } from "./streaming-mock";
+import { streamLlm } from "../llm/llm-router";
+import { getSystemPrompt } from "../llm/system-prompt";
+import { LlmMessage } from "../llm/types";
 
 /**
  * Send user message + handle response stream.
@@ -63,41 +65,66 @@ export async function sendUserMessage(text: string): Promise<void> {
   let assistantMsgEl: HTMLElement | null = null;
   let finalText = "";
 
-  await mockStream(text, {
-    onChunk: async (accumulated: string) => {
-      // First chunk: remove loading, create real assistant bubble
-      if (!assistantMsgEl) {
-        removeLoadingBubble(loadingEl);
-        const tempMsg: Message = {
-          role: "assistant",
-          text: accumulated,
-          createdAt: Date.now(),
-        };
-        assistantMsgEl = await appendMessageToDom(tempMsg);
-      } else {
-        // Update existing bubble with accumulated text
-        await updateMessageText(assistantMsgEl, accumulated, true);
-      }
-      finalText = accumulated;
-    },
-    onComplete: async (fullText: string) => {
-      finalText = fullText;
-      // Persist assistant message to RTDB
-      await appendMessage(convId!, {
-        role: "assistant",
-        text: fullText,
-        tier: 1, // Mock = Tier 1 (Gemini Flash equivalent)
+  // Round 111: Build messages array với conversation history (10 messages gần nhất)
+  const conv = await getConversation(convId);
+  const historyMessages: LlmMessage[] = [];
+  if (conv?.messages) {
+    const sorted = Object.values(conv.messages)
+      .sort((a: any, b: any) => (a.createdAt || 0) - (b.createdAt || 0));
+    // Lấy 10 messages gần nhất (không tính user message vừa append)
+    const recent = sorted.slice(-11, -1);
+    for (const m of recent as any[]) {
+      historyMessages.push({
+        role: m.role === "assistant" ? "model" : "user",
+        text: m.text || "",
       });
-      scrollToBottom();
+    }
+  }
+  // Add current user message
+  historyMessages.push({ role: "user", text });
+
+  await streamLlm(
+    {
+      messages: historyMessages,
+      systemPrompt: getSystemPrompt(),
+      tier: 1,
     },
-    onError: (e: Error) => {
-      console.error("[Mock stream error]", e);
-      removeLoadingBubble(loadingEl);
-      if (typeof window.showToast === "function") {
-        window.showToast("Streaming error: " + e.message, "error");
-      }
-    },
-  });
+    {
+      onChunk: async (accumulated: string) => {
+        // First chunk: remove loading, create real assistant bubble
+        if (!assistantMsgEl) {
+          removeLoadingBubble(loadingEl);
+          const tempMsg: Message = {
+            role: "assistant",
+            text: accumulated,
+            createdAt: Date.now(),
+          };
+          assistantMsgEl = await appendMessageToDom(tempMsg);
+        } else {
+          // Update existing bubble with accumulated text
+          await updateMessageText(assistantMsgEl, accumulated, true);
+        }
+        finalText = accumulated;
+      },
+      onComplete: async (fullText: string) => {
+        finalText = fullText;
+        // Persist assistant message to RTDB
+        await appendMessage(convId!, {
+          role: "assistant",
+          text: fullText,
+          tier: 1,
+        });
+        scrollToBottom();
+      },
+      onError: (e: Error) => {
+        console.error("[LLM stream error]", e);
+        removeLoadingBubble(loadingEl);
+        if (typeof window.showToast === "function") {
+          window.showToast("Stream error: " + e.message, "error");
+        }
+      },
+    }
+  );
 }
 
 /**
