@@ -27,7 +27,7 @@ export { secretTest } from "./handlers/secret-test";
 // export { chandraProxy } from "./handlers/chandra-proxy";  // Round 117+
 
 // Python service bridge (Round 107+)
-// export { pythonBridge } from "./handlers/python-bridge";  // Round 107+
+export { pythonBridge } from "./handlers/python-bridge";
 
 // AI tool execution (Round 112+)
 // export { toolExecutor } from "./handlers/tool-executor";  // Round 112+
