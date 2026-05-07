@@ -1,21 +1,55 @@
 # LabBook BKU — AI Architecture
 
-**Version**: 1.0
+**Version**: 2.0
 **Last updated**: 2026-05-07
-**Status**: Foundation
+**Status**: Active (Round 105 foundation applied)
 **Owner**: nAM (superadmin)
+
+> **Major changes from v1.0** (2026-05-07 morning):
+> - Adopted **Hybrid TS + Python** architecture (Cloud Run for materials informatics)
+> - Code structure migrated to `src/ts/ai/` (TypeScript strict partial, repo already TS)
+> - **6 analyzer groups × 24 subfolders** (structural, optical, electrochemistry, photoelectrochemistry, surface, microscopy)
+> - Service reuse strategy: AI module wraps existing `src/ts/services/{parsers,plot}/`
+> - Materials informatics libraries integrated: pymatgen, ASE, MatSciBERT, lmfit, impedance.py
+> - Roadmap expanded: 95 → 220 rounds across Phase A → E
+> - Phase C split into C-1 (optical/structural), C-2 (electrochemistry), C-3 (PEC)
+
+---
+
+## Table of Contents
+
+1. [Vision](#1-vision)
+2. [Three-Tier Architecture](#2-three-tier-architecture)
+3. [Hybrid TS + Python Architecture](#3-hybrid-ts--python-architecture)
+4. [Service Reuse Strategy](#4-service-reuse-strategy)
+5. [Agentic RAG Pipeline](#5-agentic-rag-pipeline)
+6. [Anti-Hallucination — 9 Layers](#6-anti-hallucination--9-layers)
+7. [Self-Learning Strategy](#7-self-learning-strategy)
+8. [Provenance Chain](#8-provenance-chain)
+9. [Voice Integration](#9-voice-integration)
+10. [Document Processing Pipeline](#10-document-processing-pipeline)
+11. [Workbench (UI)](#11-workbench-ui)
+12. [Materials Informatics Libraries](#12-materials-informatics-libraries)
+13. [Tech Stack Summary](#13-tech-stack-summary)
+14. [Cost Projection](#14-cost-projection)
+15. [Security & Privacy](#15-security--privacy)
+16. [Evaluation Strategy](#16-evaluation-strategy)
+17. [Implementation Roadmap](#17-implementation-roadmap)
+18. [Risk & Mitigation](#18-risk--mitigation)
+19. [Decision Log](#19-decision-log)
 
 ---
 
 ## 1. Vision
 
-LabBook BKU AI là một **hệ sinh thái AI Research Platform** chuyên cho lab vật liệu 2D/TMDs (WS₂, WO₃, MoS₂...). Không phải chatbot Q&A, mà là **AI nghiên cứu đồng hành** với khả năng:
+LabBook BKU AI là một **hệ sinh thái AI Research Platform** chuyên cho lab vật liệu 2D/TMDs (WS₂, WO₃, MoS₂, BiVO₄, perovskites...) với 6 mục tiêu cốt lõi:
 
-1. **Quản trị thông minh** — truy vấn database lab, kiểm soát compliance, điều phối thực nghiệm
-2. **Phân tích khoa học chuyên sâu** — đọc phổ XRD/Raman/UV-Vis/PL/FTIR/LSV ở mức nhà nghiên cứu thực thụ
+1. **Quản trị thông minh** — truy vấn database lab, kiểm soát compliance Nghị định 24/2026, điều phối thực nghiệm
+2. **Phân tích khoa học chuyên sâu** — đọc phổ XRD/Raman/UV-Vis/PL/FTIR/PEC/EIS/XPS/EDS ở mức nhà nghiên cứu thực thụ
 3. **Suy luận và định hướng** — Agentic RAG trên 1000+ paper + lab history, đề xuất thí nghiệm tối ưu
-4. **Hỗ trợ viết** — luận văn, paper, đồ án từ dữ liệu lab thực
+4. **Hỗ trợ viết** — luận văn, paper, đồ án từ dữ liệu lab thực + provenance chain audit-able
 5. **Voice-first lab workflow** — nhập/đọc bằng giọng nói khi đeo găng
+6. **DFT integration** — tạo input QE/CASTEP/VASP, parse output, kết nối với Materials Project
 
 ---
 
@@ -58,68 +92,255 @@ LabBook BKU AI là một **hệ sinh thái AI Research Platform** chuyên cho la
 - `check_compliance(chemical_name)` → Nghị định 24/2026 + GHS
 - `get_member_info(uid)`
 
-**Cost**: ~$0.003/query (Flash). Free tier rộng.
+**Cost**: ~$0.003/query.
 
 ### Tier 2 — Spectrum Analyzer (Claude Sonnet 4.6)
 
 **Use cases**: "Phân tích file XRD này", "Tính Eg từ phổ UV-Vis", "Mẫu nào có HER tốt nhất?"
 
-**Tools**:
-- `parse_spectrum(file, type)` — XRD/Raman/UV-Vis/PL/FTIR/LSV
-- `detect_peaks(data, threshold)`
-- `match_jcpds(peaks, candidate_phases)`
-- `compute_scherrer(peak_fwhm, theta)`
-- `compute_tauc(uvvis_data, transition_type)`
-- `compute_tafel(lsv_data, region)`
-- `fit_lorentzian(raman_data)` / `fit_gaussian` / `fit_voigt`
-- `identify_functional_groups(ftir_peaks)` — knowledge base C-H, C=O, Mo-S, W-O...
-- `analyze_pl_excitons(pl_data, material)` — A⁻/A⁰/B for TMDs
-- `compare_samples(sample_ids, technique)`
-- `vision_read_spectrum(image)` — fallback khi chỉ có ảnh PNG, không có file raw
+Hoạt động trên **24 spectrum types** thuộc 6 nhóm (xem Section 12).
 
 **Cost**: ~$0.06/query trung bình.
 
 ### Tier 3 — Research Agent (Claude Opus 4.7)
 
-**Use cases**: "Em tổng hợp WS₂ QDs trên WO₃, Eg=3.05 eV, làm sao tăng HER?", "Có khoảng trống nghiên cứu gì giữa lab và literature?", "Viết phần methodology cho mẫu #042"
+**Use cases**: "Em tổng hợp WS₂ QDs trên WO₃, Eg=3.05 eV, làm sao tăng HER?"
 
-**Tools** (composing Tier 1+2 tools, plus):
-- `vector_search_papers(query, filters?)` — Voyage-3 + rerank-2.5
-- `bm25_search(keywords)` — keyword fallback
-- `hybrid_retrieval(query)` — combined dense + sparse
-- `lab_memory_query(facts_about)` — episodic memory
-- `cross_source_verify(claim)` — check paper vs lab vs general knowledge
-- `generate_hypothesis(observation)`
-- `design_experiment(goal, constraints)`
-- `write_section(template, data, citations)` — methodology, results, discussion
-- `web_search_arxiv(query)` — live arXiv for very recent papers
-- `dft_input_generator(material, calculation_type, software)` — QE/CASTEP/VASP
+Multi-step reasoning: decompose → retrieve → cross-verify → reflect → synthesize → cite.
 
-**Cost**: ~$0.30/query trung bình (deep multi-step).
+**Cost**: ~$0.30/query trung bình.
 
 ### Routing Logic
 
-```javascript
-// src/js/ai/core/router.js (pseudocode)
-function routeQuery(query, conversationContext) {
-  const classification = await flashRouter(query); // cheap classifier
-
+```typescript
+// src/ts/ai/core/router.ts (pseudocode)
+function routeQuery(query: string, context: ConversationContext): Tier {
+  const classification = await flashRouter(query);
   if (classification.tier === 1) return tier1Agent;
   if (classification.tier === 2) return tier2Agent;
   if (classification.tier === 3) return tier3Agent;
-
-  // Mixed — start with Tier 2, escalate to Tier 3 if needed
   return tier2WithEscalation;
 }
 ```
 
-**Estimated mix**: 60% Tier 1, 30% Tier 2, 10% Tier 3 → average cost ~$0.04/query.
+**Estimated mix**: 60% Tier 1, 30% Tier 2, 10% Tier 3 → average ~$0.04/query.
 
 ---
 
-## 3. Agentic RAG Pipeline
+## 3. Hybrid TS + Python Architecture
 
-### 3.1 Ingestion (Offline, one-time + incremental)
+### 3.1 Lý do Hybrid
+
+TypeScript mạnh cho UI/orchestration nhưng yếu cho khoa học vật liệu:
+- Không có pymatgen (CIF, JCPDS, crystal structure)
+- Không có ASE (DFT input/output)
+- Không có lmfit (Voigt, multi-Gaussian fitting)
+- Không có impedance.py (EIS equivalent circuit)
+- Không có MatSciBERT (domain embedding)
+
+→ **Tách 2 lớp**: TS xử lý preview + orchestration, Python xử lý deep analysis.
+
+### 3.2 Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      Browser (Frontend)                          │
+│                                                                  │
+│  TypeScript App (Vite + Vanilla TS, strict partial)             │
+│  ├─ UI/UX (Tailwind + design tokens)                            │
+│  ├─ Firebase RTDB sync                                           │
+│  ├─ Chat interface                                               │
+│  ├─ src/ts/services/parsers/   (existing — REUSE)               │
+│  ├─ src/ts/services/plot/      (existing — REUSE)               │
+│  ├─ src/ts/ai/core/            (provider abstraction)            │
+│  ├─ src/ts/ai/agent/           (orchestrator + reflector)        │
+│  ├─ src/ts/ai/tools/           (Tier 1 RTDB tools)               │
+│  ├─ src/ts/ai/analyzers/       (Tier 2 — wraps Python)           │
+│  └─ src/ts/ai/python-bridge/   (HTTP client to Python service)   │
+│              │                                                   │
+└──────────────┼───────────────────────────────────────────────────┘
+               │
+               │ HTTPS (Firebase Auth tokens)
+               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│           Firebase Cloud Functions (Node.js TS)                  │
+│                                                                  │
+│  Lightweight proxies + auth + secrets management                │
+│  ├─ functions/src/claude-proxy.ts    (Anthropic API)             │
+│  ├─ functions/src/voyage-proxy.ts    (Embedding + Rerank)        │
+│  ├─ functions/src/chandra-proxy.ts   (OCR)                       │
+│  ├─ functions/src/python-bridge.ts   (Forward to Python)         │
+│  └─ functions/src/gemini-proxy.ts    (Tier 1 LLM)                │
+│              │                                                   │
+└──────────────┼───────────────────────────────────────────────────┘
+               │
+               │ HTTPS internal call (service account)
+               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│              Python Compute Service (Cloud Run)                  │
+│                                                                  │
+│  FastAPI + Python 3.11+ (auto-scale 0-100, $0 idle)             │
+│  ├─ /xrd/analyze           — pymatgen XRD pattern + JCPDS        │
+│  ├─ /raman/deconvolve      — lmfit Voigt fitting                 │
+│  ├─ /uvvis/tauc-advanced   — scipy Tauc + Urbach                 │
+│  ├─ /pl/multi-gauss        — scipy multi-Gaussian (trions)       │
+│  ├─ /ftir/peaks            — peak detection + functional groups  │
+│  ├─ /eis/fit-nyquist       — impedance.py equivalent circuit     │
+│  ├─ /ms/flat-band          — Mott-Schottky linear fit            │
+│  ├─ /ipce/calc             — IPCE/APCE wavelength response       │
+│  ├─ /xps/peak-fit          — lmfit Voigt + Shirley background    │
+│  ├─ /eds/quant             — atomic % quantification             │
+│  ├─ /bet/bjh               — surface area + pore size            │
+│  ├─ /tga/steps             — mass loss step detection            │
+│  ├─ /dft/qe-input          — ASE QE input generator              │
+│  ├─ /dft/parse-output      — pymatgen DFT output parser          │
+│  ├─ /jcpds/match           — pymatgen diffraction sim from CIF   │
+│  ├─ /cif/visualize         — pymatgen → 3D structure model       │
+│  └─ /embed/matscibert      — Domain-specific embeddings          │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 3.3 Why Cloud Run
+
+- **Pay per request** — $0 khi không dùng
+- **Auto-scale 0 → 100 instances**
+- **Free tier 2M requests/tháng** (đủ cho lab nhỏ)
+- **HTTPS auto + custom domain**
+- **Tích hợp với Firebase** (cùng GCP project)
+- **Container-based** (Docker image với pymatgen + scipy)
+- **Cold start ~2-5 giây** (chấp nhận được cho deep analysis)
+
+### 3.4 Communication Pattern
+
+```
+TypeScript:                          Python:
+─────────────                        ────────
+1. User upload XRD file
+2. Quick parse (existing parser)
+3. Show preview chart immediately
+4. Click "Deep analyze" →
+                       ┌────────────►  /xrd/analyze
+                       │                {file_data, candidates}
+                       │
+                       │              Returns:
+                       │                {peaks, jcpds_match,
+                       └────────────    scherrer, lattice, R_factor}
+5. Display Python result
+6. Send to Claude with context →
+   "Phân tích pattern này..."
+```
+
+### 3.5 Local Development
+
+```bash
+# Terminal 1 — frontend
+cd ~/LAB-MANAGER/labbook-vite-tailwind/labbook
+npm run dev
+
+# Terminal 2 — Cloud Functions emulator
+cd functions
+npm run serve
+
+# Terminal 3 — Python service (local)
+cd python-service
+uv sync
+uvicorn main:app --reload --port 8000
+```
+
+3 services cùng chạy local → develop end-to-end.
+
+---
+
+## 4. Service Reuse Strategy
+
+### 4.1 Existing services to REUSE
+
+LabBook BKU repo đã có sẵn:
+
+```
+src/ts/services/
+├── parsers/                    ← REUSE
+│   ├── corrware.ts            (CorrWare/Princeton EChem → CV/LSV data)
+│   ├── jcamp-jasco.ts         (JCAMP-DX/JASCO → spectrum data)
+│   ├── detect.ts              (Auto-detect file type)
+│   ├── parser-core.ts         (Shared utilities)
+│   └── index.ts               (Public API)
+│
+└── plot/                       ← REUSE
+    ├── tauc.ts                (Tauc plot — Eg calculation)
+    ├── bandgap-fit.ts         (Linear regression for Tauc)
+    ├── plot-preview.ts        (Quick preview rendering)
+    └── highres-png.worker.ts  (Hi-res PNG export)
+```
+
+### 4.2 Reuse Pattern
+
+AI module **wraps** existing services qua `src/ts/ai/tools/spectrum-tools.ts`:
+
+```typescript
+// AI tool wrapper
+import { detectFileType } from '@/services/parsers/detect';
+import { parseJcamp } from '@/services/parsers/jcamp-jasco';
+import { computeTauc } from '@/services/plot/tauc';
+import { fitBandgap } from '@/services/plot/bandgap-fit';
+import { pythonBridge } from '@/ai/python-bridge/client';
+
+export async function analyzeUvVisTool(input: {
+  fileBuffer: ArrayBuffer;
+  transitionType?: 'direct' | 'indirect';
+  deepAnalysis?: boolean;
+}) {
+  // 1. Quick path — existing TS services
+  const fileType = detectFileType(input.fileBuffer);
+  const spectrum = parseJcamp(input.fileBuffer);
+  const taucData = computeTauc(spectrum, input.transitionType ?? 'direct');
+  const fit = fitBandgap(taucData);
+
+  // 2. Optional deep analysis — Python service
+  let advanced = null;
+  if (input.deepAnalysis) {
+    advanced = await pythonBridge.call('/uvvis/tauc-advanced', {
+      spectrum,
+      transitionTypes: ['direct', 'indirect', 'forbidden_direct']
+    });
+  }
+
+  return {
+    quick: { spectrum, taucData, eg: fit.eg, rSquared: fit.rSquared },
+    advanced,
+    sources: ['plot/tauc.ts', 'plot/bandgap-fit.ts', advanced ? '/uvvis/tauc-advanced' : null].filter(Boolean)
+  };
+}
+```
+
+### 4.3 Benefits
+
+- ✅ **Single source of truth** — Eg từ AI và UI luôn nhất quán
+- ✅ **Code đã test** với data thật
+- ✅ **Bug fix 1 lần** áp dụng cả AI lẫn UI
+- ✅ **Round nhỏ hơn** — không phải viết lại
+- ✅ **Future migration to `lib/`** dễ dàng (rename, không refactor logic)
+
+### 4.4 New parsers needed
+
+Existing parsers cover ~30% formats. Cần viết mới (Phase C):
+
+| Format | Round | Strategy |
+|---|---|---|
+| Generic XRD `.xy/.txt` | 131 | TypeScript parser |
+| Bruker `.brml` | future | Python (XML parsing) |
+| Generic Raman `.txt` | 134 | TypeScript |
+| Renishaw `.wdf` | future | Python (binary) |
+| Generic PL `.txt` | 139 | TypeScript |
+| Biologic `.mpt` | future | TypeScript (extend corrware pattern) |
+| Generic CSV | 130 | Universal fallback |
+
+---
+
+## 5. Agentic RAG Pipeline
+
+### 5.1 Ingestion (Offline, one-time + incremental)
 
 ```
 Sources                          Pipeline                     Storage
@@ -138,14 +359,14 @@ Drive sync  ──┘                  ▼
                                  technique: each chunk gets
                                  LLM-generated context summary)
                                  ▼
-                                 Embed (Voyage-3, 1024 dim)
+                                 Embed (Voyage-3 OR MatSciBERT)
                                  ▼
                                  Index ────────────────────▶ Firestore Vector
                                                             BM25 (Lunr.js)
                                                             Metadata index
 ```
 
-### 3.2 Retrieval (Online, per query)
+### 5.2 Retrieval (Online, per query)
 
 ```
 User query
@@ -154,7 +375,7 @@ User query
 Query analysis (decompose if multi-aspect)
    │
    ├─▶ Hybrid retrieval (parallel):
-   │      • Dense: top-50 Voyage embedding similarity
+   │      • Dense: top-50 Voyage/MatSciBERT similarity
    │      • Sparse: top-50 BM25 keyword
    │   ▼
    │   Reciprocal rank fusion → top-50 merged
@@ -178,74 +399,74 @@ Reflection loop: self-critique for unsupported claims
 Final answer + citations + confidence
 ```
 
-### 3.3 Storage Schema (Firestore Vector Search)
+### 5.3 Storage Schema
 
-```javascript
-// Collection: paper_chunks
-{
-  id: "paper_2023_park_001_chunk_007",
-  paper_id: "paper_2023_park_001",
-  chunk_index: 7,
-  text: "raw chunk text",
-  contextual_text: "LLM-prep context + raw chunk",  // for embedding
-  embedding: [...],  // 1024-dim vector
+```typescript
+// Firestore: paper_chunks
+interface PaperChunk {
+  id: string;                      // "paper_2023_park_001_chunk_007"
+  paper_id: string;
+  chunk_index: number;
+  text: string;                    // raw chunk
+  contextual_text: string;         // LLM-prep context + raw (for embedding)
+  embedding: number[];             // 1024-dim vector (Voyage-3)
   metadata: {
-    paper_title: "WS2/WO3 heterojunction for HER",
-    authors: ["Park, J.", "Lee, S."],
-    year: 2023,
-    journal: "Nano Letters",
-    doi: "10.1021/...",
-    section: "Results and Discussion",
-    page: 4,
-    figures_in_chunk: ["Fig 3", "Fig 4"],
-    tables_in_chunk: [],
-    equations: ["E_g = ...", "η = ..."]
-  },
-  tags: ["WS2", "WO3", "heterojunction", "HER", "Eg"]
+    paper_title: string;
+    authors: string[];
+    year: number;
+    journal: string;
+    doi: string;
+    section: string;               // "Results and Discussion"
+    page: number;
+    figures_in_chunk: string[];
+    tables_in_chunk: string[];
+    equations: string[];
+  };
+  tags: string[];                  // ["WS2", "WO3", "heterojunction", "HER"]
 }
 
-// Collection: papers (master metadata)
-{
-  id: "paper_2023_park_001",
-  title: "...",
-  authors: [...],
-  year: 2023,
-  doi: "...",
-  abstract: "...",
-  keywords: [...],
-  pdf_url: "...",
-  num_chunks: 32,
-  ingested_at: timestamp,
-  ingested_by: "superadmin_uid",
-  source: "zotero" | "drive" | "upload"
+// Firestore: papers (master metadata)
+interface Paper {
+  id: string;
+  title: string;
+  authors: string[];
+  year: number;
+  doi: string;
+  abstract: string;
+  keywords: string[];
+  pdf_url: string;
+  num_chunks: number;
+  ingested_at: Timestamp;
+  ingested_by: string;             // user uid
+  source: 'zotero' | 'drive' | 'upload';
 }
 
-// Collection: lab_memory (episodic facts)
-{
-  id: "fact_001",
-  type: "verified_observation" | "experimental_result" | "lesson_learned",
-  content: "WS₂ QDs từ 180°C/12h hydrothermal có Eg = 3.05±0.05 eV",
-  source_type: "experiment" | "user_input" | "ai_extracted",
-  source_ids: ["exp_042"],
-  embedding: [...],
-  verified_by: ["superadmin_uid"],
-  verified_at: timestamp,
-  confidence: "high" | "medium" | "low",
-  tags: ["WS2", "QD", "hydrothermal", "Eg"]
+// Firestore: lab_memory (episodic facts)
+interface LabFact {
+  id: string;
+  type: 'verified_observation' | 'experimental_result' | 'lesson_learned';
+  content: string;
+  source_type: 'experiment' | 'user_input' | 'ai_extracted';
+  source_ids: string[];            // ["exp_042"]
+  embedding: number[];
+  verified_by: string[];
+  verified_at: Timestamp;
+  confidence: 'high' | 'medium' | 'low';
+  tags: string[];
 }
 ```
 
 ---
 
-## 4. Anti-Hallucination — 9 Layers
+## 6. Anti-Hallucination — 9 Layers
 
 ### Layer 1: Strict Grounding (System Prompt)
 
 ```
 Bạn là AI nghiên cứu vật liệu cho lab. QUY TẮC TUYỆT ĐỐI:
 1. CHỈ trả lời dựa trên: (a) chunks retrieved, (b) lab data tools,
-   (c) computational tool results.
-2. KHÔNG TỰ SINH số liệu khoa học (Eg, d-spacing, Tafel, etc.).
+   (c) Python service computational results.
+2. KHÔNG TỰ SINH số liệu khoa học (Eg, d-spacing, Tafel, Tafel slope, etc.).
    Nếu cần số, GỌI TOOL hoặc TÌM trong RAG.
 3. Mỗi claim PHẢI kèm citation ID hoặc tool source.
 4. Không có nguồn → nói "Không có dữ liệu về điều này trong corpus."
@@ -261,11 +482,11 @@ Mỗi câu được pin với chunk_id chính xác. Anthropic Citations API:
 
 ### Layer 3: Numerical Verification
 
-Schema validation cho LLM output. Số liệu phải có format:
+Số liệu phải có format:
 ```
-Eg = 3.05 eV [tool:tauc_calc] hoặc [src:chunk_891]
+Eg = 3.05 eV [tool:python-service/uvvis/tauc] hoặc [src:chunk_891]
 ```
-Reject nếu LLM cố sinh số không có tag nguồn.
+Schema validation reject nếu LLM cố sinh số không có tag nguồn.
 
 ### Layer 4: Confidence Grader (CRAG)
 
@@ -273,34 +494,15 @@ Pre-LLM step: grade từng chunk relevance trước khi inject vào prompt. Reje
 
 ### Layer 5: Reflection Loop
 
-Post-LLM step: tự critique câu trả lời với prompt:
-```
-Phân tích câu trả lời sau. Chỉ ra các claim KHÔNG có nguồn cụ thể
-(không nằm trong chunks hoặc tool results). Output JSON:
-{ "unsupported_claims": [...], "should_remove": true/false }
-```
-
-Nếu có unsupported claims → re-query hoặc remove.
+Post-LLM step: tự critique câu trả lời, tìm unsupported claims → re-query hoặc remove.
 
 ### Layer 6: Cross-source Verification
 
-Khi RAG paper nói X, lab data nói Y → flag conflict, present both:
-```
-⚠️ Paper Park 2023 báo cáo Eg = 2.8 eV cho WS₂/WO₃.
-   Nhưng mẫu lab #042 đo được 3.05 eV.
-   Có thể do: khác synthesis method, khác đặc trưng pha.
-```
+Khi RAG paper nói X, lab data nói Y, Python service compute Z → flag conflict, present cả ba cho user.
 
-### Layer 7: OOD (Out-of-Distribution) Detection
+### Layer 7: OOD Detection
 
-Câu hỏi về vật liệu chưa có trong lab + corpus:
-```
-🤖 Tôi không có dữ liệu nội bộ về vật liệu này trong lab hoặc
-   1023 paper trong corpus. Đây là kiến thức general, độ tin cậy
-   thấp hơn. Khuyến nghị tham khảo paper gốc.
-```
-
-Implementation: classifier dựa trên embedding distance thresholds.
+Câu hỏi về vật liệu chưa có trong lab + corpus → AI thừa nhận giới hạn.
 
 ### Layer 8: Eval Dashboard (Ragas)
 
@@ -309,152 +511,81 @@ Weekly evaluation:
 - **Answer Relevancy**: target ≥0.85
 - **Context Precision**: target ≥0.80
 
-Alert admin nếu metric drop > 5% so với baseline.
-
 ### Layer 9: Human-in-the-loop Verify
 
-Mỗi answer có nút `[✓ Verify]`. Khi superadmin click:
-- Fact được extract → Lab Memory permanent
-- Confidence boost cho tương lai
-- Chain entry "verified by..."
+Admin click `[✓ Verify]` → fact extract → Lab Memory permanent → tăng độ chính xác tương lai.
 
 ---
 
-## 5. Self-Learning Strategy
+## 7. Self-Learning Strategy
 
-### 5.1 Lab Memory (Episodic)
+### 7.1 Lab Memory (Episodic)
 
 Tích lũy facts từ:
-- **Auto-extraction**: mỗi experiment mới nhập RTDB → AI extract facts → propose to memory (admin approve)
-- **Conversation extraction**: cuối mỗi conversation, AI tự đề xuất facts đáng lưu
-- **Verified answers**: khi user thumbs-up + verify → fact added
+- Auto-extraction từ experiments mới nhập RTDB
+- Conversation extraction (cuối mỗi conversation, AI propose facts)
+- Verified answers (thumbs-up + verify)
 
-Facts nuôi dần Tier 3 reasoning. Sau 6 tháng, lab có **knowledge graph riêng**.
+### 7.2 Feedback Loop
 
-### 5.2 Feedback Loop
+Track 👍/👎/click-through/re-query/verify → weekly aggregation → boost good chunks, flag bad chunks.
 
-Mỗi answer track:
-- 👍 / 👎
-- Click-through citations
-- Re-query (signal: answer 1 không đủ)
-- Verify action
-- Time-to-next-question
+### 7.3 Reformulation Learning
 
-Aggregate weekly:
-- Chunks hay được dùng → boost score
-- Chunks bị dislike → flag for re-review
-- Failed queries → reformulation patterns
-- Slow queries → optimize routing
+Track failed → success query mappings → query expansion table.
 
-### 5.3 Reformulation Learning
-
-Track: query → fail → user rephrase → success
-→ Build mapping table:
-```
-"Eg sao cao thế" → "band gap quantum confinement explanation"
-"sao bị shift" → "peak shift causes strain doping"
-```
-
-Apply trong query expansion lần sau.
-
-### 5.4 No Fine-tuning
+### 7.4 No Fine-tuning
 
 **Quy tắc vàng**: Knowledge → RAG. Style → Prompt. Behavior → Eval.
 
-Không fine-tune Claude/Gemini vì:
-- Không hỗ trợ Opus/Sonnet
-- Catastrophic forgetting risk
-- Knowledge update chậm
-- Bản quyền paper phức tạp hơn
-
 ---
 
-## 6. Provenance Chain (Audit Log)
+## 8. Provenance Chain
 
-### 6.1 Schema
+### 8.1 Schema
 
-```javascript
-// Collection: ai_provenance
-{
-  id: "ans_2026_05_07_14_22_001",
-  user_uid: "superadmin_uid",
-  conversation_id: "conv_xyz",
-  user_query: "Cách tăng HER cho WS₂/WO₃",
-  timestamp: "2026-05-07T14:22:00Z",
-  tier_used: 3,
-  model: "claude-opus-4-7",
+```typescript
+// Firestore: ai_provenance
+interface ProvenanceEntry {
+  id: string;
+  user_uid: string;
+  conversation_id: string;
+  user_query: string;
+  timestamp: Timestamp;
+  tier_used: 1 | 2 | 3;
+  model: string;
 
-  agent_steps: [
-    {
-      step: 1,
-      type: "decompose",
-      thought: "Multi-aspect, 3 sub-questions",
-      output: ["sub_1: band alignment", "sub_2: HER mechanism", "sub_3: optimization"]
-    },
-    {
-      step: 2,
-      type: "tool_call",
-      tool: "vector_search_papers",
-      input: { query: "WS2 WO3 heterojunction HER" },
-      output: { chunk_ids: [...], scores: [...] }
-    },
-    {
-      step: 3,
-      type: "tool_call",
-      tool: "lab_memory_query",
-      input: { facts_about: "WS2 WO3 lab samples" },
-      output: { fact_ids: ["F0042"] }
-    },
-    {
-      step: 4,
-      type: "reflection",
-      thought: "Need more data on optimization",
-      action: "re_retrieve"
-    },
-    {
-      step: 5,
-      type: "synthesis",
-      output: "final answer text"
-    }
-  ],
+  agent_steps: AgentStep[];
 
-  claims_in_answer: [
-    {
-      claim_id: "c1",
-      text: "Eg=3.05 eV chủ yếu từ WO₃",
-      sources: ["chunk_891"],
-      confidence: "high",
-      verified_by_tool: false
-    },
-    {
-      claim_id: "c2",
-      text: "Tafel slope ~120 mV/dec điển hình cho WS₂",
-      sources: ["chunk_42", "chunk_178"],
-      confidence: "high",
-      verified_by_tool: false
-    },
-    {
-      claim_id: "c3",
-      text: "Lab Exp #042 có overpotential 320 mV",
-      sources: ["lab_exp_042"],
-      confidence: "high",
-      verified_by_tool: true
-    }
-  ],
+  claims_in_answer: Array<{
+    claim_id: string;
+    text: string;
+    sources: string[];           // chunk_ids OR tool sources
+    confidence: 'high' | 'medium' | 'low';
+    verified_by_tool: boolean;
+  }>;
 
-  total_tokens: { input: 12450, output: 1820 },
-  total_cost_usd: 0.32,
-  duration_ms: 4530,
+  total_tokens: { input: number; output: number; };
+  total_cost_usd: number;
+  duration_ms: number;
 
-  feedback: null,  // populated when user gives feedback
-  verified_by_admin: false,
-  verified_at: null
+  feedback: 'thumbs_up' | 'thumbs_down' | null;
+  verified_by_admin: boolean;
+  verified_at: Timestamp | null;
+}
+
+interface AgentStep {
+  step: number;
+  type: 'decompose' | 'tool_call' | 'reflection' | 'synthesis';
+  tool?: string;
+  thought?: string;
+  input?: any;
+  output?: any;
 }
 ```
 
-### 6.2 UI Display
+### 8.2 UI Display
 
-Provenance chain hiện collapsed bên dưới mỗi AI message:
 ```
 🤖 [answer text]
 
@@ -464,81 +595,51 @@ Sources:
   📄 Park 2023, p.4    [view]
   📄 Liu 2021, p.7     [view]
   🧪 Lab Exp #042      [open]
+  🐍 Python /xrd/analyze  [view]
 Confidence: ●●●●○ High
 ──────────────────────────────────
 [👍] [👎]  [📋 copy]  [🔗 share]  [✓ verify]
 ```
 
-### 6.3 Audit Use Cases
+### 8.3 Audit Use Cases
 
-- **Luận văn**: "AI gợi ý X, dựa trên paper Y, Z" — đầy đủ chain để defend
-- **Debug**: AI sai → xem bước nào sai → fix
+- **Luận văn**: chain truy nguyên đầy đủ — defense-able
+- **Debug**: AI sai → xem step nào sai → fix prompt
 - **Quality**: review weekly, identify bad chunks/prompts
-- **Compliance**: AI usage disclosure cho paper publication (theo yêu cầu Sakana AI license)
+- **Compliance**: AI usage disclosure (per Sakana AI license inspiration)
 
 ---
 
-## 7. Voice Integration
+## 9. Voice Integration
 
-### 7.1 Phase 1 — Web Speech API (immediate)
+### 9.1 Phase 1 — Web Speech API (immediate)
 
-**ASR (Speech-to-Text)**:
-- `webkitSpeechRecognition` / `SpeechRecognition`
-- Vietnamese support: `lang="vi-VN"` (Chrome works well)
-- English fallback: `lang="en-US"`
-- Continuous mode for lab dictation
-- Free, no server, browser native
+**ASR**: `webkitSpeechRecognition` với `lang="vi-VN"`. Continuous mode for lab dictation.
 
-**TTS (Text-to-Speech)**:
-- `speechSynthesis.speak(utterance)`
-- Vietnamese: `lang="vi-VN"`, voice selection
-- Speed/pitch control
-- Free, browser native
+**TTS**: `speechSynthesis.speak(utterance)` với `lang="vi-VN"`.
 
-**Limitation**: Quality decent nhưng không bằng VibeVoice. OK cho prototype.
+Free, browser native, OK cho prototype.
 
-### 7.2 Phase 2 — VibeVoice Self-host (future)
+### 9.2 Phase 2 — VibeVoice Self-host (future)
 
-Khi có nhu cầu:
-- VibeVoice-ASR-7B for accurate transcription with hotwords
-  (lab-specific terms: "L-Cysteine", "WS₂", "Tafel"...)
-- VibeVoice-Realtime-0.5B for low-latency TTS reading
+- VibeVoice-ASR-7B với hotwords cho lab terms
+- VibeVoice-Realtime-0.5B cho low-latency TTS
+- GPU server (~$50-200/month cloud GPU)
+- Defer until Phase E
 
-**Infrastructure needed**:
-- GPU server (RTX 4090+ / A100 / cloud)
-- Docker NVIDIA container
-- API endpoint exposed to webapp
+### 9.3 Lab Mode UX
 
-**Cost**: ~$50-200/month cloud GPU OR one-time hardware.
-
-**Defer until**: Phase D, when project has multiple users.
-
-### 7.3 Lab Mode UX
-
-```
-Press F → Lab Mode fullscreen
-  ↓
-Voice button always visible bottom-right
-Hold-to-talk OR continuous mode
-  ↓
-Live transcription shows
-  ↓
-Confirmed → AI processes → TTS reads result aloud
-```
-
-Use case: "Claude, ghi: thêm 0.5g L-Cysteine lúc 14:22" → AI write to RTDB experiment log.
+`F` key fullscreen + voice button → dictate lab actions hands-free.
 
 ---
 
-## 8. Document Processing Pipeline
-
-### 8.1 Upload Pipeline
+## 10. Document Processing Pipeline
 
 ```
 PDF Paper
    │
    ▼
-Chandra OCR (datalab.to API)
+Chandra OCR (datalab.to API via Cloud Function)
    │
    ├─ Markdown text (with structure)
    ├─ LaTeX equations (inline + block)
@@ -563,87 +664,78 @@ Merged document (text + figure descriptions + equations)
 Smart chunking (section-aware)
    │
    ▼
-Contextual pre-prep + Embed (Voyage-3)
+Contextual pre-prep + Embed (Voyage-3 OR MatSciBERT)
    │
    ▼
 Index Firestore Vector + BM25
 ```
 
-### 8.2 Source Integrations
+### 10.1 Source Integrations
 
-**Web Upload**:
-- Drag & drop, batch up to 50 PDF
-- Progress UI per file
-- Dedup by DOI/title hash
-
-**Zotero Sync**:
-- Zotero Web API + library ID
-- One-way sync (Zotero → LabBook)
-- Filter by collection/tag
-
-**Google Drive Sync**:
-- Folder watch for new PDFs
-- OAuth scope: drive.readonly
-- Webhook trigger on file add
+- **Web Upload**: Drag & drop, batch up to 50 PDF, dedup by DOI/title hash
+- **Zotero Sync**: Zotero Web API + library ID, one-way sync
+- **Google Drive**: Folder watch, OAuth scope `drive.readonly`
 
 ---
 
-## 9. Workbench (Right Sidetab + Pages)
+## 11. Workbench (UI)
 
-### 9.1 Right Sidetab (Chat) — `⌘J` toggle
+### 11.1 Right Sidetab (Chat) — `⌘J` toggle
 
 Quick chat anywhere in app. Slide-out from right (380px width). Use cases:
 - "Thông tin nhanh về [chemical]"
 - "Mở booking máy XRD T2 9h"
 - "Tìm paper về ZnO QD"
 
-### 9.2 Workbench Pages (left sidebar)
+### 11.2 Workbench Pages (left sidebar)
 
 Sub-sections under "AI Workbench":
 
-#### 9.2.1 Spectrum Analyzer
-- Upload XRD/Raman/UV-Vis/PL/FTIR/LSV files
-- Auto-detect type
-- AI analysis + computational tools
-- Multi-sample comparison
-- Export report
-
-#### 9.2.2 Paper Library
-- Browse 1000+ papers (filter, search)
-- Reading view với AI Q&A on paper
-- Highlight relevant to current lab work
-- Citation manager (BibTeX export)
-
-#### 9.2.3 Materials Database
-- CAS number lookup
-- JCPDS card library (WO₃, WS₂, MoS₂, etc. pre-loaded)
-- Compound properties (Mw, density, hazards)
-- Custom material entries
-
-#### 9.2.4 Structure Viewer
-- 3Dmol.js or Mol* for crystal/molecule
-- CIF file upload
-- Band structure plot (from DFT output)
-
-#### 9.2.5 DFT Launcher
-- Input file generator (QE, CASTEP, VASP)
-- Pseudopotential picker
-- K-point mesh suggester
-- Convergence parameter helper
-- Output parser (band gap, DOS, formation energy)
-- **NOT actual DFT execution** (need HPC)
-
-#### 9.2.6 Materials AI Writer
-- Inspired by AI-Scientist, but materials-focused
-- Templates: methodology, results, abstract, intro, discussion
-- Pull from lab data + RAG corpus
-- Output: LaTeX or Word
-- Citation auto-management
-- Style adaptation (journal-specific)
+| Tab | Function | Tier | Round |
+|---|---|---|---|
+| 💬 Chat | Trợ lý AI đa năng (entry point) | 1+2+3 | 108 |
+| 📊 Spectrum Analyzer | Upload phổ → AI đọc + Python compute | 2 | 129 |
+| 🗄 Materials DB | CAS lookup, JCPDS card library | 1 | 177 |
+| 🧬 Structure Viewer | 3Dmol.js cho CIF, band structure | 2 | 179 |
+| 🧮 DFT Launcher | Generate input QE/CASTEP/VASP, parse output | 3 | 181 |
+| 📄 Paper Library | Browse + RAG Q&A, citation manager | 3 | 127 |
+| ✍ Writing Assistant | Materials AI Writer, LaTeX/Word export | 3 | 187 |
+| 📚 Knowledge Graph | Mối liên hệ giữa lab ↔ paper ↔ kết quả | 3 | 196 |
 
 ---
 
-## 10. Tech Stack Summary
+## 12. Materials Informatics Libraries
+
+### 12.1 Python Stack
+
+Inspired by [awesome-materials-informatics](https://github.com/tilde-lab/awesome-materials-informatics):
+
+| Library | Purpose | Usage Round |
+|---|---|---|
+| **pymatgen** | Crystal structure, JCPDS sim, phase diagram | 131-133, 167, 179 |
+| **ASE** | DFT input/output (QE, VASP, CASTEP) | 181-186 |
+| **MatSciBERT** | Domain-specific embeddings cho RAG | 128 |
+| **lmfit** | Voigt, multi-Gaussian, peak fitting | 134, 139, 171 |
+| **impedance.py** | EIS Nyquist + equivalent circuit | 148-149 |
+| **scipy** | Generic curve fitting, optimization | 137, 165 |
+| **matminer** | Featurization (composition → ML features) | future |
+| **ase + spglib** | Symmetry analysis | future |
+
+### 12.2 Materials Project Integration
+
+Free API → 150K+ materials database:
+- Query by formula, structure
+- Reference Eg values, lattice parameters
+- DFT-computed properties
+- Cross-reference với lab measurements
+
+### 12.3 Crystallography Open Database (COD)
+
+Open source 500K+ crystal structures → JCPDS-equivalent cards miễn phí.
+
+---
+
+## 13. Tech Stack Summary
 
 ```yaml
 # LLM Providers
@@ -652,8 +744,9 @@ tier_2: claude-sonnet-4-6      # vision + reasoning
 tier_3: claude-opus-4-7        # deep reasoning
 
 # Embedding & Reranking
-embedding: voyage-3            # 1024-dim, scientific
-reranker: voyage-rerank-2.5    # boost retrieval
+embedding_default: voyage-3            # 1024-dim, scientific
+embedding_specialized: MatSciBERT      # domain-specific (Phase B)
+reranker: voyage-rerank-2.5
 
 # Storage
 vector_db: Firestore Vector Search
@@ -667,24 +760,26 @@ ocr: Chandra OCR (datalab.to API)
 spectrum_vision: Claude Vision direct
 
 # Voice (Phase 1)
-asr: Web Speech API
+asr: Web Speech API (vi-VN)
 tts: speechSynthesis API
 
 # Voice (Phase 2 - future)
 asr: VibeVoice-ASR-7B (self-host)
 tts: VibeVoice-Realtime-0.5B (self-host)
 
-# Backend
-runtime: Firebase Cloud Functions (Blaze plan)
-secrets: Firebase Functions config / GCP Secret Manager
-
 # Frontend
-framework: Vite + Vanilla JS (existing)
-styling: Tailwind + CSS tokens (per DESIGN.md)
-icons: Lucide (replace existing)
+framework: Vite 8 + Vanilla TypeScript
+typescript_mode: strict partial (noImplicitAny, strictNullChecks, noUnusedLocals)
+styling: Tailwind 3 + CSS tokens (per DESIGN.md)
+icons: Lucide (replace existing — Phase A)
+
+# Backend (Hybrid)
+node: Firebase Cloud Functions (TypeScript, Blaze plan)
+python: Cloud Run (FastAPI, Python 3.11+, Docker)
+secrets: Firebase Functions config + GCP Secret Manager
 
 # Standards
-tool_calling: MCP (Model Context Protocol, Anthropic-donated)
+tool_calling: MCP (Model Context Protocol, Anthropic-donated 2025)
 citations: Anthropic Citations API
 contextual_retrieval: Anthropic technique
 eval: Ragas framework (weekly)
@@ -692,41 +787,45 @@ eval: Ragas framework (weekly)
 
 ---
 
-## 11. Cost Projection (Single User Phase)
+## 14. Cost Projection
 
-### Monthly Estimate
+### Monthly Estimate (Single User Phase — superadmin only)
 
 ```
 LLM (1000 queries/mo, Tier mix 60/30/10):
-  Tier 1: 600 × $0.003  = $1.80
-  Tier 2: 300 × $0.06   = $18.00
-  Tier 3: 100 × $0.30   = $30.00
-  ─────────────────────────────
-  Subtotal:               $49.80
+  Tier 1 (Flash): 600 × $0.003  = $1.80
+  Tier 2 (Sonnet): 300 × $0.06  = $18.00
+  Tier 3 (Opus): 100 × $0.30    = $30.00
+  ─────────────────────────────────────
+  Subtotal:                       $49.80
 
 Embedding (Voyage-3):
-  Index 1000 papers:     $0.90 (one-time)
-  Query embed:           $0.01/mo
+  Index 1000 papers:              $0.90 (one-time)
+  Query embed:                    $0.01/mo
 
-Reranking (Voyage rerank-2.5):
-  ~500 reranks/mo:       $0.50
+Reranking (voyage rerank-2.5):
+  ~500 reranks/mo:                $0.50
 
 OCR (Chandra hosted):
-  ~100 PDFs/mo:          $0 (free tier)
+  ~100 PDFs/mo:                   $0 (free tier)
 
 Firebase Blaze:
-  Cloud Functions:       $0-2
-  Firestore Vector:      $0 (within free tier 1GB)
-  Hosting:               $0
-  ─────────────────────────────
-  Subtotal:               $2
+  Cloud Functions:                $0-2
+  Firestore Vector:               $0 (within 1GB free tier)
+  Hosting:                        $0
 
-TOTAL:                   ~$52/month
+Cloud Run (Python service):
+  ~200 requests/mo deep analysis: $0 (within 2M free tier)
+  Container Registry:             $0 (within 0.5GB free)
+
+TOTAL (without caching):          ~$52/month
 ```
 
-**Tối ưu hóa với prompt caching** (Anthropic):
-- System prompt + tool defs cache → 90% input cost reduction trên call thứ 2+
-- Estimated: **~$25-30/month thực tế** với caching đúng
+### Optimized với prompt caching
+
+Anthropic prompt caching giảm 90% input cost trên call thứ 2+:
+- System prompt + tool defs cache
+- **Estimated effective**: **$25-30/month**
 
 ### Cost Controls
 
@@ -734,20 +833,25 @@ TOTAL:                   ~$52/month
 - Per-query token limit: input <50K, output <8K
 - Tier 3 only triggered explicitly hoặc by complexity classifier
 - Streaming response (cancel mid-way if user navigates)
-- Response caching cho similar queries
+- Response caching cho similar queries (5 min TTL)
 
 ---
 
-## 12. Security & Privacy
+## 15. Security & Privacy
 
-### 12.1 API Key Management
+### 15.1 API Key Management
 
-- Anthropic API key: Cloud Functions env (never client-side)
-- Voyage API key: Cloud Functions env
-- Chandra API key: Cloud Functions env
-- Gemini API key: Firebase AI Logic (managed) OR Cloud Functions
+| Key | Storage | Access |
+|---|---|---|
+| Anthropic | Firebase Functions config | Cloud Functions only |
+| Voyage | Firebase Functions config | Cloud Functions only |
+| Chandra | Firebase Functions config | Cloud Functions only |
+| Gemini | Firebase Functions config | Cloud Functions only |
+| Python service auth | GCP Secret Manager | Cloud Functions ↔ Cloud Run |
 
-### 12.2 Database Rules
+Client **never** sees API keys.
+
+### 15.2 Database Rules
 
 ```json
 {
@@ -761,103 +865,83 @@ TOTAL:                   ~$52/month
     "ai_provenance": {
       "$ans_id": {
         ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'superadmin'",
-        ".write": false  // only Cloud Functions
+        ".write": false
       }
     },
     "lab_memory": {
       ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'superadmin'",
-      ".write": false  // only Cloud Functions, after admin approval
+      ".write": false
     }
   }
 }
 ```
 
-### 12.3 Data Retention
+### 15.3 Data Retention
 
 - Conversations: keep all (user-deletable)
 - Provenance: keep 1 year minimum (audit)
 - Lab Memory: permanent (until manually deleted)
-- Embedding vectors: keep with papers
 - API logs: 30 days
 
-### 12.4 PII / Sensitive
-
-- No external services see lab member personal info
-- Chandra OCR: opt for "zero data retention" mode
-- Anthropic: prompt caching is per-org, not shared
-- Voyage: standard ToS, no training on user data
-
-### 12.5 Paper Copyright
+### 15.4 Paper Copyright
 
 - RAG (truy xuất) chứ không train → fair use academic
 - Citation strict (mỗi claim trace về paper)
 - Don't share corpus externally
-- Disclose AI usage trong publications (per Sakana AI license inspiration)
+- Disclose AI usage trong publications
 
 ---
 
-## 13. Evaluation Strategy
+## 16. Evaluation Strategy
 
-### 13.1 Golden Test Set
+### 16.1 Golden Test Set
 
-Bộ test fixed cho regression testing:
-- **7 ảnh phổ user-uploaded** (XRD WO₃, MoS₂/rGO SEM/HRTEM, Raman series, FTIR series, PL trion, Tauc 3.05 eV, xQDs Stokes shift)
-- **20 câu hỏi** mỗi tier (Q&A đơn giản, phân tích phổ, suy luận sâu)
-- **Expected outputs** (key facts AI must mention)
+7 ảnh phổ user-uploaded (XRD WO₃, MoS₂/rGO SEM/HRTEM, Raman series, FTIR series, PL trion, Tauc 3.05 eV, xQDs Stokes shift) + 60 câu hỏi (20 mỗi tier) + expected outputs.
 
-Run weekly. Track regression.
-
-### 13.2 Ragas Metrics
+### 16.2 Ragas Metrics
 
 ```python
-# Weekly evaluation pipeline
 from ragas import evaluate
 
 result = evaluate(
     dataset=test_set,
-    metrics=[
-        faithfulness,        # answer grounded in context
-        answer_relevancy,    # answer addresses question
-        context_precision,   # retrieved chunks relevant
-        context_recall       # all relevant chunks retrieved
-    ]
+    metrics=[faithfulness, answer_relevancy, context_precision, context_recall]
 )
 
-# Target thresholds
 assert result['faithfulness'] >= 0.90
 assert result['answer_relevancy'] >= 0.85
 assert result['context_precision'] >= 0.80
 assert result['context_recall'] >= 0.75
 ```
 
-### 13.3 User Feedback Aggregation
+### 16.3 User Feedback Aggregation
 
 Weekly admin dashboard:
 - Top 10 thumbs-up answers (good patterns)
 - Top 10 thumbs-down (failure analysis)
-- Citations clicked (which sources useful)
-- Query reformulations (where retrieval fails)
+- Citations clicked (source quality)
+- Query reformulations (retrieval gaps)
 - Verified facts count (memory growth)
 
 ---
 
-## 14. Implementation Roadmap
+## 17. Implementation Roadmap
 
-### Phase A — Foundation (Round 105-115)
+### Phase A — Foundation (Round 105-115) ✅ Started
 
-| Round | Task |
-|---|---|
-| 105 | Folder structure + env + secrets + provider abstraction |
-| 106 | Firebase Blaze upgrade + Cloud Functions setup |
-| 107 | AI Chat sidetab UI shell (slide-out, ⌘J toggle) |
-| 108 | Conversation schema RTDB + load/save/list |
-| 109 | Markdown + KaTeX + image rendering in chat |
-| 110 | Streaming responses with abort controller |
-| 111 | Tier 1 routing + Gemini Flash integration |
-| 112 | Tier 1 tools: chemicals, equipment, bookings query |
-| 113 | Tier 1 tools: history, members, compliance |
-| 114 | Compliance KB (Nghị định 24/2026 4 phụ lục as JSON) |
-| 115 | Web Speech API integration (ASR + TTS basic) |
+| Round | Status | Task |
+|---|---|---|
+| 105 | ✅ Done | TypeScript skeleton: 75 stub files, 38 folders, 6 analyzer groups |
+| 106 | ⏳ Next | Firebase Blaze + Cloud Functions skeleton |
+| 107 | 📋 | Python service skeleton (FastAPI + Docker + Cloud Run) |
+| 108 | 📋 | AI Chat sidetab UI shell (slide-out, ⌘J) |
+| 109 | 📋 | Conversation schema RTDB + load/save/list |
+| 110 | 📋 | Markdown + KaTeX + image rendering |
+| 111 | 📋 | Tier 1 routing + Gemini Flash |
+| 112 | 📋 | Tier 1 tools: chemicals, equipment, bookings |
+| 113 | 📋 | Tier 1 tools: history, members, inventory |
+| 114 | 📋 | Compliance KB (Nghị định 24/2026) |
+| 115 | 📋 | Web Speech API (ASR + TTS, vi-VN) |
 
 ### Phase B — RAG Infrastructure (Round 116-128)
 
@@ -870,40 +954,40 @@ Weekly admin dashboard:
 | 120 | Contextual pre-prep (Anthropic technique) |
 | 121 | Voyage-3 embedding pipeline |
 | 122 | Firestore Vector Search index + queries |
-| 123 | BM25 (Lunr.js) keyword index |
+| 123 | BM25 keyword index (Lunr.js) |
 | 124 | Hybrid retrieval (RRF fusion) |
 | 125 | Voyage rerank-2.5 integration |
 | 126 | Citation tracking + UI display |
 | 127 | Paper Library page (browse, search, filter) |
-| 128 | Zotero + Drive sync sources |
+| 128 | Zotero + Drive sync + MatSciBERT alt embedding |
 
-### Phase C — Tier 2 Spectrum Analyzer (Round 129-145)
+### Phase C-1 — Optical & Structural Analyzers (Round 129-145)
 
 | Round | Task |
 |---|---|
 | 129 | Workbench page shell + Spectrum Analyzer tab |
-| 130 | File upload UI + type detection (XRD/Raman/UV-Vis/PL/FTIR/LSV) |
-| 131-132 | XRD parser (multiple formats) + peak detection |
-| 133 | XRD Scherrer + lattice refinement + JCPDS matching |
-| 134-135 | Raman parser + Lorentzian/Voigt fitting |
-| 136 | Raman MoS₂/WS₂ layer counting (E¹₂g - A₁g distance) |
-| 137-138 | UV-Vis parser + Tauc plot (direct/indirect/Kubelka-Munk) |
-| 139-140 | PL parser + multi-Gaussian deconvolution (A⁻/A⁰/B for TMDs) |
-| 141-142 | FTIR parser + functional group identification |
-| 143-144 | LSV parser + Tafel + overpotential + ECSA |
-| 145 | Vision fallback (Claude reads spectrum images directly) |
+| 130 | File upload UI + spectrum-tools.ts wrapper + types |
+| 131-132 | XRD parser (generic .xy/.txt) + Python /xrd/analyze (pymatgen) |
+| 133 | XRD Scherrer + lattice refinement + JCPDS via Materials Project |
+| 134-135 | Raman parser + Python /raman/deconvolve (lmfit Voigt) |
+| 136 | Raman MoS₂/WS₂ layer counting + D/G ratio |
+| 137-138 | UV-Vis (reuse jcamp-jasco + tauc) + Urbach + Kubelka-Munk |
+| 139-140 | PL parser + Python /pl/multi-gauss (trion A⁻/A⁰/B for TMDs) |
+| 141-142 | FTIR (reuse jcamp-jasco) + functional group KB |
+| 143-144 | LSV/HER (reuse corrware) + Tafel + overpotential |
+| 145 | Microscopy vision-based (SEM/TEM via Claude Vision) |
 
-### Phase D — Agentic + Self-learning (Round 146-160)
+### Phase C-2 — Electrochemistry Analyzers (Round 146-160)
 
 | Round | Task |
 |---|---|
-| 146 | Tier 3 orchestrator with Opus 4.7 |
-| 147 | Plan-Execute-Reflect agent loop |
-| 148 | Multi-step decomposition |
-| 149 | CRAG confidence grader integration |
-| 150 | Reflection loop (self-critique) |
-| 151 | Cross-source verification |
-| 152 | OOD detection |
+| 146 | Tier 3 orchestrator with Opus 4.7 (Plan-Execute-Reflect) |
+| 147 | CV analyzer (extend corrware): redox peaks, ECSA via Cdl |
+| 148 | EIS Nyquist plot via python-service (impedance.py) |
+| 149 | EIS equivalent circuit fitting (Rs, Rct, CPE) |
+| 150 | Reflection loop + CRAG grader |
+| 151 | GCD specific capacitance + energy density |
+| 152 | OCP transient + OOD detection |
 | 153 | Lab Memory schema + write API |
 | 154 | Auto-extract facts from experiments |
 | 155 | Feedback loop (thumbs aggregation) |
@@ -913,68 +997,63 @@ Weekly admin dashboard:
 | 159 | Eval pipeline (Ragas weekly) |
 | 160 | Eval dashboard for admin |
 
-### Phase E — Advanced Features (Round 161+)
+### Phase C-3 — Photoelectrochemistry Analyzers (Round 161-175)
 
 | Round | Task |
 |---|---|
-| 161-165 | Materials Database tab (CAS + JCPDS card library) |
-| 166-170 | Structure Viewer (3Dmol.js + CIF) |
-| 171-175 | DFT Launcher (QE/CASTEP input gen + output parser) |
-| 176-185 | Materials AI Writer (templates + LaTeX/Word export) |
-| 186-190 | Lab Mode (F key) + voice-first workflow |
-| 191-195 | Knowledge Graph viz |
-| 196-200 | Spectrum Compare (drag overlay) + What-if Simulator |
+| 161 | PEC dispatcher + chopped-light data structure |
+| 162-163 | PEC LSV under chopped light: photocurrent, ABPE |
+| 164 | PEC chronoamperometry chopped: photoresponse stability |
+| 165-166 | Mott-Schottky data parsing (multi-frequency) |
+| 167 | Mott-Schottky linear fit → flat-band, Nd via pymatgen |
+| 168-169 | IPCE/EQE parsing + APCE calculation |
+| 170 | Surface analyzers dispatcher |
+| 171-173 | XPS via Python /xps/peak-fit (lmfit Voigt + Shirley) |
+| 174 | EDS atomic % quantification |
+| 175 | BET surface area + BJH pore distribution |
+
+### Phase D — Materials DB + Structure (Round 176-190)
+
+| Round | Task |
+|---|---|
+| 176 | TGA/DSC analyzer |
+| 177-178 | Materials Database tab (CAS + JCPDS card library + COD integration) |
+| 179-180 | Structure Viewer (3Dmol.js + CIF parsing via pymatgen) |
+| 181-183 | DFT Launcher input gen (QE/CASTEP/VASP via ASE) |
+| 184-186 | DFT output parser (band structure, DOS, formation energy) |
+| 187-190 | Materials AI Writer (templates + LaTeX/Word export) |
+
+### Phase E — Advanced Features (Round 191-220+)
+
+| Round | Task |
+|---|---|
+| 191-195 | Lab Mode (F key) + voice-first workflow |
+| 196-200 | Knowledge Graph viz |
+| 201-205 | Spectrum Compare (drag overlay) |
+| 206-210 | What-if Simulator (predict before experiment) |
+| 211-220 | UI redesign per DESIGN.md (interleaved) |
 
 ---
 
-## 15. Risk & Mitigation
+## 18. Risk & Mitigation
 
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
 | LLM cost spike | Medium | High | Hard quota, prompt caching, tier routing |
 | Hallucination in scientific claims | High initially | High | 9-layer protection, provenance, eval |
 | Vector DB scale issues | Low (1k papers) | Medium | Monitor, ready to migrate to Pinecone |
-| Voyage API rate limits | Low | Low | Batch queries, fallback to Gemini embed |
+| Voyage API rate limits | Low | Low | Batch queries, fallback Gemini embed |
 | Anthropic API outage | Low | High | Fallback Gemini Pro for Tier 2 |
 | Chandra OCR quota exhausted | Medium | Medium | Self-host pymupdf as fallback |
-| Paper copyright dispute | Low | High | Strict citation, no redistribution, disclose |
-| Lab member resistance to AI | Medium | Medium | Keep superadmin-only initially, prove value |
+| Cold start Cloud Run | Medium | Low | Pre-warm via cron, graceful UX |
+| Container size > limit | Low | Medium | Multi-stage Docker, slim base |
+| Python service downtime | Low | Medium | TS fallback for basic computations |
+| Paper copyright dispute | Low | High | Strict citation, no redistribution |
+| Lab member resistance | Medium | Medium | Superadmin-only Phase A, prove value |
 
 ---
 
-## 16. Success Criteria
-
-End of each Phase:
-
-**Phase A**: AI chat works for Tier 1 queries with role gating, voice input/output basic.
-
-**Phase B**: 100+ papers indexed, RAG returns relevant chunks for materials queries, citations clickable.
-
-**Phase C**: AI correctly analyzes 7 golden test spectra (XRD, Raman, UV-Vis, PL, FTIR, LSV, vision) with key facts mentioned.
-
-**Phase D**: Agentic loop demonstrably outperforms naive RAG on multi-aspect queries; Lab Memory has 50+ verified facts; eval dashboard shows faithfulness ≥0.90.
-
-**Phase E**: Full Workbench with all tabs functional; Materials AI Writer drafts thesis section that requires <30% human edit.
-
----
-
-## 17. References
-
-- **Anthropic Citations API** — guaranteed pointers, free output tokens
-- **Anthropic Contextual Retrieval** — chunk + LLM-prep context
-- **MCP (Model Context Protocol)** — donated to Linux Foundation Dec 2025
-- **Voyage AI** — embedding + reranking, Anthropic-recommended
-- **Ragas framework** — RAG evaluation metrics
-- **CRAG paper** — Corrective RAG self-correction
-- **Self-RAG paper** — special tokens for confidence
-- **AI-Scientist v2 (SakanaAI)** — agentic tree search inspiration
-- **Chandra OCR (Datalab)** — open-source SOTA OCR
-- **Microsoft VibeVoice** — TTS/ASR for voice features
-- **Nghị định 24/2026/NĐ-CP** — Vietnam chemical compliance
-
----
-
-## 18. Decision Log
+## 19. Decision Log
 
 | Date | Decision | Rationale |
 |---|---|---|
@@ -988,6 +1067,14 @@ End of each Phase:
 | 2026-05-07 | Provenance chain from day 1 | Critical for thesis defensibility |
 | 2026-05-07 | Superadmin-only Phase 1 | Cost control + iteration speed |
 | 2026-05-07 | Materials AI Writer over AI-Scientist v2 | Domain-specific, no GPU needed |
+| 2026-05-07 | TypeScript strict partial (preserved) | Avoid 100+ type errors blocking AI work |
+| 2026-05-07 | AI module in `src/ts/ai/` (not new repo) | Single codebase, easier reuse |
+| 2026-05-07 | **Hybrid TS + Python (Cloud Run)** | Materials informatics needs pymatgen/ASE/lmfit |
+| 2026-05-07 | **Reuse existing parsers/ + plot/** | Single source of truth for science |
+| 2026-05-07 | **6 analyzer groups × 24 subfolders** | Full coverage: structural/optical/echem/PEC/surface/microscopy |
+| 2026-05-07 | **Phase C split into C-1, C-2, C-3** | Manageable phase size (~17 rounds each) |
+| 2026-05-07 | **Roadmap expand to 220 rounds** | Realistic given full scope |
+| 2026-05-07 | **MatSciBERT alongside Voyage** | Domain-specific embedding for materials |
 
 ---
 
