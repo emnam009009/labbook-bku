@@ -18,6 +18,7 @@ admin.initializeApp();
 
 // Hello-world for verification (Round 106c)
 export { hello } from "./handlers/hello";
+export { secretTest } from "./handlers/secret-test";
 
 // LLM proxies — uncomment as implemented:
 // export { claudeProxy } from "./handlers/claude-proxy";    // Round 111+
