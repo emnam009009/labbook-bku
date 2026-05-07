@@ -1,0 +1,19 @@
+# Same as .gitignore for upload to Cloud Build
+.git/
+.gitignore
+.gcloudignore
+
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+.env
+.env.local
+
+tests/
+*.md
+docs/
+
+.DS_Store
