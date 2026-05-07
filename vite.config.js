@@ -106,12 +106,31 @@ export default defineConfig({
   // Cấu hình build output
   build: {
     outDir: 'dist',
+
+    // Round 103b: align với tsconfig target=ES2022 cho native top-level
+    // await, private class fields, ??, ?. (smaller transpilation)
+    target: 'es2022',
+
     cssCodeSplit: true,
     rollupOptions: {
       output: {
         assetFileNames: 'assets/[name]-[hash][extname]',
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
+
+        // Round 103b: vendor splitting cho better long-term cache.
+        // Khi app code đổi, firebase chunk hash giữ nguyên - browser
+        // dùng cache. HTTP/2 multiplex song song nên không penalty.
+        // (lightningcss đã thử nhưng không giảm CSS - bỏ.)
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            // Firebase: large + stable, ideal cho long-term cache
+            if (id.includes('@firebase/') || id.includes('/firebase/')) {
+              return 'vendor-firebase';
+            }
+            // Heavy libs đã có lazy chunks riêng - không cần thêm rule
+          }
+        },
       },
     },
   },
