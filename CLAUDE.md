@@ -63,3 +63,77 @@ Latest pushed: Round 103b. Numbering không reset, monotonically increasing.
 - **Windows**: end user (browser test), Origin Lab desktop integration
 - **Firebase Console**: monitor RTDB, Hosting, Auth
 - **Edge browser**: primary user browser (downloads → C:\Users\LEGION\Downloads)
+
+
+## AI Module (Phase A-E, Round 105+)
+
+LabBook BKU đang xây dựng **AI Research Platform** — Hybrid TypeScript + Python kiến trúc dành cho lab vật liệu 2D/TMDs (WS₂, WO₃, MoS₂...).
+
+### Master Documentation (root)
+
+- **`AI_ARCHITECTURE.md`** — Kiến trúc 3-tier, Agentic RAG, 9-layer anti-hallucination, self-learning, provenance chain, Hybrid TS+Python strategy
+- **`DESIGN.md`** — UI design system (anti-card, cyan accent, JetBrains Mono numerical, Lucide icons)
+- **`WORKFLOW.md`** — Patch-based development process, AI assistant rules, `/mnt/d/labbook-patches/` directory layout
+
+### Detail Documentation
+
+- **`docs/ai/*`** — 9 detail files (PROMPTS, TOOLS, RAG_PIPELINE, ANTI_HALLUCINATION, PROVENANCE, EVAL, INTEGRATIONS, HYBRID_ARCHITECTURE, MATERIALS_LIBRARIES)
+- **`docs/design/*`** — 4 detail files (TOKENS, COMPONENTS, PATTERNS, MIGRATION)
+
+### Code Structure
+
+```
+src/ts/ai/                          ← AI orchestration (TypeScript strict partial)
+├── core/                           — provider abstraction
+├── agent/                          — orchestrator, planner, reflector
+├── tools/                          — Tier 1 RTDB tools
+├── analyzers/                      — 6 nhóm × 24 subfolders
+│   ├── structural/{xrd,saxs}/      — XRD, SAXS via pymatgen
+│   ├── optical/{uvvis,pl,raman,ftir,ple,trpl}/
+│   ├── electrochemistry/{cv,lsv,eis,gcd,ocp}/
+│   ├── photoelectrochemistry/{pec-lsv,pec-ca,mott-schottky,ipce}/
+│   ├── surface/{xps,eds,bet,tga}/
+│   └── microscopy/{sem,tem,afm}/
+├── rag/{ingestion,retrieval}/
+├── memory/                         — Lab Memory (episodic)
+├── voice/                          — Web Speech API → VibeVoice
+├── scientist/                      — Materials AI Writer
+├── provenance/                     — Audit chain
+├── types/                          — Shared TypeScript types
+└── python-bridge/                  — Client cho Python compute service
+
+python-service/                     ← Python compute (Cloud Run, FastAPI)
+└── (skeleton, implement Round 107+)
+    Libraries: pymatgen, ASE, MatSciBERT, lmfit, impedance.py, scipy
+```
+
+### Reuse Strategy (REUSE existing services)
+
+AI module **KHÔNG** tạo lại parsers/plot. Reuse:
+- `src/ts/services/parsers/{corrware,jcamp-jasco,detect}.ts`
+- `src/ts/services/plot/{tauc,bandgap-fit}.ts`
+
+Wrap qua `src/ts/ai/tools/spectrum-tools.ts`. Single source of truth cho khoa học.
+
+### Key Decisions
+
+- **LLM**: Gemini 2.5 Flash (Tier 1) + Claude Sonnet 4.6 (Tier 2) + Claude Opus 4.7 (Tier 3)
+- **Embedding**: Voyage-3 + voyage-rerank-2.5 (default) / MatSciBERT (chuyên ngành)
+- **Vector DB**: Firestore Vector Search (native Firebase)
+- **OCR**: Chandra (datalab.to) for PDF/handwriting
+- **Voice**: Web Speech API Phase 1 → VibeVoice self-host Phase 2
+- **Compute**: TypeScript (preview) + Python Cloud Run (deep analysis)
+- **Role**: Chỉ superadmin truy cập trong Phase A
+- **Plan**: Firebase Blaze + Cloud Run (~$5-15/month single user)
+
+### Roadmap Summary
+
+- **Phase A** (Round 105-115): Foundation, chat shell, Tier 1 tools, Web Speech
+- **Phase B** (Round 116-128): RAG infrastructure (paper ingestion, embedding)
+- **Phase C-1** (Round 129-145): Optical & Structural analyzers
+- **Phase C-2** (Round 146-160): Electrochemistry analyzers
+- **Phase C-3** (Round 161-175): Photoelectrochemistry analyzers
+- **Phase D** (Round 176-190): Agentic loop + self-learning + provenance
+- **Phase E** (Round 191+): Materials DB, Structure Viewer, DFT, AI Writer, Lab Mode
+
+Chi tiết roadmap: `ROADMAP.md`.

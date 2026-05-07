@@ -63,3 +63,48 @@ public/fonts/NotoSans-Bold.ttf
 
 # Claude Code System (personal config)
 .claude/
+
+# ============================================================
+# AI MODULE (Round 105+)
+# ============================================================
+
+# Patch backups (created by round patch scripts)
+*.bak[0-9]*
+
+# Firebase Cloud Functions
+functions/.env
+functions/.env.local
+functions/node_modules/
+functions/lib/
+
+# Python Compute Service
+python-service/.env
+python-service/.venv/
+python-service/__pycache__/
+python-service/**/__pycache__/
+python-service/.pytest_cache/
+python-service/*.egg-info/
+python-service/dist/
+python-service/build/
+
+# AI evaluation output
+.ai-eval-results/
+*.eval.json
+
+# Vector DB local cache
+.vector-cache/
+
+# Paper ingestion temp files
+.paper-tmp/
+*.pdf.cache
+
+# Lab Memory backups (sensitive)
+.lab-memory-backup/
+
+# AI assistant scratchpad
+.claude/cache/
+.claude/tmp/
+
+# TypeScript build info
+*.tsbuildinfo
+dist-types/
