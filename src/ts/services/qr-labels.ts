@@ -8,8 +8,25 @@
  *   npm install qrcode jspdf
  */
 
-import QRCode from 'qrcode'
-import { jsPDF } from 'jspdf'
+// Round 103: lazy-load both QRCode + jsPDF to keep ~600KB out of
+// the initial modulepreload chain. They only run when user clicks
+// "Print QR labels" in bulk-actions menu.
+let _qrCodePromise: Promise<any> | null = null;
+let _jsPDFPromise: Promise<any> | null = null;
+
+async function loadQRCode(): Promise<any> {
+  if (!_qrCodePromise) {
+    _qrCodePromise = import('qrcode').then(m => m.default || m);
+  }
+  return _qrCodePromise;
+}
+
+async function loadJsPDF(): Promise<any> {
+  if (!_jsPDFPromise) {
+    _jsPDFPromise = import('jspdf').then((m: any) => m.jsPDF || m.default?.jsPDF || m.default);
+  }
+  return _jsPDFPromise;
+}
 
 interface LabelConfig {
   size: number;
@@ -53,6 +70,7 @@ function getBaseUrl(): string {
 
 // ─── Generate QR code dataURL ─────────────────────────────────────
 async function generateQRDataURL(text: string, sizePx: number): Promise<string> {
+  const QRCode = await loadQRCode();
   return await QRCode.toDataURL(text, {
     width: sizePx,
     margin: 1,
@@ -189,6 +207,7 @@ export async function downloadLabelsPDF(records: LabelRecord[], type: string): P
   try {
     if (window.showToast) window.showToast(`Dang tao PDF ${records.length} nhan...`, 'info' as any);
     const config = getLabelConfig();
+    const jsPDF = await loadJsPDF();
     const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
 
     let col = 0, row = 0;
