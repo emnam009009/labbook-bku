@@ -1,0 +1,25 @@
+# Compiled output
+lib/
+*.tsbuildinfo
+
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.local
+.runtimeconfig.json
+
+# Logs
+*.log
+firebase-debug.log
+firebase-debug.*.log
+ui-debug.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
