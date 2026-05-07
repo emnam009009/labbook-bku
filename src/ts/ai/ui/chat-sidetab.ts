@@ -422,3 +422,126 @@ if (typeof window !== "undefined") {
   // Round 110
   (window as any).onCopyMessage = onCopyMessage;
 }
+
+// ════════════════════════════════════════════════════════════
+// Round 114b: Mic toggle handler
+// ════════════════════════════════════════════════════════════
+import type { SpeechRecorder } from "../voice/speech-recorder";
+
+let micRecorder: SpeechRecorder | null = null;
+
+export async function onAiMicToggle(): Promise<void> {
+  const micBtn = document.getElementById("ai-chat-mic-btn") as HTMLButtonElement | null;
+  if (!micBtn) return;
+
+  // Lazy-load recorder module
+  if (!micRecorder) {
+    const { SpeechRecorder, isVoiceRecordingSupported } = await import("../voice/speech-recorder");
+    if (!isVoiceRecordingSupported()) {
+      if (typeof (window as any).showToast === "function") {
+        (window as any).showToast("Trình duyệt không hỗ trợ ghi âm", "error");
+      }
+      micBtn.disabled = true;
+      return;
+    }
+    micRecorder = new SpeechRecorder({
+      onError: (e) => {
+        if (typeof (window as any).showToast === "function") {
+          (window as any).showToast("Mic: " + e.message, "error");
+        }
+      },
+    });
+  }
+
+  const state = micRecorder.getState();
+
+  if (state === "idle") {
+    // Start recording
+    try {
+      await micRecorder.start();
+      micBtn.dataset.recording = "true";
+      micBtn.title = "Dừng ghi âm";
+    } catch (e) {
+      console.error("[mic] Start failed:", e);
+    }
+    return;
+  }
+
+  if (state === "recording") {
+    // Stop + transcribe
+    delete micBtn.dataset.recording;
+    micBtn.dataset.processing = "true";
+    micBtn.title = "Đang xử lý...";
+
+    try {
+      const result = await micRecorder.stop();
+      if (result && result.transcript) {
+        // Fill transcript vào input
+        const input = document.getElementById(INPUT_ID) as HTMLTextAreaElement | null;
+        if (input) {
+          input.value = input.value
+            ? input.value + " " + result.transcript
+            : result.transcript;
+          input.focus();
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+      } else {
+        if (typeof (window as any).showToast === "function") {
+          (window as any).showToast("Không nghe được. Thử lại?", "warning");
+        }
+      }
+    } catch (e: any) {
+      console.error("[mic] Transcribe failed:", e);
+      if (typeof (window as any).showToast === "function") {
+        (window as any).showToast("Lỗi nhận dạng: " + (e.message || "unknown"), "error");
+      }
+    } finally {
+      delete micBtn.dataset.processing;
+      micBtn.title = "Ghi âm (mic)";
+    }
+    return;
+  }
+}
+
+export async function onAiMsgSpeak(target: HTMLElement): Promise<void> {
+  const bubble = target.closest(".ai-msg") as HTMLElement | null;
+  if (!bubble) return;
+  const contentEl = bubble.querySelector(".ai-msg__content");
+  if (!contentEl) return;
+
+  const text = (contentEl as HTMLElement).innerText || (contentEl as HTMLElement).textContent || "";
+  if (!text) return;
+
+  const { getTts } = await import("../voice/text-to-speech");
+  const tts = getTts();
+
+  // If currently speaking THIS bubble → stop
+  const isThisSpeaking = target.dataset.speaking === "true";
+
+  // Always stop current speaker UI
+  document.querySelectorAll('[data-action="ai-msg-speak"][data-speaking="true"]').forEach((el) => {
+    delete (el as HTMLElement).dataset.speaking;
+  });
+
+  if (isThisSpeaking) {
+    tts.stop();
+    return;
+  }
+
+  // Start speaking
+  target.dataset.speaking = "true";
+  tts.speak(text, {
+    onStateChange: (state) => {
+      if (state === "idle") {
+        delete target.dataset.speaking;
+      }
+    },
+  });
+}
+
+// Round 114b: Expose voice handlers
+if (typeof window !== "undefined") {
+  (window as any).onAiMicToggle = onAiMicToggle;
+  (window as any).onAiMsgSpeak = onAiMsgSpeak;
+}
+

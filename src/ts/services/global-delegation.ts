@@ -211,6 +211,13 @@ export function attachGlobalDelegation() {
       case 'ai-msg-regenerate':
         if (typeof (window as any).regenerateLastResponse === 'function') (window as any).regenerateLastResponse();
         break;
+      // Round 114b: Voice
+      case 'ai-mic-toggle':
+        if (typeof (window as any).onAiMicToggle === 'function') (window as any).onAiMicToggle();
+        break;
+      case 'ai-msg-speak':
+        if (typeof (window as any).onAiMsgSpeak === 'function') (window as any).onAiMsgSpeak(target);
+        break;
     }
   });
 
