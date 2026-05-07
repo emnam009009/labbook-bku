@@ -17,6 +17,10 @@ import '../css/dashboard.css'
 import '../css/sticky-header.css'
 import '../css/theme-swatches.css'
 import '../css/attachments.css'
+import '../css/ai-chat.css'  // Round 108: AI chat sidetab
+
+// AI Chat Sidetab (Round 108)
+import { initAiChatSidetab } from './ai/ui'  // Round 108
 
 // ── Import Firebase ───────────────────────────────────────
 import { db, ref, push, onValue, fbListen, fbPush, fbSet, fbGet, fbDel, update, updatePassword } from './firebase.js'
@@ -1512,3 +1516,9 @@ window.openImageLightbox = function(opts: any) {
     .catch((e: any) => console.error('[main] openImageLightbox failed:', e));
 };
 
+// ── Init AI Chat Sidetab (Round 108) ───────────────
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => initAiChatSidetab())
+} else {
+  initAiChatSidetab()
+}

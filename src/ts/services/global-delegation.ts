@@ -176,6 +176,20 @@ export function attachGlobalDelegation() {
       case 'show-clear-all-confirm':
         if (typeof window.showClearAllConfirm === 'function') window.showClearAllConfirm(target);
         break;
+
+      // ════════ AI Chat Sidetab (Round 108) ════════
+      case 'ai-chat-toggle':
+        if (typeof window.toggleAiChatSidetab === 'function') window.toggleAiChatSidetab();
+        break;
+      case 'ai-chat-close':
+        if (typeof window.closeAiChatSidetab === 'function') window.closeAiChatSidetab();
+        break;
+      case 'ai-chat-suggestion':
+        if (typeof window.onAiChatSuggestion === 'function') window.onAiChatSuggestion(target);
+        break;
+      case 'ai-chat-send':
+        if (typeof window.onAiChatSend === 'function') window.onAiChatSend();
+        break;
     }
   });
 
