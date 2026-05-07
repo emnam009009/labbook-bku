@@ -30,4 +30,4 @@ export { geminiProxy } from "./handlers/gemini-proxy";    // Round 111+
 export { pythonBridge } from "./handlers/python-bridge";
 
 // AI tool execution (Round 112+)
-// export { toolExecutor } from "./handlers/tool-executor";  // Round 112+
+export { toolExecutor } from "./handlers/tool-executor";  // Round 112+

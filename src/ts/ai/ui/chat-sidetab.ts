@@ -115,6 +115,14 @@ export function onAiChatSuggestion(target: HTMLElement): void {
 }
 
 export async function onAiChatSend(): Promise<void> {
+  // Round 113b: Stop button takes precedence when streaming
+  // Round 113b3: renamed to streamingBtn to avoid collision với existing const sendBtn
+  const streamingBtn = document.getElementById("ai-chat-send-btn") as HTMLButtonElement | null;
+  if (streamingBtn?.dataset?.streaming === "true") {
+    const { abortCurrentStream } = await import("./message-handler");
+    abortCurrentStream();
+    return;
+  }
   const input = document.getElementById(INPUT_ID) as HTMLTextAreaElement | null;
   if (!input) return;
 

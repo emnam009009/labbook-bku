@@ -74,6 +74,14 @@ export function createMessageElement(msg: Message): HTMLElement {
                  </svg>
                  <span>Copy</span>
                </button>
+               <button class="ai-msg__action" data-action="ai-msg-regenerate" aria-label="Regenerate response" title="Tạo lại">
+                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                   <polyline points="23 4 23 10 17 10"/>
+                   <polyline points="1 20 1 14 7 14"/>
+                   <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                 </svg>
+                 <span>Tạo lại</span>
+               </button>
              </div>`
       }
     </div>
@@ -229,4 +237,15 @@ export function onCopyMessage(target: HTMLElement): void {
       window.showToast("Đã copy", "success");
     }
   });
+}
+
+
+/**
+ * Round 113b: Remove a message bubble from DOM by msgId.
+ */
+export function removeMessageBubble(msgId: string): void {
+  const container = document.getElementById("ai-chat-messages");
+  if (!container) return;
+  const el = container.querySelector(`[data-msg-id="${msgId}"]`);
+  if (el) el.remove();
 }

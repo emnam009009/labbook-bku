@@ -4,35 +4,16 @@
  * Tier 1 LLM routing (default for low-cost queries).
  * Stream response via SSE chunked transfer back to frontend.
  *
- * Flow:
- *   Frontend (Firebase Auth Bearer token)
- *     → geminiProxy verify auth + role (admin || superadmin)
- *         → Google API streamGenerateContent?alt=sse
- *             → relay chunks back to frontend
- *
- * Endpoint: POST https://asia-southeast1-lab-manager-268a6.cloudfunctions.net/geminiProxy
- *
- * Request body:
- *   {
- *     "messages": [
- *       { "role": "user" | "model", "text": "..." },
- *       ...
- *     ],
- *     "systemPrompt"?: "...",
- *     "model"?: "gemini-2.5-flash" (default)
- *   }
- *
- * Response: SSE stream with chunks like:
- *   data: {"text": "Đang phân tích "}\n\n
- *   data: {"text": "phổ XRD..."}\n\n
- *   data: [DONE]\n\n
- *
  * Round 111: Initial Tier 1 wiring.
+ * Round 111b: Manual CORS handling.
+ * Round 112: Tool calling support — inject tool definitions, support
+ *            multi-turn conversations with functionCall/functionResponse.
  */
 import { onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { logger } from "../utils/logger";
 import { verifyAuth, AuthError } from "../utils/auth";
+import { getGeminiToolDefinitions } from "../tools/registry";
 
 const geminiKey = defineSecret("GEMINI_API_KEY");
 
@@ -40,22 +21,27 @@ const DEFAULT_MODEL = "gemini-2.5-flash";
 const ALLOWED_MODELS = new Set([
   "gemini-2.5-flash",
   "gemini-2.5-flash-lite",
-  "gemini-2.5-pro", // Tier 2 fallback (Round 113+)
+  "gemini-2.5-pro",
 ]);
 
 const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 
 interface GeminiPart {
-  text: string;
+  text?: string;
+  functionCall?: { name: string; args: any };
+  functionResponse?: { name: string; response: any };
 }
+
 interface GeminiContent {
   role: "user" | "model";
   parts: GeminiPart[];
 }
 
 interface GeminiRequest {
-  systemInstruction?: { parts: GeminiPart[] };
+  systemInstruction?: { parts: { text: string }[] };
   contents: GeminiContent[];
+  tools?: any[];
+  toolConfig?: any;
   generationConfig?: {
     temperature?: number;
     maxOutputTokens?: number;
@@ -70,21 +56,44 @@ export const geminiProxy = onRequest(
     secrets: [geminiKey],
     timeoutSeconds: 120,
     memory: "256MiB",
-    cors: true, // Allow browser fetch from claude.ai or lab-manager-268a6.web.app
   },
   async (req, res) => {
-    // ── 1. Auth check (allow admin || superadmin) ────────────
+    // ── 0. Manual CORS handling ──
+    const origin = req.headers.origin || "";
+    const allowedOrigins = [
+      "https://lab-manager-268a6.web.app",
+      "https://lab-manager-268a6.firebaseapp.com",
+      "http://localhost:5173",
+      "http://localhost:3000",
+    ];
+    const allowOrigin = allowedOrigins.includes(origin)
+      ? origin
+      : allowedOrigins[0];
+
+    res.setHeader("Access-Control-Allow-Origin", allowOrigin);
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader("Access-Control-Max-Age", "3600");
+    res.setHeader("Vary", "Origin");
+
+    if (req.method === "OPTIONS") {
+      res.status(204).send("");
+      return;
+    }
+
+    // ── 1. Auth check (allow admin || superadmin) ──
     let auth;
     try {
-      auth = (await verifyAuth(req, "admin").catch(() => null))
-        ?? (await verifyAuth(req, "superadmin"));
+      auth =
+        (await verifyAuth(req, "admin").catch(() => null)) ??
+        (await verifyAuth(req, "superadmin"));
     } catch (e) {
       const error = e as AuthError;
       res.status(error.statusCode || 500).json({ error: error.message });
       return;
     }
 
-    // ── 2. Validate request body ────────────
+    // ── 2. Validate body ──
     if (req.method !== "POST") {
       res.status(405).json({ error: "Method not allowed" });
       return;
@@ -94,29 +103,40 @@ export const geminiProxy = onRequest(
     const messages = body.messages;
     const systemPrompt = body.systemPrompt || "";
     const model = body.model || DEFAULT_MODEL;
-
-    if (!Array.isArray(messages) || messages.length === 0) {
-      res.status(400).json({ error: "messages must be a non-empty array" });
-      return;
-    }
+    const enableTools = body.enableTools !== false; // Default true (Round 112+)
+    const rawContents = body.rawContents; // Round 112: support raw multi-turn (with functionCall/Response)
 
     if (!ALLOWED_MODELS.has(model)) {
       res.status(400).json({ error: `Model not allowed: ${model}` });
       return;
     }
 
-    // ── 3. Build Gemini request ────────────
-    const contents: GeminiContent[] = messages
-      .filter((m: any) => typeof m?.text === "string" && m.text.trim().length > 0)
-      .map((m: any) => ({
-        // Gemini uses "user" and "model" roles
-        role: m.role === "assistant" || m.role === "model" ? "model" : "user",
-        parts: [{ text: String(m.text) }],
-      }));
+    // ── 3. Build Gemini request ──
+    let contents: GeminiContent[];
 
-    if (contents.length === 0) {
-      res.status(400).json({ error: "No valid messages" });
-      return;
+    if (rawContents && Array.isArray(rawContents) && rawContents.length > 0) {
+      // Round 112: Multi-turn with tools — frontend sends raw contents
+      contents = rawContents;
+    } else {
+      // Standard: convert flat messages → Gemini contents
+      if (!Array.isArray(messages) || messages.length === 0) {
+        res.status(400).json({ error: "messages must be a non-empty array" });
+        return;
+      }
+      contents = messages
+        .filter(
+          (m: any) => typeof m?.text === "string" && m.text.trim().length > 0
+        )
+        .map((m: any) => ({
+          role:
+            m.role === "assistant" || m.role === "model" ? "model" : "user",
+          parts: [{ text: String(m.text) }],
+        }));
+
+      if (contents.length === 0) {
+        res.status(400).json({ error: "No valid messages" });
+        return;
+      }
     }
 
     const geminiReq: GeminiRequest = {
@@ -126,23 +146,34 @@ export const geminiProxy = onRequest(
         maxOutputTokens: 4096,
         topP: 0.9,
       },
-      // Disable safety filtering for scientific content (chemistry, etc.)
-      // Adjust if needed for your use case
       safetySettings: [
         { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
         { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
-        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
-        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" },
+        {
+          category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+          threshold: "BLOCK_ONLY_HIGH",
+        },
+        {
+          category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+          threshold: "BLOCK_ONLY_HIGH",
+        },
       ],
     };
 
     if (systemPrompt) {
-      geminiReq.systemInstruction = {
-        parts: [{ text: systemPrompt }],
+      geminiReq.systemInstruction = { parts: [{ text: systemPrompt }] };
+    }
+
+    // Round 112: inject tool definitions
+    if (enableTools) {
+      geminiReq.tools = getGeminiToolDefinitions();
+      // Optional: AUTO mode — Gemini decides when to call tools
+      geminiReq.toolConfig = {
+        functionCallingConfig: { mode: "AUTO" },
       };
     }
 
-    // ── 4. Call Gemini API with streaming ────────────
+    // ── 4. Call Gemini API with streaming ──
     const url = `${GEMINI_API_BASE}/models/${model}:streamGenerateContent?alt=sse`;
     const apiKey = geminiKey.value();
 
@@ -181,11 +212,11 @@ export const geminiProxy = onRequest(
       return;
     }
 
-    // ── 5. Stream SSE response back to client ────────────
+    // ── 5. Stream SSE response back to client ──
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
-    res.setHeader("X-Accel-Buffering", "no"); // Disable proxy buffering
+    res.setHeader("X-Accel-Buffering", "no");
 
     const reader = upstream.body.getReader();
     const decoder = new TextDecoder();
@@ -198,9 +229,8 @@ export const geminiProxy = onRequest(
 
         buffer += decoder.decode(value, { stream: true });
 
-        // Parse SSE lines (each event ends with \n\n)
         const lines = buffer.split("\n");
-        buffer = lines.pop() || ""; // Keep incomplete last line
+        buffer = lines.pop() || "";
 
         for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
@@ -209,13 +239,25 @@ export const geminiProxy = onRequest(
 
           try {
             const json = JSON.parse(data);
-            const text = json?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-            if (text) {
-              // Forward as simplified SSE chunk
-              res.write(`data: ${JSON.stringify({ text })}\n\n`);
+            const parts = json?.candidates?.[0]?.content?.parts || [];
+
+            for (const part of parts) {
+              // Text chunk (streaming text)
+              if (typeof part.text === "string" && part.text) {
+                res.write(
+                  `data: ${JSON.stringify({ text: part.text })}\n\n`
+                );
+              }
+              // Function call (Round 112)
+              if (part.functionCall) {
+                res.write(
+                  `data: ${JSON.stringify({
+                    functionCall: part.functionCall,
+                  })}\n\n`
+                );
+              }
             }
 
-            // Check finish reason
             const finishReason = json?.candidates?.[0]?.finishReason;
             if (finishReason && finishReason !== "STOP") {
               logger.warn("Gemini finish reason", {
@@ -224,19 +266,19 @@ export const geminiProxy = onRequest(
               });
             }
           } catch {
-            // Ignore JSON parse errors (heartbeat, malformed chunks)
+            // Ignore malformed chunks
           }
         }
       }
 
-      // End of stream
       res.write(`data: [DONE]\n\n`);
       res.end();
 
       logger.info("Gemini stream completed", {
         uid: auth.uid,
         model,
-        messageCount: contents.length,
+        turns: contents.length,
+        toolsEnabled: enableTools,
       });
     } catch (e) {
       logger.error("Gemini stream error", { uid: auth.uid, error: e });

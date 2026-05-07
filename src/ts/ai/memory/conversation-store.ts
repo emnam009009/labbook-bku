@@ -253,3 +253,22 @@ export function listenMessages(
     cb(list);
   });
 }
+
+
+/**
+ * Round 113b: Delete a single message by ID.
+ */
+export async function deleteMessage(
+  convId: string,
+  msgId: string
+): Promise<void> {
+  const path = getConvPath(convId);
+  if (!path) return;
+  await fbDel(`${path}/messages/${msgId}`);
+  // Decrement messageCount + bump updatedAt
+  const conv = await getConversation(convId);
+  if (conv) {
+    await fbSet(`${path}/messageCount`, Math.max(0, (conv.messageCount || 1) - 1));
+    await fbSet(`${path}/updatedAt`, Date.now());
+  }
+}

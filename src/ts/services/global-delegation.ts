@@ -207,6 +207,10 @@ export function attachGlobalDelegation() {
       case 'ai-msg-copy':
         if (typeof window.onCopyMessage === 'function') window.onCopyMessage(target);
         break;
+      // Round 113b: Regenerate response
+      case 'ai-msg-regenerate':
+        if (typeof (window as any).regenerateLastResponse === 'function') (window as any).regenerateLastResponse();
+        break;
     }
   });
 
