@@ -1,14 +1,22 @@
 /**
- * AI Chat Sidetab — Round 108 + 108b
+ * AI Chat Sidetab — Round 108 + 108b + 109
  *
- * Logic toggle/show/hide cho AI chat sidetab.
- * Welcome screen với 4 suggestions.
- * Keyboard shortcut: Ctrl+J (Win/Linux) / Cmd+J (Mac).
- * Round 108b: Draggable FAB + persist position to localStorage.
+ * Round 108: UI shell (sidetab + FAB + welcome).
+ * Round 108b: Draggable FAB + persist position.
+ * Round 109: Role gate (admin/superadmin only) + conversation list integration.
  *
  * @see /AI_ARCHITECTURE.md Section 5 (Chat UX)
  */
 // @ts-nocheck
+
+import {
+  initConversationList,
+  restoreConvSidebarState,
+  onNewChatClick,
+  onLoadConv,
+  onDeleteConv,
+  toggleConvSidebar,
+} from "./conversation-list";
 
 // ════════════════════════════════════════════════════════════
 // Constants
@@ -19,14 +27,9 @@ const FAB_ID = "ai-chat-fab";
 const BACKDROP_ID = "ai-chat-backdrop";
 const INPUT_ID = "ai-chat-input";
 
-// Round 108b: drag constants
 const FAB_POS_KEY = "ai-chat-fab-pos";
 const DRAG_THRESHOLD_PX = 5;
 const FAB_MARGIN = 8;
-
-// ════════════════════════════════════════════════════════════
-// Types
-// ════════════════════════════════════════════════════════════
 
 interface FabPosition {
   right: number;
@@ -34,10 +37,42 @@ interface FabPosition {
 }
 
 // ════════════════════════════════════════════════════════════
+// Round 109: Role gate
+// ════════════════════════════════════════════════════════════
+
+/** Check if current user can access AI chat */
+function canAccessAi(): boolean {
+  const role = (window as any).currentAuth?.role;
+  return role === "admin" || role === "superadmin";
+}
+
+/** Hide all AI UI elements (called when role insufficient) */
+function hideAiUi(): void {
+  const fab = document.getElementById(FAB_ID);
+  const sidetab = document.getElementById(SIDETAB_ID);
+  const backdrop = document.getElementById(BACKDROP_ID);
+  if (fab) fab.style.display = "none";
+  if (sidetab) sidetab.style.display = "none";
+  if (backdrop) backdrop.style.display = "none";
+}
+
+/** Show all AI UI elements */
+function showAiUi(): void {
+  const fab = document.getElementById(FAB_ID);
+  const sidetab = document.getElementById(SIDETAB_ID);
+  const backdrop = document.getElementById(BACKDROP_ID);
+  if (fab) fab.style.display = "";
+  if (sidetab) sidetab.style.display = "";
+  if (backdrop) backdrop.style.display = "";
+}
+
+// ════════════════════════════════════════════════════════════
 // Sidetab toggle / show / hide (Round 108)
 // ════════════════════════════════════════════════════════════
 
 export function toggleAiChatSidetab(force?: boolean): void {
+  if (!canAccessAi()) return; // Round 109: gate
+
   const sidetab = document.getElementById(SIDETAB_ID);
   const backdrop = document.getElementById(BACKDROP_ID);
   if (!sidetab || !backdrop) return;
@@ -139,7 +174,7 @@ function saveFabPosition(pos: FabPosition): void {
   try {
     localStorage.setItem(FAB_POS_KEY, JSON.stringify(pos));
   } catch {
-    // Ignore quota errors
+    // ignore
   }
 }
 
@@ -283,7 +318,27 @@ function initFabDrag(): void {
 // ════════════════════════════════════════════════════════════
 
 export function initAiChatSidetab(): void {
+  // Round 109: Role gate — ẩn UI nếu không có quyền
+  if (!canAccessAi()) {
+    hideAiUi();
+    // Re-check sau khi auth load (auth có thể chưa load lúc init đầu)
+    setTimeout(() => {
+      if (canAccessAi()) {
+        showAiUi();
+        completeInit();
+      }
+    }, 1500);
+    return;
+  }
+
+  showAiUi();
+  completeInit();
+}
+
+function completeInit(): void {
+  // Keyboard shortcut: Ctrl+J / Cmd+J
   document.addEventListener("keydown", (e) => {
+    if (!canAccessAi()) return;
     const isMac = navigator.platform.toUpperCase().includes("MAC");
     const modKey = isMac ? e.metaKey : e.ctrlKey;
     if (modKey && e.key.toLowerCase() === "j") {
@@ -298,6 +353,7 @@ export function initAiChatSidetab(): void {
     }
   });
 
+  // Input listener
   const input = document.getElementById(INPUT_ID) as HTMLTextAreaElement | null;
   if (input) {
     input.addEventListener("input", () => {
@@ -315,9 +371,11 @@ export function initAiChatSidetab(): void {
   }
 
   updateSendButtonState();
-
-  // Round 108b: Init draggable FAB
   initFabDrag();
+
+  // Round 109: init conversation list
+  initConversationList();
+  restoreConvSidebarState();
 }
 
 // ════════════════════════════════════════════════════════════
@@ -325,9 +383,16 @@ export function initAiChatSidetab(): void {
 // ════════════════════════════════════════════════════════════
 
 if (typeof window !== "undefined") {
+  // Round 108
   (window as any).toggleAiChatSidetab = toggleAiChatSidetab;
   (window as any).closeAiChatSidetab = closeAiChatSidetab;
   (window as any).onAiChatSuggestion = onAiChatSuggestion;
   (window as any).onAiChatSend = onAiChatSend;
+  // Round 108b
   (window as any).resetAiChatFabPosition = resetFabPosition;
+  // Round 109
+  (window as any).onNewChatClick = onNewChatClick;
+  (window as any).onLoadConv = onLoadConv;
+  (window as any).onDeleteConv = onDeleteConv;
+  (window as any).toggleConvSidebar = toggleConvSidebar;
 }

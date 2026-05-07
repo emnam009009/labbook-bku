@@ -46,7 +46,9 @@ export const secretTest = onRequest(
   async (req, res) => {
     try {
       // Verify auth + role
-      const auth = await verifyAuth(req, "superadmin");
+      // Round 109: Allow admin or superadmin
+      const auth = (await verifyAuth(req, "admin").catch(() => null))
+        ?? (await verifyAuth(req, "superadmin"));
 
       logger.info("Secret test invoked", {
         uid: auth.uid,

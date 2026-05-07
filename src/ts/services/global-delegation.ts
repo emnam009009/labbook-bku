@@ -190,6 +190,19 @@ export function attachGlobalDelegation() {
       case 'ai-chat-send':
         if (typeof window.onAiChatSend === 'function') window.onAiChatSend();
         break;
+      // Round 109: Conversation list cases
+      case 'ai-chat-new-chat':
+        if (typeof window.onNewChatClick === 'function') window.onNewChatClick();
+        break;
+      case 'ai-chat-load-conv':
+        if (typeof window.onLoadConv === 'function') window.onLoadConv(target);
+        break;
+      case 'ai-chat-delete-conv':
+        if (typeof window.onDeleteConv === 'function') window.onDeleteConv(target, e);
+        break;
+      case 'ai-chat-toggle-conv-sidebar':
+        if (typeof window.toggleConvSidebar === 'function') window.toggleConvSidebar();
+        break;
     }
   });
 

@@ -76,7 +76,9 @@ export const pythonBridge = onRequest(
   async (req, res) => {
     try {
       // 1. Verify Firebase Auth + superadmin role
-      const auth = await verifyAuth(req, "superadmin");
+      // Round 109: Allow admin or superadmin
+      const auth = (await verifyAuth(req, "admin").catch(() => null))
+        ?? (await verifyAuth(req, "superadmin"));
 
       // 2. Validate request body
       const body = req.body as BridgeRequest;

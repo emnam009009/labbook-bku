@@ -245,6 +245,57 @@
           }
         }
       }
+    },
+    "aiConversations": {
+      ".indexOn": [
+        "updatedAt"
+      ],
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')",
+      "$uid": {
+        ".read": "auth != null && $uid === auth.uid && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')",
+        ".write": "auth != null && $uid === auth.uid && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')",
+        ".indexOn": [
+          "updatedAt"
+        ],
+        "$convId": {
+          ".validate": "newData.hasChildren(['title','createdAt']) || data.exists()",
+          "title": {
+            ".validate": "newData.isString() && newData.val().length <= 200"
+          },
+          "createdAt": {
+            ".validate": "newData.isNumber()"
+          },
+          "updatedAt": {
+            ".validate": "newData.isNumber()"
+          },
+          "messageCount": {
+            ".validate": "newData.isNumber()"
+          },
+          "messages": {
+            "$msgId": {
+              ".validate": "newData.hasChildren(['role','text','createdAt']) || data.exists()",
+              "role": {
+                ".validate": "newData.isString() && (newData.val() === 'user' || newData.val() === 'assistant' || newData.val() === 'system')"
+              },
+              "text": {
+                ".validate": "newData.isString() && newData.val().length <= 50000"
+              },
+              "createdAt": {
+                ".validate": "newData.isNumber()"
+              },
+              "tier": {
+                ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 3"
+              },
+              "$other": {
+                ".validate": true
+              }
+            }
+          },
+          "$other": {
+            ".validate": true
+          }
+        }
+      }
     }
   }
 }
