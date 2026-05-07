@@ -203,6 +203,10 @@ export function attachGlobalDelegation() {
       case 'ai-chat-toggle-conv-sidebar':
         if (typeof window.toggleConvSidebar === 'function') window.toggleConvSidebar();
         break;
+      // Round 110: Message actions
+      case 'ai-msg-copy':
+        if (typeof window.onCopyMessage === 'function') window.onCopyMessage(target);
+        break;
     }
   });
 

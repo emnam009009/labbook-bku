@@ -18,6 +18,9 @@ import {
   toggleConvSidebar,
 } from "./conversation-list";
 
+// Round 110: Lazy-import onCopyMessage chỉ khi cần (avoid bundling on initial load)
+import { onCopyMessage } from "./message-bubble";
+
 // ════════════════════════════════════════════════════════════
 // Constants
 // ════════════════════════════════════════════════════════════
@@ -111,22 +114,35 @@ export function onAiChatSuggestion(target: HTMLElement): void {
   updateSendButtonState();
 }
 
-export function onAiChatSend(): void {
+export async function onAiChatSend(): Promise<void> {
   const input = document.getElementById(INPUT_ID) as HTMLTextAreaElement | null;
   if (!input) return;
 
   const text = input.value.trim();
   if (!text) return;
 
-  if (typeof window.showToast === "function") {
-    window.showToast("AI chat sẽ được kích hoạt ở Round 110+", "info");
-  } else {
-    console.log("[AI Chat] User message:", text);
-  }
+  // Round 110: Actually send message
+  // Disable input while sending
+  input.disabled = true;
+  const sendBtn = document.getElementById("ai-chat-send-btn") as HTMLButtonElement | null;
+  if (sendBtn) sendBtn.disabled = true;
 
-  input.value = "";
-  autoResizeTextarea(input);
-  updateSendButtonState();
+  try {
+    // Lazy-load message handler
+    const { sendUserMessage } = await import("./message-handler");
+    await sendUserMessage(text);
+    input.value = "";
+    autoResizeTextarea(input);
+  } catch (e) {
+    console.error("[AI Chat send error]", e);
+    if (typeof window.showToast === "function") {
+      window.showToast("Không gửi được tin nhắn. Thử lại?", "error");
+    }
+  } finally {
+    input.disabled = false;
+    input.focus();
+    updateSendButtonState();
+  }
 }
 
 function autoResizeTextarea(input: HTMLTextAreaElement): void {
@@ -395,4 +411,6 @@ if (typeof window !== "undefined") {
   (window as any).onLoadConv = onLoadConv;
   (window as any).onDeleteConv = onDeleteConv;
   (window as any).toggleConvSidebar = toggleConvSidebar;
+  // Round 110
+  (window as any).onCopyMessage = onCopyMessage;
 }

@@ -160,17 +160,30 @@ export async function onNewChatClick(): Promise<void> {
   // (listenConversations sẽ tự fire khi RTDB thay đổi → re-render)
 }
 
-/** Load conversation hiện có */
-export function onLoadConv(target: HTMLElement): void {
-  const convId = target.dataset.convId;
+/** Load conversation hiện có (Round 110: load messages thật) */
+export async function onLoadConv(target: HTMLElement): Promise<void> {
+  // Click trên nút xóa thì không load (event bubble)
+  if (target.closest(".ai-conv-item__delete")) return;
+
+  // Lấy convId từ target hoặc parent
+  const convId = target.dataset.convId
+    || target.closest("[data-conv-id]")?.getAttribute("data-conv-id");
   if (!convId) return;
+
   setCurrentConvId(convId);
   showMessagesView();
   // Re-render to update active state
   listConversations().then(renderList);
-  // Round 110+ sẽ implement load messages thật
-  if (typeof window.showToast === "function") {
-    window.showToast("Round 110+ sẽ hiển thị tin nhắn", "info");
+
+  // Round 110: Load messages thật
+  try {
+    const { loadConversationMessages } = await import("./message-handler");
+    await loadConversationMessages(convId);
+  } catch (e) {
+    console.error("[Load conversation error]", e);
+    if (typeof window.showToast === "function") {
+      window.showToast("Không tải được cuộc trò chuyện", "error");
+    }
   }
 }
 
