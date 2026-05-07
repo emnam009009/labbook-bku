@@ -60,3 +60,6 @@ public/fonts/NotoSans-Bold.ttf
 
 # Patch backup files (Round 51+)
 *.bak*
+
+# Claude Code System (personal config)
+.claude/
