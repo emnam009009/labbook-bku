@@ -74,8 +74,9 @@ describe('escapeJs', () => {
     expect(escapeJs(undefined)).toBe('')
   })
 
-  it('giữ nguyên double quote (chỉ escape single)', () => {
-    expect(escapeJs('"hello"')).toBe('"hello"')
+  it('escape double quote thành &quot; (cho an toàn trong data-* attribute)', () => {
+    // Bug 9 fix: trước đây không escape ", bị XSS khi nhúng vào data-name="..."
+    expect(escapeJs('"hello"')).toBe('&quot;hello&quot;')
   })
 })
 

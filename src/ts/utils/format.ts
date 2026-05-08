@@ -15,11 +15,14 @@ export function escapeHtml(s: unknown): string {
     .replace(/'/g, '&#39;');
 }
 
-// Dùng cho string nhúng vào attribute onclick="...'${x}'..." (escape thêm \\ và ')
+// Dùng cho string nhúng vào attribute như data-name="...${x}..." hoặc onclick="...'${x}'..."
+// Bug 9 fix: escape cả " để không break attribute với double quote.
+// Trước đây chỉ escape \\ và ' (cho onclick string), bị thiếu " khi dùng trong data-* attr.
 export function escapeJs(s: unknown): string {
   if (s == null) return '';
   return String(s)
     .replace(/\\/g, '\\\\')
+    .replace(/"/g, '&quot;')   // Bug 9 fix: escape double quote cho HTML attribute
     .replace(/'/g, "\\'")
     .replace(/\n/g, '\\n')
     .replace(/\r/g, '');

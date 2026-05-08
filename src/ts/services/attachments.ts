@@ -236,7 +236,18 @@ export async function uploadAttachment({
     uploadedAt: Date.now(),
     note: String(note || '').slice(0, 500),
   };
-  await fbSet(`attachments/${refType}/${refId}/${attachmentId}`, record);
+  // Bug 7 fix: nếu fbSet fail (rule deny / network), file đã ở Storage thì
+  // cleanup để không orphan (chiếm quota Spark plan 5GB).
+  // getDownloadURL đã ở trên nên không tính, nếu nó fail thì cleanup ở catch ngoài.
+  try {
+    await fbSet(`attachments/${refType}/${refId}/${attachmentId}`, record);
+  } catch (metaErr) {
+    // Rollback Storage object
+    try { await deleteObject(fileRef); } catch (cleanupErr) {
+      console.warn('[attachments] orphan cleanup failed', cleanupErr);
+    }
+    throw metaErr;
+  }
 
   // Round 90: fire-and-forget audit log (don't block return)
   // Saves ~150-300ms/file. Best-effort; failures logged but don't matter.
