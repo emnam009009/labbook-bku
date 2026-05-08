@@ -204,6 +204,9 @@ export function attachGlobalDelegation() {
       case 'ai-paper-delete':
         if (typeof window.onPaperDelete === 'function') window.onPaperDelete(target);
         break;
+      case 'ai-paper-reextract':
+        if (typeof window.onPaperReExtract === 'function') window.onPaperReExtract(target);
+        break;
       case 'ai-chat-suggestion':
         if (typeof window.onAiChatSuggestion === 'function') window.onAiChatSuggestion(target);
         break;

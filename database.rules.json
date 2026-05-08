@@ -263,8 +263,19 @@
           "sizeBytes": { ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= 104857600" },
           "uploadedAt": { ".validate": "newData.isString()" },
           "uploadedBy": { ".validate": "newData.isString()" },
+          "uploadedByName": { ".validate": "newData.isString() && newData.val().length <= 200" },
           "storagePath": { ".validate": "newData.isString() && newData.val().beginsWith('papers/_shared/')" },
           "processingStatus": { ".validate": "newData.isString()" },
+          "errorMessage": { ".validate": "newData.isString() || newData.val() == null" },
+          "numPages": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+          "numChars": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+          "numChunks": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+          "textPath": { ".validate": "newData.isString() && newData.val().beginsWith('papers/_shared/')" },
+          "extractedAt": { ".validate": "newData.isString()" },
+          "extractionMethod": { ".validate": "newData.isString() && newData.val().length <= 50" },
+          "extractionQuality": { ".validate": "newData.isNumber()" },
+          "extractionCostCents": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+          "textExtracted": { ".validate": "newData.isBoolean()" },
           "$other": { ".validate": false }
         }
       }

@@ -1679,3 +1679,44 @@ body.ai-tools-sidetab-resizing .ai-tools-sidetab__resizer {
   font-size: 13px;
 }
 .ai-paper-list__empty p { margin: 4px 0; }
+
+/* Round 133b: Paper status badges */
+.ai-paper-row__status {
+  white-space: nowrap;
+}
+.ai-paper-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.ai-paper-badge.is-pending  { background: #f1f5f9; color: #64748b; }
+.ai-paper-badge.is-running  { background: rgba(6, 182, 212, 0.12); color: #0891B2; }
+.ai-paper-badge.is-success  { background: rgba(34, 197, 94, 0.12); color: #16a34a; }
+.ai-paper-badge.is-ready    { background: rgba(99, 102, 241, 0.12); color: #6366f1; }
+.ai-paper-badge.is-error    { background: rgba(239, 68, 68, 0.12); color: #dc2626; }
+
+.ai-paper-badge.is-running::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: ai-pulse 1.2s ease-in-out infinite;
+}
+@keyframes ai-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+.ai-paper-row__btn--retry {
+  color: #f59e0b;
+}
+.ai-paper-row__btn--retry:hover {
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+}

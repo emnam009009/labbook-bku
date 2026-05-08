@@ -40,8 +40,27 @@ function escapeHtml(s: string): string {
   } as any)[c]);
 }
 
+// ─── Status badge ──────────────────────────────────────────
+function renderStatusBadge(paper: Paper): string {
+  const status = paper.processingStatus || "uploaded";
+  const meta: Record<string, { label: string; cls: string; icon: string }> = {
+    uploaded:   { label: "Chưa OCR",   cls: "is-pending", icon: "⏸" },
+    extracting: { label: "Đang OCR",   cls: "is-running", icon: "⏳" },
+    extracted:  { label: "Đã OCR",     cls: "is-success", icon: "✓" },
+    chunking:   { label: "Đang chunk", cls: "is-running", icon: "⏳" },
+    chunked:    { label: "Đã chunk",   cls: "is-success", icon: "✓" },
+    embedding:  { label: "Đang embed", cls: "is-running", icon: "⏳" },
+    indexed:    { label: "Sẵn sàng",   cls: "is-ready",   icon: "🔍" },
+    error:      { label: "Lỗi",        cls: "is-error",   icon: "✗" },
+  };
+  const s = meta[status] || meta.uploaded;
+  const tooltip = paper.errorMessage ? escapeHtml(paper.errorMessage) : `${s.label} (${escapeHtml(status)})`;
+  return `<span class="ai-paper-badge ${s.cls}" title="${tooltip}">${s.icon} ${s.label}</span>`;
+}
+
 // ─── Render ────────────────────────────────────────────────
 function renderRow(paper: Paper): string {
+  const isError = paper.processingStatus === "error";
   return `
     <tr data-paper-id="${escapeHtml(paper.paperId)}">
       <td class="ai-paper-row__title" title="${escapeHtml(paper.title)}">
@@ -49,8 +68,18 @@ function renderRow(paper: Paper): string {
         ${escapeHtml(paper.title)}
       </td>
       <td class="ai-paper-row__size">${formatSize(paper.sizeBytes)}</td>
+      <td class="ai-paper-row__status">${renderStatusBadge(paper)}</td>
       <td class="ai-paper-row__date">${formatDate(paper.uploadedAt)}</td>
       <td class="ai-paper-row__actions">
+        ${isError ? `<button class="ai-paper-row__btn ai-paper-row__btn--retry" type="button"
+                data-action="ai-paper-reextract"
+                data-paper-id="${escapeHtml(paper.paperId)}"
+                title="Trích xuất lại">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+          </svg>
+        </button>` : ""}
         <button class="ai-paper-row__btn" type="button"
                 data-action="ai-paper-delete"
                 data-paper-id="${escapeHtml(paper.paperId)}"

@@ -33,3 +33,9 @@ export {
   stopPaperListListener,
   onPaperDelete,
 } from "../papers/paper-list";
+
+// R133b: Extraction trigger
+export {
+  triggerExtraction,
+  onPaperReExtract,
+} from "../papers/paper-extract";

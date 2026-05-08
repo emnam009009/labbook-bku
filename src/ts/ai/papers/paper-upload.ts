@@ -127,8 +127,8 @@ export async function uploadPaper(file: File): Promise<string | null> {
       async () => {
         // Upload done → write metadata
         try {
-          const meta: Paper = {
-            paperId,
+          // R133b-fix: KHÔNG ghi paperId field (redundant với key + reject bởi $other rule)
+          const meta = {
             title: file.name.replace(/\.pdf$/i, ""),
             filename: safeFilename,
             sha256,
@@ -137,11 +137,17 @@ export async function uploadPaper(file: File): Promise<string | null> {
             uploadedBy: currentAuth.uid || "",
             uploadedByName: currentAuth.displayName || "",
             storagePath,
-            processingStatus: "uploaded",
+            processingStatus: "uploaded" as const,
           };
           await set(dbRef(db, `${SHARED_PATH}/${paperId}`), meta);
           if (progressEl) progressEl.style.display = "none";
           showToast(`Đã thêm: ${meta.title}`, "success");
+
+          // R133b: Auto-trigger Chandra extraction (fire-and-forget)
+          import("./paper-extract").then((m) => {
+            m.triggerExtraction(paperId, { silent: true });
+          });
+
           resolve(paperId);
         } catch (e: any) {
           if (progressEl) progressEl.style.display = "none";
