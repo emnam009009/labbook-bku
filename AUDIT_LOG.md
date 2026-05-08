@@ -454,3 +454,69 @@ Khi suspected regression, check theo thứ tự:
 8. **VN diacritics missing somewhere new?** → Grep `Dong\|Tai\|Nhap\|nhan QR` trong source.
 9. **File picker không mở?** → Check input không có `hidden` attr (visually-hidden CSS thay thế).
 10. **Audit log dòng nào?** → `actionAudit/{ts}` cho AI write tools, `history/{ts}` cho user actions thường.
+
+---
+
+## R129 Phase A2 Add-on (2026-05-08)
+
+> Sau khi commercialize audit done (R116-R126) + docs refresh (R127-R128), R129 thêm 4th action tool theo cùng pattern R115. Hai bug minor phát hiện trong process:
+
+### R129 Bugs (in-development, not regression)
+
+| Bug | Round | Type | Files | Root cause |
+|---|---|---|---|---|
+| H. confirmAction whitelist miss | R129a-fix | Logic | `confirm-action.ts` | R129a quên update validTypes array — handler reject draft type mới trước khi gọi commitDraft |
+| I. Patch boundary blank line | R129b-fix | Patch script | `confirmation-card.ts` | Boundary string trong apply.py viết liền không có blank line, file thực tế có → match fail |
+
+### Lessons R129 (cho future tool addition)
+
+**1. Add action tool checklist** — phải update ĐỦ 5 files:
+- `functions/src/tools/actions.ts` — function + interface + ActionDraft union + commitDraft case
+- `functions/src/tools/registry.ts` — import + tool def trong ACTION_TOOLS_DEFS
+- `functions/src/handlers/confirm-action.ts` — **validTypes whitelist** (DỄ QUÊN — bug H)
+- `src/ts/ai/ui/confirmation-card.ts` — DraftPreview interface + ActionDraft union + title/icon switch + body renderer
+- `src/css/ai-chat.css` — styles cho card layout mới
+- `src/ts/ai/llm/system-prompt.ts` — tool description + examples
+
+**2. Patch boundary methodology** — `cat -A` trước khi viết script:
+```bash
+sed -n '69,75p' src/ts/ai/ui/confirmation-card.ts | cat -A
+```
+Output `$` = newline, blank line giữa code blocks → boundary string phải copy exact bao gồm blank lines.
+
+**3. Test pipeline isolation** — sub-rounds tách riêng:
+- Backend (R129a): DevTools `fetch` direct call → verify response schema
+- Frontend (R129b): Card render visual → verify diff table layout
+- System prompt (R129c): Chat test full flow → verify AI tự gọi tool
+
+Test bundle nhau khi pipeline có nhiều stages = khó localize bug (R115d 4 iterations).
+
+### R129 Files map (cho future regression)
+
+```
+functions/src/tools/
+├── actions.ts                    ← ExperimentResultDraft, recordExperimentResultDraft (R129a)
+├── registry.ts                   ← tool def + ACTION_TOOL_NAMES (R129a)
+└── ...
+
+functions/src/handlers/
+└── confirm-action.ts             ← validTypes whitelist (R129a-fix)
+
+src/ts/ai/ui/
+└── confirmation-card.ts          ← experiment-result-draft template (R129b/b-fix)
+
+src/css/
+└── ai-chat.css                   ← .ai-confirm-card__diff-{table,row,old,arrow,new} (R129b)
+
+src/ts/ai/llm/
+└── system-prompt.ts              ← Tool 4 description + 3 examples (R129c)
+```
+
+### Update regression checklist (extends section above)
+
+11. **Action tool result-draft fail confirm?** → Check `confirm-action.ts` validTypes có type mới chưa. Symptom: card show "Invalid draft type: xxx-draft" sau click Xác nhận.
+12. **Diff table render trống?** → Check 3 things:
+    - Source: `src/ts/ai/ui/confirmation-card.ts` có if-chain cho type
+    - Build: `dist/assets/index-*.js` có string "diff-table" và type literal
+    - Live: `curl https://lab-manager-268a6.web.app/assets/index-*.js | grep type` — verify deploy synced
+13. **AI không gọi action tool mới?** → Check `system-prompt.ts` có tool description + examples chưa. Symptom: AI generate text giả thay vì gọi tool.

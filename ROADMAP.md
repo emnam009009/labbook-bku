@@ -62,7 +62,17 @@ Pending features và improvements đã thảo luận. Owner Nam quyết định 
 >
 > Detailed phase plan: see `AI_ARCHITECTURE.md` Section 14.
 
-### Phase A — Foundation (Round 105-115) ✅ DONE
+### Phase A — Foundation (Round 105-115 + R129 add-on) ✅ DONE
+
+**Tools ecosystem post-Phase A**: 10 tools dispatched qua Cloud Function `toolExecutor`
+- 6 read tools (chemicals, equipment, experiments, bookings, members, date)
+- 4 action tools với confirmation card pattern:
+  - createExperimentDraft (R115a — hydro + electrochem)
+  - updateChemicalStockDraft (R115a — search by name/CAS/formula)
+  - createBookingDraft (R115a — equipment + time slots)
+  - recordExperimentResultDraft (R129 — partial update với diff visualization)
+
+**Phase A Original (R105-R115)**
 
 | Round | Status | Task |
 |---|---|---|
@@ -98,9 +108,10 @@ Unplanned audit work trước khi commercialize. Phase B paused, resume từ Rou
 
 **Total**: 14 bugs + 3 features. Coverage: race conditions, XSS, data loss, security rules, listener leaks, UX. **See `AUDIT_LOG.md` for full root-cause analysis.**
 
-### Phase B — Compliance KB + RAG Infrastructure (Round 127-139)
+### Phase B — Compliance KB + RAG Infrastructure (Round 130+)
 
-⚠️ Round numbers shifted +11 vs original plan because of Pre-Commercial Audit.
+⚠️ Round numbers shifted +14 vs original plan because of Pre-Commercial Audit (R116-R126) + docs refresh (R127-R128) + Phase A2 add-on (R129).
+Round 127-129 used: R127-R128 = docs refresh, R129a-c = recordExperimentResultDraft (4th action tool, see CHANGELOG).
 
 | Round | Status | Task |
 |---|---|---|

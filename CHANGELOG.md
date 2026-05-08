@@ -2,6 +2,43 @@
 
 Concise version history. For full git log: `git log --oneline`.
 
+## [Round 129a-c] - 2026-05-08
+
+### Added — recordExperimentResultDraft (4th action tool)
+**Use case**: User báo "EC-1778... đo xong, eta10=280, tafel=65" → AI tự gọi tool → confirmation card với diff visualization → user confirm → DB update + audit log.
+
+- **Backend (R129a)**: New `recordExperimentResultDraft` function trong `actions.ts`
+  - Detect category từ code prefix (HT- → hydro, EC- → electrochem)
+  - Search record by `code` field, build partial payload + diff preview
+  - `commitDraft` case mới: `db.ref(targetPath).update()` (NOT push - update existing record)
+  - Tool def trong `registry.ts` với 11 params: code, status enum, note, hydro fields (yield_mass, color), electrochem metrics (eta10, tafel, j0, rs, rct, ecsa)
+- **Backend (R129a-fix)**: Extend `confirm-action.ts` whitelist `validTypes` thêm "experiment-result-draft"
+- **Frontend (R129b)**: New card type "experiment-result-draft" trong `confirmation-card.ts`
+  - Title "Cập nhật kết quả Thủy nhiệt/Điện hóa" với icon 📊
+  - Body: 4-column diff grid (label | old | → | new)
+  - Old values gray + line-through, new values bold + JetBrains Mono, arrow cyan
+- **Frontend (R129b-fix)**: Boundary blank line fix trong patch script
+- **System prompt (R129c)**: Tool 4 description + 3 examples (EC success, HT success, missing-code handling)
+
+### Modified
+- `functions/src/tools/actions.ts` — interface ExperimentResultDraft, function recordExperimentResultDraft, commitDraft case (~120 LOC added)
+- `functions/src/tools/registry.ts` — import + tool def (~50 LOC)
+- `functions/src/handlers/confirm-action.ts` — validTypes array (1 line)
+- `src/ts/ai/ui/confirmation-card.ts` — 4th card template (~30 LOC)
+- `src/css/ai-chat.css` — `.ai-confirm-card__diff-table` styles (~30 LOC)
+- `src/ts/ai/llm/system-prompt.ts` — tool description + examples
+
+### Tools ecosystem (post R129)
+- **6 read tools**: searchChemicals, searchEquipment, searchExperiments, getBookings, listMembers, getCurrentDate
+- **4 action tools**: createExperimentDraft, updateChemicalStockDraft, createBookingDraft, **recordExperimentResultDraft** (mới)
+- Total: **10 tools** dispatched qua Cloud Function `toolExecutor`
+
+### Lessons learned
+- **Khi add action tool mới, phải update HAI files**: `actions.ts` (commitDraft case) **VÀ** `confirm-action.ts` (validTypes whitelist). R129a chỉ update file đầu → R129a-fix bổ sung.
+- **Boundary patches phải kiểm `cat -A` trước**: blank lines trong source không match boundary string viết liền nhau (R129b → R129b-fix iteration).
+- **Test sub-rounds riêng**: backend test direct via DevTools fetch (verify schema) → frontend test card render (verify CSS) → end-to-end qua chat. Test bundled gây khó debug.
+
+
 ## [Round 126] - 2026-05-08
 
 ### Added — Resizable AI sidetab
