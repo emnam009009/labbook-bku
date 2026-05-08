@@ -19,6 +19,7 @@ import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import { logger } from "../utils/logger";
 import { verifyAuth, AuthError } from "../utils/auth";
+import { publishPaperEvent } from "../utils/pubsub-publisher";
 
 const chandraKey = defineSecret("CHANDRA_API_KEY");
 
@@ -211,6 +212,9 @@ export const chandraProxy = onRequest(
         extractionCostCents: costCents,
         errorMessage: null,
       });
+
+      // R134b: Publish event để trigger chunkPaper (Pub/Sub chain)
+      await publishPaperEvent(paperId, "extracted");
 
       res.status(200).json({
         success: true,

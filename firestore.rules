@@ -1,0 +1,18 @@
+rules_version = '2';
+// LabBook BKU — Firestore rules (Round 134a)
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // aiChunks: text chunks từ papers cho RAG
+    // - Read: bất kỳ user authenticated
+    // - Write: chỉ Cloud Functions (admin SDK bypass rules)
+    match /aiChunks/{chunkId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

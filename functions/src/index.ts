@@ -26,6 +26,8 @@ export { geminiProxy } from "./handlers/gemini-proxy";    // Round 111+
 export { speechProxy } from "./handlers/speech-proxy";    // Round 114+
 // export { voyageProxy } from "./handlers/voyage-proxy";    // Round 121+
 export { chandraProxy } from "./handlers/chandra-proxy";  // Round 133a (R117 originally planned, deferred to R133)
+export { chunkPaper } from "./handlers/chunk-paper";  // Round 134a
+export { paperPipelineRouter } from "./triggers/paper-pipeline-router";  // Round 134b
 
 // Python service bridge (Round 107+)
 export { pythonBridge } from "./handlers/python-bridge";
