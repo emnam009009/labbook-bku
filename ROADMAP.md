@@ -4,10 +4,8 @@ Pending features và improvements đã thảo luận. Owner Nam quyết định 
 
 ## Deferred bugs (don't fix unless asked)
 
-### Bug #11: Notifications schema flat vs rule-nested
-- **Status**: Reviewed, intentionally deferred (Round 73-ish)
-- **Reason**: App runs correctly despite inconsistency. Refactor cost not justified for ~50-user internal lab app.
-- **Action**: Don't bring up unless owner explicitly asks to revisit.
+### ~~Bug #11: Notifications schema flat vs rule-nested~~ ✅ RESOLVED in R122
+- **Resolution**: R122 refactored to nested per-user schema với migration script. See AUDIT_LOG.md.
 
 ## Discussed but deferred features
 
@@ -80,95 +78,142 @@ Pending features và improvements đã thảo luận. Owner Nam quyết định 
 | 114a-b3 | ✅ Done | Voice STT/TTS (Cloud Speech v2 Chirp 2 vi-VN + browser TTS) |
 | 115a-d | ✅ Done | Action tools với confirm UI (3 write tools, draft pattern, audit log) |
 
-### Phase B — Compliance KB + RAG Infrastructure (Round 116-128)
+### Pre-Commercial Audit (Round 116-126) ✅ DONE — May 8 2026
+
+Unplanned audit work trước khi commercialize. Phase B paused, resume từ Round 127+.
+
+| Round | Status | Task | Bugs |
+|---|---|---|---|
+| 116 | ✅ Done | Auth listener leak + presence stuck + XSS edit | 3 |
+| 117 | ✅ Done | Orphan storage cleanup + recall rule + escapeJs XSS | 3 |
+| 118 | ✅ Done | Atomic stock updates (runTransaction) + image upload size limit | 3 |
+| 119 | ✅ Done | Atomic booking slot reservation (saveBooking) | 1 |
+| 120 | ✅ Done | Atomic drag/drop reschedule + resize (Bug 3 continued) | 1 |
+| 121 | ✅ Done | Search stuck, bulk select missing, member card, bell empty | 4 |
+| 122 | ✅ Done | Notifications nested schema + migration script + lock cleanup | 2 |
+| 123 | ✅ Done | Members KPI card scroll | 1 feature |
+| 124 | ✅ Done | Admin-only import/export, file picker, VN diacritics | 3 |
+| 125 | ✅ Done | Console cleanup (PWA meta, dev SW, password form) | 3 cosmetic |
+| 126 | ✅ Done | Resizable AI sidetab (left-edge drag handle) | 1 feature |
+
+**Total**: 14 bugs + 3 features. Coverage: race conditions, XSS, data loss, security rules, listener leaks, UX. **See `AUDIT_LOG.md` for full root-cause analysis.**
+
+### Phase B — Compliance KB + RAG Infrastructure (Round 127-139)
+
+⚠️ Round numbers shifted +11 vs original plan because of Pre-Commercial Audit.
 
 | Round | Status | Task |
 |---|---|---|
-| 116 | ⏳ Next | Compliance KB (Nghị định 24/2026 4 phụ lục as JSON, search tool) |
-| 117 | 📋 | Paper upload UI + queue + dedup |
-| 118 | 📋 | Chandra OCR integration (Cloud Function proxy) |
-| 119 | 📋 | PDF extraction pipeline (text + figures + metadata) |
-| 120 | 📋 | Smart chunking (section-aware, overlap) |
-| 121 | 📋 | Contextual pre-prep (Anthropic technique) |
-| 122 | 📋 | Voyage-3 embedding pipeline |
-| 123 | 📋 | Firestore Vector Search index + queries |
-| 124 | 📋 | BM25 keyword index (Lunr.js) |
-| 125 | 📋 | Hybrid retrieval (RRF fusion) |
-| 126 | 📋 | Voyage rerank-2.5 integration |
-| 127 | 📋 | Citation tracking + UI display |
-| 128 | 📋 | Paper Library page (browse, search, filter) + Zotero/Drive sync |
+| 127 | ⏳ Next | Compliance KB (Nghị định 24/2026 4 phụ lục as JSON, search tool) |
+| 128 | 📋 | Paper upload UI + queue + dedup |
+| 129 | 📋 | Chandra OCR integration (Cloud Function proxy) |
+| 130 | 📋 | PDF extraction pipeline (text + figures + metadata) |
+| 131 | 📋 | Smart chunking (section-aware, overlap) |
+| 132 | 📋 | Contextual pre-prep (Anthropic technique) |
+| 133 | 📋 | Voyage-3 embedding pipeline |
+| 134 | 📋 | Firestore Vector Search index + queries |
+| 135 | 📋 | BM25 keyword index (Lunr.js) |
+| 136 | 📋 | Hybrid retrieval (RRF fusion) |
+| 137 | 📋 | Voyage rerank-2.5 integration |
+| 138 | 📋 | Citation tracking + UI display |
+| 139 | 📋 | Paper Library page (browse, search, filter) + Zotero/Drive sync |
 
-### Phase C-1 — Optical & Structural Analyzers (Round 129-145)
+### Phase C-1 — Optical & Structural Analyzers (Round 140-156)
 
-| Round | Task |
-|---|---|
-| 129 | Workbench page shell + Spectrum Analyzer tab |
-| 130 | File upload UI + spectrum-tools.ts wrapper + types |
-| 131-132 | XRD parser (generic .xy/.txt) + Python /xrd/analyze (pymatgen) |
-| 133 | XRD Scherrer + lattice refinement + JCPDS via Materials Project |
-| 134-135 | Raman parser (generic .txt) + Python /raman/deconvolve (lmfit Voigt) |
-| 136 | Raman MoS₂/WS₂ layer counting (E¹₂g - A₁g) + D/G ratio |
-| 137-138 | UV-Vis (reuse jcamp-jasco + tauc) + Urbach + Kubelka-Munk |
-| 139-140 | PL parser + Python /pl/multi-gauss (trion A⁻/A⁰/B for TMDs) |
-| 141-142 | FTIR (reuse jcamp-jasco) + functional group KB (Mo-S, W-O...) |
-| 143-144 | LSV/HER (reuse corrware) + Tafel + overpotential @ 10 mA/cm² |
-| 145 | Microscopy vision-based (SEM/TEM via Claude Vision) |
-
-### Phase C-2 — Electrochemistry Analyzers (Round 146-160)
+⚠️ Numbers shifted from original 129-145.
 
 | Round | Task |
 |---|---|
-| 146 | Tier 3 orchestrator with Opus 4.7 (Plan-Execute-Reflect) |
-| 147 | CV analyzer (extend corrware): redox peaks, ECSA via Cdl |
-| 148 | EIS Nyquist plot via python-service (impedance.py) |
-| 149 | EIS equivalent circuit fitting (Rs, Rct, CPE) |
-| 150 | Reflection loop (self-critique) + CRAG grader |
-| 151 | GCD specific capacitance + energy density |
-| 152 | OCP transient + OOD detection |
-| 153 | Lab Memory schema + write API |
-| 154 | Auto-extract facts from experiments |
-| 155 | Feedback loop (thumbs aggregation) |
-| 156 | Reformulation pattern learning |
-| 157 | Provenance chain UI display |
-| 158 | Verify-and-promote-to-memory flow |
-| 159 | Eval pipeline (Ragas weekly) |
-| 160 | Eval dashboard for admin |
+| 140 | Workbench page shell + Spectrum Analyzer tab |
+| 141 | File upload UI + spectrum-tools.ts wrapper + types |
+| 142-143 | XRD parser (generic .xy/.txt) + Python /xrd/analyze (pymatgen) |
+| 144 | XRD Scherrer + lattice refinement + JCPDS via Materials Project |
+| 145-146 | Raman parser (generic .txt) + Python /raman/deconvolve (lmfit Voigt) |
+| 147 | Raman MoS₂/WS₂ layer counting (E¹₂g - A₁g) + D/G ratio |
+| 148-149 | UV-Vis (reuse jcamp-jasco + tauc) + Urbach + Kubelka-Munk |
+| 150-151 | PL parser + Python /pl/multi-gauss (trion A⁻/A⁰/B for TMDs) |
+| 152-153 | FTIR (reuse jcamp-jasco) + functional group KB (Mo-S, W-O...) |
+| 154-155 | LSV/HER (reuse corrware) + Tafel + overpotential @ 10 mA/cm² |
+| 156 | Microscopy vision-based (SEM/TEM via Claude Vision) |
 
-### Phase C-3 — Photoelectrochemistry Analyzers (Round 161-175)
+### Phase C-2 — Electrochemistry Analyzers (Round 157-171)
+
+⚠️ Numbers shifted from original 146-160.
 
 | Round | Task |
 |---|---|
-| 161 | PEC dispatcher + chopped-light data structure |
-| 162-163 | PEC LSV under chopped light: photocurrent, ABPE |
-| 164 | PEC chronoamperometry chopped: photoresponse stability |
-| 165-166 | Mott-Schottky data parsing (multi-frequency) |
-| 167 | Mott-Schottky linear fit → flat-band potential, Nd |
-| 168-169 | IPCE/EQE parsing + APCE calculation (with UV-Vis) |
-| 170 | Surface analyzers dispatcher |
-| 171-173 | XPS via Python /xps/peak-fit (lmfit Voigt + Shirley) |
-| 174 | EDS atomic % quantification |
-| 175 | BET surface area + BJH pore distribution |
+| 157 | Tier 3 orchestrator with Opus 4.7 (Plan-Execute-Reflect) |
+| 158 | CV analyzer (extend corrware): redox peaks, ECSA via Cdl |
+| 159 | EIS Nyquist plot via python-service (impedance.py) |
+| 160 | EIS equivalent circuit fitting (Rs, Rct, CPE) |
+| 161 | Reflection loop (self-critique) + CRAG grader |
+| 162 | GCD specific capacitance + energy density |
+| 163 | OCP transient + OOD detection |
+| 164 | Lab Memory schema + write API |
+| 165 | Auto-extract facts from experiments |
+| 166 | Feedback loop (thumbs aggregation) |
+| 167 | Reformulation pattern learning |
+| 168 | Provenance chain UI display |
+| 169 | Verify-and-promote-to-memory flow |
+| 170 | Eval pipeline (Ragas weekly) |
+| 171 | Eval dashboard for admin |
 
-### Phase D — Materials DB + Structure (Round 176-190)
+### Phase C-3 — Photoelectrochemistry Analyzers (Round 172-186)
 
-| Round | Task |
-|---|---|
-| 176 | TGA/DSC analyzer |
-| 177-178 | Materials Database tab (CAS + JCPDS card library) |
-| 179-180 | Structure Viewer (3Dmol.js + CIF parsing via pymatgen) |
-| 181-183 | DFT Launcher input gen (QE/CASTEP/VASP via ASE) |
-| 184-186 | DFT output parser (band structure, DOS, formation energy) |
-| 187-190 | Materials AI Writer (templates + LaTeX/Word export) |
-
-### Phase E — Advanced Features (Round 191+)
+⚠️ Numbers shifted from original 161-175.
 
 | Round | Task |
 |---|---|
-| 191-195 | Lab Mode (F key) + voice-first workflow |
-| 196-200 | Knowledge Graph viz |
-| 201-205 | Spectrum Compare (drag overlay) |
-| 206-210 | What-if Simulator (predict before experiment) |
-| 211-220 | UI redesign per DESIGN.md (interleaved with above) |
+| 172 | PEC dispatcher + chopped-light data structure |
+| 173-174 | PEC LSV under chopped light: photocurrent, ABPE |
+| 175 | PEC chronoamperometry chopped: photoresponse stability |
+| 176-177 | Mott-Schottky data parsing (multi-frequency) |
+| 178 | Mott-Schottky linear fit → flat-band potential, Nd |
+| 179-180 | IPCE/EQE parsing + APCE calculation (with UV-Vis) |
+| 181 | Surface analyzers dispatcher |
+| 182-184 | XPS via Python /xps/peak-fit (lmfit Voigt + Shirley) |
+| 185 | EDS atomic % quantification |
+| 186 | BET surface area + BJH pore distribution |
+
+### Phase D — Materials DB + Structure (Round 187-201)
+
+⚠️ Numbers shifted from original 176-190.
+
+| Round | Task |
+|---|---|
+| 187 | TGA/DSC analyzer |
+| 188-189 | Materials Database tab (CAS + JCPDS card library) |
+| 190-191 | Structure Viewer (3Dmol.js + CIF parsing via pymatgen) |
+| 192-194 | DFT Launcher input gen (QE/CASTEP/VASP via ASE) |
+| 195-197 | DFT output parser (band structure, DOS, formation energy) |
+| 198-201 | Materials AI Writer (templates + LaTeX/Word export) |
+
+### Phase E — Advanced Features (Round 202+)
+
+⚠️ Numbers shifted from original 191+.
+
+| Round | Task |
+|---|---|
+| 202-206 | Lab Mode (F key) + voice-first workflow |
+| 207-211 | Knowledge Graph viz |
+| 212-216 | Spectrum Compare (drag overlay) |
+| 217-221 | What-if Simulator (predict before experiment) |
+| 222-231 | UI redesign per DESIGN.md (interleaved with above) |
+
+### Commercialization Track (parallel với Phase B+, no fixed round numbers)
+
+Owner Nam đang định hướng commercialize sau Pre-Commercial Audit. Roadmap song song:
+
+| Priority | Task | Notes |
+|---|---|---|
+| P1 | Multi-tenant rules namespace | `users/{tenantId}/{uid}` thay flat `users/{uid}`. Đụng tất cả paths có user data. |
+| P1 | Email verification flow | Currently auto-pending sau register. Public release cần Firebase Auth `sendEmailVerification`. |
+| P1 | Rate limiting | RTDB không built-in rate limit. Cần Cloud Function gateway hoặc App Check để chống abuse. |
+| P2 | Stripe billing integration | Subscription tiers, webhook handlers, cancel/refund flow |
+| P2 | Domain whitelisting per tenant | Tenant admin tự manage list email domain allow register |
+| P2 | Audit log expansion | Currently chỉ `actionAudit/` cho AI write tools. Cần audit cho mọi RTDB write (cho compliance). |
+| P3 | GDPR/PDPA tooling | Export user data, delete-on-request flow |
+| P3 | Backup automation | Currently manual. Cần Cloud Scheduler + Functions để daily snapshot. |
 
 ### Branch Strategy
 

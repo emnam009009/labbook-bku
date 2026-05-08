@@ -27,6 +27,7 @@ LabBook BKU là **web app quản lý phòng thí nghiệm hoá**. Stack:
 |-------|------|
 | Full architecture + folder map | [AGENTS.md](./AGENTS.md) |
 | AI module deep dive | [AI_ARCHITECTURE.md](./AI_ARCHITECTURE.md) |
+| **Pre-commercial audit log (R116-R126)** | [AUDIT_LOG.md](./AUDIT_LOG.md) |
 | Tech stack details + conventions | [.claude/memory/global.md](./.claude/memory/global.md) |
 | Established code patterns | [.claude/memory/patterns.md](./.claude/memory/patterns.md) |
 | Lessons learned (DON'Ts) | [.claude/memory/mistakes.md](./.claude/memory/mistakes.md) |
@@ -36,7 +37,7 @@ LabBook BKU là **web app quản lý phòng thí nghiệm hoá**. Stack:
 | Future features | [ROADMAP.md](./ROADMAP.md) |
 | Recent changes | [CHANGELOG.md](./CHANGELOG.md) |
 
-## Current state (as of Round 115d, May 8 2026)
+## Current state (as of Round 126, May 8 2026)
 
 ### Pre-AI (Round 1-104)
 - ✅ **Tests**: 62/62 pass (Vitest)
@@ -53,20 +54,43 @@ LabBook BKU là **web app quản lý phòng thí nghiệm hoá**. Stack:
 - ✅ **Voice STT/TTS**: Cloud Speech v2 Chirp 2 vi-VN + browser TTS (R114)
 - ✅ **3 action tools** với confirm UI: createExperiment (hydro+electrochem), updateChemicalStock, createBooking (R115)
 
+### Pre-Commercial Audit (Round 116-126) ✅ DONE — May 8 2026
+**14 bugs + 3 features** fixed across security/correctness/UX before commercialization. Phase B paused.
+
+- ✅ **R116-R120**: Security & race conditions (listener leak, presence stuck, XSS, orphan storage, stock race, image bloat, booking race x2 — saveBooking + drag/resize)
+- ✅ **R121-R122**: UI/UX + notification security overhaul (search stuck, bulk select, member card, **bell empty FIXED via nested schema migration with one-shot script**, lock cleanup)
+- ✅ **R123-R126**: Polish (members KPI scroll, admin-only import/export, file picker, VN diacritics, console cleanup, **resizable AI sidetab**)
+
+**See `AUDIT_LOG.md` for full bug list + root causes.**
+
 ### Cloud Functions deployed (asia-southeast1)
 - `geminiProxy` — SSE streaming Gemini 2.5 Flash với tool calling
 - `toolExecutor` — dispatch 9 tools (6 read + 3 action)
 - `speechProxy` — Cloud Speech v2 Chirp 2 STT
 - `confirmAction` — commit action drafts to RTDB + audit log
 
+### Notification schema (R122 — nested per-user)
+- Path: `notifications/{uid}/{notifId}` (was flat `notifications/{notifId}` before R122)
+- Broadcast admin: fan-out write per recipient (1 entry/admin) hoặc fallback `notifications/_admin/{notifId}`
+- Listener: per-user listen of `notifications/{myUid}` + admin-only listen on `_admin` bucket
+- Migration script: `scripts/migrate-notifications-r122.mjs` (firebase-admin SDK, idempotent, with backup)
+
+### Booking lock schema (R119-R120, R122 cleanup)
+- Path: `booking_locks/{equipmentKey}_{date}` với `slots: [{start, end, bookingKey, status}]`
+- Atomic via `runTransaction` — `tryReserveSlot` (new) / `tryReserveSlotForUpdate` (drag/resize, with self-exclusion)
+- Stale cleanup: `cleanupStaleLocks` admin-only, throttle 5min, drops `tmp_*` >60s và slots cho bookings không còn
+
 ### Next
-- 🔄 **R116**: Compliance KB (Nghị định 24/2026 + 4 phụ lục JSON)
+- 🔄 **Phase B resume** (Round 127+): Compliance KB (Nghị định 24/2026 + 4 phụ lục JSON)
+- Hoặc commercial roadmap: multi-tenant rules, rate limiting, email verification, billing
 
 ## Round numbering
 
-Round = 1 patch session = 1+ atomic Python scripts = 1+ git commits.
+Round = 1 patch session = 1+ atomic Python scripts hoặc git apply patches = 1+ git commits.
 
-Latest commit: `cd8dc7c feat(ai-chat): voice STT/TTS + action tools (R114-R115)`. Numbering không reset, monotonically increasing.
+Latest commit: `feat(R126): resizable AI sidetab via left-edge drag handle`. Numbering không reset, monotonically increasing.
+
+**Note R116-R126 không phải patch script atomic** — dùng git diff patches (workflow đã shift). Future round có thể tiếp tục dùng git diff patches: tạo trong `/mnt/d/labbook-patches/` với tên `labbook-bku-bugfix-rXXX.patch`, apply bằng `git apply`.
 
 ## Communication norms
 
@@ -180,11 +204,14 @@ Audit log path: `/actionAudit/{ts}` với uid, action, targetPath, resultKey.
 ### Roadmap Summary
 
 - **Phase A** ✅ Done (Round 105-115)
-- **Phase B** ⏳ Next (Round 116-128): Compliance KB + RAG infrastructure
-- **Phase C-1** (Round 129-145): Optical & Structural analyzers
-- **Phase C-2** (Round 146-160): Electrochemistry analyzers
-- **Phase C-3** (Round 161-175): Photoelectrochemistry analyzers
-- **Phase D** (Round 176-190): Agentic loop + self-learning + provenance
-- **Phase E** (Round 191+): Materials DB, Structure Viewer, DFT, AI Writer, Lab Mode
+- **Pre-Commercial Audit** ✅ Done (Round 116-126) — security/correctness/UX hardening before commercial launch
+- **Phase B** ⏳ Next (Round 127+): Compliance KB + RAG infrastructure (or commercial-readiness work first)
+- **Phase C-1** (Round ~140-156): Optical & Structural analyzers
+- **Phase C-2** (Round ~157-171): Electrochemistry analyzers
+- **Phase C-3** (Round ~172-186): Photoelectrochemistry analyzers
+- **Phase D** (Round ~187-201): Agentic loop + self-learning + provenance
+- **Phase E** (Round ~202+): Materials DB, Structure Viewer, DFT, AI Writer, Lab Mode
 
-Chi tiết roadmap: `ROADMAP.md`.
+Round numbers shifted +11 vs ROADMAP.md original numbers because R116-R126 was unplanned audit work. Update ROADMAP.md ranges when resuming Phase B.
+
+Chi tiết roadmap: `ROADMAP.md`. Audit log: `AUDIT_LOG.md`.
