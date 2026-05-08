@@ -274,6 +274,11 @@
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
           <span data-label>Chat</span>
         </div>
+        <!-- Round 131a: AI Tools (superadmin only) -->
+        <div class="sidebar-item superadmin-only" data-action="ai-tools-toggle" data-tip="AI Tools" id="ai-tools-nav-btn" style="display:none" role="button" tabindex="0" aria-label="AI Tools">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+          <span data-label>AI Tools</span>
+        </div>
       </div>
       <!-- Round 16: Avatar at bottom of sidebar -->
       
@@ -1931,6 +1936,85 @@
 
     </div>
   </aside>
+
+  <!-- ════════════════════════════════════════════════════
+       Round 131a: AI Tools sidetab (Library, Workbench, DFT, ...)
+       ════════════════════════════════════════════════════ -->
+  <aside id="ai-tools-sidetab" class="ai-tools-sidetab" aria-hidden="true" aria-label="AI Tools">
+      <!-- Resize handle (R126 pattern) -->
+      <div class="ai-tools-sidetab__resizer" data-action="ai-tools-resize-start" tabindex="0" role="separator" aria-label="Kéo để thay đổi độ rộng" aria-orientation="vertical"></div>
+
+      <!-- Vertical sub-tabs bar (icon-only, hover hiện label) -->
+      <nav class="ai-tools-tabs" role="tablist" aria-label="AI Tools tabs">
+        <button class="ai-tools-tab is-active" data-action="ai-tools-tab-switch" data-tab="library" title="Tài liệu" role="tab" aria-selected="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2zM22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+        </button>
+        <button class="ai-tools-tab" data-action="ai-tools-tab-switch" data-tab="workbench" title="Workbench (Phase C)" role="tab" aria-selected="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 007 4.5v15A2.5 2.5 0 009.5 22h5a2.5 2.5 0 002.5-2.5v-15A2.5 2.5 0 0014.5 2h-5z"/><path d="M12 8v8M9 12h6"/></svg>
+        </button>
+        <button class="ai-tools-tab" data-action="ai-tools-tab-switch" data-tab="dft" title="DFT Launcher (Phase D)" role="tab" aria-selected="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 8 22 16 12 22 2 16 2 8 12 2"/><line x1="12" y1="22" x2="12" y2="12"/><polyline points="22 8 12 12 2 8"/></svg>
+        </button>
+        <button class="ai-tools-tab" data-action="ai-tools-tab-switch" data-tab="materials-db" title="Materials DB (Phase D)" role="tab" aria-selected="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0018 0V5"/><path d="M3 12a9 3 0 0018 0"/></svg>
+        </button>
+        <button class="ai-tools-tab" data-action="ai-tools-tab-switch" data-tab="memory" title="Lab Memory (Phase E)" role="tab" aria-selected="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0012 4.5 2.5 2.5 0 0114.5 2 2.5 2.5 0 0117 4.5c0 .89-.46 1.66-1.15 2.13C16.95 7.65 18 9.06 18 10.5a3.5 3.5 0 01-3.5 3.5c-.61 0-1.18-.16-1.68-.43.43.66.68 1.43.68 2.26 0 1.18-.71 2.21-1.74 2.65"/><path d="M14.5 2a2.5 2.5 0 00-2.5 2.5 2.5 2.5 0 01-2.5-2.5A2.5 2.5 0 007 4.5c0 .89.46 1.66 1.15 2.13C7.05 7.65 6 9.06 6 10.5A3.5 3.5 0 009.5 14c.61 0 1.18-.16 1.68-.43-.43.66-.68 1.43-.68 2.26 0 1.93 1.57 3.5 3.5 3.5"/></svg>
+        </button>
+      </nav>
+
+      <!-- Main content area -->
+      <div class="ai-tools-main">
+        <header class="ai-tools-header">
+          <h2 class="ai-tools-title" data-tab-title>📚 Thư viện tài liệu</h2>
+          <button class="ai-tools-close" type="button" data-action="ai-tools-toggle" aria-label="Đóng">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </header>
+
+        <div class="ai-tools-body">
+          <!-- Library tab (default active) -->
+          <div class="ai-tools-panel is-active" data-panel="library">
+            <div class="ai-tools-placeholder">
+              <div class="ai-tools-placeholder__icon">📚</div>
+              <h3>Thư viện tài liệu</h3>
+              <p>Upload + quản lý paper khoa học.<br>Sẽ được implement trong R132+.</p>
+            </div>
+          </div>
+          <div class="ai-tools-panel" data-panel="workbench">
+            <div class="ai-tools-placeholder">
+              <div class="ai-tools-placeholder__icon">🔬</div>
+              <h3>Workbench</h3>
+              <p>Spectrum Analyzer (XRD, Raman, UV-Vis, PL...).<br><strong>Phase C-1</strong> — Round 144+.</p>
+            </div>
+          </div>
+          <div class="ai-tools-panel" data-panel="dft">
+            <div class="ai-tools-placeholder">
+              <div class="ai-tools-placeholder__icon">💎</div>
+              <h3>DFT Launcher</h3>
+              <p>Tạo input QE/CASTEP/VASP via ASE, parse output.<br><strong>Phase D</strong> — Round 181+.</p>
+            </div>
+          </div>
+          <div class="ai-tools-panel" data-panel="materials-db">
+            <div class="ai-tools-placeholder">
+              <div class="ai-tools-placeholder__icon">🧪</div>
+              <h3>Materials Database</h3>
+              <p>CAS + JCPDS card library + 3Dmol.js viewer.<br><strong>Phase D</strong> — Round 177+.</p>
+            </div>
+          </div>
+          <div class="ai-tools-panel" data-panel="memory">
+            <div class="ai-tools-placeholder">
+              <div class="ai-tools-placeholder__icon">🧠</div>
+              <h3>Lab Memory</h3>
+              <p>Episodic memory + facts từ thí nghiệm.<br><strong>Phase D</strong> — Round 153+.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+  </aside>
+
+  <!-- AI Tools backdrop (mobile, optional) -->
+  <div class="ai-tools-backdrop" data-action="ai-tools-toggle" aria-hidden="true"></div>
 
 </body>
 </html>

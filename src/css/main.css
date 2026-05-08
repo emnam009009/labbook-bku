@@ -3399,3 +3399,7 @@ body.is-dragging-booking .cal-edge-zone.is-hover {
 body.is-dragging-booking .cal-edge-zone.cal-edge-right.is-hover {
   background: linear-gradient(to left, rgba(13,148,136,0.4), rgba(13,148,136,0.1));
 }
+
+/* Round 131a: superadmin-only visibility (extends admin-only pattern) */
+body.superadmin-mode .superadmin-only { display: inline-flex !important; }
+

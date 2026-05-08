@@ -184,6 +184,16 @@ export function attachGlobalDelegation() {
       case 'ai-chat-close':
         if (typeof window.closeAiChatSidetab === 'function') window.closeAiChatSidetab();
         break;
+      // ════════ AI Tools Sidetab (Round 131) ════════
+      case 'ai-tools-toggle':
+        if (typeof window.toggleAiToolsSidetab === 'function') window.toggleAiToolsSidetab();
+        break;
+      case 'ai-tools-tab-switch':
+        if (typeof window.onAiToolsTabSwitch === 'function') window.onAiToolsTabSwitch(target);
+        break;
+      case 'ai-tools-resize-start':
+        if (typeof window.onAiToolsResizeStart === 'function' && ev) window.onAiToolsResizeStart(target, ev);
+        break;
       case 'ai-chat-suggestion':
         if (typeof window.onAiChatSuggestion === 'function') window.onAiChatSuggestion(target);
         break;

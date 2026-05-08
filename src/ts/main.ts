@@ -20,7 +20,7 @@ import '../css/attachments.css'
 import '../css/ai-chat.css'  // Round 108: AI chat sidetab
 
 // AI Chat Sidetab (Round 108)
-import { initAiChatSidetab } from './ai/ui'  // Round 108
+import { initAiChatSidetab, initAiToolsSidetab } from './ai/ui'  // Round 108, R131b
 
 // ── Import Firebase ───────────────────────────────────────
 import { db, ref, push, onValue, fbListen, fbPush, fbSet, fbGet, fbDel, update, updatePassword } from './firebase.js'
@@ -1520,7 +1520,8 @@ window.openImageLightbox = function(opts: any) {
 
 // ── Init AI Chat Sidetab (Round 108) ───────────────
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => initAiChatSidetab())
+  document.addEventListener('DOMContentLoaded', () => { initAiChatSidetab(); initAiToolsSidetab(); })
 } else {
   initAiChatSidetab()
+  initAiToolsSidetab()
 }
