@@ -13,7 +13,127 @@
 
 
 import { vals, fuzzy, escapeHtml } from '../utils/format.js'
-import { db, ref, update, remove, fbPush } from '../firebase.js'
+import { db, ref, update, remove, fbPush, runTransaction } from '../firebase.js'
+
+// ═══════════════════════════════════════════════════
+// BUG 3 FIX (R119): Atomic slot reservation
+// ═══════════════════════════════════════════════════
+// Path: booking_locks/{equipmentKey}_{date}
+// Cấu trúc: { slots: [{ start, end, bookingKey, status }] }
+//
+// Bug 3 (race condition): 2 user concurrent saveBooking đọc cache local thấy
+// "không conflict" → cả 2 push thành công → DB có 2 booking trùng giờ.
+//
+// Fix: dùng runTransaction trên path lock — read-modify-write atomic ở server.
+// Nếu 2 user concurrent: chỉ 1 thắng (server retry user kia với data mới →
+// thấy conflict → abort).
+
+interface LockSlot {
+  start: string;   // "HH:MM"
+  end: string;
+  bookingKey: string;
+  status: string;
+}
+interface LockData {
+  slots?: LockSlot[];
+}
+
+function _lockPath(equipmentKey: string, date: string): string {
+  // Sanitize date: chỉ giữ digit/dash (đề phòng date "2026-01-15" hợp lệ).
+  // Firebase key không cho phép `.`, `#`, `$`, `[`, `]`, `/`.
+  const safeKey = String(equipmentKey || '').replace(/[.#$[\]/]/g, '_');
+  const safeDate = String(date || '').replace(/[.#$[\]/]/g, '_');
+  return `booking_locks/${safeKey}_${safeDate}`;
+}
+
+function _slotsOverlap(a: LockSlot, startTime: string, endTime: string): boolean {
+  // String compare HH:MM hoạt động đúng vì zero-padded.
+  // Active slots only — caller đã filter status ngoài rejected/cancelled.
+  if (!a.start || !a.end) return false;
+  return a.start < endTime && a.end > startTime;
+}
+
+/**
+ * Cố gắng reserve 1 slot atomic. Trả về:
+ *  - { ok: true, lockKey } nếu reserved thành công
+ *  - { ok: false, conflict: <slot trùng>, lockKey } nếu trùng giờ
+ * Caller sau đó phải push booking + gắn bookingKey vào slot (qua releaseSlot
+ * khi reject/cancel để trả lock).
+ *
+ * `bookingKey` truyền vào để track — vì chưa push booking record, ta dùng
+ * temp id (Date.now() + random) — sau khi push thành công sẽ patch lại.
+ */
+async function tryReserveSlot(
+  equipmentKey: string,
+  date: string,
+  startTime: string,
+  endTime: string,
+  tempBookingId: string
+): Promise<{ ok: boolean; conflict?: LockSlot; lockKey: string }> {
+  const lockKey = _lockPath(equipmentKey, date);
+  let conflictSlot: LockSlot | null = null;
+
+  const result = await runTransaction(ref(db, lockKey), (current: LockData | null) => {
+    const data: LockData = current || {};
+    const slots: LockSlot[] = Array.isArray(data.slots) ? data.slots.slice() : [];
+    // Filter active slots — bỏ qua reject/cancel/complete (vẫn còn trong array
+    // nếu cleanup chậm); active = pending/approved/in-use
+    const ACTIVE = ['pending', 'approved', 'in-use'];
+    for (const s of slots) {
+      if (!s || !ACTIVE.includes(s.status)) continue;
+      if (_slotsOverlap(s, startTime, endTime)) {
+        conflictSlot = s;
+        return undefined; // abort transaction, server không write
+      }
+    }
+    slots.push({ start: startTime, end: endTime, bookingKey: tempBookingId, status: 'pending' });
+    return { slots };
+  });
+
+  if (!result.committed || conflictSlot) {
+    return { ok: false, conflict: conflictSlot || undefined, lockKey };
+  }
+  return { ok: true, lockKey };
+}
+
+/**
+ * Update slot bookingKey từ tempId sang Firebase pushKey thực sự,
+ * hoặc cập nhật status (approved/rejected/cancelled).
+ * Nếu newStatus là rejected/cancelled/completed → remove slot khỏi array.
+ */
+async function updateSlotStatus(
+  equipmentKey: string,
+  date: string,
+  bookingKey: string,
+  newStatus: string,
+  matchTempId?: string
+): Promise<void> {
+  const lockKey = _lockPath(equipmentKey, date);
+  const REMOVE = ['rejected', 'cancelled', 'completed'];
+
+  await runTransaction(ref(db, lockKey), (current: LockData | null) => {
+    if (!current || !Array.isArray(current.slots)) return current;
+    const slots = current.slots.slice();
+    let changed = false;
+    const out: LockSlot[] = [];
+    for (const s of slots) {
+      if (!s) continue;
+      const isMatch = s.bookingKey === bookingKey || (matchTempId && s.bookingKey === matchTempId);
+      if (isMatch) {
+        if (REMOVE.includes(newStatus)) {
+          changed = true;
+          continue; // remove
+        }
+        out.push({ ...s, bookingKey, status: newStatus });
+        changed = true;
+      } else {
+        out.push(s);
+      }
+    }
+    if (!changed) return current;
+    return { slots: out };
+  });
+}
 
 // ═══════════════════════════════════════════════════
 // RENDER LIST
@@ -402,7 +522,8 @@ window.saveBooking = async function() {
     return;
   }
   
-  // Conflict check
+  // Conflict check (cache-based — pre-flight UX, vẫn giữ để báo nhanh trước
+  // khi gọi server). Atomic reserve ở dưới mới là barrier thật.
   window.devLog?.('[saveBooking] Checking conflict:', { equipmentKey, date, startTime, endTime });
   window.devLog?.('[saveBooking] All bookings:', vals(window.cache?.bookings || {}));
   const conflict = checkConflict(equipmentKey, date, startTime, endTime);
@@ -438,9 +559,34 @@ window.saveBooking = async function() {
   
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Đang lưu...'; }
   
+  // Bug 3 fix R119: atomic slot reservation BEFORE push
+  // Tránh 2 user concurrent push booking trùng giờ.
+  const tempId = `tmp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  let reserveResult;
+  try {
+    reserveResult = await tryReserveSlot(equipmentKey, date, startTime, endTime, tempId);
+  } catch (e) {
+    console.error('saveBooking reserve failed:', e);
+    showToast?.('Lỗi kiểm tra lịch: ' + (e?.message || e), 'danger');
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Đăng ký'; }
+    return;
+  }
+  if (!reserveResult.ok) {
+    const c = reserveResult.conflict;
+    const msg = c
+      ? `Trùng lịch với booking khác (${c.start} - ${c.end}). Vui lòng chọn giờ khác.`
+      : 'Trùng lịch — có người vừa đăng ký cùng giờ. Thử lại với giờ khác.';
+    showToast?.(msg, 'danger');
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Đăng ký'; }
+    return;
+  }
+
   try {
     const ref = await fbPush('bookings', booking);
     const bookingKey = ref?.key || '';
+    // Patch slot bookingKey từ tempId sang real key
+    try { await updateSlotStatus(equipmentKey, date, bookingKey, 'pending', tempId); }
+    catch (e) { console.warn('[saveBooking] updateSlotStatus failed', e); }
     // Notify admin có booking mới
     if (typeof window.createNotification === 'function') {
       window.createNotification(
@@ -455,6 +601,9 @@ window.saveBooking = async function() {
     closeModal?.('modal-booking');
   } catch (e) {
     console.error('saveBooking error:', e);
+    // Rollback lock vì push booking fail
+    try { await updateSlotStatus(equipmentKey, date, tempId, 'cancelled'); }
+    catch (rollbackErr) { console.warn('[saveBooking] lock rollback failed', rollbackErr); }
     showToast?.('Lỗi: ' + e.message, 'danger');
   } finally {
     if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Đăng ký'; }
@@ -542,6 +691,11 @@ window.confirmRejectBooking = async function() {
       rejectedAt: new Date().toISOString(),
       rejectedReason: reason || '',
     });
+    // Bug 3 fix R119: cleanup slot khỏi lock để slot được giải phóng
+    if (booking?.equipmentKey && booking?.date) {
+      try { await updateSlotStatus(booking.equipmentKey, booking.date, key, 'rejected'); }
+      catch (e) { console.warn('[rejectBooking] lock cleanup failed', e); }
+    }
     // Notify member booking bị từ chối + lý do
     if (booking && typeof window.createNotification === 'function') {
       const msg = `${booking.equipmentName} - ${formatDate(booking.date)}` + (reason ? ` | Lý do: ${reason}` : '');
@@ -563,10 +717,16 @@ window.confirmRejectBooking = async function() {
 window.cancelBooking = async function(key) {
   if (!confirm('Hủy đăng ký này?')) return;
   try {
+    const booking = window.cache?.bookings?.[key];
     await update(ref(db, `bookings/${key}`), {
       status: 'cancelled',
       cancelledAt: new Date().toISOString(),
     });
+    // Bug 3 fix R119: cleanup slot
+    if (booking?.equipmentKey && booking?.date) {
+      try { await updateSlotStatus(booking.equipmentKey, booking.date, key, 'cancelled'); }
+      catch (e) { console.warn('[cancelBooking] lock cleanup failed', e); }
+    }
     window.showToast?.('Đã hủy', 'success');
   } catch (e) {
     window.showToast?.('Lỗi: ' + e.message, 'danger');
@@ -575,10 +735,16 @@ window.cancelBooking = async function(key) {
 
 window.checkInBooking = async function(key) {
   try {
+    const booking = window.cache?.bookings?.[key];
     await update(ref(db, `bookings/${key}`), {
       status: 'in-use',
       checkInAt: new Date().toISOString(),
     });
+    // Bug 3 fix R119: update slot status (vẫn giữ slot vì in-use vẫn block giờ)
+    if (booking?.equipmentKey && booking?.date) {
+      try { await updateSlotStatus(booking.equipmentKey, booking.date, key, 'in-use'); }
+      catch (e) { console.warn('[checkInBooking] lock update failed', e); }
+    }
     window.showToast?.('Đã check-in', 'success');
   } catch (e) {
     window.showToast?.('Lỗi: ' + e.message, 'danger');
@@ -587,10 +753,16 @@ window.checkInBooking = async function(key) {
 
 window.checkOutBooking = async function(key) {
   try {
+    const booking = window.cache?.bookings?.[key];
     await update(ref(db, `bookings/${key}`), {
       status: 'completed',
       checkOutAt: new Date().toISOString(),
     });
+    // Bug 3 fix R119: cleanup slot — completed không còn block
+    if (booking?.equipmentKey && booking?.date) {
+      try { await updateSlotStatus(booking.equipmentKey, booking.date, key, 'completed'); }
+      catch (e) { console.warn('[checkOutBooking] lock cleanup failed', e); }
+    }
     window.showToast?.('Đã check-out', 'success');
   } catch (e) {
     window.showToast?.('Lỗi: ' + e.message, 'danger');
@@ -612,6 +784,11 @@ window.deleteBooking = async function(key) {
   
   try {
     await remove(ref(db, `bookings/${key}`));
+    // Bug 3 fix R119: cleanup slot khỏi lock
+    if (booking?.equipmentKey && booking?.date) {
+      try { await updateSlotStatus(booking.equipmentKey, booking.date, key, 'cancelled'); }
+      catch (cleanupErr) { console.warn('[deleteBooking] lock cleanup failed', cleanupErr); }
+    }
     window.showToast?.('Đã xóa cứng đăng ký', 'success');
   } catch (e) {
     console.error('deleteBooking error:', e);
@@ -701,6 +878,11 @@ async function autoCancelOverdueBookings() {
           cancelledBy: 'system',
           rejectedReason: reason,  // dùng rejectedReason để UI tooltip hiện được
         });
+        // Bug 3 fix R119: cleanup slot
+        if (b.equipmentKey && b.date) {
+          try { await updateSlotStatus(b.equipmentKey, b.date, b._key, 'cancelled'); }
+          catch (e) { console.warn('[autoCancel] lock cleanup failed', e); }
+        }
         cancelledCount++;
         window.devLog?.(`[autoCancel] ${b.code} (${b.userName}) - ${reason}`);
 
