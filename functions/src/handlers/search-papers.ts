@@ -1,38 +1,43 @@
 /**
- * Search Papers — Round 136a
+ * Search Papers — Round 137b (Hybrid retrieval)
  *
- * RAG retrieval: query string → embedding → Firestore vectorSearch → top K chunks.
- * Read-only, available to all authenticated users.
+ * Pipeline:
+ *   query → SearchEngine (vector | bm25 | hybrid) → top-K chunks → enrich titles
+ *
+ * Backward compatible with R136a callers: response shape preserved,
+ * new score fields added optionally, request fields `mode`/`retrievalDepth`
+ * are optional with sensible defaults.
  */
 import { onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import { logger } from "../utils/logger";
 import { verifyAuth, AuthError } from "../utils/auth";
+import { createSearchEngine } from "../search/engine";
+import { DEFAULT_SEARCH_CONFIG } from "../search/config";
+import type { SearchMode, SearchEngineContext } from "../search/types";
+import { createTracer } from "../observability/tracer";
+import { FirestoreTraceSink } from "../observability/trace-sink";
+import { VoyageReranker, type Reranker } from "../search/reranker";
 
 const voyageKey = defineSecret("VOYAGE_API_KEY");
 
 const VOYAGE_API_URL = "https://api.voyageai.com/v1/embeddings";
 const VOYAGE_MODEL = "voyage-3-large";
 const FIRESTORE_DB = "labbook";
-const COLLECTION = "aiChunks";
-const DEFAULT_LIMIT = 10;
-const MAX_LIMIT = 50;
 
 interface SearchRequest {
   query: string;
   limit?: number;
-  paperId?: string;  // optional: filter by paper
+  paperId?: string;
+  // R137b additions (all optional)
+  mode?: SearchMode;
+  retrievalDepth?: number;
+  // R137c1: rerank toggle (default config.rerankerEnabled = true)
+  rerank?: boolean;
 }
 
-interface ChunkResult {
-  chunkId: string;
-  paperId: string;
-  chunkIndex: number;
-  sectionPath: string;
-  text: string;
-  distance?: number;
-}
+const VALID_MODES: SearchMode[] = ["vector", "bm25", "hybrid"];
 
 export const searchPapers = onRequest(
   {
@@ -59,81 +64,134 @@ export const searchPapers = onRequest(
       return;
     }
 
-    const body = req.body as SearchRequest;
-    if (!body?.query || typeof body.query !== "string") {
+    const body = (req.body || {}) as SearchRequest;
+    if (!body.query || typeof body.query !== "string") {
       res.status(400).json({ error: "Missing query" });
       return;
     }
-    const query = body.query.trim().slice(0, 1000);
-    if (!query) { res.status(400).json({ error: "Empty query" }); return; }
+    const queryText = body.query.trim().slice(0, 1000);
+    if (!queryText) { res.status(400).json({ error: "Empty query" }); return; }
 
-    const limit = Math.min(MAX_LIMIT, Math.max(1, body.limit || DEFAULT_LIMIT));
-    const paperFilter = body.paperId;
+    const config = DEFAULT_SEARCH_CONFIG;
+    const limit = Math.min(config.maxLimit, Math.max(1, body.limit || config.defaultLimit));
+    const mode: SearchMode = (body.mode && VALID_MODES.includes(body.mode))
+      ? body.mode
+      : "hybrid";
+    const retrievalDepth = body.retrievalDepth
+      ? Math.min(config.maxRetrievalDepth, Math.max(1, body.retrievalDepth))
+      : undefined;
+    // R137c1: rerank toggle — explicit body.rerank wins, else config default
+    const rerankEnabled = typeof body.rerank === "boolean"
+      ? body.rerank
+      : config.rerankerEnabled;
 
-    logger.info(`[searchPapers] uid=${uid} query="${query.slice(0, 100)}" limit=${limit}`);
+    logger.info(
+      `[searchPapers] uid=${uid} mode=${mode} rerank=${rerankEnabled} query="${queryText.slice(0, 80)}" limit=${limit}`
+    );
+
+    // R137b-eval+obs: create tracer for this request
+    const tracer = createTracer({
+      endpoint: "searchPapers",
+      userId: uid,
+      attributes: { mode, limit, paperId: body.paperId, retrievalDepth, rerank: rerankEnabled },
+    });
+    tracer.setQuery(queryText);
 
     try {
-      // 1. Embed query
-      const apiKey = voyageKey.value();
-      const embedResp = await fetch(VOYAGE_API_URL, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          input: [query],
-          model: VOYAGE_MODEL,
-          input_type: "query",
-        }),
-      });
-      if (!embedResp.ok) {
-        const errText = await embedResp.text();
-        logger.error(`[searchPapers] Voyage error ${embedResp.status}: ${errText.slice(0, 300)}`);
-        res.status(502).json({ error: `Embed failed: ${errText.slice(0, 200)}` });
-        return;
-      }
-      const embedData = await embedResp.json() as any;
-      const queryVector = embedData.data?.[0]?.embedding;
-      if (!queryVector || !Array.isArray(queryVector)) {
-        res.status(500).json({ error: "Invalid embedding response" });
-        return;
-      }
-
-      // 2. Firestore vectorSearch
-      const { getFirestore, FieldValue } = await import("firebase-admin/firestore");
+      // Build context: Firestore + embedding fn (only invoked if engine needs it)
+      const { getFirestore } = await import("firebase-admin/firestore");
       const db = getFirestore(FIRESTORE_DB);
+      const traceSink = new FirestoreTraceSink(db);
 
-      let baseQuery: any = db.collection(COLLECTION);
-      if (paperFilter) {
-        baseQuery = baseQuery.where("paperId", "==", paperFilter);
+      const apiKey = voyageKey.value();
+      const embed = async (text: string): Promise<number[]> => {
+        return tracer.span("embed", async () => {
+          const resp = await fetch(VOYAGE_API_URL, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              input: [text],
+              model: VOYAGE_MODEL,
+              input_type: "query",
+            }),
+          });
+          if (!resp.ok) {
+            const errText = await resp.text();
+            throw new Error(`Voyage error ${resp.status}: ${errText.slice(0, 200)}`);
+          }
+          const data = await resp.json() as any;
+          const vec = data.data?.[0]?.embedding;
+          if (!vec || !Array.isArray(vec)) {
+            throw new Error("Invalid embedding response");
+          }
+          // Track cost: rough estimate, Voyage doesn't return usage in embed response
+          // Approximate: text length / 4 ≈ tokens
+          tracer.recordCost(VOYAGE_MODEL as any, { inputTokens: Math.ceil(text.length / 4) }, "embed");
+          return vec;
+        }, { textLength: text.length });
+      };
+
+      const ctx: SearchEngineContext = { embed, firestore: db };
+      const engine = createSearchEngine(mode, config);
+
+      // R137c1: when reranking, ensure engine returns enough candidates
+      // (default retrievalDepth gives 30 from each, hybrid merges to ~30-60 unique)
+      const effectiveRetrievalDepth = rerankEnabled
+        ? Math.max(retrievalDepth || 0, config.rerankerCandidates)
+        : retrievalDepth;
+
+      const startedAt = Date.now();
+      const results = await tracer.span(
+        `${mode}_search`,
+        () => engine.search(
+          { text: queryText, limit, paperId: body.paperId, retrievalDepth: effectiveRetrievalDepth },
+          ctx,
+        ),
+        { mode },
+      );
+      const searchMs = Date.now() - startedAt;
+
+      // R137c1: rerank stage (graceful fallback on failure)
+      let reranked = results;
+      if (rerankEnabled && results.length > 1) {
+        const reranker: Reranker = new VoyageReranker({
+          apiKey,
+          model: config.rerankerModel,
+          onTokensUsed: (tokens) => {
+            tracer.recordCost(config.rerankerModel as any, { inputTokens: tokens }, "rerank");
+          },
+        });
+        try {
+          reranked = await tracer.span(
+            "rerank",
+            () => reranker.rerank({
+              query: queryText,
+              candidates: results.slice(0, config.rerankerCandidates),
+              topK: limit,
+            }),
+            { model: config.rerankerModel, candidateCount: Math.min(results.length, config.rerankerCandidates) },
+          );
+        } catch (e) {
+          // Span already recorded the error via tracer.span's catch.
+          // Fall back to original ranking.
+          logger.warn("[searchPapers] rerank failed, using original ranking", { error: String(e) });
+          reranked = results;
+        }
       }
 
-      const vectorQuery = baseQuery.findNearest({
-        vectorField: "embedding",
-        queryVector: FieldValue.vector(queryVector),
-        limit,
-        distanceMeasure: "COSINE",
-        distanceResultField: "_distance",
-      });
+      // R137b-fix: trim to caller's `limit` (engines return pool size for hybrid merge)
+      // After rerank, list is already topK from reranker; slice is idempotent.
+      const trimmed = reranked.slice(0, limit);
 
-      const snap = await vectorQuery.get();
-      const results: ChunkResult[] = snap.docs.map((d: any) => {
-        const data = d.data();
-        return {
-          chunkId: d.id,
-          paperId: data.paperId,
-          chunkIndex: data.chunkIndex,
-          sectionPath: data.sectionPath,
-          text: data.text,
-          distance: data._distance,
-        };
-      });
+      logger.info(
+        `[searchPapers] mode=${mode} pool=${results.length} reranked=${rerankEnabled} returned=${trimmed.length} in ${searchMs}ms`
+      );
 
-      logger.info(`[searchPapers] Returned ${results.length} chunks for query="${query.slice(0, 50)}"`);
-
-      // 3. Enrich với paper title (batch fetch RTDB)
-      const paperIds = [...new Set(results.map((r) => r.paperId))];
+      // Enrich with paper titles (RTDB batch fetch — same pattern as R136a)
+      const paperIds = [...new Set(trimmed.map((r) => r.paperId))];
       const titles: Record<string, string> = {};
       await Promise.all(paperIds.map(async (pid) => {
         const ref = admin.database().ref(`aiPapers/_shared/${pid}/title`);
@@ -141,20 +199,37 @@ export const searchPapers = onRequest(
         titles[pid] = snap.val() || pid;
       }));
 
-      const enrichedResults = results.map((r) => ({
+      const enriched = trimmed.map((r) => ({
         ...r,
         paperTitle: titles[r.paperId] || r.paperId,
       }));
 
+      // R137b-eval+obs: finalize trace (fire-and-forget — sink swallows errors)
+      tracer.recordSpan("enrich_titles", 0, "ok", { paperCount: paperIds.length });
+      await tracer.finish(traceSink, { status: "ok" });
+
       res.status(200).json({
         success: true,
-        query,
-        count: enrichedResults.length,
-        results: enrichedResults,
+        query: queryText,
+        mode,
+        rerank: rerankEnabled,
+        count: enriched.length,
+        searchMs,
+        traceId: tracer.traceId,
+        results: enriched,
       });
     } catch (e: any) {
       logger.error(`[searchPapers] Exception`, { error: String(e), stack: e?.stack });
-      res.status(500).json({ error: e?.message || "Search failed" });
+      // R137b-eval+obs: persist failed trace too
+      try {
+        const { getFirestore } = await import("firebase-admin/firestore");
+        const db = getFirestore(FIRESTORE_DB);
+        await tracer.finish(new FirestoreTraceSink(db), {
+          status: "error",
+          errorMessage: String(e?.message || e).slice(0, 200),
+        });
+      } catch { /* swallow */ }
+      res.status(500).json({ error: e?.message || "Search failed", traceId: tracer.traceId });
     }
   }
 );

@@ -43,6 +43,34 @@
           }
         }
       ]
+    },
+    {
+      "collectionGroup": "aiChunks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "paperId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "bm25TokenizerVersion",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "aiChunks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "bm25Language",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "paperId",
+          "order": "ASCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []

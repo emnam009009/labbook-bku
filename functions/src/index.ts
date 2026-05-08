@@ -29,6 +29,8 @@ export { chandraProxy } from "./handlers/chandra-proxy";  // Round 133a (R117 or
 export { chunkPaper } from "./handlers/chunk-paper";  // Round 134a
 export { paperPipelineRouter } from "./triggers/paper-pipeline-router";  // Round 134b
 export { searchPapers } from "./handlers/search-papers";  // Round 136a
+export { backfillBM25 } from "./handlers/backfill-bm25";  // Round 137a
+export { runEval } from "./handlers/run-eval";  // Round 137b-eval+obs
 
 // Python service bridge (Round 107+)
 export { pythonBridge } from "./handlers/python-bridge";

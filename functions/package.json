@@ -22,7 +22,9 @@
     "@google-cloud/pubsub": "^5.3.0",
     "firebase-admin": "^12.7.0",
     "firebase-functions": "^7.2.5",
-    "google-auth-library": "^10.6.2"
+    "google-auth-library": "^10.6.2",
+    "natural": "^8.0.0",
+    "stopwords-iso": "^1.1.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

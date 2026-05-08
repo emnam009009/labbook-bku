@@ -14,6 +14,10 @@ import * as admin from "firebase-admin";
 import { logger } from "../utils/logger";
 import { verifyAuth, AuthError } from "../utils/auth";
 import { publishPaperEvent } from "../utils/pubsub-publisher";
+import { tokenize } from "../bm25/tokenizer";
+import { updateCorpusStats } from "../bm25/corpus-stats";
+import { TOKENIZER_VERSION } from "../bm25/types";
+import type { TokenizeResult } from "../bm25/types";
 
 const SHARED_PATH = "aiPapers/_shared";
 const FIRESTORE_DB = "labbook";
@@ -224,19 +228,45 @@ export async function chunkPaperCore(paperId: string): Promise<{ numChunks: numb
     await delBatch.commit();
   }
 
+  // R137a: Tokenize each chunk for BM25 inverted index
+  const tokenizeResults: TokenizeResult[] = [];
+  for (const chunk of allChunks) {
+    tokenizeResults.push(tokenize(chunk.text));
+  }
+  logger.info(`[chunkPaperCore] tokenized ${tokenizeResults.length} chunks for BM25`);
+
   const BATCH_SIZE = 500;
+  const nowMs = Date.now();
   for (let i = 0; i < allChunks.length; i += BATCH_SIZE) {
     const batch = dbInstance.batch();
-    for (const chunk of allChunks.slice(i, i + BATCH_SIZE)) {
+    for (let j = 0; j < allChunks.slice(i, i + BATCH_SIZE).length; j++) {
+      const chunk = allChunks[i + j];
+      const tk = tokenizeResults[i + j];
       const docRef = dbInstance.collection(COLLECTION).doc();
       batch.set(docRef, {
         ...chunk,
         embedding: null,
         embeddingModel: null,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        // R137a BM25 fields
+        bm25Tokens: tk.tokens,
+        bm25TokenFreq: tk.tokenFreq,
+        bm25DocLength: tk.docLength,
+        bm25Language: tk.language,
+        bm25TokenizerVersion: TOKENIZER_VERSION,
+        bm25TokenizedAt: nowMs,
       });
     }
     await batch.commit();
+  }
+
+  // R137a: Update corpus stats incrementally (after all chunk writes succeeded)
+  try {
+    await updateCorpusStats(dbInstance, tokenizeResults, "add");
+    logger.info(`[chunkPaperCore] corpus stats updated +${tokenizeResults.length} docs`);
+  } catch (e) {
+    logger.error(`[chunkPaperCore] corpus stats update failed`, { error: String(e) });
+    // Non-fatal: chunks are written, stats can be rebuilt via backfill
   }
 
   await paperRef.update({
