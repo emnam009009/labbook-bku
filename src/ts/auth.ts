@@ -6,6 +6,7 @@ import {
 } from './firebase.js'
 import { browserLocalPersistence, setPersistence, updateProfile } from 'firebase/auth'
 import type { User } from 'firebase/auth'
+import { stopPresence } from './services/presence.js'
 
 // ── Type for currentAuth ────────────────────────────────────────────────
 export interface CurrentAuthState {
@@ -80,6 +81,16 @@ export async function register(email: string, password: string, fullName: string
 
 // ── Đăng xuất ───────────────────────────────────────────────────────────
 export async function logout(): Promise<void> {
+  // Bug 2 fix: ghi presence offline TRƯỚC khi signOut, lúc còn auth.uid
+  // (sau signOut rules .write `auth.uid === $uid` sẽ deny → presence kẹt online)
+  // listeners.ts cũng có gọi stopPresence ở stopListeners, nhưng đó là sau khi
+  // signOut → fail. Gọi ở đây sớm hơn để write thành công.
+  try { await stopPresence() } catch (e) { /* noop */ }
+
+  // Bug 1 fix: cleanup role listener trước khi signOut
+  // (tránh listener của user A vẫn fire sau khi user B login)
+  stopRoleListener()
+
   await signOut(auth)
   Object.assign(currentAuth, {
     user: null, uid: null, email: null, displayName: null, role: 'viewer',
@@ -94,8 +105,17 @@ export async function logout(): Promise<void> {
 // ── Load role từ Firebase (realtime) ────────────────────────────────────
 export type RoleCallback = (role: string) => void
 
+// Bug 1 fix: giữ unsub để cleanup khi logout / switch account
+// (tránh listener cũ ghi đè currentAuth khi user khác đã login cùng tab)
+let _roleUnsub: (() => void) | null = null
+
 export function loadUserRole(uid: string, callback?: RoleCallback): void {
-  onValue(ref(db, 'users/' + uid + '/role'), async (snap: any) => {
+  // Cleanup listener cũ nếu có (vd: re-login sau logout)
+  if (_roleUnsub) {
+    try { _roleUnsub() } catch (e) { /* noop */ }
+    _roleUnsub = null
+  }
+  _roleUnsub = onValue(ref(db, 'users/' + uid + '/role'), async (snap: any) => {
     const role = snap.val() || 'viewer'
     currentAuth.role         = role
     currentAuth.isAdmin      = isAdminRole(role)
@@ -103,6 +123,14 @@ export function loadUserRole(uid: string, callback?: RoleCallback): void {
     currentAuth.isSuperAdmin = isSuperAdminRole(role)
     if (callback) callback(role)
   })
+}
+
+// Cleanup role listener (gọi từ logout)
+export function stopRoleListener(): void {
+  if (_roleUnsub) {
+    try { _roleUnsub() } catch (e) { /* noop */ }
+    _roleUnsub = null
+  }
 }
 
 // ── Init Auth ───────────────────────────────────────────────────────────
