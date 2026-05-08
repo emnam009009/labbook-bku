@@ -276,6 +276,11 @@
           "extractionQuality": { ".validate": "newData.isNumber()" },
           "extractionCostCents": { ".validate": "newData.isNumber() && newData.val() >= 0" },
           "textExtracted": { ".validate": "newData.isBoolean()" },
+          "chunkedAt": { ".validate": "newData.isString()" },
+          "numEmbedded": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+          "embeddingModel": { ".validate": "newData.isString() && newData.val().length <= 100" },
+          "embeddedAt": { ".validate": "newData.isString()" },
+          "embeddingTokens": { ".validate": "newData.isNumber() && newData.val() >= 0" },
           "$other": { ".validate": false }
         }
       }

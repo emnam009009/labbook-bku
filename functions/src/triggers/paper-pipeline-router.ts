@@ -14,6 +14,10 @@ import { onMessagePublished } from "firebase-functions/v2/pubsub";
 import * as admin from "firebase-admin";
 import { logger } from "../utils/logger";
 import { chunkPaperCore } from "../handlers/chunk-paper";
+import { embedChunksCore } from "../handlers/embed-chunks";
+import { defineSecret } from "firebase-functions/params";
+
+const voyageKey = defineSecret("VOYAGE_API_KEY");
 
 interface PaperEvent {
   paperId: string;
@@ -28,6 +32,7 @@ export const paperPipelineRouter = onMessagePublished(
     timeoutSeconds: 540,
     memory: "512MiB",
     retry: false,  // Manual retry nếu fail (tránh loop bug)
+    secrets: [voyageKey],  // R135: cho embedChunksCore
   },
   async (event) => {
     let payload: PaperEvent;
@@ -56,8 +61,8 @@ export const paperPipelineRouter = onMessagePublished(
           await chunkPaperCore(paperId);
           break;
         case "chunked":
-          // R135+: trigger embedding
-          logger.info(`[router] Stage 'chunked' - embedPaper not implemented yet (R135+)`);
+          // R135: trigger embedding
+          await embedChunksCore(paperId);
           break;
         case "embedded":
           // R136+: trigger indexing
