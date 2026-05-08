@@ -2,153 +2,291 @@
 
 Tài liệu này mô tả kiến trúc, luồng dữ liệu, và quy ước code của LabBook BKU.
 
-*This document describes the architecture, data flow, and code conventions of LabBook BKU.*
+> **Last updated**: Round 127 (May 8 2026), sau Pre-Commercial Audit (R116-R126).
+> Cho deep-dive về AI module xem `AI_ARCHITECTURE.md`. Cho debug regression xem `AUDIT_LOG.md`.
 
 ---
 
-## 🎯 Triết lý thiết kế / Design philosophy
+## 🎯 Triết lý thiết kế
 
-- **Vanilla JS, không framework** — Dự án dùng ES modules thuần, không React/Vue. Lý do: nhẹ, ít dependencies, dễ debug.
-- **Single Page App** — Tất cả content trong `index.html`, JavaScript điều khiển hiển thị qua class `.active` trên các `.page`.
-- **Firebase làm backend** — Realtime Database cho data, Authentication cho user, Hosting cho deploy. Không có server riêng.
-- **Realtime first** — Mọi thay đổi data đều sync qua Firebase listeners → re-render. Không có "save button" cho user, mà mọi update đều push trực tiếp lên DB.
-
-*Vanilla JS with no framework. Single page app. Firebase backend. Realtime sync everywhere.*
+- **TypeScript ESM, không framework UI** — Vanilla DOM với event delegation. Không React/Vue. Lý do: nhẹ, ít deps, dễ debug, bundle nhỏ.
+- **Single Page App** — Tất cả content trong `index.html`, JS điều khiển hiển thị qua class `.active` trên các `.page`.
+- **Firebase RTDB làm primary backend** — Realtime sync cho data, Auth cho user, Hosting cho deploy. Cloud Functions (asia-southeast1, Blaze plan) cho AI proxy + speech + action commit.
+- **Realtime first** — Mọi thay đổi data đều sync qua Firebase listeners → re-render. Không có "save button" cho user — mọi update push trực tiếp lên DB.
+- **CSP strict + global delegation** — Không inline `onclick`, dùng `data-action` + global delegation handler (xem R55-58e). Mozilla Observatory 125/100 A+.
+- **Patches-driven workflow** — Thay đổi code qua git diff patches từ `/mnt/d/labbook-patches/`. Audit history rõ ràng mỗi round (xem CHANGELOG.md).
 
 ---
 
-## 📁 Cấu trúc thư mục / Folder structure
+## 📁 Cấu trúc thư mục
 
 ```
-src/ts/
-├── main.js                          # Entry point — import tất cả modules, gắn lên window, khởi động app
-├── firebase.js                      # Init Firebase + export helpers (fbSet, fbGet, fbListen, ...)
-├── auth.js                          # Authentication core (login, register, role management)
-├── state.js                         # Module-level state (chia sẻ giữa các module)
-├── labbook-extensions.js            # Extension cũ (chuẩn bị deprecate)
+labbook/
+├── index.html                          # SPA shell, ~1900 lines, all modals + page containers
+├── src/
+│   ├── ts/                             # Frontend TypeScript (ESM)
+│   │   ├── main.ts                     # Entry point, init flow, lazy loaders, window globals
+│   │   ├── firebase.ts                 # Init Firebase + helpers (fbSet/fbGet/fbListen/fbPush/runTransaction/incrementStock)
+│   │   ├── auth.ts                     # Auth core (login, register, role listener với unsub tracking — R116)
+│   │   ├── state.ts                    # Module-level state shared
+│   │   ├── labbook-extensions.ts       # Legacy (deprecate dần)
+│   │   │
+│   │   ├── pages/                      # 1 file = 1 page
+│   │   │   ├── auth-flow.ts            # Login/Register/Logout UI
+│   │   │   ├── dashboard.ts            # Trang chủ với KPI cards, charts, recent activity
+│   │   │   ├── experiments.ts          # Hydrothermal + Electrode + Electrochem dispatcher
+│   │   │   ├── chemicals.ts            # Quản lý hóa chất (stock, group, CAS lookup)
+│   │   │   ├── ink.ts                  # Mực in điện cực
+│   │   │   ├── equipment.ts            # Thiết bị
+│   │   │   ├── booking.ts              # Đặt lịch + week time-grid + booking_locks transaction (~1900 lines)
+│   │   │   ├── members.ts              # Thành viên lab
+│   │   │   ├── users.ts                # User accounts management (admin only)
+│   │   │   ├── history.ts              # Audit log viewer (admin only)
+│   │   │   ├── chat.ts                 # Group chat
+│   │   │   ├── overview.ts             # Cross-experiment overview (R77c+)
+│   │   │   ├── reports.ts              # Monthly reports PDF
+│   │   │   ├── settings.ts             # User profile + lab title/subtitle
+│   │   │   └── workbench/              # AI Workbench (Phase B+ skeleton)
+│   │   │
+│   │   ├── services/                   # Business logic, không trực tiếp render
+│   │   │   ├── listeners.ts            # Firebase listeners — SMALL_COLLECTIONS + LARGE_COLLECTIONS_CONFIG + per-user notifications (R122)
+│   │   │   ├── presence.ts             # Online/offline tracking (start/stop ordering critical — R116)
+│   │   │   ├── notifications.ts        # Bell + toast — fan-out per recipient nested schema (R122)
+│   │   │   ├── notifications-hooks.ts  # Auto-create notification trên save/approve/reject events
+│   │   │   ├── render-dispatcher.ts    # Gọi đúng renderXxx() cho page active
+│   │   │   ├── theme-manager.ts        # Theme switching (color tokens via CSS vars)
+│   │   │   ├── theme-picker-ui.ts      # Color picker dropdown
+│   │   │   ├── avatar.ts               # User avatar generation (initial/color)
+│   │   │   ├── avatar-menu-a11y.ts     # ARIA + keyboard nav
+│   │   │   ├── save-handlers.ts        # Form save (saveHydro/saveElectrode/saveElectrochem/saveInk) — atomic stock via incrementStock (R118)
+│   │   │   ├── edit-handlers.ts        # Inline row edit — escapeHtml on values (R116 XSS fix)
+│   │   │   ├── image-handlers.ts       # Upload/paste/drop với validateImageFile (R118)
+│   │   │   ├── form-helpers.ts         # Calc loading, lookup CAS, compute formula
+│   │   │   ├── group-lock-mgmt.ts      # Nhóm + lock items (locked items immutable)
+│   │   │   ├── duplicate-delete.ts     # Duplicate row + delete + undo — atomic stock (R118)
+│   │   │   ├── attachments.ts          # Storage upload với rollback (R117 orphan fix)
+│   │   │   ├── attachment-classifier.ts # Auto-detect category (XRD/UV-Vis/PL/Raman/...)
+│   │   │   ├── bulk-actions.ts         # Bulk select + bulk export/lock/delete
+│   │   │   ├── bulk-multi-select.ts    # Multi-select state
+│   │   │   ├── bulk-row-style.ts       # CSS hooks cho bulk select rows
+│   │   │   ├── date-range-filter.ts    # Filter theo khoảng ngày (DD/MM/YYYY)
+│   │   │   ├── member-filter.ts        # Filter theo thành viên
+│   │   │   ├── global-search.ts        # Top-bar search với reset trên navigate (R121)
+│   │   │   ├── global-delegation.ts    # Single delegation handler cho data-action (CSP strict)
+│   │   │   ├── excel-export.ts         # SheetJS XLSX export
+│   │   │   ├── pdf-report.ts           # pdfmake monthly report (lazy-loaded, R103)
+│   │   │   ├── pdf/                    # PDF utilities
+│   │   │   ├── parsers/                # Reusable parsers (corrware, jcamp-jasco, detect)
+│   │   │   ├── plot/                   # Tauc plot, bandgap fit, OffscreenCanvas worker
+│   │   │   ├── qr-labels.ts            # QR label print + jspdf (lazy-loaded, R103) — VN diacritics fixed (R124)
+│   │   │   ├── origin-labtalk.ts       # .ogs script gen cho Origin Lab (R95-102)
+│   │   │   ├── origin-launcher.ts      # `labbook-origin://` protocol launcher
+│   │   │   ├── booking-suggestions.ts  # Smart suggest free slots
+│   │   │   ├── table-sort.ts           # Header click sort
+│   │   │   ├── table-align.ts          # Layout helper
+│   │   │   ├── custom-select-keyboard.ts # Keyboard nav cho custom selects
+│   │   │   ├── a11y-enhancements.ts    # ARIA + focus management
+│   │   │   ├── history-log.ts          # Helper ghi history collection
+│   │   │   ├── mobile-sidebar.ts       # Mobile drawer (extracted inline script — R58)
+│   │   │   └── sticky-header.ts        # Sticky table headers
+│   │   │
+│   │   ├── ui/                         # UI primitives, không phụ thuộc business logic
+│   │   │   ├── modal.ts                # Open/close modal + hooks
+│   │   │   ├── toast.ts                # Show/hide toast với undo button
+│   │   │   ├── navigation.ts           # showPage (resets header search — R121) + sidebar toggle
+│   │   │   ├── custom-selects.ts       # Custom dropdown
+│   │   │   ├── attachments-panel.ts    # File picker + dropzone (visually-hidden input — R124)
+│   │   │   ├── exp-actions-menu.ts     # 3-line menu Nhập/Xuất (admin-only — R124)
+│   │   │   ├── pdf-export-modal.ts     # PDF preview before export
+│   │   │   ├── pdf-preview-lightbox.ts # Lightbox cho PDF view
+│   │   │   ├── image-lightbox.ts       # Lightbox cho ảnh
+│   │   │   ├── overview-modal.ts       # Cross-experiment overview popup
+│   │   │   ├── upload-busy-overlay.ts  # Spinner trong khi upload
+│   │   │   └── drag-row-overview.ts    # Drag rows giữa experiments
+│   │   │
+│   │   ├── utils/                      # Pure functions, không side effect
+│   │   │   ├── format.ts               # escapeHtml, escapeJs (R117 fix), vals, fuzzy, formatChemical, fmtDate
+│   │   │   ├── dom.ts                  # flashRow, setText, setHtml
+│   │   │   ├── async.ts                # safeAsync wrapper
+│   │   │   ├── auth-helpers.ts         # canEdit, canDelete, getPersonName
+│   │   │   ├── pagination.ts           # Pagination helper
+│   │   │   └── display-limit.ts        # Show more/less for long lists
+│   │   │
+│   │   ├── types/                      # Shared TypeScript types
+│   │   │
+│   │   └── ai/                         # AI module (Phase A done, B+ in progress)
+│   │       ├── llm/                    # gemini-client, system-prompt, types
+│   │       ├── tools/                  # tool-client, tool-definitions
+│   │       ├── ui/                     # chat-sidetab (resizable — R126), message-bubble, markdown-render, confirmation-card
+│   │       ├── voice/                  # speech-recorder (STT), text-to-speech (TTS)
+│   │       ├── memory/                 # conversation-store
+│   │       └── core/, agent/, analyzers/, rag/, scientist/, provenance/, types/, python-bridge/
+│   │              # Skeleton folders — implement Phase B-E
+│   │
+│   └── css/
+│       ├── main.css                    # ~3300 lines, root vars + components + responsive
+│       ├── tokens/                     # Design token files (Phase B+)
+│       ├── components.css              # Reusable component classes
+│       ├── dashboard.css               # Dashboard-specific
+│       ├── attachments.css             # Attachments panel + dropzone
+│       ├── ai-chat.css                 # AI chat sidetab + resizer (R126)
+│       ├── argon-flavor.css            # Argon-style polish
+│       ├── theme-swatches.css          # Color picker UI
+│       ├── dark-mode.css               # Dark mode overrides
+│       ├── mobile-ux.css               # Mobile-specific tweaks
+│       ├── polish.css                  # Final visual polish
+│       ├── sidebar-smooth.css          # Sidebar animations
+│       ├── sticky-header.css           # Sticky table headers
+│       └── fix-avatar-zindex.css       # Avatar dropdown z-index fix
 │
-├── pages/                           # Mỗi file = 1 trang trong app
-│   ├── auth-flow.js                 # Login/Register/Logout UI
-│   ├── dashboard.js                 # Trang chủ với KPI + charts
-│   ├── experiments.js               # Hydrothermal, Electrode, Electrochem (gộp 3 page)
-│   ├── chemicals.js                 # Quản lý hóa chất
-│   ├── ink.js                       # Quản lý mực in
-│   ├── equipment.js                 # Quản lý thiết bị
-│   ├── booking.js                   # Đặt lịch + week time-grid (~1500 lines)
-│   ├── members.js                   # Danh sách thành viên
-│   ├── users.js                     # Quản lý user accounts (admin only)
-│   ├── history.js                   # Lịch sử thao tác (admin only)
-│   ├── chat.js                      # Chat group
-│   └── week-grid-snippet.js         # Helper cho booking week-grid
+├── functions/src/                      # Cloud Functions TypeScript (asia-southeast1)
+│   ├── index.ts                        # Function exports
+│   ├── handlers/
+│   │   ├── gemini-proxy.ts             # SSE streaming Gemini 2.5 Flash với tool calling (R111)
+│   │   ├── tool-executor.ts            # Dispatch 9 tools (6 read + 3 action) với role check (R112+R115a)
+│   │   ├── speech-proxy.ts             # Cloud Speech v2 Chirp 2 STT (R114)
+│   │   ├── confirm-action.ts           # Commit action drafts → RTDB + audit log (R115)
+│   │   ├── python-bridge.ts            # Bridge tới Python service (Phase C+)
+│   │   ├── secret-test.ts              # Dev/debug secret manager
+│   │   └── hello.ts                    # Health check
+│   ├── tools/
+│   │   ├── registry.ts                 # TOOLS object + executeTool dispatcher
+│   │   ├── chemicals.ts, equipment.ts,
+│   │   ├── experiments.ts, bookings.ts,
+│   │   ├── members.ts, utils.ts        # 6 read tools (R112)
+│   │   └── actions.ts                  # 3 draft generators + commitDraft (R115)
+│   └── utils/
+│       ├── auth.ts                     # verifyAuth với role hierarchy
+│       └── logger.ts
 │
-├── services/                        # Business logic, không trực tiếp render
-│   ├── listeners.js                 # Firebase listeners cho 12 collections
-│   ├── presence.js                  # Online/offline tracking
-│   ├── notifications.js             # Bell icon + toast notifications
-│   ├── notifications-hooks.js       # Hooks tự động tạo notification khi có event
-│   ├── render-dispatcher.js         # Gọi đúng render function theo collection
-│   ├── theme.js                     # Theme switching logic
-│   ├── theme-picker-ui.js           # UI cho theme picker
-│   ├── avatar.js                    # User avatar logic
-│   ├── avatar-menu-a11y.js          # A11y cho avatar dropdown
-│   ├── save-handlers.js             # Handler save form (hydro, electrode, ...)
-│   ├── edit-handlers.js             # Handler edit row inline
-│   ├── image-handlers.js            # Upload/paste/drop ảnh
-│   ├── form-helpers.js              # Helper điền form, calc loading, lookup CAS, ...
-│   ├── group-lock-mgmt.js           # Quản lý nhóm + lock items
-│   ├── duplicate-delete.js          # Duplicate row + delete với undo
-│   ├── bulk-actions.js              # Bulk select + bulk operations
-│   ├── bulk-multi-select.js         # Multi-select state
-│   ├── bulk-row-style.js            # CSS cho bulk select rows
-│   ├── date-range-filter.js         # Filter theo khoảng ngày
-│   ├── member-filter.js             # Filter theo thành viên
-│   ├── global-search.js             # Cmd+K global search
-│   ├── excel-export.js              # Export ra Excel
-│   ├── table-sort.js                # Sort theo column header
-│   ├── table-align.js               # Cân chỉnh table layout
-│   ├── custom-select-keyboard.js    # Keyboard nav cho custom selects
-│   ├── a11y-enhancements.js         # ARIA + keyboard improvements
-│   ├── history-log.js               # Helper ghi vào history collection
+├── scripts/
+│   ├── migrate-notifications-r122.mjs  # One-shot migration flat → nested (R122)
+│   └── subset-fonts.mjs                # Font subsetting cho Vietnamese
 │
-├── ui/                              # UI primitives, không phụ thuộc logic
-│   ├── modal.js                     # Open/close modal + hooks
-│   ├── toast.js                     # Show/hide toast
-│   ├── navigation.js                # Show page, sidebar toggle
-│   └── custom-selects.js            # Custom dropdown component
-│
-└── utils/                           # Pure functions, không có side effect
-    ├── format.js                    # escapeHtml, vals, fuzzy, formatChemical, fmtDate, ...
-    ├── dom.js                       # flashRow, setText, setHtml
-    ├── async.js                     # safeAsync wrapper
-    └── auth-helpers.js              # canEdit, canDelete, getPersonName
+├── database.rules.json                 # Firebase RTDB rules (strict per-uid notifications, booking_locks)
+├── storage.rules                       # Storage rules (admin write only)
+├── firebase.json                       # Hosting + Functions + CSP headers config
+├── firestore.indexes.json              # Firestore Vector Search indexes (Phase B+)
+├── .gitignore                          # serviceAccountKey.json, backup-notifications-*, etc.
+└── package.json                        # firebase-admin devDep + npm run migrate:notifications
 ```
 
 ---
 
 ## 🔄 Data flow
 
-### 1. Khởi động app / App startup
+### 1. Khởi động app
 
 ```
-[index.html] loads
+[index.html] loads, body{visibility:hidden} chống FOUC
     ↓
-[main.js] imports tất cả modules
+[main.ts] imports core modules + lazy loaders
     ↓
-[main.js] gắn handlers lên window cho HTML inline `onclick=...` gọi được
+DOMContentLoaded
     ↓
-DOMContentLoaded fires
+[main.ts] initAuth() → onAuthStateChanged listener
     ↓
-[main.js] initAuth() → đăng ký onAuthStateChanged listener
+User đã login? → onLogin callback chạy
     ↓
-Nếu user đã login (token còn) → onLogin callback chạy
+[main.ts] startListeners()
     ↓
-[main.js] gọi startListeners()
+[listeners.ts] đăng ký:
+    • LARGE_COLLECTIONS: hydro, electrode, electrochem, ink, bookings (limitToLast với orderBy)
+    • SMALL_COLLECTIONS: chemicals, members, equipment, groups, eq_groups, presence
+    • Per-user: notifications/{myUid} (R122 nested)
+    • Admin-only: history (limit 500), notifications/_admin (R122)
+    • Settings: subtitle
     ↓
-[listeners.js] đăng ký 12 fbListen() cho: hydro, electrode, electrochem,
-    chemicals, members, history, ink, equipment, groups, bookings,
-    notifications, presence + listener riêng cho users
+Mỗi listener → window.cache[col] = data → dispatchEvent('cache-update')
     ↓
-Mỗi listener nhận data → set window.cache[collection] → renderAll()
+[render-dispatcher.ts] → renderXxx() cho page active
     ↓
-[render-dispatcher.js] gọi đúng renderXxx() cho page đang active
+Body class = '{role}-mode' → CSS hide/show admin-only / member-only elements
+    ↓
+[chat-sidetab.ts] initAiChatSidetab() — role gate (admin/superadmin only)
 ```
 
-### 2. User thực hiện hành động / User action flow
-
-Ví dụ: tạo thí nghiệm hydrothermal mới.
+### 2. User action flow (ví dụ: tạo thí nghiệm hydro)
 
 ```
 User click "Thêm thí nghiệm" → openModal('modal-hydrothermal')
     ↓
 User điền form → click "Lưu"
     ↓
-[save-handlers.js] saveHydro() được gọi (qua window.saveHydro)
+[global-delegation.ts] data-action="save-hydro" routes
     ↓
-Validate → fbPush('hydro', data)
+[save-handlers.ts] saveHydro() validate
     ↓
-Firebase ghi → listener trong [listeners.js] tự nhận update
+Atomic stock decrement: incrementStock(chemKey, -consumed) qua runTransaction (R118)
     ↓
-window.cache.hydro được cập nhật
+fbPush('hydro', data) → trả về newKey
     ↓
-window.dispatchEvent('cache-update', {col: 'hydro'})
+Firebase listener tự nhận update → cache.hydro updated → renderHydro()
     ↓
-renderAll() → renderHydro() re-render bảng
+[notifications-hooks.ts] auto-create notification:
+    createNotification(type, refKey, targetUid=null)
     ↓
-notifications-hooks.js detect data mới → tạo notification cho admins
+[notifications.ts] createNotification fan-out:
+    • targetUid cụ thể → fbPush(notifications/{targetUid}/{notifId})
+    • null (broadcast admin) → fetch admins → multi-write per admin
+    • Fallback _admin bucket nếu không có quyền
+    ↓
+Admin's listener trên notifications/{adminUid} fires → bell badge update
 ```
 
-### 3. Realtime sync giữa nhiều client / Multi-client realtime
+### 3. Booking flow với atomic slot reservation (R119-R120)
 
-Khi user A tạo record mới:
-- Firebase nhận `push()` từ A
-- Firebase đẩy event xuống TẤT CẢ client đang listen (kể cả A)
-- Mỗi client tự cập nhật `cache` của mình → re-render
+```
+User click "Đăng ký" → modal → click "Lưu"
+    ↓
+[booking.ts] saveBooking():
+    1. Pre-flight cache check (UX feedback)
+    2. tryReserveSlot(eqKey, date, start, end, tempId) → runTransaction
+       trên booking_locks/{eqKey}_{date}, abort nếu overlap với active slots
+    3. fbPush(bookings/...) → realKey
+    4. updateSlotStatus(tempId → realKey)
+       (nếu push fail → slot rollback giữ tempId, cleanupStaleLocks dọn sau)
+    ↓
+Notification → admin (broadcast)
+    ↓
+Admin approve/reject → updateSlotStatus update slot status
+    ↓
+Drag/drop hoặc resize: tryReserveSlotForUpdate (atomic remove old + add new)
+```
 
-Đây là lý do dự án không cần "refresh button" — UI luôn đồng bộ với DB.
+### 4. AI chat flow (Phase A done)
+
+```
+User typed message in sidetab → click send (Ctrl+Enter)
+    ↓
+[message-handler.ts] append user bubble + persist conversation
+    ↓
+fetch geminiProxy (Cloud Function, SSE streaming)
+    ↓
+Gemini 2.5 Flash với system prompt + tools schema:
+    • If tool call needed: gemini → toolExecutor (Cloud Function)
+    • toolExecutor verify role + dispatch:
+      - Read tool (chemicals/equipment/etc) → query RTDB → return data
+      - Action tool (createExperiment/etc) → return DRAFT (no DB write)
+    • Function calling loop max 5 iterations
+    ↓
+Stream chunks → markdown-render với placeholder for action drafts
+    ↓
+DOMPurify sanitize → re-inject confirmation-card HTML
+    ↓
+User click "Xác nhận" → POST confirmAction → verify superadmin → commit RTDB → audit log
+    ↓
+Card update: "✅ Đã tạo HT-xxx"
+```
+
+### 5. Realtime sync giữa nhiều client
+
+Firebase RTDB push event xuống TẤT CẢ client đang listen (kể cả client gửi).
+Không cần "refresh button" — UI luôn đồng bộ với DB.
 
 ---
 
-## 🗄 Cấu trúc Firebase Realtime DB
+## 🗄 Firebase Realtime Database schema
 
 ```
 /
@@ -162,82 +300,90 @@ Khi user A tạo record mới:
 ├── hydro/{id}             # Thí nghiệm thủy nhiệt
 ├── electrode/{id}         # Thí nghiệm điện cực
 ├── electrochem/{id}       # Thí nghiệm điện hóa
-├── chemicals/{id}         # Hóa chất
+├── ink/{id}               # Mực in điện cực
+├── chemicals/{id}         # Hóa chất (stock atomic via runTransaction — R118)
 ├── equipment/{id}         # Thiết bị
 ├── members/{id}           # Thành viên lab
-├── ink/{id}               # Mực in
 ├── groups/{id}            # Nhóm hóa chất
 ├── eq_groups/{id}         # Nhóm thiết bị
 │
-├── bookings/{id}          # Đặt lịch sử dụng thiết bị
-│   ├── userId
-│   ├── equipmentId
-│   ├── date
-│   ├── startTime, endTime
+├── bookings/{id}          # Đặt lịch
+│   ├── userId, equipmentId, equipmentKey, equipmentName, userName
+│   ├── date, startTime, endTime, purpose
 │   ├── status             # pending | approved | in-use | completed | rejected | cancelled
 │   └── ...
 │
-├── notifications/{uid}/{id}
+├── booking_locks/         # R119-R120: atomic slot reservation
+│   └── {equipmentKey}_{YYYY-MM-DD}/
+│       └── slots: [{ start, end, bookingKey, status }, ...]
+│
+├── notifications/         # R122: nested per-user
+│   ├── {uid}/{notifId}/   # User's bucket — strict per-uid read
+│   │   ├── type, bookingKey, title, message
+│   │   ├── createdAt, readBy: { [uid]: ISO }
+│   │   └── deletedBy: { [uid]: ISO }   # tombstone
+│   └── _admin/{notifId}   # Broadcast fallback bucket (admin/superadmin readable)
+│
 ├── presence/{uid}
-│   ├── online: bool
+│   ├── online: bool        # Set offline TRƯỚC signOut — R116
 │   └── lastSeen: timestamp
 │
 ├── chat/
-│   ├── messages/{id}
+│   ├── messages/{id}       # Validation cho phép recall (text:null) + superadmin moderation — R117
 │   └── typing/{uid}
 │
-├── history/{id}           # Audit log (admin only)
+├── aiConversations/{uid}/{convId}/   # AI chat persistence (R109)
+│   ├── messages: [{role, content, ts, ...}]
+│   ├── title               # Auto-generated 3-6 word VN title (R113)
+│   └── createdAt, updatedAt
+│
+├── actionAudit/{ts}        # AI action commit audit log (R115)
+│   ├── uid, action, args, targetPath, resultKey
+│   └── ts
+│
+├── history/{id}            # User actions audit log (admin only)
 └── settings/
-    ├── title              # Tên lab hiển thị
-    └── subtitle
+    ├── subtitle            # Hiển thị dưới tên lab
+    └── title               # Tên lab
 ```
 
-Rules chi tiết: `database.rules.json`. *Detailed rules in `database.rules.json`.*
+Rules chi tiết: `database.rules.json`. Storage rules: `storage.rules`.
+
+**Region**: Tất cả ở `asia-southeast1` (Singapore). RTDB URL: `https://lab-manager-268a6-default-rtdb.asia-southeast1.firebasedatabase.app`.
 
 ---
 
-## 🪝 Window globals — Pattern bridging modules với HTML inline
+## 🔐 Phân quyền (4 lớp)
 
-Vì HTML có rất nhiều `onclick="saveHydro()"` (legacy), `main.js` gắn các function cần thiết lên `window`:
+Đọc role từ `users/{uid}/role`. Lưu vào `currentAuth.role` trong `auth.ts`.
 
-```js
-window.saveHydro = saveHydro;
-window.openModal = openModal;
-window.showToast = showToast;
-// ... ~80 functions tổng
-```
+**Lớp 1 — UI (CSS body class)**:
+- `applyRoleUI(role)` set `body.{role}-mode` (superadmin-mode/admin-mode/member-mode/viewer-mode/pending-mode/rejected-mode)
+- CSS rules ẩn/hiện element theo class: `.admin-only`, `.member-only`, hoặc `[data-action="..."]`
+- Vd R124: `body.member-mode [data-action="exp-actions-menu"] { display: none }`
 
-**Lý do còn dùng pattern này:** Đã có sẵn trong codebase từ trước refactor. Nếu refactor toàn bộ HTML để dùng `addEventListener` thì là task lớn riêng.
+**Lớp 2 — JS function gate**:
+- Helpers `canEdit()`, `canDelete()` trong `utils/auth-helpers.ts`
+- Action handlers check role trước khi gọi save/delete
+- Vd R124: `case 'exp-actions-menu'` check role ≠ admin → toast deny
 
-**Khi viết module mới:** Chỉ expose ra `window` nếu HTML cần gọi inline. Bình thường dùng `import/export`.
+**Lớp 3 — Cloud Function gate** (R115a):
+- `tool-executor.ts` pre-check `ACTION_TOOL_NAMES.includes(name)` → require superadmin
+- `confirmAction` verify superadmin trước khi commit RTDB
 
----
+**Lớp 4 — Firebase RTDB rules** (lớp duy nhất chống bypass):
+- Mỗi path có `.read` + `.write` + `.validate` rule
+- R122 strict per-uid notifications: `auth.uid === $uid`
+- R119 booking_locks: chỉ member+ ghi
+- R117 chat recall rule cho phép `text:null` + superadmin override
 
-## 🔐 Phân quyền / Role-based access
-
-Đọc role từ `users/{uid}/role`. Lưu vào `currentAuth.role` (object trong `auth.js`).
-
-**3 lớp kiểm tra:**
-
-1. **UI layer** — `applyRoleUI(role)` trong `auth.js` ẩn/hiện element theo class `.admin-only`, `.member-only`. Body có class `viewer-mode` để CSS điều khiển.
-2. **Function layer** — Helper `canEdit()`, `canDelete()` trong `utils/auth-helpers.js`. Các save/edit handler check trước khi ghi.
-3. **Database layer** — Firebase rules trong `database.rules.json` chặn ở DB level. **Đây là lớp duy nhất chống được attack** — UI và function layer chỉ là UX, ai có console đều bypass được.
-
-⚠️ **Quan trọng:** Mọi rule mới ở 2 lớp đầu phải có rule tương ứng ở DB rules. *Any UI/function rule must have a corresponding DB rule.*
+⚠️ **Mọi rule mới ở lớp 1-3 phải có rule tương ứng ở lớp 4** — UI/function/Cloud Function chỉ là UX, attacker với DevTools console bypass được.
 
 ---
 
 ## 🎨 CSS architecture
 
-```
-src/css/
-├── main.css                # Toàn bộ styles chính (~3000 lines)
-├── argon-flavor.css        # Theme Argon variant
-├── theme-swatches.css      # Color picker UI
-└── sidebar-smooth.css      # Sidebar animation tinh chỉnh
-```
-
-**Theming pattern:** CSS variables ở `:root`, theme picker đổi values qua `style.setProperty('--teal', '#0d9488')`. Tất cả component dùng `var(--teal)` thay vì hard-code màu.
+**Theming pattern**: CSS variables ở `:root`, theme-manager đổi values qua `style.setProperty('--teal', '#0d9488')`. Tất cả components dùng `var(--teal)` thay vì hard-code màu.
 
 ```css
 :root {
@@ -247,11 +393,31 @@ src/css/
   --text: #0f172a;
   --surface: #ffffff;
   --danger: #ef4444;
+  /* AI chat resizable width — R126 */
+  --ai-sidetab-width: 380px;
   /* ... */
 }
 ```
 
-**Dark mode:** Override các var trong `html.dark { ... }`.
+**Dark mode**: Override các var trong `dark-mode.css` qua `html.dark { ... }`.
+
+**CSP impact**: `style-src` cho phép `'unsafe-inline'` (437 inline styles trong index.html — separate refactor phase). `script-src` strict không có `'unsafe-inline'`.
+
+---
+
+## 🪝 Window globals — Bridging modules với HTML
+
+Lý do còn dùng pattern: HTML có legacy inline `onclick="saveHydro()"` từ trước R55-58e CSP refactor. Các function cần thiết được gắn lên `window`:
+
+```ts
+window.saveHydro = saveHydro;
+window.openModal = openModal;
+// ... ~80 functions tổng
+```
+
+**Hiện đang migrate** sang event delegation (`data-action` + `global-delegation.ts`). Đa số inline events đã removed (~480 sites trong R55-58e). Một số vẫn còn cho legacy compat.
+
+**Khi viết module mới**: KHÔNG expose lên `window`. Dùng `data-action` + register handler trong `global-delegation.ts`.
 
 ---
 
@@ -259,35 +425,115 @@ src/css/
 
 Để tránh circular import:
 
-- `utils/*` — không import gì khác trong project (pure)
-- `ui/*` — chỉ có thể import từ `utils/*`
-- `services/*` — có thể import từ `utils/*`, `ui/*`, `firebase.js`, `auth.js`
-- `pages/*` — có thể import bất cứ thứ gì
-- `main.js` — orchestrator, import tất cả
+| Layer | Có thể import từ |
+|---|---|
+| `utils/*` | Không gì khác (pure functions only) |
+| `ui/*` | `utils/*` |
+| `services/*` | `utils/*`, `ui/*`, `firebase.ts`, `auth.ts` |
+| `pages/*` | Bất cứ gì |
+| `ai/*` | Bất cứ gì + `firebase.ts` qua tool-client |
+| `main.ts` | Orchestrator, import tất cả |
+| `functions/src/*` | Backend, độc lập với frontend |
 
-**Pattern bypass:** Nếu cần truy cập từ thấp lên cao, dùng `window.cache` hoặc dispatch CustomEvent.
-
----
-
-## 🚦 Khi nào dùng listener vs fbGet?
-
-- **fbListen** — khi cần realtime sync (hầu hết trường hợp)
-- **fbGet** — khi chỉ cần đọc 1 lần (validate trước khi ghi, init data, ...)
+**Pattern bypass khi cần truy cập từ thấp lên cao**: dùng `window.cache` hoặc dispatch CustomEvent (`'cache-update'`, `'pageChange'`).
 
 ---
 
-## 🐛 Known technical debt
+## 🚦 Listener vs fbGet vs runTransaction
 
-- `main.js` quá lớn (~1300 lines), cần split thành sub-modules
-- `booking.js` ~1500 lines, có thể tách week-grid ra riêng
-- `labbook-extensions.js` cũ, các logic trong này nên migrate dần
-- Window globals nhiều — long-term nên thay bằng event bus
-- Chưa có TypeScript
+| Use case | API |
+|---|---|
+| Realtime sync (hầu hết cases) | `fbListen` |
+| Đọc 1 lần (validate, init, migration) | `fbGet` |
+| Atomic read-modify-write (stock, slots, counters) | `runTransaction` |
+| Atomic increment/decrement | `incrementStock` helper (R118) |
+| Push immutable record | `fbPush` (returns key) |
+| Set known path | `fbSet` |
+| Patch fields | `update` |
+| Soft delete vs hard delete | `update({deleted: true})` vs `remove` |
 
 ---
 
-## 📚 Tham khảo / References
+## ☁️ Cloud Functions (asia-southeast1)
+
+Triển khai trong `functions/src/`. Deploy: `firebase deploy --only functions`.
+
+| Function | Trigger | Purpose |
+|---|---|---|
+| `geminiProxy` | HTTPS (SSE) | Stream Gemini 2.5 Flash với tool calling loop, max 5 iter (R111) |
+| `toolExecutor` | HTTPS | Dispatch 9 tools (6 read + 3 action draft generators), role gate (R112+R115a) |
+| `speechProxy` | HTTPS | Cloud Speech v2 Chirp 2 STT (vi-VN single, R114) |
+| `confirmAction` | HTTPS | Commit action draft → RTDB + actionAudit, superadmin verify (R115) |
+| `python-bridge` | HTTPS | Tới python-service (Phase C+) |
+
+**Secret manager**: `GEMINI_API_KEY` (Secret Manager, not env var).
+
+**Service account**: Default compute SA `478810777276-compute@developer.gserviceaccount.com` với roles `Cloud Speech Client` + `Firebase Admin`.
+
+---
+
+## 🔄 Migration script pattern (R122)
+
+Khi đổi schema RTDB cần migration data, dùng `firebase-admin` SDK với service account key (bypass rules).
+
+Pattern (xem `scripts/migrate-notifications-r122.mjs`):
+
+1. Load service account key từ `./serviceAccountKey.json` hoặc `GOOGLE_APPLICATION_CREDENTIALS` env
+2. **Backup tự động** trước khi modify (`backup-notifications-{ts}.json`)
+3. **Dry-run plan** in ra terminal
+4. **Confirmation prompt** `[yes/no]`
+5. **Atomic apply** qua single `ref().update(map)` — Firebase đảm bảo all-or-nothing
+6. **Idempotent** — heuristic phân biệt schema cũ vs mới, skip nếu đã migrate
+
+⚠️ `serviceAccountKey.json` + `backup-*.json` PHẢI gitignored. Service account key có quyền admin — không commit, không share, dùng xong xóa.
+
+---
+
+## 🐛 Tech debt + open issues
+
+### Done (R116-R126)
+- ✅ Auth listener leak (R116)
+- ✅ Presence stuck online (R116)
+- ✅ XSS edit modal (R116)
+- ✅ XSS escapeJs `"` (R117)
+- ✅ Orphan storage cleanup (R117)
+- ✅ Stock race condition (R118)
+- ✅ Image upload size DoS (R118)
+- ✅ Booking race conditions (R119-R120)
+- ✅ Notification security (R122)
+- ✅ Stale lock cleanup (R122)
+- ✅ Bell empty notifications (R122)
+- ✅ Search box stuck UX (R121)
+- ✅ Bulk select missing (R121)
+- ✅ Member card layout (R121)
+- ✅ Admin-only import/export gate (R124)
+- ✅ File picker không trigger (R124)
+- ✅ VN diacritics qr-labels (R124)
+
+### Còn lại (priority Low)
+- `main.ts` ~1500 lines, cần split thành sub-modules
+- `booking.ts` ~1900 lines, có thể tách week-grid + helpers ra
+- `labbook-extensions.ts` legacy, migrate dần
+- ~28 empty `catch (e) {}` blocks → log warn
+- 437 inline styles trong `index.html` → nên migrate sang CSS class
+- `pdfmake` 975KB + `vfs_fonts` 855KB — lazy import qua dynamic `import()` chỉ khi cần
+- Window globals nhiều — long-term thay bằng event bus
+
+### Commercialization roadmap (xem ROADMAP.md)
+- Multi-tenant rules namespace `users/{tenantId}/{uid}`
+- Rate limiting via Cloud Function gateway
+- Email verification flow
+- Stripe billing integration
+- GDPR/PDPA tooling
+- Backup automation
+
+---
+
+## 📚 Tham khảo
 
 - [Firebase Realtime Database docs](https://firebase.google.com/docs/database)
+- [Firebase Cloud Functions docs](https://firebase.google.com/docs/functions)
 - [Vite docs](https://vitejs.dev/)
 - [Tailwind CSS docs](https://tailwindcss.com/docs)
+- [TypeScript docs](https://www.typescriptlang.org/docs/)
+- Internal: `AGENTS.md`, `AI_ARCHITECTURE.md`, `DESIGN.md`, `WORKFLOW.md`, `AUDIT_LOG.md`, `CHANGELOG.md`, `ROADMAP.md`, `CLAUDE.md`
