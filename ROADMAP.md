@@ -108,26 +108,48 @@ Unplanned audit work trước khi commercialize. Phase B paused, resume từ Rou
 
 **Total**: 14 bugs + 3 features. Coverage: race conditions, XSS, data loss, security rules, listener leaks, UX. **See `AUDIT_LOG.md` for full root-cause analysis.**
 
-### Phase B — Compliance KB + RAG Infrastructure (Round 130+)
+### Phase B — RAG Infrastructure (Round 130-137c2) ✅ MOSTLY DONE
 
-⚠️ Round numbers shifted +14 vs original plan because of Pre-Commercial Audit (R116-R126) + docs refresh (R127-R128) + Phase A2 add-on (R129).
-Round 127-129 used: R127-R128 = docs refresh, R129a-c = recordExperimentResultDraft (4th action tool, see CHANGELOG).
+⚠️ Round numbers shifted +14 vs original plan due to Pre-Commercial Audit (R116-R126) + docs refresh (R127-R128) + Phase A2 add-on (R129).
+
+#### Phase B.1 — RAG pipeline foundation (R130-R136) ✅ DONE
 
 | Round | Status | Task |
 |---|---|---|
-| 127 | ⏳ Next | Compliance KB (Nghị định 24/2026 4 phụ lục as JSON, search tool) |
-| 128 | 📋 | Paper upload UI + queue + dedup |
-| 129 | 📋 | Chandra OCR integration (Cloud Function proxy) |
-| 130 | 📋 | PDF extraction pipeline (text + figures + metadata) |
-| 131 | 📋 | Smart chunking (section-aware, overlap) |
-| 132 | 📋 | Contextual pre-prep (Anthropic technique) |
-| 133 | 📋 | Voyage-3 embedding pipeline |
-| 134 | 📋 | Firestore Vector Search index + queries |
-| 135 | 📋 | BM25 keyword index (Lunr.js) |
-| 136 | 📋 | Hybrid retrieval (RRF fusion) |
-| 137 | 📋 | Voyage rerank-2.5 integration |
-| 138 | 📋 | Citation tracking + UI display |
-| 139 | 📋 | Paper Library page (browse, search, filter) + Zotero/Drive sync |
+| 130 | ✅ Done | Sidebar item AI Tools (superadmin only) |
+| 131a-v3 + b-fix | ✅ Done | AI Tools sidetab UI shell + 5 sub-tabs (Library/Search/Chat/Eval/Settings) |
+| 132a + b + b-fix | ✅ Done | Paper Library upload + dedup (SHA-256, 100MB limit) |
+| 133a + b + b-fix | ✅ Done | Chandra OCR integration (Cloud Function proxy + auto-trigger) |
+| 134a + b + b-fix | ✅ Done | Section-aware chunking + Pub/Sub event chain (paper-pipeline topic) |
+| 135 + fix | ✅ Done | Voyage embeddings (voyage-3-large) via Pub/Sub chain |
+| 136a + b + c-fix | ✅ Done | RAG vector search backend (`searchPapers`) + frontend UI |
+
+#### Phase B.2 — Hybrid retrieval + eval + observability + rerank (R137a-R137c2) ✅ DONE
+
+| Round | Status | Task |
+|---|---|---|
+| 137a + a-fix | ✅ Done | BM25 inverted index foundation (tokenizer + corpus stats + backfill) |
+| 137b + b-fix | ✅ Done | Hybrid search engine (Vector + BM25 + RRF) |
+| 137b-eval+obs | ✅ Done | RAG eval framework (MRR/P@K/NDCG@K) + LLM observability (tracing + cost) |
+| 137c1 + c1-fix | ✅ Done | Voyage rerank-2.5 backend integration |
+| 137c2 | ✅ Done | Frontend confidence badges + latency display |
+
+**Architecture**: Commercial-ready interfaces (`SearchEngine`, `Reranker`, `TraceSink`) for SaaS fork. Multi-tenant schema-ready (`tenantId` field). See `docs/commercial-roadmap.md` for full plan.
+
+**Baseline metrics** (10 seed queries, 678 chunks):
+- Hybrid + rerank: MRR=1.0, P@10=0.95, NDCG=0.99
+- Latency: 524ms warm (no rerank), ~920ms warm (with rerank), 3-4s cold
+
+#### Phase B.3+ — pending
+
+| Round | Status | Task |
+|---|---|---|
+| 138 | ⏳ Next | Hierarchical retrieval (paper/section summaries for synthesis queries) |
+| 139 | 📋 | Knowledge graph foundations (entity extraction, citation parsing) |
+| 140+ | 📋 | Knowledge graph backend (Neo4j AuraDB) |
+| ... | 📋 | Synthesis layer, query router, advanced features |
+
+**Compliance KB** (Nghị định 24/2026) deferred — was previously planned at R127, will revisit when commercialization timing demands it.
 
 ### Phase C-1 — Optical & Structural Analyzers (Round 140-156)
 

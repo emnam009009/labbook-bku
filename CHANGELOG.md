@@ -2,6 +2,271 @@
 
 Concise version history. For full git log: `git log --oneline`.
 
+## [Round 137c — c1 + c1-fix + c2] - 2026-05-08
+
+### Added — Voyage rerank-2.5 + frontend confidence UI
+
+**R137c1 — Backend rerank**:
+- `Reranker` interface (`functions/src/search/reranker.ts`) — commercial-ready abstraction
+- `VoyageReranker` implementation hitting `/v1/rerank` (rerank-2.5)
+- `NoopReranker` for testing / disabled state
+- Pipeline: hybrid → top-30 candidates → Voyage rerank → top-K final
+- Per-request toggle: `body.rerank: false` to disable; default `true` from config
+- Graceful failure: network/API error logs warning, returns original ranking
+- Cost tracked via tracer (`recordCost(model, tokens, "rerank")`)
+- New `rerankScore?: number` in `SearchResult`
+- Config additions: `rerankerEnabled`, `rerankerModel` (default `rerank-2.5`), `rerankerCandidates` (default 30)
+
+**R137c1-fix**: removed unused `NoopReranker` import (TS strict `noUnusedLocals`)
+
+**R137c2 — Frontend UI** (`src/ts/ai/papers/paper-search.ts`):
+- Confidence badges from `rerankScore`:
+  - ≥ 0.85: "Rất phù hợp" (green)
+  - 0.65-0.85: "Phù hợp" (blue)
+  - 0.4-0.65: "Có thể phù hợp" (yellow)
+  - < 0.4: "Yếu" (gray)
+- Latency display in meta line (`Kết quả: 10 · 539 ms`)
+- Inline CSS injection (no separate CSS file changes)
+- Backward-compat: falls back to `vectorScore` if rerank not present
+
+### Modified
+- `functions/src/search/config.ts` — rerank fields
+- `functions/src/search/types.ts` — `rerankScore` field
+- `functions/src/handlers/search-papers.ts` — wire reranker, span tracking, response field
+
+### Lessons
+- Default `rerank: true` adds ~400ms warm latency vs ~80ms BM25-only — acceptable for search UX
+- Voyage `relevance_score` is **relative within query**, not absolute — don't compare cross-query
+
+---
+
+## [Round 137b-eval+obs] - 2026-05-08
+
+### Added — RAG evaluation framework + LLM observability
+
+**Observability (`functions/src/observability/`)**:
+- `Trace`, `Span`, `CostBreakdown` types
+- `Tracer` class: `tracer.span(name, fn)` wraps async ops with timing + status
+- `TraceSink` interface; `FirestoreTraceSink` implementation (writes to `aiTraces` collection)
+- `NoopTraceSink` for tests
+- Cost calculator: Voyage embed/rerank + Gemini Flash/Pro pricing per 1M tokens
+- Privacy: queries logged as preview (100 chars) + sha256 hash, never full text
+
+**Eval framework (`functions/src/eval/`)**:
+- `GroundTruthQuery`, `QueryEvalResult`, `EvalRunSummary` types
+- Pure-function metrics: `mrr`, `precisionAtK`, `ndcgAtK`
+- Seed dataset: 10 queries (5 EN + 3 mixed VI/EN + 2 pure VI) — covers CV, POM, DFT papers
+- `runEvalDataset()` runner: executes dataset across requested modes, aggregates per-mode metrics
+
+**HTTPS handler `runEval`**:
+- Superadmin only
+- Body: `{ modes?: ["vector"|"bm25"|"hybrid"], limit?: 10 }`
+- Persists run summary to `aiEvalRuns/{runId}` + per-query results to subcollection
+
+**Tracer integration in `searchPapers`**:
+- Spans: `embed`, `{mode}_search`, `rerank` (R137c1), `enrich_titles`
+- Response now includes `traceId` for debugging
+
+### Baseline metrics (10 seed queries, 678 chunks)
+- Vector: MRR=1.0, P@10=0.95, NDCG=0.99, latency 527ms
+- BM25: MRR=0.8, P@10=0.7, NDCG=0.79, latency 741ms (2 VI queries fail — expected, BM25 cross-language limit)
+- Hybrid: MRR=1.0, P@10=0.95, NDCG=0.99, latency 524ms
+
+### Modified
+- `functions/src/handlers/search-papers.ts` — tracer integration
+- `functions/src/index.ts` — export `runEval`
+
+### Lessons
+- Privacy log queries as preview + hash, not full text
+- Tracer fire-and-forget: sink swallows errors so observability never breaks business logic
+- `Promise.allSettled` for parallel engines lets one fail without blocking the other
+
+---
+
+## [Round 137b — b + b-fix] - 2026-05-08
+
+### Added — Hybrid Search Engine (Vector + BM25 + RRF)
+
+**SearchEngine architecture** (`functions/src/search/`):
+- `SearchEngine` interface, `SearchMode = "vector" | "bm25" | "hybrid"`
+- `VectorEngine` — extracts R136a Voyage embed + Firestore findNearest into reusable engine
+- `BM25Engine` — Option A retrieval (top-30 IDF tokens via array-contains-any → in-memory BM25 score)
+- `HybridEngine` — runs Vector + BM25 in parallel via `Promise.allSettled`, merges via RRF
+- `rrfMerge()` — Reciprocal Rank Fusion (k=60, Cormack et al. 2009 standard)
+- `createSearchEngine(mode, config)` factory
+
+**Centralized config** (`config.ts`):
+- BM25 hyperparams (k1=1.5, b=0.75)
+- Per-engine retrieval depths (30/30 default)
+- RRF k constant (60)
+- Limit caps (defaultLimit=10, maxLimit=50)
+- **Multi-tenant ready**: `defaultTenantId: "default"` field; queries optionally filter
+
+**searchPapers handler**:
+- New optional request fields: `mode`, `retrievalDepth`
+- Default mode `hybrid`, default rerank ON (after R137c1)
+- Response shape preserved + adds `mode`, `searchMs`, optional score breakdown per result
+
+**R137b-fix**: trim results to caller's `limit` after engine.search() returns pool size
+
+### Modified
+- `functions/src/handlers/search-papers.ts` — full rewrite using engine factory
+
+### Lessons
+- Engine returns pool size (e.g. 30 for hybrid merge); caller trims to `limit`
+- `array-contains-any` Firestore limit = 30 values per query → top-30 IDF tokens by query is ceiling
+- Hybrid `Promise.allSettled` lets one engine fail without blocking the other
+
+---
+
+## [Round 137a — a + a-fix] - 2026-05-08
+
+### Added — BM25 inverted index foundation
+
+**BM25 module** (`functions/src/bm25/`):
+- `tokenizer.ts` — multi-language with chemistry-aware patterns
+  - Preserves chemistry tokens as-is: empirical formulas (LiFePO4, Ni(OH)2), acronyms (CV, EIS, XRD), units (mV, mA, °C), ions (Cu2+)
+  - Snowball Porter v2 stemmer for English (via `natural` package)
+  - No stemming for Vietnamese (no robust open-source stemmer)
+- `stopwords.ts` — English (stopwords-iso, 179 words) + Vietnamese (50 manual) + chemistry whitelist
+- `chemistry-patterns.ts` — regex for formulas, acronyms, ions, units
+- `stemmer.ts` — wrapper with chemistry bypass logic
+- `corpus-stats.ts` — DF/IDF tracker with sharding guard (1MB Firestore doc limit)
+- `types.ts` — `TOKENIZER_VERSION` for safe iteration
+
+**Integration**:
+- `chunkPaperCore()` tokenizes inline, writes `bm25Tokens`, `bm25TokenFreq`, `bm25DocLength`, `bm25Language`, `bm25TokenizerVersion`, `bm25TokenizedAt` to each chunk
+- Corpus stats updated incrementally via Firestore transaction (avoids lost writes on parallel chunks)
+
+**Backfill HTTPS function** (`backfillBM25`):
+- Idempotent (skips chunks with current tokenizerVersion)
+- Force-rerun support
+- Dry-run mode for safety
+- Rebuilds corpus stats from scratch after re-tokenize
+- Persists to `aiCorpusStats/global`
+
+**R137a-fix — noise filter**:
+- Bumped `TOKENIZER_VERSION` 1 → 2 (forces re-tokenize)
+- `rawSplit`: treat pipe `|` as whitespace (markdown table syntax)
+- `processToken`: reject all-dash tokens (`---`), pure numbers from table cells (`33`, `66`), tokens with no letter (`2-3` ranges)
+
+### Schema
+- `aiChunks/{id}.bm25Tokens: string[]` (for `array-contains-any` query)
+- `aiChunks/{id}.bm25TokenFreq: Record<string, number>` (for TF scoring)
+- `aiChunks/{id}.bm25DocLength: number`
+- `aiChunks/{id}.bm25Language: "en" | "vi" | "mixed"`
+- `aiCorpusStats/global` (sharded if vocab > ~50K tokens)
+
+### Modified
+- `functions/src/handlers/chunk-paper.ts` — tokenize inline before Firestore write
+- `functions/src/index.ts` — export `backfillBM25`
+- `functions/package.json` — `natural@^8.0.0`, `stopwords-iso@^1.1.0`
+- `firestore.indexes.json` — composite indexes for BM25 queries
+
+### Lessons
+- Markdown table separators (`---`) leak through tokenizer if you preserve `-` for compound words; need explicit reject
+- Pipe `|` in markdown tables wraps numbers; strip pipe before tokenize, then re-check `isPureNumber` after inner-strip
+- Tokenizer versioning lets you ship breaking tokenization changes without breaking the index — bump version, re-backfill
+
+---
+
+## [Round 136 — a + b + c-fix] - 2026-05-08
+
+### Added — RAG vector search backend + frontend
+
+- **Backend `searchPapers`** (R136a) — Voyage embed query → Firestore `findNearest` cosine, returns top-K chunks with paper title enrichment
+- **Frontend** (R136b) — search bar in Library tab → calls `searchPapers` → renders chunks with paperTitle, sectionPath, query highlighting
+- **R136c-fix**: `marked-katex-extension` `nonStandard: true` for Gemini outputs without surrounding spaces in `$...$`
+
+### Modified
+- `functions/src/handlers/search-papers.ts` — new HTTPS handler
+- `src/ts/ai/papers/paper-search.ts` — new search UI module
+- `firestore.indexes.json` — vector index (1024 dim flat)
+
+---
+
+## [Round 135 — + fix] - 2026-05-08
+
+### Added — Voyage embeddings via Pub/Sub chain
+
+- `paperPipelineRouter` Pub/Sub trigger handles "chunked" event → calls embedding subroutine
+- `voyage-3-large` model via secret `VOYAGE_API_KEY`
+- Persists embedding to `aiChunks/{id}.embedding` as `FieldValue.vector()`
+- RTDB rules whitelist extended with `numEmbedded`, `embeddingModel`, `embeddedAt`, `embeddingTokens`
+
+### R135-fix
+- Voyage API: `/v1/embeddings` accepts voyage-3-large/3.5/3.5-lite. `/v1/contextualizedembeddings` is a different API (voyage-context-3) — not used here.
+
+---
+
+## [Round 134 — a + b + b-fix] - 2026-05-08
+
+### Added — Section-aware chunking + Pub/Sub event chain
+
+- **Chunking** (`chunk-paper.ts`): parses markdown headings → sections, splits oversized sections by paragraph with 50-token overlap
+- **Pub/Sub topic `paper-pipeline`** + **`paperPipelineRouter`** subscriber routes events by stage (extracted | chunked | embedded | indexed)
+- Stage transition: extracted → publishes "extracted" → router calls chunking → publishes "chunked" → router calls embedding (R135)
+
+### R134b-fix
+- Firebase Admin SDK named DB pattern: `getFirestore("labbook")` is the only correct API. `(admin.firestore as any)(...)` does not exist.
+
+---
+
+## [Round 133 — a + b + b-fix] - 2026-05-08
+
+### Added — Chandra OCR integration
+
+- **`chandraProxy`** Cloud Function — uploads PDF to datalab.to Chandra API, polls until complete, downloads markdown + images, persists to Firebase Storage
+- **Auto-trigger** on paper upload (R133b): paper status `uploaded` → triggers Chandra OCR → status transitions to `extracted`
+- **R133b-fix**: extended RTDB rules whitelist with extraction metadata fields
+
+### Cost
+- Free tier credits at datalab.to (~$5 budget)
+
+---
+
+## [Round 132 — a + b + b-fix] - 2026-05-08
+
+### Added — Paper Library upload + list
+
+- Upload UI in AI Tools tab → Library sub-tab
+- File validation: 100MB max, PDF only
+- SHA-256 dedup (don't re-upload same file)
+- Persists to Firebase Storage + `aiPapers/_shared/{paperId}` RTDB metadata
+
+### R132b-fix
+- Boundary patches must check `cat -A` for whitespace differences
+
+---
+
+## [Round 131 — a-v3 + b-fix] - 2026-05-08
+
+### Added — AI Tools sidetab UI shell
+
+- Right-side sidetab (similar to AI Chat sidetab from R108) with 5 sub-tabs:
+  - Library (papers, R132+)
+  - Search (R136+)
+  - Chat with papers (deferred to later round)
+  - Eval (R137b-eval)
+  - Settings (placeholder)
+- Draggable resize handle (left edge)
+
+### R131a v1→v3 iteration
+- v1: layout broken on small screens
+- v2: tab indicator misaligned
+- v3: final polish
+
+---
+
+## [Round 130] - 2026-05-08
+
+### Added — Sidebar item AI Tools
+
+- New sidebar item "AI Tools" visible to superadmin only
+- Click → opens AI Tools sidetab (R131+)
+
+---
+
 ## [Round 129a-c] - 2026-05-08
 
 ### Added — recordExperimentResultDraft (4th action tool)
