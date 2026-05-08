@@ -41,10 +41,14 @@ export function toggleAiToolsSidetab(force?: boolean): void {
     sidetab.classList.add("is-open");
     sidetab.setAttribute("aria-hidden", "false");
     document.body.classList.add("ai-tools-sidetab-open");
+    // R132b: Subscribe paper list khi mở Library tab
+    import("../papers/paper-list").then((m) => m.startPaperListListener());
   } else {
     sidetab.classList.remove("is-open");
     sidetab.setAttribute("aria-hidden", "true");
     document.body.classList.remove("ai-tools-sidetab-open");
+    // R132b: Unsubscribe khi đóng để giảm RTDB connections
+    import("../papers/paper-list").then((m) => m.stopPaperListListener());
   }
 }
 
@@ -184,4 +188,44 @@ export function initAiToolsSidetab(): void {
   (window as any).closeAiToolsSidetab = closeAiToolsSidetab;
   (window as any).onAiToolsTabSwitch = onAiToolsTabSwitch;
   (window as any).onAiToolsResizeStart = onAiToolsResizeStart;
+
+  // R132b: Paper Library globals (lazy import để không block init)
+  import("../papers/paper-upload").then((m) => {
+    (window as any).onPaperPickClick = m.onPaperPickClick;
+    (window as any).onPaperFileSelected = m.onPaperFileSelected;
+    (window as any).onPaperDragOver = m.onPaperDragOver;
+    (window as any).onPaperDragLeave = m.onPaperDragLeave;
+    (window as any).onPaperDrop = m.onPaperDrop;
+  });
+  import("../papers/paper-list").then((m) => {
+    (window as any).onPaperDelete = m.onPaperDelete;
+  });
+
+  // R132b: Drag/drop native events (KHÔNG đi qua data-action vì native API)
+  document.addEventListener("DOMContentLoaded", () => {
+    const dz = document.getElementById("ai-paper-dropzone");
+    if (dz) {
+      dz.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dz.classList.add("is-dragover");
+      });
+      dz.addEventListener("dragleave", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dz.classList.remove("is-dragover");
+      });
+      dz.addEventListener("drop", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dz.classList.remove("is-dragover");
+        const files = (e as DragEvent).dataTransfer?.files;
+        if (!files || files.length === 0) return;
+        const mod = await import("../papers/paper-upload");
+        for (const file of Array.from(files)) {
+          await mod.uploadPaper(file);
+        }
+      });
+    }
+  });
 }

@@ -6,6 +6,22 @@ rules_version = '2';
 //   25 MB / file limit
 service firebase.storage {
   match /b/{bucket}/o {
+    // ════════ Round 132a: AI Papers Library (shared) ════════
+    // Path: papers/_shared/{paperId}/{fileName}
+    // 50 MB / file, PDF only.
+    // NOTE: superadmin gate via RTDB rules (paperId chỉ tạo được khi
+    // RTDB metadata accept, mà metadata yêu cầu superadmin role).
+    // Client-side cũng hide upload UI cho non-superadmin.
+    match /papers/_shared/{paperId}/{fileName} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.size <= 104857600
+        && request.resource.contentType == 'application/pdf'
+        && fileName.matches('.*\\.pdf');
+      allow delete: if request.auth != null
+        && resource.metadata.uid == request.auth.uid;
+    }
+
     match /attachments/{refType}/{refId}/{fileName} {
       // Đọc: mọi user đã auth (rules RTDB sẽ chặn pending/rejected ở metadata layer)
       allow read: if request.auth != null;

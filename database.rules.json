@@ -249,6 +249,26 @@
         }
       }
     },
+    "aiPapers": {
+      ".read": "auth != null",
+      "_shared": {
+        ".indexOn": ["uploadedAt"],
+        ".read": "auth != null",
+        ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'superadmin'",
+        "$paperId": {
+          ".validate": "newData.hasChildren(['title','sha256','sizeBytes','uploadedAt','uploadedBy']) || !newData.exists()",
+          "title": { ".validate": "newData.isString() && newData.val().length <= 500" },
+          "sha256": { ".validate": "newData.isString() && newData.val().length === 64" },
+          "filename": { ".validate": "newData.isString() && newData.val().length <= 300" },
+          "sizeBytes": { ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= 104857600" },
+          "uploadedAt": { ".validate": "newData.isString()" },
+          "uploadedBy": { ".validate": "newData.isString()" },
+          "storagePath": { ".validate": "newData.isString() && newData.val().beginsWith('papers/_shared/')" },
+          "processingStatus": { ".validate": "newData.isString()" },
+          "$other": { ".validate": false }
+        }
+      }
+    },
     "aiConversations": {
       ".indexOn": [
         "updatedAt"

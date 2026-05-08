@@ -194,6 +194,16 @@ export function attachGlobalDelegation() {
       case 'ai-tools-resize-start':
         if (typeof window.onAiToolsResizeStart === 'function' && ev) window.onAiToolsResizeStart(target, ev);
         break;
+      // ════════ Paper Library (Round 132b) ════════
+      case 'ai-paper-pick':
+        if (typeof window.onPaperPickClick === 'function') window.onPaperPickClick();
+        break;
+      case 'ai-paper-file-selected':
+        if (typeof window.onPaperFileSelected === 'function') window.onPaperFileSelected(target as HTMLInputElement);
+        break;
+      case 'ai-paper-delete':
+        if (typeof window.onPaperDelete === 'function') window.onPaperDelete(target);
+        break;
       case 'ai-chat-suggestion':
         if (typeof window.onAiChatSuggestion === 'function') window.onAiChatSuggestion(target);
         break;

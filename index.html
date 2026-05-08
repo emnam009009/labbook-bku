@@ -1973,12 +1973,64 @@
         </header>
 
         <div class="ai-tools-body">
-          <!-- Library tab (default active) -->
+          <!-- Library tab (Round 132b: real content) -->
           <div class="ai-tools-panel is-active" data-panel="library">
-            <div class="ai-tools-placeholder">
-              <div class="ai-tools-placeholder__icon">📚</div>
-              <h3>Thư viện tài liệu</h3>
-              <p>Upload + quản lý paper khoa học.<br>Sẽ được implement trong R132+.</p>
+            <!-- Drop zone -->
+            <div id="ai-paper-dropzone" class="ai-paper-dropzone"
+                 data-action="ai-paper-pick"
+                 data-action-dragover="ai-paper-dragover"
+                 data-action-dragleave="ai-paper-dragleave"
+                 data-action-drop="ai-paper-drop"
+                 role="button" tabindex="0" aria-label="Thả PDF vào đây hoặc click để chọn">
+              <input type="file" id="ai-paper-file-input"
+                     accept="application/pdf,.pdf"
+                     multiple
+                     style="display:none"
+                     data-action="ai-paper-file-selected">
+              <div class="ai-paper-dropzone__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+              </div>
+              <div class="ai-paper-dropzone__text">
+                <strong>Kéo thả PDF vào đây</strong>
+                <span>hoặc click để chọn file</span>
+                <small>Tối đa 100 MB · Chỉ .pdf</small>
+              </div>
+            </div>
+
+            <!-- Upload progress -->
+            <div id="ai-paper-upload-progress" class="ai-paper-progress" style="display:none">
+              <div class="ai-paper-progress__bar">
+                <div id="ai-paper-upload-progress-bar" class="ai-paper-progress__fill"></div>
+              </div>
+              <div id="ai-paper-upload-progress-text" class="ai-paper-progress__text">0%</div>
+            </div>
+
+            <!-- List header -->
+            <div class="ai-paper-list-header">
+              <h3>Tài liệu (<span id="ai-paper-list-count">0</span>)</h3>
+            </div>
+
+            <!-- Table -->
+            <div class="ai-paper-list-wrap">
+              <table class="ai-paper-list">
+                <thead>
+                  <tr>
+                    <th>Tiêu đề</th>
+                    <th style="width:80px">Size</th>
+                    <th style="width:90px">Ngày</th>
+                    <th style="width:50px"></th>
+                  </tr>
+                </thead>
+                <tbody id="ai-paper-list-tbody">
+                  <tr><td colspan="4" class="ai-paper-list__empty">
+                    <p>Đang tải...</p>
+                  </td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
           <div class="ai-tools-panel" data-panel="workbench">

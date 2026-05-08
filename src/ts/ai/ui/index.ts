@@ -18,3 +18,18 @@ export {
   onAiToolsResizeStart,
   initAiToolsSidetab,
 } from "../tools/ai-tools-sidetab";
+
+// Round 132b: Paper Library
+export {
+  uploadPaper,
+  onPaperPickClick,
+  onPaperFileSelected,
+  onPaperDragOver,
+  onPaperDragLeave,
+  onPaperDrop,
+} from "../papers/paper-upload";
+export {
+  startPaperListListener,
+  stopPaperListListener,
+  onPaperDelete,
+} from "../papers/paper-list";
