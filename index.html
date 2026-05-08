@@ -2033,6 +2033,37 @@
                 </tbody>
               </table>
             </div>
+
+            <!-- R136b: Search section -->
+            <div class="ai-paper-search-section">
+              <h3 class="ai-paper-search-title">🔍 Tìm kiếm trong tài liệu</h3>
+              <div class="ai-paper-search-bar">
+                <input type="text" id="ai-paper-search-input"
+                       class="ai-paper-search-input"
+                       placeholder="vd: what is overpotential? cyclic voltammetry methods..."
+                       data-action="ai-paper-search-keydown" />
+                <button type="button" class="ai-paper-search-btn"
+                        data-action="ai-paper-search-submit"
+                        title="Tìm kiếm">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                </button>
+                <button type="button" class="ai-paper-search-btn ai-paper-search-btn--clear"
+                        data-action="ai-paper-search-clear"
+                        title="Xóa">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="ai-paper-search-meta">
+                <span>Kết quả: <span id="ai-paper-search-count">0</span></span>
+              </div>
+              <div id="ai-paper-search-results" class="ai-paper-search-results"></div>
+            </div>
           </div>
           <div class="ai-tools-panel" data-panel="workbench">
             <div class="ai-tools-placeholder">

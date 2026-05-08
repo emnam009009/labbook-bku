@@ -36,7 +36,10 @@ async function ensureLoaded(): Promise<void> {
     _purify = DOMPurifyModule.default;
 
     // Configure marked with KaTeX support
-    marked.use(markedKatex({ throwOnError: false }));
+    marked.use(markedKatex({
+      throwOnError: false,
+      nonStandard: true,  // R136c-fix: cho phép $...$ không cần space xung quanh
+    }));
 
     // Configure marked options
     marked.setOptions({

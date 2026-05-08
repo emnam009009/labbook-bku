@@ -13,6 +13,36 @@
           "order": "ASCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "aiChunks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "embedding",
+          "vectorConfig": {
+            "dimension": 1024,
+            "flat": {}
+          }
+        }
+      ]
+    },
+    {
+      "collectionGroup": "aiChunks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "paperId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "embedding",
+          "vectorConfig": {
+            "dimension": 1024,
+            "flat": {}
+          }
+        }
+      ]
     }
   ],
   "fieldOverrides": []

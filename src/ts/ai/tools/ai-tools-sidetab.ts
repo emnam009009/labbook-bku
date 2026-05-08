@@ -203,6 +203,11 @@ export function initAiToolsSidetab(): void {
   import("../papers/paper-extract").then((m) => {
     (window as any).onPaperReExtract = m.onPaperReExtract;
   });
+  import("../papers/paper-search").then((m) => {
+    (window as any).onPaperSearchSubmit = m.onPaperSearchSubmit;
+    (window as any).onPaperSearchKeydown = m.onPaperSearchKeydown;
+    (window as any).onPaperSearchClear = m.onPaperSearchClear;
+  });
 
   // R132b: Drag/drop native events (KHÔNG đi qua data-action vì native API)
   document.addEventListener("DOMContentLoaded", () => {

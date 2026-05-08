@@ -207,6 +207,16 @@ export function attachGlobalDelegation() {
       case 'ai-paper-reextract':
         if (typeof window.onPaperReExtract === 'function') window.onPaperReExtract(target);
         break;
+      // ════════ Paper Search (Round 136b) ════════
+      case 'ai-paper-search-submit':
+        if (typeof window.onPaperSearchSubmit === 'function') window.onPaperSearchSubmit();
+        break;
+      case 'ai-paper-search-keydown':
+        if (typeof window.onPaperSearchKeydown === 'function' && ev) window.onPaperSearchKeydown(target, ev);
+        break;
+      case 'ai-paper-search-clear':
+        if (typeof window.onPaperSearchClear === 'function') window.onPaperSearchClear();
+        break;
       case 'ai-chat-suggestion':
         if (typeof window.onAiChatSuggestion === 'function') window.onAiChatSuggestion(target);
         break;

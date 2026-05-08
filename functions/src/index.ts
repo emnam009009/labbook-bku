@@ -28,6 +28,7 @@ export { speechProxy } from "./handlers/speech-proxy";    // Round 114+
 export { chandraProxy } from "./handlers/chandra-proxy";  // Round 133a (R117 originally planned, deferred to R133)
 export { chunkPaper } from "./handlers/chunk-paper";  // Round 134a
 export { paperPipelineRouter } from "./triggers/paper-pipeline-router";  // Round 134b
+export { searchPapers } from "./handlers/search-papers";  // Round 136a
 
 // Python service bridge (Round 107+)
 export { pythonBridge } from "./handlers/python-bridge";

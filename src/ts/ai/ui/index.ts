@@ -39,3 +39,10 @@ export {
   triggerExtraction,
   onPaperReExtract,
 } from "../papers/paper-extract";
+
+// R136b: Search
+export {
+  onPaperSearchSubmit,
+  onPaperSearchKeydown,
+  onPaperSearchClear,
+} from "../papers/paper-search";
