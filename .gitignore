@@ -61,6 +61,14 @@ public/fonts/NotoSans-Bold.ttf
 # Patch backup files (Round 51+)
 *.bak*
 
+# Firebase service account keys (R122 migration scripts) - KHÔNG commit
+serviceAccountKey.json
+*-serviceAccountKey.json
+*.serviceAccount.json
+
+# Migration backup files
+backup-notifications-*.json
+
 # Claude Code System (personal config)
 .claude/
 

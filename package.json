@@ -17,12 +17,14 @@
     "deploy:rules": "firebase deploy --only database,storage",
     "deploy:hosting": "npm run build && firebase deploy --only hosting",
     "deploy:all": "npm run build && firebase deploy --only hosting,database",
-    "deploy:storage": "firebase deploy --only storage"
+    "deploy:storage": "firebase deploy --only storage",
+    "migrate:notifications": "node scripts/migrate-notifications-r122.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.5.3",
     "@commitlint/config-conventional": "^20.5.3",
     "autoprefixer": "^10.4.0",
+    "firebase-admin": "^13.0.0",
     "postcss": "^8.4.0",
     "subset-font": "^2.5.0",
     "tailwindcss": "^3.4.0",

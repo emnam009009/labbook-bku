@@ -19,7 +19,7 @@
 // @ts-nocheck
 
 
-import { db, ref, update, remove, fbPush } from '../firebase.js'
+import { db, ref, update, remove, fbPush, fbGet } from '../firebase.js'
 import { vals } from '../utils/format.js'
 
 // ╔════════════════════════════════════════════════════════════════╗
@@ -45,7 +45,52 @@ window.createNotification = async function(type, bookingKey, targetUid, title, m
       createdAt: new Date().toISOString(),
       readBy: {},  // Map uid → ISO timestamp
     };
-    await fbPush('notifications', notif);
+
+    // R122: nested schema per-user. Tránh fan-out broadcast bằng cách
+    // ghi 1 lần cho mỗi recipient → mỗi user chỉ listen path của mình →
+    // rule isolation đúng.
+    let recipients = [];
+    if (targetUid) {
+      // Notif gửi cho user cụ thể
+      recipients = [targetUid];
+    } else {
+      // Broadcast cho tất cả admin/superadmin
+      const cache = window.cache as any;
+      if (cache?.users && typeof cache.users === 'object') {
+        for (const [uid, user] of Object.entries(cache.users)) {
+          const role = (user as any)?.role;
+          if (role === 'admin' || role === 'superadmin') {
+            recipients.push(uid);
+          }
+        }
+      }
+      // Nếu cache.users chưa load (user member không có quyền đọc) →
+      // fallback: fetch trực tiếp từ DB.
+      if (recipients.length === 0) {
+        try {
+          const snap = await fbGet('users');
+          if (snap && typeof snap === 'object') {
+            for (const [uid, user] of Object.entries(snap)) {
+              const role = (user as any)?.role;
+              if (role === 'admin' || role === 'superadmin') {
+                recipients.push(uid);
+              }
+            }
+          }
+        } catch (e) {
+          // Member không có quyền read users → không thể fan-out admin.
+          // Chấp nhận: notification không tới được admin trong case này.
+          // Workaround: rule cho phép member ghi notifications/_admin/{notifId}
+          // (xem rule update R122) — fallback path:
+          console.warn('[createNotification] cannot fetch users, fallback _admin', e);
+          await fbPush('notifications/_admin', notif);
+          return;
+        }
+      }
+    }
+
+    // Fan-out write: mỗi recipient 1 entry
+    await Promise.all(recipients.map(uid => fbPush(`notifications/${uid}`, notif)));
   } catch (e) {
     console.error('createNotification error:', e);
   }
@@ -105,13 +150,8 @@ window.clearAllNotifications = async function() {
   try {
     const ops = [];
     notifs.forEach(n => {
-      if (n.targetUid === uid) {
-        ops.push(remove(ref(db, `notifications/${n._key}`)));
-      } else {
-        ops.push(update(ref(db, `notifications/${n._key}/deletedBy`), {
-          [uid]: new Date().toISOString()
-        }));
-      }
+      // R122: path nested — notif của user thì user xóa được trực tiếp
+      ops.push(remove(ref(db, `notifications/${uid}/${n._key}`)));
     });
     await Promise.all(ops);
     window.showToast?.(`Đã xóa ${notifs.length} thông báo`, 'success');
@@ -133,7 +173,8 @@ window.markAllNotificationsRead = async function() {
   try {
     const now = new Date().toISOString();
     await Promise.all(notifs.map(n =>
-      update(ref(db, `notifications/${n._key}/readBy`), { [uid]: now })
+      // R122: path nested
+      update(ref(db, `notifications/${uid}/${n._key}/readBy`), { [uid]: now })
     ));
     window.showToast?.(`Đã đánh dấu ${notifs.length} thông báo`, 'success');
   } catch (e) {
@@ -147,26 +188,22 @@ window.markAllNotificationsRead = async function() {
 // ╚════════════════════════════════════════════════════════════════╝
 /**
  * Lấy notifications relevant cho user hiện tại
- * - Admin/Superadmin: notifs targetUid=null (broadcast) + targetUid=currentUid
- * - Member: notifs targetUid=currentUid
+ * R122: nested schema — cache.notifications[uid] = { [notifId]: notif }
+ * Mỗi user chỉ thấy notif ở path của mình.
  */
 function getMyNotifications() {
   const cache = window.cache;
-  if (!cache?.notifications) return [];
-
   const uid = window.currentAuth?.uid;
-  const role = window.currentAuth?.role;
-  const isAdminLike = window.currentAuth?.isAdmin || role === 'superadmin' || role === 'admin';
-  if (!uid) return [];
+  if (!uid || !cache?.notifications) return [];
 
-  return vals(cache.notifications).filter(n => {
+  // Path mới: notifications/{uid}/{notifId}
+  const myBucket = (cache.notifications as any)[uid];
+  if (!myBucket || typeof myBucket !== 'object') return [];
+
+  return vals(myBucket).filter((n: any) => {
     // Filter notif đã bị user này đánh dấu xóa
     if (n.deletedBy && n.deletedBy[uid]) return false;
-    // Admin/Superadmin: thấy notif của mình + notif chung (targetUid null)
-    if (isAdminLike && (n.targetUid === null || !n.targetUid || n.targetUid === uid)) return true;
-    // Member: chỉ thấy notif của mình (targetUid = uid)
-    if (!isAdminLike && n.targetUid === uid) return true;
-    return false;
+    return true;
   });
 }
 
@@ -255,15 +292,16 @@ function escapeHtmlSimple(s) {
 // ╚════════════════════════════════════════════════════════════════╝
 window.handleNotificationClick = async function(key) {
   const cache = window.cache;
-  const notif = cache?.notifications?.[key];
+  const uid = window.currentAuth?.uid;
+  if (!uid) return;
+  // R122: path nested
+  const notif = cache?.notifications?.[uid]?.[key];
   if (!notif) return;
 
-  const uid = window.currentAuth?.uid;
-
   // 1. Mark as read
-  if (uid && (!notif.readBy || !notif.readBy[uid])) {
+  if (!notif.readBy || !notif.readBy[uid]) {
     try {
-      await update(ref(db, `notifications/${key}/readBy`), {
+      await update(ref(db, `notifications/${uid}/${key}/readBy`), {
         [uid]: new Date().toISOString()
       });
     } catch (e) {

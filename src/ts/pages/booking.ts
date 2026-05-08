@@ -13,7 +13,7 @@
 
 
 import { vals, fuzzy, escapeHtml } from '../utils/format.js'
-import { db, ref, update, remove, fbPush, runTransaction } from '../firebase.js'
+import { db, ref, update, remove, fbPush, fbGet, runTransaction } from '../firebase.js'
 
 // ═══════════════════════════════════════════════════
 // BUG 3 FIX (R119): Atomic slot reservation
@@ -186,12 +186,94 @@ async function tryReserveSlotForUpdate(
 }
 
 // ═══════════════════════════════════════════════════
+// R122: Cleanup stale slots trong booking_locks
+// ═══════════════════════════════════════════════════
+// Edge case: tryReserveSlot thắng nhưng fbPush booking fail (network drop,
+// tab close giữa chừng) → slot tmp_* kẹt. Hoặc booking đã bị xóa cứng nhưng
+// slot không được cleanup. Helper này quét và dọn:
+//
+// 1. Slot bookingKey starts with "tmp_": cũ hơn 60s → drop
+// 2. Slot bookingKey không tồn tại trong cache.bookings: drop
+// 3. Slot status mismatch với booking.status (vd slot=pending nhưng
+//    booking đã rejected) → đồng bộ
+//
+// Chỉ admin chạy để giảm contention. Throttle 5 phút.
+let _lastLockCleanup = 0;
+async function cleanupStaleLocks(): Promise<void> {
+  const isAdmin = window.currentAuth?.isAdmin || ['admin','superadmin'].includes(window.currentAuth?.role);
+  if (!isAdmin) return;
+  const now = Date.now();
+  if (now - _lastLockCleanup < 5 * 60 * 1000) return;
+  _lastLockCleanup = now;
+
+  try {
+    const allLocks: Record<string, LockData> | null = await fbGet('booking_locks');
+    if (!allLocks || typeof allLocks !== 'object') return;
+
+    const bookings = (window.cache?.bookings || {}) as Record<string, any>;
+    const TMP_TTL_MS = 60 * 1000;
+    const REMOVE_STATUS = ['rejected', 'cancelled', 'completed'];
+    let cleanedCount = 0;
+
+    for (const [lockKey, lockData] of Object.entries(allLocks)) {
+      if (!lockData || !Array.isArray(lockData.slots)) continue;
+      const oldSlots = lockData.slots;
+      const newSlots: LockSlot[] = [];
+      let changed = false;
+
+      for (const s of oldSlots) {
+        if (!s || !s.bookingKey) { changed = true; continue; }
+        // tmp_* và quá tuổi → drop. parse timestamp từ tmp_<ts>_<rand>
+        if (s.bookingKey.startsWith('tmp_')) {
+          const m = /^tmp_(\d+)_/.exec(s.bookingKey);
+          const ts = m ? parseInt(m[1], 10) : 0;
+          if (ts > 0 && (now - ts) > TMP_TTL_MS) { changed = true; continue; }
+          newSlots.push(s);
+          continue;
+        }
+        // Booking không còn tồn tại → drop slot
+        const b = bookings[s.bookingKey];
+        if (!b) { changed = true; continue; }
+        // Booking đã ở trạng thái đóng → drop slot
+        if (REMOVE_STATUS.includes(b.status)) { changed = true; continue; }
+        // Status mismatch → đồng bộ
+        if (s.status !== b.status) {
+          newSlots.push({ ...s, status: b.status });
+          changed = true;
+          continue;
+        }
+        newSlots.push(s);
+      }
+
+      if (changed) {
+        cleanedCount += oldSlots.length - newSlots.length;
+        try {
+          await update(ref(db, `booking_locks/${lockKey}`), { slots: newSlots });
+        } catch (e) {
+          console.warn('[cleanupStaleLocks] update failed', lockKey, e);
+        }
+      }
+    }
+
+    if (cleanedCount > 0) {
+      window.devLog?.(`[cleanupStaleLocks] removed ${cleanedCount} stale slots`);
+    }
+  } catch (e) {
+    console.warn('[cleanupStaleLocks] scan failed', e);
+  }
+}
+
+// ═══════════════════════════════════════════════════
 // RENDER LIST
 // ═══════════════════════════════════════════════════
 export function renderBooking() {
   const cache = window.cache;
   if (!cache) return;
   
+  // R122: throttled background cleanup of stale slots — fire-and-forget,
+  // không block render.
+  cleanupStaleLocks().catch(() => { /* silent */ });
+
   const tbody = document.getElementById('booking-tbody');
   if (!tbody) return;
   

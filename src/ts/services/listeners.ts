@@ -49,7 +49,7 @@ const SMALL_COLLECTIONS = [
   'equipment',     // Thiết bị, thường <50
   'groups',        // Nhóm hóa chất, thường <20
   'eq_groups',     // Nhóm thiết bị, thường <20
-  'notifications', // Per-user, đã filter theo rule
+  // 'notifications' đã chuyển sang nested per-user (R122) — listen riêng dưới
   'presence',      // Online status, lightweight
 ];
 
@@ -144,6 +144,41 @@ export function startListeners(): void {
       }
     }));
   });
+
+  // ── NOTIFICATIONS per-user (R122 nested schema) ──
+  // Path: notifications/{myUid} — chỉ listen của user hiện tại.
+  // Cache layout: cache.notifications = { [uid]: { [notifId]: notif } }
+  // — chỉ uid hiện tại có data, các uid khác sẽ undefined ở client.
+  if (auth.currentUser) {
+    const myUid = auth.currentUser.uid;
+    _unsubs.push(fbListen(`notifications/${myUid}`, function(data: Record<string, any> | null) {
+      if (!window.cache) return;
+      const cache = window.cache as any;
+      if (!cache.notifications || typeof cache.notifications !== 'object') {
+        cache.notifications = {};
+      }
+      cache.notifications[myUid] = data || {};
+      window.dispatchEvent(new CustomEvent('cache-update', { detail: { col: 'notifications' } }));
+      if (typeof (window as any).renderAll === 'function') (window as any).renderAll();
+    }));
+    // Admin/superadmin: listen thêm path _admin (broadcast fallback khi
+    // member không có quyền fetch users để fan-out)
+    if (_isAdminLike()) {
+      _unsubs.push(fbListen('notifications/_admin', function(data: Record<string, any> | null) {
+        if (!window.cache) return;
+        const cache = window.cache as any;
+        if (!cache.notifications || typeof cache.notifications !== 'object') {
+          cache.notifications = {};
+        }
+        // Merge _admin notifs vào bucket của uid hiện tại để render thấy
+        // (vì getMyNotifications đọc từ cache.notifications[uid])
+        const merged = { ...(cache.notifications[myUid] || {}), ...(data || {}) };
+        cache.notifications[myUid] = merged;
+        window.dispatchEvent(new CustomEvent('cache-update', { detail: { col: 'notifications' } }));
+        if (typeof (window as any).renderAll === 'function') (window as any).renderAll();
+      }));
+    }
+  }
 
   // ── HISTORY (admin only) ──
   if (_isAdminLike()) {
