@@ -6,25 +6,27 @@
 
 LabBook BKU là **web app quản lý phòng thí nghiệm hoá**. Stack:
 - **Vite 8 + Tailwind 3 + Firebase RTDB + TypeScript ESM**
-- Deploy: **Firebase Hosting (Spark plan)** → `https://lab-manager-268a6.web.app`
+- Deploy: **Firebase Hosting + Cloud Functions (Blaze plan)** → `https://lab-manager-268a6.web.app`
 - Working dir (WSL Ubuntu): `~/LAB-MANAGER/labbook-vite-tailwind/labbook`
-- Repo: `github.com/emnam009009/labbook-bku`
+- Repo: `github.com/emnam009/labbook-bku` (branch `ai-assistant`)
 
 **Owner**: bạn Nam — communication 100% **tiếng Việt**.
 
 ## Critical rules (NEVER violate)
 
 1. **CSS `:has()` selector BROKEN** trong project — không dùng. Dùng JS DOM check thay thế.
-2. **Patches**: Luôn dùng atomic Python script trong `/mnt/user-data/outputs/labbook-patches/` với backup `.bakNN`.
+2. **Patches**: Luôn dùng atomic Python script trong `/mnt/d/labbook-patches/round-{N}{suffix}/` với backup `.bakNN`.
 3. **Verify before deploy**: `npm run typecheck && npm run build && npm test` (62/62 must pass).
 4. **AGENTS.md tracked in repo** — `git pull` đầu session, KHÔNG `rm -f`.
-5. **Boundary verify before patch**: grep/read file thực tế trước khi viết patch — KHÔNG assume HTML structure.
+5. **Boundary verify before patch**: grep/read file thực tế trước khi viết patch — KHÔNG assume HTML/whitespace structure. Dùng `cat -A` để check exact whitespace + blank lines.
+6. **DOMPurify strips HTML comments**: dùng span+data-attr placeholders nếu cần inject HTML qua sanitize pipeline.
 
 ## Quick navigation
 
 | Topic | File |
 |-------|------|
 | Full architecture + folder map | [AGENTS.md](./AGENTS.md) |
+| AI module deep dive | [AI_ARCHITECTURE.md](./AI_ARCHITECTURE.md) |
 | Tech stack details + conventions | [.claude/memory/global.md](./.claude/memory/global.md) |
 | Established code patterns | [.claude/memory/patterns.md](./.claude/memory/patterns.md) |
 | Lessons learned (DON'Ts) | [.claude/memory/mistakes.md](./.claude/memory/mistakes.md) |
@@ -34,20 +36,37 @@ LabBook BKU là **web app quản lý phòng thí nghiệm hoá**. Stack:
 | Future features | [ROADMAP.md](./ROADMAP.md) |
 | Recent changes | [CHANGELOG.md](./CHANGELOG.md) |
 
-## Current state (as of Round 103b)
+## Current state (as of Round 115d, May 8 2026)
 
+### Pre-AI (Round 1-104)
 - ✅ **Tests**: 62/62 pass (Vitest)
 - ✅ **Lighthouse Mobile**: Performance 93, Accessibility 95, Best Practices 100, SEO 100
 - ✅ **CSP**: Mozilla Observatory 125/100 Grade A+ (Round 55-58e)
 - ✅ **Origin Lab integration**: Working end-to-end (Round 95-102)
 - ✅ **Bundle optimized**: -600KB initial load (Round 103a-b)
-- 🔄 **Next**: TBD per user request
+
+### AI Module Phase A done (Round 105-115)
+- ✅ **Chat sidetab UI** với streaming, markdown, KaTeX, highlight.js (R108-110)
+- ✅ **Real Gemini Flash** via geminiProxy Cloud Function (R111)
+- ✅ **6 read tools** (chemicals, equipment, experiments, bookings, members, date) (R112)
+- ✅ **UI polish**: Stop, Regenerate, Auto-rename, error toasts (R113)
+- ✅ **Voice STT/TTS**: Cloud Speech v2 Chirp 2 vi-VN + browser TTS (R114)
+- ✅ **3 action tools** với confirm UI: createExperiment (hydro+electrochem), updateChemicalStock, createBooking (R115)
+
+### Cloud Functions deployed (asia-southeast1)
+- `geminiProxy` — SSE streaming Gemini 2.5 Flash với tool calling
+- `toolExecutor` — dispatch 9 tools (6 read + 3 action)
+- `speechProxy` — Cloud Speech v2 Chirp 2 STT
+- `confirmAction` — commit action drafts to RTDB + audit log
+
+### Next
+- 🔄 **R116**: Compliance KB (Nghị định 24/2026 + 4 phụ lục JSON)
 
 ## Round numbering
 
 Round = 1 patch session = 1+ atomic Python scripts = 1+ git commits.
 
-Latest pushed: Round 103b. Numbering không reset, monotonically increasing.
+Latest commit: `cd8dc7c feat(ai-chat): voice STT/TTS + action tools (R114-R115)`. Numbering không reset, monotonically increasing.
 
 ## Communication norms
 
@@ -61,11 +80,12 @@ Latest pushed: Round 103b. Numbering không reset, monotonically increasing.
 
 - **WSL Ubuntu**: dev environment, builds, deploys
 - **Windows**: end user (browser test), Origin Lab desktop integration
-- **Firebase Console**: monitor RTDB, Hosting, Auth
+- **Firebase Console**: monitor RTDB, Hosting, Auth, Cloud Functions logs
+- **Google Cloud Console**: Speech API, IAM, Secret Manager
 - **Edge browser**: primary user browser (downloads → C:\Users\LEGION\Downloads)
 
 
-## AI Module (Phase A-E, Round 105+)
+## AI Module (Phase A done, Phase B next)
 
 LabBook BKU đang xây dựng **AI Research Platform** — Hybrid TypeScript + Python kiến trúc dành cho lab vật liệu 2D/TMDs (WS₂, WO₃, MoS₂...).
 
@@ -80,31 +100,39 @@ LabBook BKU đang xây dựng **AI Research Platform** — Hybrid TypeScript + P
 - **`docs/ai/*`** — 9 detail files (PROMPTS, TOOLS, RAG_PIPELINE, ANTI_HALLUCINATION, PROVENANCE, EVAL, INTEGRATIONS, HYBRID_ARCHITECTURE, MATERIALS_LIBRARIES)
 - **`docs/design/*`** — 4 detail files (TOKENS, COMPONENTS, PATTERNS, MIGRATION)
 
-### Code Structure
+### Code Structure (current)
 
 ```
-src/ts/ai/                          ← AI orchestration (TypeScript strict partial)
-├── core/                           — provider abstraction
-├── agent/                          — orchestrator, planner, reflector
-├── tools/                          — Tier 1 RTDB tools
-├── analyzers/                      — 6 nhóm × 24 subfolders
-│   ├── structural/{xrd,saxs}/      — XRD, SAXS via pymatgen
-│   ├── optical/{uvvis,pl,raman,ftir,ple,trpl}/
-│   ├── electrochemistry/{cv,lsv,eis,gcd,ocp}/
-│   ├── photoelectrochemistry/{pec-lsv,pec-ca,mott-schottky,ipce}/
-│   ├── surface/{xps,eds,bet,tga}/
-│   └── microscopy/{sem,tem,afm}/
-├── rag/{ingestion,retrieval}/
-├── memory/                         — Lab Memory (episodic)
-├── voice/                          — Web Speech API → VibeVoice
-├── scientist/                      — Materials AI Writer
-├── provenance/                     — Audit chain
-├── types/                          — Shared TypeScript types
-└── python-bridge/                  — Client cho Python compute service
+src/ts/ai/                          ← AI orchestration (TypeScript)
+├── llm/                            ← gemini-client, system-prompt, types
+├── tools/                          ← tool-client, tool-definitions
+├── ui/                             ← chat-sidetab, message-bubble, message-handler,
+│                                      markdown-render, title-generator,
+│                                      confirmation-card (R115b)
+├── voice/                          ← types, speech-recorder, text-to-speech (R114b)
+├── memory/                         ← conversation-store
+├── core/, agent/, analyzers/,      ← Skeleton folders (Phase B+ implement)
+│   rag/, scientist/, provenance/,
+│   types/, python-bridge/
 
-python-service/                     ← Python compute (Cloud Run, FastAPI)
-└── (skeleton, implement Round 107+)
-    Libraries: pymatgen, ASE, MatSciBERT, lmfit, impedance.py, scipy
+functions/src/                      ← Cloud Functions (TypeScript)
+├── handlers/
+│   ├── gemini-proxy.ts             ← SSE streaming, tool injection (R111)
+│   ├── tool-executor.ts            ← Dispatch 9 tools, role check (R112+R115a)
+│   ├── speech-proxy.ts             ← Cloud Speech v2 (R114a)
+│   └── confirm-action.ts           ← Commit drafts + audit (R115a)
+├── tools/
+│   ├── registry.ts                 ← TOOLS object + executeTool dispatcher
+│   ├── chemicals.ts, equipment.ts,
+│   ├── experiments.ts, bookings.ts,
+│   ├── members.ts, utils.ts        ← 6 read tools (R112)
+│   └── actions.ts                  ← 3 draft generators + commitDraft (R115a)
+└── utils/
+    ├── auth.ts                     ← verifyAuth với role hierarchy
+    └── logger.ts
+
+python-service/                     ← Python compute (Phase C+)
+└── (skeleton, implement Round 130+)
 ```
 
 ### Reuse Strategy (REUSE existing services)
@@ -113,23 +141,46 @@ AI module **KHÔNG** tạo lại parsers/plot. Reuse:
 - `src/ts/services/parsers/{corrware,jcamp-jasco,detect}.ts`
 - `src/ts/services/plot/{tauc,bandgap-fit}.ts`
 
-Wrap qua `src/ts/ai/tools/spectrum-tools.ts`. Single source of truth cho khoa học.
+Wrap qua `src/ts/ai/tools/spectrum-tools.ts` (Phase C). Single source of truth cho khoa học.
 
 ### Key Decisions
 
-- **LLM**: Gemini 2.5 Flash (Tier 1) + Claude Sonnet 4.6 (Tier 2) + Claude Opus 4.7 (Tier 3)
-- **Embedding**: Voyage-3 + voyage-rerank-2.5 (default) / MatSciBERT (chuyên ngành)
-- **Vector DB**: Firestore Vector Search (native Firebase)
-- **OCR**: Chandra (datalab.to) for PDF/handwriting
-- **Voice**: Web Speech API Phase 1 → VibeVoice self-host Phase 2
-- **Compute**: TypeScript (preview) + Python Cloud Run (deep analysis)
-- **Role**: Chỉ superadmin truy cập trong Phase A
+- **LLM Tier 1** (active): Gemini 2.5 Flash — used for all chat
+- **LLM Tier 2-3** (Phase D): Claude Sonnet 4.6, Claude Opus 4.7
+- **Embedding** (Phase B): Voyage-3 + voyage-rerank-2.5 / MatSciBERT
+- **Vector DB**: Firestore Vector Search
+- **OCR** (Phase B): Chandra (datalab.to)
+- **Voice STT** (active): Cloud Speech v2 Chirp 2 vi-VN
+- **Voice TTS** (active): Browser native, Phase 2 may upgrade Cloud TTS Wavenet
+- **Compute**: TypeScript (preview) + Python Cloud Run (Phase C)
+- **Roles**: read tools = admin/superadmin, **action tools = superadmin only**
 - **Plan**: Firebase Blaze + Cloud Run (~$5-15/month single user)
+
+### Action Tools Pattern (R115a-d)
+
+Tool returns DRAFT (NOT write DB):
+```
+User: "tạo thí nghiệm hydro MoS2 200°C 24h"
+  ↓
+Gemini: createExperimentDraft({category, material, temp, ...})
+  ↓
+Backend: build payload + preview, return ActionDraft (no DB write)
+  ↓
+Frontend: gemini-client embeds <!--AI_DRAFT:base64--> trong stream
+  ↓
+markdown-render: extract markers → span placeholder → DOMPurify sanitize → re-inject card HTML
+  ↓
+User clicks "Xác nhận":
+  → POST /confirmAction → verify superadmin → push to RTDB → audit log
+  → Update card UI: "✅ Đã tạo HT-xxx"
+```
+
+Audit log path: `/actionAudit/{ts}` với uid, action, targetPath, resultKey.
 
 ### Roadmap Summary
 
-- **Phase A** (Round 105-115): Foundation, chat shell, Tier 1 tools, Web Speech
-- **Phase B** (Round 116-128): RAG infrastructure (paper ingestion, embedding)
+- **Phase A** ✅ Done (Round 105-115)
+- **Phase B** ⏳ Next (Round 116-128): Compliance KB + RAG infrastructure
 - **Phase C-1** (Round 129-145): Optical & Structural analyzers
 - **Phase C-2** (Round 146-160): Electrochemistry analyzers
 - **Phase C-3** (Round 161-175): Photoelectrochemistry analyzers

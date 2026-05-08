@@ -35,7 +35,8 @@ Pending features và improvements đã thảo luận. Owner Nam quyết định 
 
 ### CSP architecture (Round 55-58e)
 - Strict CSP với `'unsafe-inline'` chỉ cho `style-src` (437 inline styles in index.html)
-- Future phase to extract inline styles → external CSS classes (separate refactor effort)
+- `style-src` includes `cdn.jsdelivr.net` for KaTeX (R113a3)
+- `connect-src` includes `*.cloudfunctions.net` for Cloud Functions (R111b)
 - Mozilla Observatory 125/100 Grade A+
 
 ### Memory + plot system (Round 89-94)
@@ -47,6 +48,13 @@ Pending features và improvements đã thảo luận. Owner Nam quyết định 
 - Web → Browser → Protocol handler → Wrapper batch → Origin auto-execute
 - See [.claude/skills/labbook/origin-integration.md](./.claude/skills/labbook/origin-integration.md)
 
+### AI Module (Round 105-115)
+- Frontend chat sidetab với streaming + markdown + KaTeX
+- Backend: 4 Cloud Functions deployed (geminiProxy, toolExecutor, speechProxy, confirmAction)
+- 9 tools: 6 read + 3 action (action requires superadmin)
+- Voice STT (vi-VN Chirp 2) + TTS (browser native)
+- Confirmation card pattern cho write operations
+
 
 ---
 
@@ -56,39 +64,39 @@ Pending features và improvements đã thảo luận. Owner Nam quyết định 
 >
 > Detailed phase plan: see `AI_ARCHITECTURE.md` Section 14.
 
-### Phase A — Foundation (Round 105-115)
+### Phase A — Foundation (Round 105-115) ✅ DONE
 
 | Round | Status | Task |
 |---|---|---|
 | 105 | ✅ Done | TypeScript skeleton: 24 analyzer subfolders + docs + .env + .gitignore |
-| 106 | ⏳ Next | Firebase Blaze upgrade + Cloud Functions skeleton + tsconfig validation |
-| 107 | 📋 | Python service skeleton (FastAPI + Docker + Cloud Run setup) |
-| 108 | 📋 | AI Chat sidetab UI shell (slide-out, ⌘J toggle) |
-| 109 | 📋 | Conversation schema RTDB + load/save/list |
-| 110 | 📋 | Markdown + KaTeX + image rendering in chat |
-| 111 | 📋 | Tier 1 routing + Gemini Flash integration + tools schema types |
-| 112 | 📋 | Tier 1 tools: chemicals, equipment, bookings query |
-| 113 | 📋 | Tier 1 tools: history, members, inventory predictor |
-| 114 | 📋 | Compliance KB (Nghị định 24/2026 4 phụ lục as JSON) |
-| 115 | 📋 | Web Speech API integration (ASR + TTS basic, vi-VN) |
+| 106 | ✅ Done | Firebase Blaze upgrade + Cloud Functions skeleton |
+| 107 | 📋 Deferred | Python service skeleton (FastAPI + Cloud Run) — needed Phase C |
+| 108-108b | ✅ Done | AI Chat sidetab UI shell + draggable FAB |
+| 109 | ✅ Done | Conversation schema RTDB + load/save/list |
+| 110 | ✅ Done | Markdown + KaTeX + highlight.js rendering |
+| 111-111b | ✅ Done | Real Gemini Flash streaming via geminiProxy |
+| 112-112c | ✅ Done | Backend tool calling: 6 read tools (chemicals, equipment, experiments, bookings, members, date) |
+| 113a-b3 | ✅ Done | UI polish: Stop/Regenerate/Auto-rename/Error toasts + race condition fixes |
+| 114a-b3 | ✅ Done | Voice STT/TTS (Cloud Speech v2 Chirp 2 vi-VN + browser TTS) |
+| 115a-d | ✅ Done | Action tools với confirm UI (3 write tools, draft pattern, audit log) |
 
-### Phase B — RAG Infrastructure (Round 116-128)
+### Phase B — Compliance KB + RAG Infrastructure (Round 116-128)
 
-| Round | Task |
-|---|---|
-| 116 | Paper upload UI + queue + dedup |
-| 117 | Chandra OCR integration (Cloud Function proxy) |
-| 118 | PDF extraction pipeline (text + figures + metadata) |
-| 119 | Smart chunking (section-aware, overlap) |
-| 120 | Contextual pre-prep (Anthropic technique) |
-| 121 | Voyage-3 embedding pipeline |
-| 122 | Firestore Vector Search index + queries |
-| 123 | BM25 keyword index (Lunr.js) |
-| 124 | Hybrid retrieval (RRF fusion) |
-| 125 | Voyage rerank-2.5 integration |
-| 126 | Citation tracking + UI display |
-| 127 | Paper Library page (browse, search, filter) |
-| 128 | Zotero + Drive sync sources + MatSciBERT alt embedding |
+| Round | Status | Task |
+|---|---|---|
+| 116 | ⏳ Next | Compliance KB (Nghị định 24/2026 4 phụ lục as JSON, search tool) |
+| 117 | 📋 | Paper upload UI + queue + dedup |
+| 118 | 📋 | Chandra OCR integration (Cloud Function proxy) |
+| 119 | 📋 | PDF extraction pipeline (text + figures + metadata) |
+| 120 | 📋 | Smart chunking (section-aware, overlap) |
+| 121 | 📋 | Contextual pre-prep (Anthropic technique) |
+| 122 | 📋 | Voyage-3 embedding pipeline |
+| 123 | 📋 | Firestore Vector Search index + queries |
+| 124 | 📋 | BM25 keyword index (Lunr.js) |
+| 125 | 📋 | Hybrid retrieval (RRF fusion) |
+| 126 | 📋 | Voyage rerank-2.5 integration |
+| 127 | 📋 | Citation tracking + UI display |
+| 128 | 📋 | Paper Library page (browse, search, filter) + Zotero/Drive sync |
 
 ### Phase C-1 — Optical & Structural Analyzers (Round 129-145)
 
