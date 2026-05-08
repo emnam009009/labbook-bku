@@ -77,7 +77,7 @@ export const confirmAction = onRequest(
       return;
     }
 
-    const validTypes = ["experiment-draft", "chemical-stock-draft", "booking-draft"];
+    const validTypes = ["experiment-draft", "chemical-stock-draft", "booking-draft", "experiment-result-draft"];
     if (!validTypes.includes(draft.type)) {
       res.status(400).json({ error: `Invalid draft type: ${draft.type}` });
       return;

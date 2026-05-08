@@ -255,6 +255,7 @@ import {
   createExperimentDraft,
   updateChemicalStockDraft,
   createBookingDraft,
+  recordExperimentResultDraft,
 } from "./actions";
 
 // Tool definitions for action tools
@@ -384,6 +385,67 @@ const ACTION_TOOLS_DEFS: Record<string, ToolDefinition> = {
       required: ["equipmentQuery", "date", "startTime", "endTime"],
     },
     handler: async (args: any) => createBookingDraft(args._uid, args),
+  },
+
+  recordExperimentResultDraft: {
+    name: "recordExperimentResultDraft",
+    description:
+      "Tạo DRAFT cập nhật KẾT QUẢ thí nghiệm (KHÔNG ghi DB ngay). " +
+      "Dùng khi user nói thí nghiệm đã xong, có kết quả đo. " +
+      "Code prefix HT- (hydro) hoặc EC- (electrochem) — backend tự detect category. " +
+      "Update partial fields, không touch các field khác (date, material, etc.).",
+    parameters: {
+      type: "object",
+      properties: {
+        code: {
+          type: "string",
+          description: "Mã thí nghiệm cần update. VD: HT-1778... hoặc EC-1778...",
+        },
+        status: {
+          type: "string",
+          enum: ["Hoàn thành", "Thất bại", "Cần làm lại"],
+          description: "Trạng thái mới",
+        },
+        note: {
+          type: "string",
+          description: "Ghi chú kết quả (optional)",
+        },
+        yield_mass: {
+          type: "number",
+          description: "Khối lượng sản phẩm (mg, cho hydro)",
+        },
+        color: {
+          type: "string",
+          description: "Màu sản phẩm (cho hydro)",
+        },
+        eta10: {
+          type: "number",
+          description: "Overpotential @ 10 mA/cm² (mV, cho electrochem HER/OER)",
+        },
+        tafel: {
+          type: "number",
+          description: "Tafel slope (mV/dec, cho electrochem)",
+        },
+        j0: {
+          type: "number",
+          description: "Exchange current density j₀ (mA/cm², cho electrochem)",
+        },
+        rs: {
+          type: "number",
+          description: "Series resistance Rs (Ω, cho electrochem EIS)",
+        },
+        rct: {
+          type: "number",
+          description: "Charge transfer resistance Rct (Ω, cho electrochem EIS)",
+        },
+        ecsa: {
+          type: "number",
+          description: "Electrochemical surface area (cm², cho electrochem)",
+        },
+      },
+      required: ["code", "status"],
+    },
+    handler: async (args: any) => recordExperimentResultDraft(args._uid, args),
   },
 };
 

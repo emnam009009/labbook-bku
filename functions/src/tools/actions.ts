@@ -73,7 +73,8 @@ export interface BookingDraft {
 export type ActionDraft =
   | ExperimentDraft
   | ChemicalStockDraft
-  | BookingDraft;
+  | BookingDraft
+  | ExperimentResultDraft;
 
 // ────────────────────────────────────────────────────────────
 // Helper: get user displayName
@@ -453,6 +454,12 @@ export async function commitDraft(
       const newRef = ref.push();
       await newRef.set(draft.payload);
       resultKey = newRef.key || "";
+    } else if (draft.type === "experiment-result-draft") {
+      // Round 129a: Update existing record (partial fields)
+      // targetPath: "hydro/{key}" or "electrochem/{key}"
+      await db.ref(draft.targetPath).update(draft.payload);
+      const parts = draft.targetPath.split("/");
+      resultKey = parts[parts.length - 1] || "";
     } else {
       return { success: false, error: "Unknown draft type" };
     }
@@ -471,4 +478,169 @@ export async function commitDraft(
     console.error("[commitDraft] Error:", e);
     return { success: false, error: e.message || String(e) };
   }
+}
+
+
+// ────────────────────────────────────────────────────────────
+// Round 129a: recordExperimentResultDraft
+// ────────────────────────────────────────────────────────────
+
+export interface ExperimentResultDraft {
+  type: "experiment-result-draft";
+  draftId: string;
+  category: "hydro" | "electrochem";
+  preview: {
+    code: string;
+    person: string;
+    oldStatus: string;
+    newStatus: string;
+    changes: Record<string, { old: any; new: any }>;
+  };
+  payload: Record<string, any>;
+  targetPath: string;
+}
+
+interface RecordResultParams {
+  code: string;
+  status: string;
+  note?: string;
+  yield_mass?: number;
+  color?: string;
+  eta10?: number;
+  tafel?: number;
+  j0?: number;
+  rs?: number;
+  rct?: number;
+  ecsa?: number;
+  _uid?: string;
+}
+
+const VALID_RESULT_STATUSES = ["Hoàn thành", "Thất bại", "Cần làm lại"];
+
+export async function recordExperimentResultDraft(
+  uid: string,
+  params: RecordResultParams
+): Promise<ExperimentResultDraft | { error: string }> {
+  const { code, status } = params;
+
+  if (!code) return { error: "Thiếu code thí nghiệm" };
+  if (!status) return { error: "Thiếu status mới" };
+  if (!VALID_RESULT_STATUSES.includes(status)) {
+    return {
+      error: `Status không hợp lệ. Cho phép: ${VALID_RESULT_STATUSES.join(", ")}`,
+    };
+  }
+
+  // Detect category từ code prefix
+  let category: "hydro" | "electrochem";
+  if (code.startsWith("HT-")) category = "hydro";
+  else if (code.startsWith("EC-")) category = "electrochem";
+  else
+    return {
+      error: `Code không nhận diện: ${code}. Phải bắt đầu HT- hoặc EC-`,
+    };
+
+  // Search record by code
+  const snap = await admin.database().ref(category).once("value");
+  const records = snap.val() || {};
+
+  let recordKey: string | null = null;
+  let oldRecord: any = null;
+  for (const [k, v] of Object.entries<any>(records)) {
+    if (v && v.code === code) {
+      recordKey = k;
+      oldRecord = v;
+      break;
+    }
+  }
+
+  if (!recordKey) {
+    return {
+      error: `Không tìm thấy thí nghiệm với mã ${code} trong /${category}`,
+    };
+  }
+
+  // Build payload (chỉ fields user cung cấp + status + meta)
+  const payload: Record<string, any> = {
+    status,
+    updatedAt: todayDDMMYYYY(),
+    updatedBy: await getUserDisplayName(uid),
+  };
+  const changes: Record<string, { old: any; new: any }> = {};
+
+  if (oldRecord.status !== status) {
+    changes["Trạng thái"] = {
+      old: oldRecord.status || "(chưa set)",
+      new: status,
+    };
+  }
+
+  if (params.note !== undefined) {
+    payload.note = params.note;
+    if ((oldRecord.note || "") !== params.note) {
+      changes["Ghi chú"] = {
+        old: oldRecord.note || "(rỗng)",
+        new: params.note,
+      };
+    }
+  }
+
+  if (category === "hydro") {
+    if (params.yield_mass !== undefined) {
+      payload.yield_mass = params.yield_mass;
+      changes["Khối lượng sản phẩm"] = {
+        old: oldRecord.yield_mass ?? "(chưa có)",
+        new: `${params.yield_mass} mg`,
+      };
+    }
+    if (params.color !== undefined) {
+      payload.color = params.color;
+      changes["Màu sản phẩm"] = {
+        old: oldRecord.color || "(chưa có)",
+        new: params.color,
+      };
+    }
+  }
+
+  if (category === "electrochem") {
+    const metrics: Array<[keyof RecordResultParams, string, string]> = [
+      ["eta10", "η@10 mA/cm²", "mV"],
+      ["tafel", "Tafel slope", "mV/dec"],
+      ["j0", "j₀", "mA/cm²"],
+      ["rs", "Rs", "Ω"],
+      ["rct", "Rct", "Ω"],
+      ["ecsa", "ECSA", "cm²"],
+    ];
+    for (const [key, label, unit] of metrics) {
+      const val = params[key];
+      if (val !== undefined && val !== null) {
+        payload[key as string] = val;
+        changes[label] = {
+          old: oldRecord[key as string] ?? "(chưa có)",
+          new: `${val} ${unit}`,
+        };
+      }
+    }
+  }
+
+  if (Object.keys(changes).length === 0) {
+    return {
+      error: "Không có field nào thay đổi (status giống cũ + không có metric mới)",
+    };
+  }
+
+  return {
+    type: "experiment-result-draft",
+    draftId: generateDraftId(),
+    category,
+    preview: {
+      code,
+      person: oldRecord.person || oldRecord.createdBy || "—",
+      oldStatus: oldRecord.status || "(chưa set)",
+      newStatus: status,
+      changes,
+    },
+    payload,
+    targetPath: `${category}/${recordKey}`,
+  };
 }

@@ -32,10 +32,14 @@ interface DraftPreview {
   endTime?: string;
   purpose?: string;
   userName?: string;
+  // Result-draft specific (R129b)
+  oldStatus?: string;
+  newStatus?: string;
+  changes?: Record<string, { old: any; new: any }>;
 }
 
 interface ActionDraft {
-  type: "experiment-draft" | "chemical-stock-draft" | "booking-draft";
+  type: "experiment-draft" | "chemical-stock-draft" | "booking-draft" | "experiment-result-draft";
   draftId: string;
   category?: "hydro" | "electrochem";
   preview: DraftPreview;
@@ -70,6 +74,11 @@ export function renderConfirmationCardHTML(draft: ActionDraft): string {
   } else if (draft.type === "booking-draft") {
     title = "Đặt lịch thiết bị";
     icon = "📅";
+  } else if (draft.type === "experiment-result-draft") {
+    title = draft.category === "hydro"
+      ? "Cập nhật kết quả Thủy nhiệt"
+      : "Cập nhật kết quả Điện hóa";
+    icon = "📊";
   }
 
   // Build body content based on draft type
@@ -139,6 +148,31 @@ export function renderConfirmationCardHTML(draft: ActionDraft): string {
           <span class="ai-confirm-card__value">${esc(p.purpose)}</span>
         </div>` : ""}
       </div>
+    `;
+  } else if (draft.type === "experiment-result-draft") {
+    const p = draft.preview;
+    const meta = [
+      p.code && `<div><strong>Mã:</strong> ${esc(p.code)}</div>`,
+      p.person && `<div><strong>Người làm:</strong> ${esc(p.person)}</div>`,
+    ]
+      .filter(Boolean)
+      .join("");
+
+    const diffRows = Object.entries(p.changes || {})
+      .map(
+        ([field, val]: [string, any]) =>
+          `<div class="ai-confirm-card__diff-row">
+             <span class="ai-confirm-card__diff-label">${esc(field)}</span>
+             <span class="ai-confirm-card__diff-old">${esc(String(val.old))}</span>
+             <span class="ai-confirm-card__diff-arrow">→</span>
+             <span class="ai-confirm-card__diff-new">${esc(String(val.new))}</span>
+           </div>`
+      )
+      .join("");
+
+    bodyHtml = `
+      <div class="ai-confirm-card__meta">${meta}</div>
+      <div class="ai-confirm-card__diff-table">${diffRows}</div>
     `;
   }
 
