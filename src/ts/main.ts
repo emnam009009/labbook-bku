@@ -1462,8 +1462,10 @@ function _loadChatModule() {
 
 // Register Service Worker SAU first paint để không block render
 // (vite-plugin-pwa: injectRegister: false → tự register ở đây)
+// R125: skip ở dev mode — Vite dev không generate sw.js, request /sw.js
+// fallback về index.html → MIME error trong console.
 // ─────────────────────────────────────────────────────────
-if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
     // Chờ thêm 1 idle callback để chắc chắn không cạnh tranh first paint
     const register = () => navigator.serviceWorker.register('/sw.js').catch(err => {

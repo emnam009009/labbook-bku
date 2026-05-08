@@ -413,6 +413,16 @@ export function attachGlobalDelegation() {
     document.head.appendChild(style);
   }
 
+  // R125: form data-noop-submit="1" — chặn submit event (thay cho onsubmit
+  // inline để pass CSP strict). Wrap password fields trong <form> để
+  // password manager nhận diện, nhưng không submit.
+  document.body.addEventListener('submit', function(e) {
+    const t = e.target as HTMLElement;
+    if (t && t.tagName === 'FORM' && (t as HTMLElement).dataset?.noopSubmit === '1') {
+      e.preventDefault();
+    }
+  });
+
   // ── Round 58c: INJECT CSS for hover effects ───────
   // Thay cho onmouseover/out inline tren cac element
   if (!document.getElementById('global-hover-css')) {
