@@ -390,8 +390,8 @@ function renderMembersKPI(members) {
   const entries = Object.entries(members || {});
   const total = entries.length;
 
-  // Limit hiển thị 4 người đầu trong KPI card (compact)
-  const display = entries.slice(0, 4);
+  // R123: hiển thị tất cả members, scroll khi vượt 2 hàng (avoid card cao bất thường)
+  const display = entries;
 
   const rolesShort = {
     'Sinh viên đại học': 'SV ĐH',
@@ -452,7 +452,7 @@ function renderMembersKPI(members) {
       <h3 style="margin:0;font-size:15px;font-weight:700;color:#344767;letter-spacing:-0.01em">Thành viên lab</h3>
       <span style="font-size:11px;color:#64748b;font-weight:500">${total} người</span>
     </div>
-    ${rowsHTML}
+    <div class="dash-scroll" style="max-height:104px;overflow-y:auto;padding-right:4px">${rowsHTML}</div>
   `;
 }
 
