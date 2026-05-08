@@ -9,6 +9,22 @@
 // ── Chuyen trang ───────────────────────────────────────
 // id: ten page (vd 'dashboard', 'hydro', 'chemicals'); el: sidebar item duoc click
 export function showPage(id: string, el?: HTMLElement | null): void {
+  // R121 fix Bug A: reset header search box state khi navigate.
+  // Tránh case: user gõ search → click result → navigate, nhưng box ở trạng
+  // thái expand vì input value còn → mouseleave check value → skip collapse.
+  const _hsBox = document.getElementById('header-search-box');
+  const _hsInput = document.getElementById('header-search-input') as HTMLInputElement | null;
+  if (_hsBox && _hsInput) {
+    _hsInput.value = '';
+    _hsInput.blur();
+    _hsBox.style.width = '40px';
+    _hsBox.style.borderColor = '#e2e8f0';
+    _hsBox.style.borderRadius = '50%';
+    _hsInput.style.width = '0';
+    _hsInput.style.padding = '0';
+    const dd = document.getElementById('header-search-dropdown');
+    if (dd) { dd.style.display = 'none'; dd.innerHTML = ''; }
+  }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
   const _pg = document.getElementById('page-' + id);

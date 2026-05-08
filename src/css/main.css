@@ -455,6 +455,16 @@ code, .mono, pre { font-family: 'Inter', sans-serif !important; }
   .member-card {
     @apply bg-surface border border-border rounded-lab-lg p-4 cursor-pointer;
     transition: all 0.2s; box-shadow: var(--shadow);
+    /* R121 fix Bug C: flex column + height đầy ô grid để nút Xóa luôn ở dưới */
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  /* Nút Xóa luôn ở dưới — đẩy bằng margin-top:auto trên chính nó (xem .member-del-btn). 
+     Hoặc nếu render cấu trúc thay đổi, fallback: spacer trống ở giữa */
+  .member-card .member-del-btn {
+    margin-top: auto;
+    align-self: flex-end;
   }
   .member-card:hover {
     border-color: var(--teal-3); transform: translateY(-2px);

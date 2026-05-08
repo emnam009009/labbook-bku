@@ -57,7 +57,7 @@ export function renderInk(): void {
     const safeCode = escapeHtml(r.code || '');
     const safeCodeJs = escapeJs(r.code || '');
 
-    return '<tr class="clickable-row" style="vertical-align:middle"' + (!r.locked ? ' data-ink-action="edit-ink" data-ink-key="' + safeKey + '"' : '') + ' title="' + (!r.locked ? 'Nhấn để sửa' : 'Đã khóa') + '">' +
+    return '<tr class="clickable-row" data-key="' + safeKey + '" style="vertical-align:middle"' + (!r.locked ? ' data-ink-action="edit-ink" data-ink-key="' + safeKey + '"' : '') + ' title="' + (!r.locked ? 'Nhấn để sửa' : 'Đã khóa') + '">' +
       '<td data-ink-action="stop"><strong style="font-family:\'Courier New\',monospace;font-size:14px;cursor:pointer;color:var(--blue2)" data-ink-action="show-image" data-ink-key="' + safeKey + '">' + safeCode + '</strong></td>' +
       '<td style="text-align:center">' + nameCell + '</td>' +
       '<td style="text-align:center"><span class="tag">' + formatChemical(escapeHtml(r.material || '')) + '</span></td>' +

@@ -135,6 +135,56 @@ async function updateSlotStatus(
   });
 }
 
+/**
+ * R120: Reserve slot mới khi reschedule/resize, exclude bookingKey hiện tại
+ * (để không tự conflict với chính mình nếu cùng equipment+date).
+ *
+ * Trả về:
+ *  - { ok: true } nếu reserved thành công (slot cũ vẫn còn nếu cùng date —
+ *    caller phải release riêng nếu cần)
+ *  - { ok: false, conflict } nếu trùng với booking khác
+ *
+ * Khi cùng equipment+date (chỉ đổi giờ): operation là "remove old + add new"
+ * trong cùng 1 transaction. Khi đổi date: chỉ add slot mới ở date mới
+ * (slot cũ ở date cũ phải release riêng).
+ */
+async function tryReserveSlotForUpdate(
+  equipmentKey: string,
+  oldDate: string,
+  newDate: string,
+  newStart: string,
+  newEnd: string,
+  bookingKey: string
+): Promise<{ ok: boolean; conflict?: LockSlot }> {
+  const newLockKey = _lockPath(equipmentKey, newDate);
+  const ACTIVE = ['pending', 'approved', 'in-use'];
+  let conflictSlot: LockSlot | null = null;
+
+  const result = await runTransaction(ref(db, newLockKey), (current: LockData | null) => {
+    const data: LockData = current || {};
+    const slots: LockSlot[] = Array.isArray(data.slots) ? data.slots.slice() : [];
+    const out: LockSlot[] = [];
+    for (const s of slots) {
+      if (!s) continue;
+      // Cùng date: bỏ slot cũ của booking này (sẽ thay bằng slot mới ở dưới)
+      if (oldDate === newDate && s.bookingKey === bookingKey) continue;
+      // Check overlap với slot active khác
+      if (ACTIVE.includes(s.status) && _slotsOverlap(s, newStart, newEnd)) {
+        conflictSlot = s;
+        return undefined; // abort
+      }
+      out.push(s);
+    }
+    out.push({ start: newStart, end: newEnd, bookingKey, status: 'pending' });
+    return { slots: out };
+  });
+
+  if (!result.committed || conflictSlot) {
+    return { ok: false, conflict: conflictSlot || undefined };
+  }
+  return { ok: true };
+}
+
 // ═══════════════════════════════════════════════════
 // RENDER LIST
 // ═══════════════════════════════════════════════════
@@ -283,7 +333,7 @@ function renderRow(r) {
     actions += `<button class="del-btn" data-action="delete-booking" data-key="${r._key}" title="Xóa cứng" style="margin-left:4px"><svg class="w-4 h-4 fill-none stroke-white" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" stroke-linejoin="round" stroke-linecap="round"></path></svg></button>`;
   }
   
-  return `<tr>
+  return `<tr data-key="${r._key}">
     <td><strong style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--text)">${escapeHtml(r.code || '')}</strong></td>
     <td>${escapeHtml(r.userName || '')}</td>
     <td>${escapeHtml(r.equipmentName || '')}</td>
@@ -1421,13 +1471,46 @@ window.calOnDrop = async function(e, newIso) {
     }
   }
   
+  // R120: atomic reserve slot mới (exclude self). Nếu user đã chọn override
+  // conflict ở trên thì vẫn pass (vì _slotsOverlap chỉ trả conflict nếu CÒN
+  // booking active khác). Atomic chống race với user concurrent thứ 3.
+  try {
+    const reserveResult = await tryReserveSlotForUpdate(
+      b.equipmentKey, b.date, newIso, newStartTime, newEndTime, key
+    );
+    if (!reserveResult.ok) {
+      const c2 = reserveResult.conflict;
+      const msg = c2
+        ? `Trùng lịch (server): có booking khác ở ${c2.start}-${c2.end}. Đã hủy.`
+        : 'Trùng lịch — có người vừa đặt cùng giờ. Đã hủy.';
+      window.showToast?.(msg, 'danger');
+      renderCalendar();
+      return;
+    }
+  } catch (err) {
+    console.error('reschedule reserve failed:', err);
+    window.showToast?.('Lỗi: ' + (err?.message || err), 'danger');
+    renderCalendar();
+    return;
+  }
+
   try {
     const updates = { date: newIso, startTime: newStartTime, endTime: newEndTime };
     if (b.status === 'approved') updates.status = 'pending';
     await update(ref(db, `bookings/${key}`), updates);
+    // R120: nếu đổi date → release slot cũ ở date cũ (slot mới đã được
+    // reserve ở tryReserveSlotForUpdate trên — nếu cùng date thì old slot
+    // đã được merge trong cùng transaction, không cần release thêm)
+    if (newIso !== b.date) {
+      try { await updateSlotStatus(b.equipmentKey, b.date, key, 'cancelled'); }
+      catch (e) { console.warn('[reschedule] release old slot failed', e); }
+    }
     window.showToast?.(`Đã chuyển ${dateChanged ? 'sang ' + formatDate(newIso) : ''}${timeChanged ? ' ' + newStartTime + '-' + newEndTime : ''}`.trim(), 'success');
   } catch (err) {
     console.error('drag drop update error:', err);
+    // Rollback slot mới đã reserve
+    try { await updateSlotStatus(b.equipmentKey, newIso, key, 'cancelled'); }
+    catch (rollbackErr) { console.warn('[reschedule] lock rollback failed', rollbackErr); }
     window.showToast?.('Lỗi: ' + err.message, 'danger');
     renderCalendar();
   }
@@ -1661,6 +1744,27 @@ async function dayOnResizeEnd(e) {
     }
   }
   
+  // R120: atomic reserve slot mới (cùng date, exclude self)
+  try {
+    const reserveResult = await tryReserveSlotForUpdate(
+      b.equipmentKey, b.date, b.date, newStartTime, newEndTime, state.key
+    );
+    if (!reserveResult.ok) {
+      const c2 = reserveResult.conflict;
+      const msg = c2
+        ? `Trùng lịch (server): có booking khác ở ${c2.start}-${c2.end}. Đã hủy.`
+        : 'Trùng lịch — có người vừa đặt cùng giờ. Đã hủy.';
+      window.showToast?.(msg, 'danger');
+      renderCalendar();
+      return;
+    }
+  } catch (err) {
+    console.error('resize reserve failed:', err);
+    window.showToast?.('Lỗi: ' + (err?.message || err), 'danger');
+    renderCalendar();
+    return;
+  }
+
   try {
     const updates = {};
     if (startChanged) updates.startTime = newStartTime;
@@ -1671,6 +1775,9 @@ async function dayOnResizeEnd(e) {
     window.showToast?.(`Đã đổi ${edgeLabel} thành ${newValue}`, 'success');
   } catch (err) {
     console.error('resize update error:', err);
+    // R120: rollback slot — restore về giờ cũ trong lock
+    try { await updateSlotStatus(b.equipmentKey, b.date, state.key, 'cancelled'); }
+    catch (rollbackErr) { console.warn('[resize] lock rollback failed', rollbackErr); }
     window.showToast?.('Lỗi: ' + err.message, 'danger');
     renderCalendar();
   }

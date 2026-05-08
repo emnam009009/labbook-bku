@@ -124,14 +124,11 @@
       ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'member' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')"
     },
     "notifications": {
-      "$uid": {
-        ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')",
-        ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin' || root.child('users').child(auth.uid).child('role').val() === 'member')",
-        ".indexOn": [
-          "ts",
-          "read"
-        ]
-      }
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() !== 'pending' && root.child('users').child(auth.uid).child('role').val() !== 'rejected'",
+      ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'member' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')",
+      ".indexOn": [
+        "createdAt"
+      ]
     },
     "history": {
       ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')",
