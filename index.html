@@ -1760,6 +1760,12 @@
   <aside id="ai-chat-sidetab" class="ai-sidetab" aria-hidden="true"
          aria-label="AI Chat">
 
+    <!-- R126: drag handle ở mép trái để resize sidetab. Position absolute
+         left:0 (so với sidetab) — pointer-events nhận drag, JS gắn mousedown
+         trong global-delegation. -->
+    <div class="ai-sidetab__resizer" role="separator" aria-orientation="vertical"
+         aria-label="Kéo để thay đổi độ rộng" tabindex="0"></div>
+
     <!-- Header -->
     <div class="ai-sidetab__header">
       <div class="ai-sidetab__title">

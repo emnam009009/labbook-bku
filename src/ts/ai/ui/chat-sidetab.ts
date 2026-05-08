@@ -338,6 +338,119 @@ function initFabDrag(): void {
 }
 
 // ════════════════════════════════════════════════════════════
+// R126: Resize sidetab bằng kéo mép trái
+// ════════════════════════════════════════════════════════════
+
+const SIDETAB_WIDTH_KEY = "ai-chat-sidetab-width";
+const SIDETAB_MIN_WIDTH = 320;
+const SIDETAB_MAX_WIDTH_RATIO = 0.85; // tối đa 85% viewport
+
+function getSidetabMaxWidth(): number {
+  return Math.max(SIDETAB_MIN_WIDTH, Math.floor(window.innerWidth * SIDETAB_MAX_WIDTH_RATIO));
+}
+
+function clampSidetabWidth(w: number): number {
+  return Math.max(SIDETAB_MIN_WIDTH, Math.min(getSidetabMaxWidth(), Math.round(w)));
+}
+
+function loadSidetabWidth(): number | null {
+  try {
+    const raw = localStorage.getItem(SIDETAB_WIDTH_KEY);
+    if (!raw) return null;
+    const n = parseInt(raw, 10);
+    if (!Number.isFinite(n) || n < SIDETAB_MIN_WIDTH) return null;
+    return n;
+  } catch { return null; }
+}
+
+function saveSidetabWidth(w: number): void {
+  try { localStorage.setItem(SIDETAB_WIDTH_KEY, String(w)); } catch { /* localStorage disabled */ }
+}
+
+function applySidetabWidth(w: number): void {
+  // Sửa CSS var trên :root → .ai-sidetab dùng var(--ai-sidetab-width)
+  document.documentElement.style.setProperty("--ai-sidetab-width", w + "px");
+}
+
+function initSidetabResize(): void {
+  // Restore width đã lưu (nếu có)
+  const saved = loadSidetabWidth();
+  if (saved !== null) applySidetabWidth(clampSidetabWidth(saved));
+
+  const sidetab = document.getElementById(SIDETAB_ID);
+  if (!sidetab) return;
+  const handle = sidetab.querySelector<HTMLElement>(".ai-sidetab__resizer");
+  if (!handle) return;
+
+  let isResizing = false;
+  let startX = 0;
+  let startWidth = 0;
+
+  const onMove = (e: PointerEvent) => {
+    if (!isResizing) return;
+    // Sidetab fixed bên phải → kéo qua trái thì width tăng
+    // dx = startX - currentX (nếu kéo trái, currentX < startX → dx > 0)
+    const dx = startX - e.clientX;
+    const newW = clampSidetabWidth(startWidth + dx);
+    applySidetabWidth(newW);
+  };
+
+  const onUp = () => {
+    if (!isResizing) return;
+    isResizing = false;
+    handle.classList.remove("is-resizing");
+    document.body.classList.remove("ai-sidetab-resizing");
+    window.removeEventListener("pointermove", onMove);
+    window.removeEventListener("pointerup", onUp);
+    window.removeEventListener("pointercancel", onUp);
+
+    // Persist current width
+    const cs = getComputedStyle(sidetab);
+    const w = parseFloat(cs.width);
+    if (Number.isFinite(w)) saveSidetabWidth(Math.round(w));
+  };
+
+  handle.addEventListener("pointerdown", (e: PointerEvent) => {
+    // Chỉ phím trái mouse (button=0) hoặc touch/pen
+    if (e.button !== 0 && e.pointerType === "mouse") return;
+    e.preventDefault();
+    isResizing = true;
+    startX = e.clientX;
+    const cs = getComputedStyle(sidetab);
+    startWidth = parseFloat(cs.width) || SIDETAB_MIN_WIDTH;
+    handle.classList.add("is-resizing");
+    document.body.classList.add("ai-sidetab-resizing");
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+  });
+
+  // Keyboard accessibility: arrow keys khi handle có focus
+  handle.addEventListener("keydown", (e: KeyboardEvent) => {
+    const STEP = e.shiftKey ? 50 : 16;
+    let delta = 0;
+    if (e.key === "ArrowLeft") delta = STEP;   // mở rộng
+    else if (e.key === "ArrowRight") delta = -STEP; // thu hẹp
+    else return;
+    e.preventDefault();
+    const cs = getComputedStyle(sidetab);
+    const cur = parseFloat(cs.width) || SIDETAB_MIN_WIDTH;
+    const newW = clampSidetabWidth(cur + delta);
+    applySidetabWidth(newW);
+    saveSidetabWidth(newW);
+  });
+
+  // Re-clamp khi window resize (tránh sidetab to hơn viewport)
+  window.addEventListener("resize", () => {
+    const cs = getComputedStyle(sidetab);
+    const cur = parseFloat(cs.width);
+    if (!Number.isFinite(cur)) return;
+    const clamped = clampSidetabWidth(cur);
+    if (clamped !== Math.round(cur)) applySidetabWidth(clamped);
+  });
+}
+
+// ════════════════════════════════════════════════════════════
 // Init (Round 108 — main entry, gọi từ main.ts)
 // ════════════════════════════════════════════════════════════
 
@@ -396,6 +509,7 @@ function completeInit(): void {
 
   updateSendButtonState();
   initFabDrag();
+  initSidetabResize();
 
   // Round 109: init conversation list
   initConversationList();

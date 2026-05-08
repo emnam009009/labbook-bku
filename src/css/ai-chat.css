@@ -1274,3 +1274,54 @@ pre:hover .ai-code-copy {
 .ai-confirm-card__result--success { background: rgba(16, 185, 129, 0.1); color: #047857; }
 .ai-confirm-card__result--error { background: rgba(239, 68, 68, 0.1); color: #b91c1c; }
 .ai-confirm-card__result--cancelled { background: rgba(148, 163, 184, 0.1); color: #64748b; }
+
+/* ══════════════════════════════════════════════════════════
+   R126: Sidetab resizer — kéo mép trái để thay đổi độ rộng
+   ══════════════════════════════════════════════════════════ */
+.ai-sidetab__resizer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: ew-resize;
+  background: transparent;
+  z-index: 10;
+  transition: background 0.15s ease;
+}
+.ai-sidetab__resizer::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 32px;
+  border-radius: 1px;
+  background: var(--ai-border);
+  transition: background 0.15s ease;
+  opacity: 0.5;
+}
+.ai-sidetab__resizer:hover {
+  background: rgba(6, 182, 212, 0.06);
+}
+.ai-sidetab__resizer:hover::after,
+.ai-sidetab__resizer.is-resizing::after {
+  background: var(--ai-cyan);
+  opacity: 1;
+}
+
+/* Khi đang resize: disable transition để feedback tức thời + dim text selection */
+body.ai-sidetab-resizing,
+body.ai-sidetab-resizing * {
+  cursor: ew-resize !important;
+  user-select: none !important;
+}
+body.ai-sidetab-resizing .ai-sidetab {
+  transition: none !important;
+}
+
+/* Mobile: ẩn resizer (touch experience kém + sidetab chiếm hết width) */
+@media (max-width: 480px) {
+  .ai-sidetab__resizer { display: none; }
+}
