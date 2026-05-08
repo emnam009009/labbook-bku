@@ -33,6 +33,22 @@
 
 import { db, ref, update } from '../firebase.js'
 
+// ── Bug 12 fix R118: validate image trước khi đọc base64 ─────────
+// Tránh user upload ảnh huge (10MB+) → encode base64 ~13MB → bloat RTDB
+// Spark plan: 1GB DB total, mỗi ảnh nội bộ chỉ cần 200-500KB là đủ.
+const MAX_IMAGE_BYTES = 800 * 1024;  // 800KB raw → ~1.1MB base64 sau encode
+
+function validateImageFile(file: File | null | undefined): string | null {
+  if (!file) return 'Chưa chọn file';
+  if (!file.type || !file.type.startsWith('image/')) {
+    return 'Chỉ chấp nhận file ảnh (jpg, png, webp...)';
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    return `Ảnh quá lớn (${(file.size / 1024).toFixed(0)} KB). Tối đa ${(MAX_IMAGE_BYTES / 1024).toFixed(0)} KB.`;
+  }
+  return null;  // OK
+}
+
 // ── Module-level state (3 cái — chỉ dùng trong module này) ──
 let currentInkImageKey = null;
 let currentElectrodeImageKey = null;
@@ -99,6 +115,9 @@ function processInkImage(file) {
 
   const r = cache.ink[currentInkImageKey];
   if (r?.locked && !isAdmin) { showToast('Công thức đã khóa!'); return; }
+  // Bug 12 fix R118: validate size + type trước khi đọc base64
+  const err = validateImageFile(file);
+  if (err) { showToast(err, 'danger'); return; }
   const reader = new FileReader();
   reader.onload = async (e) => {
     const imageData = e.target.result;
@@ -192,6 +211,9 @@ function processElectrodeImage(file) {
 
   const r = cache.electrode[currentElectrodeImageKey];
   if (r?.locked && !isAdmin) { showToast('Điện cực đã khóa!'); return; }
+  // Bug 12 fix R118: validate
+  const err = validateImageFile(file);
+  if (err) { showToast(err, 'danger'); return; }
   const reader = new FileReader();
   reader.onload = async (e) => {
     const imageData = e.target.result;
@@ -285,6 +307,9 @@ function processHydroImage(file) {
 
   const r = cache.hydro[currentHydroImageKey];
   if (r?.locked && !isAdmin) { showToast('Thí nghiệm đã khóa!'); return; }
+  // Bug 12 fix R118: validate
+  const err = validateImageFile(file);
+  if (err) { showToast(err, 'danger'); return; }
   const reader = new FileReader();
   reader.onload = async (e) => {
     const imageData = e.target.result;
@@ -362,7 +387,9 @@ export async function dropImageToCell(col, key, file) {
   const showToast = window.showToast;
 
   if (!isAdmin) return;
-  if (!file || !file.type.startsWith('image/')) return;
+  // Bug 12 fix R118: validate
+  const err = validateImageFile(file);
+  if (err) { showToast(err, 'danger'); return; }
   const reader = new FileReader();
   reader.onload = async (e) => {
     await update(ref(db, col + '/' + key), { image: e.target.result });
@@ -378,6 +405,9 @@ export async function uploadChemicalImage(input) {
   if (!isAdmin) return;
   const file = input.files[0];
   if (!file) return;
+  // Bug 12 fix R118: validate
+  const err = validateImageFile(file);
+  if (err) { showToast(err, 'danger'); return; }
   const reader = new FileReader();
   reader.onload = async (e) => {
     const base64 = e.target.result;
@@ -436,6 +466,10 @@ export async function deleteChemicalImage() {
 export function previewEquipmentImage(input) {
   const file = input.files[0];
   if (!file) return;
+  // Bug 12 fix R118: validate
+  const showToast = window.showToast;
+  const err = validateImageFile(file);
+  if (err) { showToast?.(err, 'danger'); return; }
   const reader = new FileReader();
   reader.onload = function(e) {
     window.__eqImageBase64 = e.target.result;
@@ -453,7 +487,9 @@ export async function dropEquipmentImageToCell(col, key, file) {
   const showToast = window.showToast;
 
   if (!isAdmin) return;
-  if (!file || !file.type.startsWith('image/')) return;
+  // Bug 12 fix R118: validate
+  const err = validateImageFile(file);
+  if (err) { showToast(err, 'danger'); return; }
   const reader = new FileReader();
   reader.onload = async (e) => {
     await update(ref(db, col + '/' + key), { image: e.target.result });

@@ -20,7 +20,7 @@
 // @ts-nocheck
 
 
-import { db, ref, update, fbPush, fbGet } from '../firebase.js'
+import { db, ref, update, fbPush, fbGet, incrementStock } from '../firebase.js'
 import { vals } from '../utils/format.js'
 import { getPersonName } from '../utils/auth-helpers.js'
 import { logHistory } from './history-log.js'
@@ -128,9 +128,9 @@ export async function saveHydro() {
 
     if (editKey) {
       await update(ref(db, `hydro/${editKey}`), r);
-      await Promise.all(stockUpdates.map(u =>
-        update(ref(db, `chemicals/${u.key}`), { stock: u.newStock })
-      ));
+      // Bug 10 fix R118: incrementStock dùng runTransaction, atomic ở server
+      // (cũ: đọc cache + tính newStock + write → race khi 2 user concurrent)
+      await Promise.all(stockUpdates.map(u => incrementStock(u.key, u.delta, 3)));
       stockUpdates.forEach(u => {
         const sign = u.delta >= 0 ? '-' : '+';
         logHistory(`${u.delta >= 0 ? 'Trừ' : 'Hoàn'} tồn kho: ${u.name}`, `${sign}${Math.abs(u.delta)}${u.unit} (TN: ${r.code})`);
@@ -148,9 +148,8 @@ export async function saveHydro() {
 
     // New record path
     await fbPush('hydro', r);
-    await Promise.all(stockUpdates.map(u =>
-      update(ref(db, `chemicals/${u.key}`), { stock: u.newStock })
-    ));
+    // Bug 10 fix R118: atomic stock update via runTransaction
+    await Promise.all(stockUpdates.map(u => incrementStock(u.key, u.delta, 3)));
     stockUpdates.forEach(u => {
       logHistory(`Trừ tồn kho: ${u.name}`, `-${u.delta}${u.unit} (TN: ${r.code})`);
     });
@@ -266,9 +265,8 @@ export async function saveElectrode() {
 
     if (editKeyE) {
       await update(ref(db, `electrode/${editKeyE}`), r);
-      await Promise.all(stockUpdates.map(u =>
-        update(ref(db, `chemicals/${u.key}`), { stock: u.newStock })
-      ));
+      // Bug 10 fix R118: atomic stock update via runTransaction
+      await Promise.all(stockUpdates.map(u => incrementStock(u.key, u.delta, 5)));
       stockUpdates.forEach(u => {
         const sign = u.delta >= 0 ? '-' : '+';
         logHistory(`${u.delta >= 0 ? 'Trừ' : 'Hoàn'} tồn kho: ${u.name}`, `${sign}${Math.abs(u.delta)}${u.unit} (ĐC: ${r.code})`);
@@ -280,9 +278,8 @@ export async function saveElectrode() {
     }
 
     await fbPush('electrode', r);
-    await Promise.all(stockUpdates.map(u =>
-      update(ref(db, `chemicals/${u.key}`), { stock: u.newStock })
-    ));
+    // Bug 10 fix R118: atomic stock update via runTransaction
+    await Promise.all(stockUpdates.map(u => incrementStock(u.key, u.delta, 5)));
     stockUpdates.forEach(u => {
       logHistory(`Trừ tồn kho: ${u.name}`, `-${u.delta}${u.unit} (ĐC: ${r.code})`);
     });

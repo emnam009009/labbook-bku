@@ -30,7 +30,7 @@ import { canEdit, getPersonName } from '../utils/auth-helpers.js'
 import { vals } from '../utils/format.js'
 import { logHistory as logHistoryRaw } from './history-log.js'
 const logHistory = logHistoryRaw as any
-import { db, ref, update, onValue, fbDel, fbPush, fbGet } from '../firebase.js'
+import { db, ref, update, onValue, fbDel, fbPush, fbGet, incrementStock } from '../firebase.js'
 
 
 // ═══════════════════════════════════════════════════════════
@@ -83,10 +83,17 @@ export async function delItem(col: string, key: string, name: string): Promise<v
         for (const uc of item.usedChems) {
           const cur = cache.chemicals[uc.key];
           if (cur && uc.mass) {
-            const newStock = parseFloat((parseFloat(cur.stock || 0) + parseFloat(uc.mass)).toFixed(3));
-            await update(ref(db, `chemicals/${uc.key}`), { stock: newStock });
-            stockChanges.push({ chemKey: uc.key, delta: parseFloat(uc.mass) });
-            logHistory(`Hoàn tồn kho: ${cur.name}`, `+${uc.mass}${cur.unit || 'g'} (Xóa TN: ${name})`);
+            const mass = parseFloat(uc.mass);
+            // Bug 11 fix R118: atomic refund (delta âm = +stock)
+            try {
+              await incrementStock(uc.key, -mass, 3);
+              stockChanges.push({ chemKey: uc.key, delta: mass });
+              logHistory(`Hoàn tồn kho: ${cur.name}`, `+${uc.mass}${cur.unit || 'g'} (Xóa TN: ${name})`);
+            } catch (e) {
+              console.warn('[delItem] refund stock failed', uc.key, e);
+              // Không break: tiếp tục xóa các chemical khác. Stock đã refund sẽ
+              // được track trong stockChanges để undo có thể reverse.
+            }
           }
         }
       }
@@ -99,10 +106,15 @@ export async function delItem(col: string, key: string, name: string): Promise<v
         for (const uc of item.usedInkChems) {
           const cur = cache.chemicals[uc.key];
           if (cur && uc.mass) {
-            const newStock = parseFloat((parseFloat(cur.stock || 0) + parseFloat(uc.mass)).toFixed(5));
-            await update(ref(db, `chemicals/${uc.key}`), { stock: newStock });
-            stockChanges.push({ chemKey: uc.key, delta: parseFloat(uc.mass) });
-            logHistory(`Hoàn tồn kho: ${cur.name}`, `+${uc.mass}${uc.unit || 'g'} (Xóa ĐC: ${name})`);
+            const mass = parseFloat(uc.mass);
+            // Bug 11 fix R118: atomic refund
+            try {
+              await incrementStock(uc.key, -mass, 5);
+              stockChanges.push({ chemKey: uc.key, delta: mass });
+              logHistory(`Hoàn tồn kho: ${cur.name}`, `+${uc.mass}${uc.unit || 'g'} (Xóa ĐC: ${name})`);
+            } catch (e) {
+              console.warn('[delItem] refund stock failed', uc.key, e);
+            }
           }
         }
       }
@@ -116,12 +128,12 @@ export async function delItem(col: string, key: string, name: string): Promise<v
       try {
         delete backup._key;
         await update(ref(db, `${col}/${key}`), backup);
-        // Reverse stock changes - re-deduct what we added back
+        // Bug 11 fix R118: reverse refund atomic (re-deduct mass)
         for (const sc of stockChanges) {
-          const cur = cache.chemicals[sc.chemKey];
-          if (cur) {
-            const restoredStock = parseFloat((parseFloat(cur.stock || 0) - sc.delta).toFixed(5));
-            await update(ref(db, `chemicals/${sc.chemKey}`), { stock: restoredStock });
+          try {
+            await incrementStock(sc.chemKey, sc.delta, 5);
+          } catch (e) {
+            console.warn('[delItem undo] reverse refund failed', sc.chemKey, e);
           }
         }
         logHistory(`Hoàn tác xóa ${col}: ${name}`, '');

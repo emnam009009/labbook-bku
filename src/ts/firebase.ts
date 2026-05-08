@@ -14,6 +14,7 @@ import {
   onDisconnect, serverTimestamp,
   query, orderByChild, limitToLast, limitToFirst, startAt, endAt, equalTo,
   connectDatabaseEmulator,
+  runTransaction,
 } from 'firebase/database'
 import {
   getStorage,
@@ -67,6 +68,7 @@ export {
   ref, set, push, onValue, remove, update, onDisconnect, serverTimestamp,
   stRef, uploadBytesResumable, getDownloadURL, deleteObject, getBytes,
   query, orderByChild, limitToLast, limitToFirst, startAt, endAt, equalTo,
+  runTransaction,
   signInWithEmailAndPassword, signOut, onAuthStateChanged,
   updatePassword, EmailAuthProvider, reauthenticateWithCredential,
   browserLocalPersistence, setPersistence,
@@ -139,4 +141,40 @@ export function logHistory(action: string, detail: string = ''): Promise<any> {
     // Khong throw len tren — log that bai khong nen break flow chinh
     return null
   })
+}
+
+// ── Stock atomic update (Bug 10/11 fix R118) ─────────────────────
+// Dùng runTransaction để read-modify-write atomic ở server, tránh race
+// khi 2 user concurrent saveHydro/saveElectrode/delItem cùng hóa chất.
+//
+// delta > 0: trừ kho (consume)
+// delta < 0: hoàn kho (refund)
+//
+// Returns the final stock value after the increment, hoặc null nếu fail.
+// Caller có thể kiểm tra giá trị âm để cảnh báo.
+export async function incrementStock(
+  chemKey: string,
+  delta: number,
+  precision: number = 5
+): Promise<number | null> {
+  if (!chemKey || !isFinite(delta) || delta === 0) return null
+  const stockRef = ref(db, `chemicals/${chemKey}/stock`)
+  try {
+    const result = await runTransaction(stockRef, (current: any) => {
+      const cur = parseFloat(current || 0)
+      // Nếu chemicals/{key}/stock chưa tồn tại (current=null), Firebase vẫn
+      // chạy transaction với current=null. Trả về delta thì sẽ tạo node.
+      // Nhưng để an toàn, chỉ update khi node đã có (caller đã verify).
+      if (current == null) return current  // abort: don't create stock from nothing
+      const next = parseFloat((cur - delta).toFixed(precision))
+      return next
+    })
+    if (result.committed && result.snapshot.exists()) {
+      return result.snapshot.val() as number
+    }
+    return null
+  } catch (err) {
+    console.error('[incrementStock]', chemKey, delta, err)
+    throw err
+  }
 }
