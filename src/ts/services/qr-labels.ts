@@ -158,9 +158,9 @@ async function buildLabelsPageHtml(records: LabelRecord[], type: string, config:
     </head>
     <body>
       <div class="qr-toolbar no-print">
-        <span style="font-size:13px;align-self:center;font-weight:600">${records.length} nhan QR</span>
+        <span style="font-size:13px;align-self:center;font-weight:600">${records.length} nhãn QR</span>
         <button onclick="window.print()">In</button>
-        <button onclick="window.close()">Dong</button>
+        <button onclick="window.close()">Đóng</button>
       </div>
       <div class="qr-page">
         ${labelsHtml.join('')}
@@ -287,10 +287,10 @@ export async function printBulkLabels(keys: string[], type: string, mode: string
 // ─── PUBLIC: Choice dialog ────────────────────────────────────────
 export function showLabelChoiceDialog(records: LabelRecord[], type: string): Promise<void> | undefined {
   const choice = window.prompt(
-    `Ban muon xu ly ${records.length} nhan QR nhu the nao?\n\n` +
-    `1 = In truc tiep (mo tab moi + Ctrl+P)\n` +
-    `2 = Tai PDF ve may\n\n` +
-    `Nhap 1 hoac 2:`,
+    `Bạn muốn xử lý ${records.length} nhãn QR như thế nào?\n\n` +
+    `1 = In trực tiếp (mở tab mới + Ctrl+P)\n` +
+    `2 = Tải PDF về máy\n\n` +
+    `Nhập 1 hoặc 2:`,
     '1'
   );
   if (choice === '1') {

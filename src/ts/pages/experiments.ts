@@ -253,8 +253,14 @@ function attachExpDelegation(tbodyId) {
         e.stopPropagation();
         if (typeof window.showElectrodeImage === 'function') window.showElectrodeImage(key);
         break;
-      case 'exp-actions-menu':
+      case 'exp-actions-menu': {
         e.stopPropagation();
+        // R124 Bug E: chỉ admin/superadmin
+        const role = (window as any).currentAuth?.role;
+        if (role !== 'admin' && role !== 'superadmin') {
+          (window as any).showToast?.('Chức năng nhập/xuất dữ liệu chỉ dành cho admin', 'danger');
+          return;
+        }
         if (typeof window.openExpActionsMenu === 'function') {
           window.openExpActionsMenu(target, {
             refType: target.dataset.refType,
@@ -263,6 +269,7 @@ function attachExpDelegation(tbodyId) {
           });
         }
         break;
+      }
       case 'lock-item':
         e.stopPropagation();
         if (typeof window.lockItem === 'function') window.lockItem(col, key);

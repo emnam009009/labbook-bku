@@ -1299,6 +1299,15 @@ body.viewer-mode .empty-state-btn { display: none !important; }
 body.viewer-mode .empty-state-sub { display: none !important; }
 body.viewer-mode .empty-state-text::after { content: ' (Chưa có dữ liệu)'; }
 
+/* R124 Bug E: chỉ admin/superadmin có chức năng Nhập/xuất dữ liệu.
+   Ẩn trigger 3-line menu (data-action="exp-actions-menu") với role thấp. */
+body.member-mode [data-action="exp-actions-menu"],
+body.viewer-mode [data-action="exp-actions-menu"],
+body.pending-mode [data-action="exp-actions-menu"],
+body.rejected-mode [data-action="exp-actions-menu"] {
+  display: none !important;
+}
+
 /* ── Plus Button ─────────────────────────────────── */
 .plusButton {
   --plus_sideLength: 26px;

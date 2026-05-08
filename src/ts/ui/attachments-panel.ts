@@ -66,7 +66,8 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
           </select>
         </label>
         <label class="att-upload-btn">
-          <input type="file" class="att-file-input" multiple hidden />
+          <input type="file" class="att-file-input" multiple
+                 style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0" />
           <span>Chọn file</span>
         </label>
         <button type="button" class="btn btn-sm att-overview-btn" data-action="open-overview"
@@ -657,6 +658,22 @@ export function mountAttachmentsPanel(container, { refType, refId }) {
     handleFiles(e.target.files);
     e.target.value = ''; // allow re-uploading same file
   });
+
+  // R124 Bug F: explicit click handler trên label "Chọn file" để fallback
+  // nếu native <label>↔<input> association không trigger được file picker
+  // trong một số browser (đặc biệt khi input bị hidden hoặc CSP strict).
+  const uploadBtn = panel.querySelector('.att-upload-btn');
+  if (uploadBtn) {
+    uploadBtn.addEventListener('click', (e) => {
+      // Chỉ trigger nếu click vào label/span, không phải input bên trong
+      // (tránh double-fire khi label tự động delegate vào input).
+      const t = e.target as HTMLElement;
+      if (t.tagName === 'INPUT') return;
+      e.preventDefault();
+      e.stopPropagation();
+      (fileInput as HTMLInputElement).click();
+    });
+  }
 
   // Drag & drop — Round 90: drop trong empty state (upload moi) HOAC
   // preview state (thay the file dang preview). Cancel drop chi khi
