@@ -230,6 +230,28 @@ export const geminiClient: LlmClient = {
         })
       );
 
+      // Round 115b: Detect action drafts and embed marker trong stream
+      // để frontend render confirmation card inline
+      for (const tr of toolResults) {
+        if (
+          tr.result.ok &&
+          tr.result.result &&
+          typeof tr.result.result.type === "string" &&
+          tr.result.result.type.endsWith("-draft")
+        ) {
+          try {
+            const json = JSON.stringify(tr.result.result);
+            // btoa needs latin1 — encode UTF-8 first
+            const b64 = btoa(unescape(encodeURIComponent(json)));
+            const marker = `\n\n<!--AI_DRAFT:${b64}-->\n\n`;
+            allAccumulated += marker;
+            cb.onChunk(allAccumulated);
+          } catch (e) {
+            console.warn("[gemini-client] Failed to embed draft marker:", e);
+          }
+        }
+      }
+
       // Append tool results as user message
       contents.push({
         role: "user",

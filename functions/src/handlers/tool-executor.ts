@@ -22,7 +22,7 @@
 import { onRequest } from "firebase-functions/v2/https";
 import { logger } from "../utils/logger";
 import { verifyAuth, AuthError } from "../utils/auth";
-import { executeTool, TOOL_NAMES } from "../tools/registry";
+import { executeTool, TOOL_NAMES, ACTION_TOOL_NAMES } from "../tools/registry";
 
 export const toolExecutor = onRequest(
   {
@@ -54,12 +54,22 @@ export const toolExecutor = onRequest(
       return;
     }
 
-    // ── 1. Auth check (allow admin || superadmin) ──
+    // ── 1. Pre-check: action tools need superadmin ──
+    const earlyName = (req.body || {}).name as string | undefined;
+    const isActionTool =
+      typeof earlyName === "string" && ACTION_TOOL_NAMES.includes(earlyName);
+
     let auth;
     try {
-      auth =
-        (await verifyAuth(req, "admin").catch(() => null)) ??
-        (await verifyAuth(req, "superadmin"));
+      if (isActionTool) {
+        // Round 115a: Action tools require superadmin
+        auth = await verifyAuth(req, "superadmin");
+      } else {
+        // Read tools: admin OR superadmin
+        auth =
+          (await verifyAuth(req, "admin").catch(() => null)) ??
+          (await verifyAuth(req, "superadmin"));
+      }
     } catch (e) {
       const error = e as AuthError;
       res.status(error.statusCode || 500).json({
@@ -96,7 +106,7 @@ export const toolExecutor = onRequest(
 
     // ── 3. Execute tool ──
     const startTime = Date.now();
-    const result = await executeTool(name, args);
+    const result = await executeTool(name, args, { uid: auth.uid });
     const duration = Date.now() - startTime;
 
     logger.info("Tool executed", {

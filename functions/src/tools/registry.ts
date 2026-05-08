@@ -221,11 +221,13 @@ export function getGeminiToolDefinitions() {
 }
 
 /**
- * Execute a tool by name. Throws if tool not found.
+ * Execute a tool by name with caller context (uid for action tools).
+ * Throws if tool not found.
  */
 export async function executeTool(
   name: string,
-  args: any
+  args: any,
+  context: { uid: string } = { uid: "" }
 ): Promise<{ ok: boolean; result?: any; error?: string }> {
   const tool = TOOLS[name];
   if (!tool) {
@@ -233,7 +235,10 @@ export async function executeTool(
   }
 
   try {
-    const result = await tool.handler(args || {});
+    // Round 115a: action tools need uid for permission/audit
+    // Inject _uid into args (read tools ignore it)
+    const argsWithCtx = { ...(args || {}), _uid: context.uid };
+    const result = await tool.handler(argsWithCtx);
     return { ok: true, result };
   } catch (e: any) {
     return { ok: false, error: e?.message || String(e) };
@@ -241,3 +246,155 @@ export async function executeTool(
 }
 
 export const TOOL_NAMES = Object.keys(TOOLS);
+
+// ════════════════════════════════════════════════════════════
+// Round 115a: Action tools (write operations, superadmin only)
+// ════════════════════════════════════════════════════════════
+
+import {
+  createExperimentDraft,
+  updateChemicalStockDraft,
+  createBookingDraft,
+} from "./actions";
+
+// Tool definitions for action tools
+const ACTION_TOOLS_DEFS: Record<string, ToolDefinition> = {
+  createExperimentDraft: {
+    name: "createExperimentDraft",
+    description:
+      "Tạo DRAFT thí nghiệm mới (KHÔNG ghi DB ngay - tạo bản nháp để user xác nhận). " +
+      "Hỗ trợ 2 loại: 'hydro' (thủy nhiệt) và 'electrochem' (đo điện hóa). " +
+      "Dùng khi user muốn tạo, ghi sổ, lưu thí nghiệm mới. " +
+      "Tool trả về draft với mã code, fields đã parse - frontend show confirm dialog cho user.",
+    parameters: {
+      type: "object",
+      properties: {
+        category: {
+          type: "string",
+          enum: ["hydro", "electrochem"],
+          description: "Loại thí nghiệm: hydro (thủy nhiệt) hoặc electrochem (đo điện hóa)",
+        },
+        date: {
+          type: "string",
+          description: "Ngày thí nghiệm dạng YYYY-MM-DD. Default = hôm nay.",
+        },
+        person: {
+          type: "string",
+          description: "Tên người thực hiện. Default = current user.",
+        },
+        note: { type: "string", description: "Ghi chú (optional)" },
+        isSample: { type: "boolean", description: "Là mẫu test? Default false." },
+
+        // Hydro fields
+        material: { type: "string", description: "Vật liệu (cho hydro)" },
+        temp: { type: "number", description: "Nhiệt độ °C (cho hydro)" },
+        time: { type: "number", description: "Thời gian giữ (giờ, cho hydro)" },
+        rate: { type: "number", description: "Tốc độ gia nhiệt °C/min (hydro) hoặc scan rate (electrochem)" },
+        ph: { type: "number", description: "pH (cho hydro)" },
+        vol: { type: "number", description: "Thể tích mL (cho hydro)" },
+
+        // Electrochem fields
+        electrode: { type: "string", description: "Tên điện cực làm việc (cho electrochem)" },
+        ec_type: {
+          type: "string",
+          description: "Loại đo điện hóa: CV, LSV, CA, CP, EIS, GCD (cho electrochem)",
+        },
+        reaction: {
+          type: "string",
+          description: "Phản ứng: HER, OER, ORR, NRR, etc. (cho electrochem)",
+        },
+        electrolyte: { type: "string", description: "Dung dịch điện ly (cho electrochem)" },
+        re: { type: "string", description: "Reference electrode (cho electrochem)" },
+        ce: { type: "string", description: "Counter electrode (cho electrochem)" },
+        inst: { type: "string", description: "Thiết bị/máy đo (cho electrochem)" },
+        estart: { type: "string", description: "E start (V vs RE)" },
+        eend: { type: "string", description: "E end (V vs RE)" },
+        ir: { type: "string", description: "iR compensation (cho electrochem)" },
+      },
+      required: ["category"],
+    },
+    handler: async (args: any) => createExperimentDraft(args._uid, args),
+  },
+
+  updateChemicalStockDraft: {
+    name: "updateChemicalStockDraft",
+    description:
+      "Tạo DRAFT cập nhật tồn kho hóa chất (KHÔNG ghi DB ngay - bản nháp). " +
+      "Search hóa chất theo tên/CAS/công thức, tính giá trị mới (theo newStock tuyệt đối hoặc delta tương đối). " +
+      "Default update field 'stock' (lượng còn lại trong chai). Field 'qty' là số chai/lọ. " +
+      "Frontend show confirm dialog với old vs new value cho user xác nhận.",
+    parameters: {
+      type: "object",
+      properties: {
+        chemicalQuery: {
+          type: "string",
+          description: "Tên/CAS/công thức hóa chất cần update. Vd: 'NaCl', 'Thiourea'.",
+        },
+        newStock: {
+          type: "number",
+          description: "Giá trị tuyệt đối mới. Vd: 50 (g hoặc unit của chemical).",
+        },
+        delta: {
+          type: "number",
+          description: "Thay đổi tương đối. Vd: -100 (giảm 100), +50 (thêm 50).",
+        },
+        field: {
+          type: "string",
+          enum: ["stock", "qty"],
+          description:
+            "Field cần update: 'stock' (lượng trong 1 chai, default) hoặc 'qty' (số chai).",
+        },
+        reason: { type: "string", description: "Lý do cập nhật (optional)" },
+      },
+      required: ["chemicalQuery"],
+    },
+    handler: async (args: any) => updateChemicalStockDraft(args._uid, args),
+  },
+
+  createBookingDraft: {
+    name: "createBookingDraft",
+    description:
+      "Tạo DRAFT đặt lịch dùng thiết bị (KHÔNG ghi DB ngay - bản nháp). " +
+      "Search thiết bị theo tên, validate time format, trả về draft cho user xác nhận. " +
+      "Status mặc định 'pending'.",
+    parameters: {
+      type: "object",
+      properties: {
+        equipmentQuery: {
+          type: "string",
+          description: "Tên thiết bị cần đặt. Vd: 'SEM', 'Máy ly tâm', 'Autolab'.",
+        },
+        date: {
+          type: "string",
+          description: "Ngày đặt YYYY-MM-DD. Vd: '2026-05-08'.",
+        },
+        startTime: {
+          type: "string",
+          description: "Giờ bắt đầu HH:MM. Vd: '09:00'.",
+        },
+        endTime: {
+          type: "string",
+          description: "Giờ kết thúc HH:MM. Vd: '11:00'.",
+        },
+        purpose: {
+          type: "string",
+          description: "Mục đích sử dụng (optional)",
+        },
+      },
+      required: ["equipmentQuery", "date", "startTime", "endTime"],
+    },
+    handler: async (args: any) => createBookingDraft(args._uid, args),
+  },
+};
+
+// Action tool names — for permission check in tool-executor
+export const ACTION_TOOL_NAMES = Object.keys(ACTION_TOOLS_DEFS);
+
+// Add action tools to TOOLS registry
+Object.assign(TOOLS, ACTION_TOOLS_DEFS);
+
+// Round 115a2: Re-derive TOOL_NAMES after assign
+// (TOOL_NAMES exported above was computed BEFORE action tools were merged)
+// Workaround: mutate the array in place to include action tool names
+TOOL_NAMES.push(...ACTION_TOOL_NAMES.filter((n) => !TOOL_NAMES.includes(n)));
+

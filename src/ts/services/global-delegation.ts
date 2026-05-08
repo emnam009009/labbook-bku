@@ -218,6 +218,13 @@ export function attachGlobalDelegation() {
       case 'ai-msg-speak':
         if (typeof (window as any).onAiMsgSpeak === 'function') (window as any).onAiMsgSpeak(target);
         break;
+      // Round 115b: Action confirmation
+      case 'ai-confirm-action':
+        if (typeof (window as any).onConfirmAction === 'function') (window as any).onConfirmAction(target);
+        break;
+      case 'ai-cancel-action':
+        if (typeof (window as any).onCancelAction === 'function') (window as any).onCancelAction(target);
+        break;
     }
   });
 

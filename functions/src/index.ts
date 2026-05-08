@@ -32,3 +32,6 @@ export { pythonBridge } from "./handlers/python-bridge";
 
 // AI tool execution (Round 112+)
 export { toolExecutor } from "./handlers/tool-executor";  // Round 112+
+
+// Round 115a: AI action confirmation endpoint
+export { confirmAction } from "./handlers/confirm-action";

@@ -89,14 +89,49 @@ async function ensureHljs(): Promise<any> {
 export async function renderMarkdown(text: string): Promise<string> {
   await ensureLoaded();
 
-  // Parse markdown to HTML
-  const rawHtml = await _markedInstance.parse(text);
+  // Round 115d v4: Extract AI_DRAFT markers TRƯỚC khi render markdown.
+  // Card HTML self-generated từ confirmation-card.ts là trusted source.
+  // Dùng <span> placeholder (DOMPurify keeps spans + data-idx via ADD_ATTR)
+  // thay vì __FOO__ (markdown parse) hoặc HTML comment (DOMPurify strip).
+  const draftMarkers: string[] = [];
+  const textWithPlaceholders = text.replace(
+    /<!--AI_DRAFT:[A-Za-z0-9+/=]+-->/g,
+    (match) => {
+      const idx = draftMarkers.length;
+      draftMarkers.push(match);
+      return `<span class="aidr-ph" data-idx="${idx}"></span>`;
+    }
+  );
 
-  // Sanitize
-  const cleanHtml = _purify.sanitize(rawHtml, {
+  // Parse markdown to HTML
+  const rawHtml = await _markedInstance.parse(textWithPlaceholders);
+
+  // Sanitize (Round 115d v4: ADD data-idx for placeholder spans)
+  let cleanHtml = _purify.sanitize(rawHtml, {
     ADD_TAGS: ["math", "annotation", "semantics", "mrow", "mn", "mo", "mi", "msup", "msub", "mfrac", "msqrt", "mtable", "mtr", "mtd"],
-    ADD_ATTR: ["xmlns", "encoding", "display"],
+    ADD_ATTR: ["xmlns", "encoding", "display", "data-idx"],
   });
+
+  // Round 115d v4: Re-inject confirmation card HTML (trusted source).
+  if (draftMarkers.length > 0) {
+    const { preprocessDraftMarkers } = await import("./confirmation-card");
+    // Match span placeholder, accept whitespace/attribute order variations
+    cleanHtml = cleanHtml.replace(
+      /<span\s+[^>]*?class="aidr-ph"[^>]*?data-idx="(\d+)"[^>]*?><\/span>/g,
+      (_match, idx) => {
+        const marker = draftMarkers[parseInt(idx, 10)];
+        return preprocessDraftMarkers(marker);
+      }
+    );
+    // Also handle reversed attribute order (data-idx first, class second)
+    cleanHtml = cleanHtml.replace(
+      /<span\s+[^>]*?data-idx="(\d+)"[^>]*?class="aidr-ph"[^>]*?><\/span>/g,
+      (_match, idx) => {
+        const marker = draftMarkers[parseInt(idx, 10)];
+        return preprocessDraftMarkers(marker);
+      }
+    );
+  }
 
   return cleanHtml;
 }

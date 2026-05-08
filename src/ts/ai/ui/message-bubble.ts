@@ -9,6 +9,7 @@
 
 import { Message } from "../memory/conversation-store";
 import { renderMarkdown, highlightCodeBlocks, addCodeBlockCopyButtons } from "./markdown-render";
+import { preprocessDraftMarkers } from "./confirmation-card";
 
 const MESSAGES_CONTAINER_ID = "ai-chat-messages";
 
