@@ -139,7 +139,7 @@ export const chandraProxy = onRequest(
       formData.append("output_format", "markdown");
       formData.append("mode", "balanced");
 
-      const apiKey = chandraKey.value();
+      const apiKey = chandraKey.value().trim();  // R141: strip trailing newline from secret
       logger.info(`[chandraProxy] Submitting paperId=${paperId} size=${pdfBuffer.length}`);
 
       const submitResp = await fetch(CHANDRA_API_URL, {
