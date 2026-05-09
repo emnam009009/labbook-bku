@@ -178,6 +178,30 @@ Lý do:
 
 **Critical rule**: Khi commit có thay đổi `bm25/`, `search/`, hay handler chính → chạy `npm test` (62/62 phải pass) để confirm regression không leak vào utils.
 
+### TypeScript debt — `@ts-nocheck` cleanup
+
+**Status** (May 10 2026 audit):
+- **49 files** với `@ts-nocheck` (20% trong 244 TS files)
+- **~21,643 LOC** trong files debt = **70.7% TS code** chưa typecheck thực sự
+- **0** `@ts-ignore`, **0** `@ts-expect-error` — sạch về inline skip
+- Files debt phân bố: pages layer (booking, equipment, chemicals, experiments, dashboard, reports), services core (plot, image-handlers, save-handlers, notifications), AI module (paper-*, voice, tools, memory)
+- Pattern: phần lớn là legacy migrated từ JS (R1-R104 era), AI module mới (R108+) ít hơn
+
+**Why it matters**: TS pass-build hiện tại che ~70% codebase. Refactor nặng (Phase B.5 schema overhaul) trên codebase chưa typecheck đầy đủ là rủi ro thầm lặng.
+
+**Strategy — 3-tier cleanup**:
+
+1. **Tier 1 — Boy scout rule (mỗi round)**: PR đụng file `@ts-nocheck` → fix nếu effort <30 phút. Nếu chưa fix được, thêm comment `// TODO(R-XXX): remove @ts-nocheck — <reason>` để track.
+
+2. **Tier 2 — Dedicated cleanup rounds (medium-term, sau Phase B.5)**: 2-3 rounds chuyên fix. Ưu tiên theo churn rate (low churn first → ổn định, không bị invalidate khi feature work):
+   - **First**: AI Phase B files (paper-list, paper-search, conversation-store, tool-client) — low churn, well-isolated
+   - **Second**: Services core (plot/, image-handlers, save-handlers, notifications) — high impact, medium churn
+   - **Last**: Pages layer (booking, dashboard, equipment, etc.) — high churn, fix cuối tránh re-work
+
+3. **Tier 3 — CI guard (long-term)**: ESLint rule hoặc custom script chặn add `@ts-nocheck` mới. Track count theo thời gian; goal là 0 `@ts-nocheck` cuối Phase 2 (Research OS, ~5 năm).
+
+**Tracking**: count cập nhật cuối mỗi phase trong `CHANGELOG.md` "TS debt: N files / X LOC" để xem tiến độ.
+
 ---
 
 ## 6. Sai lầm cần tránh (từ report)
