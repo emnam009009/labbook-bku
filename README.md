@@ -1,184 +1,256 @@
 # LabBook BKU
 
-**Hệ thống quản lý Lab Vật liệu BKU**
-*Lab Materials Management System for BKU*
+> AI-powered lab management for materials science & electrochemistry research.
+> *Quản lý phòng thí nghiệm khoa học vật liệu có tích hợp AI.*
 
-Web app quản lý phòng thí nghiệm: thí nghiệm thủy nhiệt/điện cực/điện hóa, hóa chất, thiết bị, đặt lịch sử dụng, thành viên, và lịch sử thao tác.
+[![Status](https://img.shields.io/badge/status-active-brightgreen)]()
+[![Phase](https://img.shields.io/badge/phase-B.3%20done-blue)]()
+[![Lighthouse](https://img.shields.io/badge/lighthouse-93%2F95%2F100%2F100-success)]()
 
-A web application for managing a materials science lab: hydrothermal/electrode/electrochemistry experiments, chemicals, equipment, booking system, members, and activity history.
+LabBook is a lab management platform built for materials science and electrochemistry research groups. It combines structured experiment tracking (synthesis, electrode prep, electrochemistry) with an AI assistant that performs RAG over the lab's paper library and supports researcher workflows.
+
+Originally built for the Materials Lab at HCMC University of Technology (~50 users), now evolving toward a commercial SaaS for research labs.
 
 ---
 
-## 🚀 Quick start
+## Features
 
-### Yêu cầu / Requirements
+### Lab management
+- **Experiments**: hydrothermal synthesis, electrode preparation, electrochemistry (CV, LSV, EIS, Tafel)
+- **Chemicals & inks**: stock tracking, CAS lookup, low-stock alerts, formula search
+- **Equipment**: status, locations, maintenance, group management
+- **Bookings**: equipment reservation with calendar view, drag-drop scheduling
+- **Members & roles**: superadmin / admin / member / viewer with database-level rules
+- **Realtime**: all changes sync instantly via Firebase listeners (no save buttons, no refresh)
 
-- **Node.js** ≥ 18 (khuyến nghị / recommended: 20 LTS)
+### AI assistant
+- **Chat sidetab** with markdown, KaTeX math, syntax-highlighted code, voice input/output
+- **10+ tools**: search lab data (chemicals, equipment, experiments, bookings, members), create drafts (experiments, bookings, stock updates), search papers
+- **RAG over papers**: upload research papers (PDF), automatic OCR (Chandra), chunking, hybrid retrieval (vector + BM25 + reranker)
+- **NotebookLM-style citations**: AI cites `[1]` `[2]` as clickable chips → popover shows paper title, section, full chunk text
+- **Multi-LLM**: Gemini Flash (Tier 1, default), Claude Sonnet 4.6 / Opus 4.7 (Tier 2/3, infrastructure ready)
+- **Confirmation cards**: AI write actions (create experiment, update stock, book equipment) require user confirm before committing
+
+### Integrations
+- **Origin Lab**: one-click "Open in Origin" generates `.ogs` LabTalk script, launches Origin via custom URL protocol
+- **Excel**: export any table via SheetJS
+- **Voice**: speech-to-text (Vietnamese, Chirp 2) + text-to-speech (browser native)
+
+### Engineering
+- **TypeScript ESM**, no UI framework — vanilla DOM + event delegation
+- **Strict CSP** with global delegation (Mozilla Observatory 125/100, Grade A+)
+- **Realtime-first** Firebase RTDB + Firestore (vector search, BM25)
+- **11 Cloud Functions** deployed to `asia-southeast1` for AI proxy, tool execution, paper pipeline, search, eval
+
+---
+
+## Quick start
+
+### Requirements
+- **Node.js** ≥ 20 LTS
 - **npm** ≥ 9
-- Tài khoản Firebase với project đã setup Realtime Database + Authentication
-- *Firebase project with Realtime Database + Authentication enabled*
+- **Firebase project** with Realtime Database, Authentication, Firestore, Hosting, Functions enabled
+- **API keys** (for AI features): Gemini, Anthropic, Voyage AI, Chandra (OCR)
 
-### Cài đặt / Installation
+### Frontend setup
 
 ```bash
-# Clone repo
 git clone <repo-url>
 cd labbook
-
-# Cài dependencies / Install dependencies
 npm install
 
-# Tạo file .env (xem mẫu bên dưới) / Create .env file (see template below)
+# Create .env with Firebase config (see template below)
 cp .env.example .env
-# Sau đó điền các giá trị Firebase config vào .env
-# Then fill in Firebase config values in .env
+# Fill values from Firebase Console → Project Settings → Web app
 
-# Chạy dev server / Start dev server
-npm run dev
+npm run dev          # Dev server: http://localhost:5173
+npm run build        # Production build → dist/
+npm run preview      # Preview production build locally
 ```
 
-Dev server mở ở `http://localhost:5173`. *Dev server runs at `http://localhost:5173`.*
+### Cloud Functions setup
 
-### Biến môi trường / Environment variables
+```bash
+cd functions
+npm install
 
-File `.env` cần có 7 biến Firebase config / `.env` requires 7 Firebase config variables:
+# Set secrets (one-time)
+firebase functions:secrets:set GEMINI_API_KEY
+firebase functions:secrets:set ANTHROPIC_API_KEY
+firebase functions:secrets:set VOYAGE_API_KEY
+firebase functions:secrets:set CHANDRA_API_KEY
+
+npm run build        # TypeScript compile
+firebase deploy --only functions
+```
+
+### Deploy
+
+```bash
+# Deploy all (hosting + functions + database rules)
+firebase deploy
+
+# Or selectively:
+firebase deploy --only hosting
+firebase deploy --only functions:geminiProxy,functions:claudeProxy
+firebase deploy --only database
+```
+
+### Environment variables (`.env`)
 
 ```dotenv
+# Firebase Web SDK config (from Firebase Console)
 VITE_FIREBASE_API_KEY=...
 VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-VITE_FIREBASE_DATABASE_URL=https://your-project.firebaseio.com
+VITE_FIREBASE_DATABASE_URL=https://your-project-default-rtdb.asia-southeast1.firebasedatabase.app
 VITE_FIREBASE_PROJECT_ID=your-project
 VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=...
 VITE_FIREBASE_APP_ID=...
 ```
 
-Lấy giá trị từ Firebase Console → Project Settings → General → Your apps.
-*Get these values from Firebase Console → Project Settings → General → Your apps.*
-
-⚠️ **Không commit `.env` lên git!** Đã có sẵn trong `.gitignore`.
-*Do NOT commit `.env`! Already in `.gitignore`.*
+⚠️ Never commit `.env` to git. It's already in `.gitignore`.
 
 ---
 
-## 📦 Scripts
+## Tech stack
 
-| Lệnh / Command | Mô tả / Description |
-|---|---|
-| `npm run dev` | Chạy dev server với hot reload / Run dev server with HMR |
-| `npm run build` | Build production vào `dist/` / Build to `dist/` |
-| `npm run preview` | Preview bản build local / Preview build locally |
+**Frontend**
+- TypeScript ESM (no UI framework — vanilla DOM)
+- Vite 8 (build), Tailwind CSS 3 + CSS variables (theming)
+- Chart.js 4 (plots), SheetJS (Excel), OGL (WebGL animations)
+- KaTeX (math), highlight.js (code), DOMPurify (sanitize), marked (markdown)
 
----
+**Backend**
+- Firebase Realtime Database (primary data, realtime sync)
+- Firebase Firestore (vector search, BM25 index, paper chunks, traces)
+- Firebase Authentication, Storage, Hosting
+- Firebase Cloud Functions v2 (Node 24, asia-southeast1, Pub/Sub event chains)
 
-## 🏗 Tech stack
-
-- **Frontend:** Vanilla JavaScript (ES modules) + Vite 8
-- **Styling:** Tailwind CSS 3 + CSS variables
-- **Backend:** Firebase (Realtime Database + Authentication + Hosting)
-- **Charting:** Chart.js 4
-- **Excel:** SheetJS (xlsx)
-- **Animation:** OGL (WebGL)
-
----
-
-## 🎯 Tính năng chính / Main features
-
-- **Quản lý thí nghiệm** *(Experiment management)* — Hydrothermal, Electrode, Electrochemistry
-- **Quản lý hóa chất** *(Chemicals)* — Stock tracking, alerts, formulas
-- **Quản lý thiết bị** *(Equipment)* — Groups, lock/unlock status
-- **Đặt lịch sử dụng thiết bị** *(Booking)* — List view + Week time-grid (Google Calendar style), drag/drop reschedule, resize
-- **Quản lý thành viên** *(Members)* — Sinh viên, học viên, NCS, giảng viên
-- **Quản lý mực in** *(Ink)* — Công thức và tồn kho
-- **Hệ thống thông báo realtime** *(Notifications)* — Bell icon + dropdown
-- **Online presence** — Hiển thị ai đang online realtime
-- **Chat group** — Tin nhắn, mention, reactions
-- **Phân quyền** *(Role-based access)* — Superadmin / Admin / Member / Viewer
-- **Lịch sử thao tác** *(History log)*
-- **Export Excel** — Tất cả các bảng
-- **Theme picker** — Multiple color themes + dark mode
+**AI / RAG stack**
+- LLM: Gemini 2.5 Flash (Tier 1), Claude Sonnet 4.6 / Opus 4.7 (Tier 2/3, infra ready)
+- Embeddings: Voyage `voyage-3-large` (1024-dim)
+- Reranker: Voyage `rerank-2.5`
+- OCR: Chandra (datalab.to) — page-level layout-aware text extraction
+- Search: hybrid (vector + BM25 + RRF) → reranker → top-K
 
 ---
 
-## 🔐 Phân quyền / Roles
+## Project structure
 
-| Role | Quyền / Permissions |
-|---|---|
-| `superadmin` | Toàn quyền + xóa admin khác / Full access including admin management |
-| `admin` | Toàn quyền trong app / Full app access |
-| `member` | Đọc/ghi dữ liệu, không quản lý user / Read/write data, no user management |
-| `viewer` | Chỉ đọc / Read-only |
-| `pending` | Chờ duyệt / Awaiting approval |
-| `rejected` | Bị từ chối / Rejected |
-
-User mới đăng ký có role `pending`, cần admin duyệt qua trang **Quản lý tài khoản**.
-*New users register with `pending` role, requiring admin approval via the **Account Management** page.*
-
----
-
-## 📁 Cấu trúc thư mục / Project structure
-
-Xem chi tiết trong [`ARCHITECTURE.md`](./ARCHITECTURE.md).
-*See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for details.*
+See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for full details. Brief overview:
 
 ```
 labbook/
-├── index.html              # Entry HTML (single page app)
+├── index.html                    # SPA shell
 ├── src/
-│   ├── css/                # Stylesheets
-│   └── js/
-│       ├── main.js         # Entry point, ties everything together
-│       ├── firebase.js     # Firebase init + helpers
-│       ├── auth.js         # Authentication core
-│       ├── pages/          # Page renderers (dashboard, booking, ...)
-│       ├── services/       # Business logic (notifications, presence, ...)
-│       ├── ui/             # UI primitives (modal, toast, navigation)
-│       └── utils/          # Pure utilities (format, dom, async, ...)
-├── database.rules.json     # Firebase security rules
-├── firebase.json           # Firebase Hosting config
-└── vite.config.js          # Vite build config
+│   ├── ts/                       # Frontend TypeScript
+│   │   ├── main.ts               # Entry point
+│   │   ├── firebase.ts           # Firebase init + helpers
+│   │   ├── auth.ts               # Authentication
+│   │   ├── pages/                # Page renderers
+│   │   ├── services/             # Business logic
+│   │   ├── ui/                   # UI primitives (modal, toast, ...)
+│   │   ├── utils/                # Pure utilities
+│   │   └── ai/                   # AI module (chat, RAG, tools, citations)
+│   │       ├── llm/              # Gemini/Claude clients, tier router
+│   │       ├── papers/           # Paper upload, search UI
+│   │       ├── tools/            # Tool client (frontend → toolExecutor)
+│   │       ├── ui/               # Chat sidetab, message bubble, citation popover
+│   │       ├── memory/           # Conversation store
+│   │       └── voice/            # STT/TTS
+│   └── css/                      # Tailwind + custom CSS
+├── functions/                    # Cloud Functions (TypeScript)
+│   ├── src/
+│   │   ├── handlers/             # HTTP entry points (proxies, search, eval)
+│   │   ├── tools/                # Tool implementations + registry
+│   │   ├── search/               # SearchEngine, BM25, reranker, config
+│   │   ├── observability/        # Tracer, cost calculator
+│   │   ├── eval/                 # RAG eval framework
+│   │   └── index.ts              # Cloud Functions exports
+│   └── package.json
+├── docs/                         # Internal documentation
+│   ├── ai/                       # AI architecture deep dives
+│   ├── design/                   # Design tokens, mockups
+│   └── commercial-roadmap.md     # Commercial fork planning
+├── extras/                       # External integrations (Origin Lab)
+├── database.rules.json           # RTDB security rules
+├── firestore.rules               # Firestore security rules
+├── firestore.indexes.json        # Firestore composite indexes
+├── firebase.json                 # Firebase project config
+├── vite.config.js                # Vite build config
+└── tsconfig.json                 # TypeScript config
 ```
 
 ---
 
-## 🚢 Deploy
+## Roles & permissions
 
-```bash
-# Build
-npm run build
+| Role | Permissions |
+|---|---|
+| `superadmin` | Full access including admin user management + AI write tools |
+| `admin` | Full app access |
+| `member` | Read/write lab data, no user management |
+| `viewer` | Read-only |
+| `pending` | Awaiting admin approval (after self-registration) |
+| `rejected` | Registration denied |
 
-# Deploy lên Firebase Hosting
-firebase deploy --only hosting
-
-# Deploy rules database
-firebase deploy --only database
-
-# Deploy cả 2
-firebase deploy
-```
-
-Cần đăng nhập Firebase CLI trước (`firebase login`).
-*Login to Firebase CLI first (`firebase login`).*
+Three enforcement layers: UI hide/show → function-level checks → Firebase security rules. The DB layer is the only attack-resistant layer; UI/function layers are UX only.
 
 ---
 
-## 🤝 Đóng góp / Contributing
+## Documentation
 
-Xem [`CONTRIBUTING.md`](./CONTRIBUTING.md) để biết quy ước commit, branch, và quy trình PR.
-*See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for commit conventions, branching strategy, and PR workflow.*
+- [`ARCHITECTURE.md`](./ARCHITECTURE.md) — system architecture, data flow, conventions
+- [`AI_ARCHITECTURE.md`](./AI_ARCHITECTURE.md) — AI module deep-dive (LLM tiering, RAG, tools, citations)
+- [`ROADMAP.md`](./ROADMAP.md) — phased plan and active priorities
+- [`CHANGELOG.md`](./CHANGELOG.md) — version history per round
+- [`AUDIT_LOG.md`](./AUDIT_LOG.md) — bug audit + regression checklists
+- [`WORKFLOW.md`](./WORKFLOW.md) — git workflow, patches-driven development
+- [`DESIGN.md`](./DESIGN.md) — design tokens, UI patterns
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — commit conventions, PR workflow
+- [`docs/commercial-roadmap.md`](./docs/commercial-roadmap.md) — commercial fork planning
+- [`CLAUDE.md`](./CLAUDE.md) — entry point for AI coding agents
 
 ---
 
-## 📝 License
+## Status
 
-Dự án nội bộ BKU. Không phân phối ra ngoài khi chưa có sự đồng ý.
-*Internal project for BKU. Do not redistribute without permission.*
+**Current phase**: B.3 done (Tier 1 RAG with NotebookLM-style citations)
+
+**Done**:
+- Phase A — AI foundation (R105-R115): chat, tools, voice, confirmation cards
+- Phase B.1 — Paper RAG pipeline (R130-R136): upload → OCR → chunk → embed → search
+- Phase B.2 — Hybrid retrieval + eval (R137a-c2): BM25, reranker, evaluation framework, observability
+- Phase B.3 — Citations (R138): claudeProxy, searchPapers tool, citation chips with popover
+
+**Active priorities**:
+- Phase B.5 — Research Schema Foundation: unified Sample/Material/Experiment/DataAsset entities (planned)
+- Documentation refresh (R138c-f, in progress)
+
+**Future**:
+- Phase B.4 — Knowledge graph (citation network, entity extraction)
+- Phase C — Domain analyzers (XRD, Raman, EIS modules)
+- Phase D — DFT integration, materials database
+- Commercial fork — multi-tenancy, billing, branding (separate repo `labbook-saas`)
+
+See [`ROADMAP.md`](./ROADMAP.md) for full phased plan.
 
 ---
 
-## 📞 Liên hệ / Contact
+## License
 
-Lab Vật liệu BKU — Khoa Kỹ thuật Hóa học, Đại học Bách Khoa TP.HCM
-*Materials Lab — Faculty of Chemical Engineering, HCMUT*
+Proprietary, internal/research use. Commercial licensing in planning.
+*Sản phẩm độc quyền, sử dụng nội bộ và nghiên cứu. Đang trong quá trình lập kế hoạch cấp phép thương mại.*
 
+---
 
+## Contact
+
+**Materials Lab — Faculty of Chemical Engineering, HCMC University of Technology**
+
+For research collaboration or commercial inquiries, contact the project maintainer (nAM).
+
+---
+
+*LabBook BKU evolved from a closed lab tool into a research platform. Built with vanilla TypeScript, Firebase, and AI agents.*
