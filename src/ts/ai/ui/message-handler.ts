@@ -28,6 +28,7 @@ import {
   scrollToBottom,
   removeMessageBubble,
 } from "./message-bubble";
+import { migrateCitations, attachCitationChips } from "./citation-popover";
 import { streamLlm } from "../llm/llm-router";
 import { getSystemPrompt } from "../llm/system-prompt";
 import { LlmMessage } from "../llm/types";
@@ -159,11 +160,23 @@ export async function sendUserMessage(text: string): Promise<void> {
           finalText = fullText;
           streamCompleted = true;
           // Persist assistant message to RTDB
-          await appendMessage(convId!, {
+          const realMsgId = await appendMessage(convId!, {
             role: "assistant",
             text: fullText,
             tier: 1,
           });
+          // R138b2b-fix4: bind real msgId to streaming bubble + re-render chips.
+          // During streaming, citations were stored under msgId="" (empty)
+          // because the bubble had no ID yet. Now migrate to real msgId
+          // and re-run chip-ify so [N] markers become clickable chips.
+          if (realMsgId && assistantMsgEl) {
+            assistantMsgEl.dataset.msgId = realMsgId;
+            migrateCitations("", realMsgId);
+            const contentEl = assistantMsgEl.querySelector(
+              ".ai-msg__content",
+            ) as HTMLElement | null;
+            if (contentEl) attachCitationChips(contentEl, realMsgId);
+          }
           scrollToBottom();
         },
         onError: (e: Error) => {

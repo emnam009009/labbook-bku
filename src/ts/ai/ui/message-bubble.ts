@@ -10,6 +10,14 @@
 import { Message } from "../memory/conversation-store";
 import { renderMarkdown, highlightCodeBlocks, addCodeBlockCopyButtons } from "./markdown-render";
 import { preprocessDraftMarkers } from "./confirmation-card";
+import {
+  preprocessCitationMarkers,
+  attachCitationChips,
+  attachGlobalCitationDelegation,
+} from "./citation-popover";
+
+// R138b2b: register citation popover click handlers once on module load
+attachGlobalCitationDelegation();
 
 const MESSAGES_CONTAINER_ID = "ai-chat-messages";
 
@@ -95,6 +103,9 @@ export function createMessageElement(msg: Message): HTMLElement {
     </div>
   `;
 
+  // R138b2b: tag with msgId so streaming updateMessageText can find citations
+  if (msg.id) wrap.dataset.msgId = msg.id;
+
   return wrap;
 }
 
@@ -109,12 +120,20 @@ export async function renderMessageMarkdown(msgEl: HTMLElement, msg: Message): P
   if (!contentEl) return;
 
   try {
-    const html = await renderMarkdown(msg.text);
+    // R138b2b: extract citations marker BEFORE render, then chip-ify [N] AFTER
+    const msgId = msg.id || "";
+    const preprocessed = preprocessCitationMarkers(
+      preprocessDraftMarkers(msg.text),
+      msgId,
+    );
+    const html = await renderMarkdown(preprocessed);
     contentEl.innerHTML = html;
 
     // Post-process: highlight code + add copy buttons
     await highlightCodeBlocks(contentEl);
     addCodeBlockCopyButtons(contentEl);
+    // R138b2b: turn [N] text into clickable citation chips
+    if (msgId) attachCitationChips(contentEl, msgId);
   } catch (e) {
     console.error("[Markdown render error]", e);
     contentEl.textContent = msg.text; // Fallback to plain text
@@ -155,9 +174,16 @@ export async function updateMessageText(
   if (isAssistant) {
     // Re-render markdown (with throttle/debounce trong production)
     try {
-      contentEl.innerHTML = await renderMarkdown(newText);
+      // R138b2b: same preprocess + chip-ify pipeline as initial render
+      const msgId = msgEl.dataset.msgId || "";
+      const preprocessed = preprocessCitationMarkers(
+        preprocessDraftMarkers(newText),
+        msgId,
+      );
+      contentEl.innerHTML = await renderMarkdown(preprocessed);
       await highlightCodeBlocks(contentEl);
       addCodeBlockCopyButtons(contentEl);
+      if (msgId) attachCitationChips(contentEl, msgId);
     } catch {
       contentEl.textContent = newText;
     }

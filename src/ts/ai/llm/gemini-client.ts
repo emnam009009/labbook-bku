@@ -251,6 +251,45 @@ export const geminiClient: LlmClient = {
           }
         }
       }
+      // Round 138b2b: searchPapers tool → embed AI_CITATIONS marker so
+      // frontend can render clickable [N] chips with chunk popover.
+      for (const tr of toolResults) {
+        if (
+          tr.name === "searchPapers" &&
+          tr.result.ok &&
+          tr.result.result &&
+          Array.isArray(tr.result.result.chunks) &&
+          tr.result.result.chunks.length > 0
+        ) {
+          try {
+            // Build position-keyed citation map (compact).
+            // Use the FULL chunk text in metadata so the popover can show
+            // the actual quoted passage (NotebookLM-style).
+            const citations: Record<string, any> = {};
+            for (const c of tr.result.result.chunks) {
+              if (typeof c?.position === "number") {
+                citations[String(c.position)] = {
+                  position: c.position,
+                  chunkId: c.chunkId,
+                  paperId: c.paperId,
+                  paperTitle: c.paperTitle,
+                  sectionPath: c.sectionPath,
+                  text: c.text,
+                  rerankScore: c.rerankScore,
+                };
+              }
+            }
+            const json = JSON.stringify(citations);
+            const b64 = btoa(unescape(encodeURIComponent(json)));
+            // Hidden marker — extracted before markdown render, never visible.
+            const marker = `\n\n<!--AI_CITATIONS:${b64}-->\n\n`;
+            allAccumulated += marker;
+            cb.onChunk(allAccumulated);
+          } catch (e) {
+            console.warn("[gemini-client] Failed to embed citations marker:", e);
+          }
+        }
+      }
 
       // Append tool results as user message
       contents.push({
