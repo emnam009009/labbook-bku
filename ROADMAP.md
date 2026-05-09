@@ -2,6 +2,8 @@
 
 Pending features và improvements đã thảo luận. Owner Nam quyết định priority.
 
+> **Long-term strategic context**: see `docs/long-term-roadmap.md` (R143, May 10 2026) — maps strategic vision report to rounds, 3-phase 5-10 year vision (Scientific SaaS → Research OS → Scientific Platform).
+
 ## Deferred bugs (don't fix unless asked)
 
 ### ~~Bug #11: Notifications schema flat vs rule-nested~~ ✅ RESOLVED in R122
@@ -148,20 +150,83 @@ Unplanned audit work trước khi commercialize. Phase B paused, resume từ Rou
 - Hybrid + rerank: MRR=1.0, P@10=0.95, NDCG=0.99
 - Latency: 524ms warm (no rerank), ~920ms warm (with rerank), 3-4s cold
 
-#### Phase B.3+ — pending
+#### Phase B.3 — Claude proxy + Tier 1 RAG (R138 a/b1/b2) ✅ DONE
 
 | Round | Status | Task |
 |---|---|---|
-| 138 | ⏳ Next | Hierarchical retrieval (paper/section summaries for synthesis queries) |
-| 139 | 📋 | Knowledge graph foundations (entity extraction, citation parsing) |
-| 140+ | 📋 | Knowledge graph backend (Neo4j AuraDB) |
-| ... | 📋 | Synthesis layer, query router, advanced features |
+| 138a | ✅ Done | Claude proxy infrastructure (claude-sonnet-4-6, opus-4-7, haiku-4-5) |
+| 138b1 | ✅ Done | searchPapers tool (direct call, 1-indexed positions for citations) |
+| 138b2a | ✅ Done | Tier 1 RAG verified end-to-end (Gemini + searchPapers) |
+| 138b2b | ✅ Done | NotebookLM-style citation chips (popover, dark mode aware) |
+
+#### Phase B.4 — Closure + production hardening (R140-R142) ✅ DONE
+
+⚠️ Phase B AI work continued past R138 — R139 was research-schema design doc (deferred to Phase B.5 R150+).
+
+| Round | Status | Task |
+|---|---|---|
+| 139 | ✅ Done | Research Schema design doc (`docs/research-schema.md` — Phase B.5 plan) |
+| 140 | ✅ Done | Stress-test A2 doc filled (13 papers indexed, Chandra incident logged) |
+| 141 | ✅ Done | Chandra API key trim newline fix (was causing 401 mid-test) |
+| 142 + b + c | ✅ Done | BM25 indexPaper stage implemented (closes "not implemented yet" gap) |
+
+**Phase B verdict**: RAG pipeline production-ready. Extract → Chunk → Embed → **Index** → Search (vector/bm25/hybrid) → Rerank. ~3575 chunks indexed, 20 papers, ~$0.20 cost.
+
+#### Phase B.5 — Unified Research Schema (R150-R155) 📋 PLANNED
+
+> See `docs/research-schema.md` for full design + `docs/long-term-roadmap.md` for strategic context.
+>
+> Renumbered từ R140-R145 cũ vì Phase B.4 đã chiếm R140-R142.
+
+| Round | Task | Effort |
+|---|---|---|
+| R150 | Materials ontology + Firestore setup + Materials browser page | 3-5 days |
+| R151 | Samples collection + CRUD + Sample picker | 7-10 days |
+| R152 | Experiments unified collection + adapter layer | 7-10 days |
+| R153 | DataAssets collection + upload flow rewrite | 5-7 days |
+| R154 | Lineage UI (visual graph) | 5-7 days |
+| R155 | Backward compat audit + bulk migration | 3-5 days |
+
+**Total**: 30-44 days realistic, spread 8-12 weeks.
+
+**Pre-requisite**: Resolve 7 open design questions in `docs/research-schema.md` Section 12 before starting R150.
+
+#### Phase B.6+ — Future work (TBD)
+
+| Phase | Scope | Source |
+|---|---|---|
+| Phase B.6+ | Event-driven architecture expansion (queue, workers, retry) | Report Priority 3 |
+| Phase B.7+ | Internal REST APIs (`GET /samples`, `POST /experiments`) | Report Priority 4 |
+
+---
+
+## Test Strategy — Phase-end
+
+**Decision (May 10 2026)**: Test debt được giải quyết **cuối mỗi phase**, không inline trong feature work.
+
+**Hiện trạng**:
+- Vitest 4.1.5 setup, 62/62 tests pass trong `tests/utils/` (auth-helpers, format, async)
+- Pattern: `globalThis.window` mock, `vi.spyOn`, `beforeEach/afterEach`
+- Coverage: <1% (chỉ utility modules)
+
+**Plan**:
+- Cuối Phase B (R143-R149): test BM25 module (tokenizer, stemmer, chemistry-patterns, corpus-stats), pipeline core, search engines
+- Cuối Phase B.5 (sau R155): test schema migration, lineage logic, adapter pattern
+- Cuối mỗi Phase C-1/C-2/C-3: test analyzer parsers + Python compute responses
+
+**Critical rule**: Mỗi commit đụng `bm25/`, `search/`, hay handler chính → `npm test` (62/62 phải pass) để confirm utils không regression.
 
 **Compliance KB** (Nghị định 24/2026) deferred — was previously planned at R127, will revisit when commercialization timing demands it.
 
-### Phase C-1 — Optical & Structural Analyzers (Round 140-156)
+### Phase C-1 — Optical & Structural Analyzers (Round 156-171)
 
-⚠️ Numbers shifted from original 129-145.
+⚠️ Numbers shifted further from R140-R156 vì:
+- R140-R142 = Phase B.4 closure (BM25 indexPaper, Chandra fix, A2 docs) — DONE
+- R143-R149 = Phase B closure work (test backfill, eval expansion, etc.)
+- R150-R155 = Phase B.5 Unified Research Schema
+- → Phase C-1 starts at R156
+
+Original plan was R129-R145; this is the second renumber.
 
 | Round | Task |
 |---|---|

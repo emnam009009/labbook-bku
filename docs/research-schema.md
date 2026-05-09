@@ -679,11 +679,11 @@ For lab BKU phase, all users get `tenantId: "default"`. Commercial fork later as
 
 ---
 
-## 8. Frontend components (R140-R144)
+## 8. Frontend components (R150-R154)
 
 Plans, not code:
 
-### R140 — Materials Browser
+### R150 — Materials Browser
 
 - Page: `/#/materials`
 - List view: card grid by category (TMD, oxide, ...)
@@ -692,7 +692,7 @@ Plans, not code:
 - Search by formula/name/aliases
 - Connect with chemicals (existing) via formula match
 
-### R141 — Sample Manager (the big one)
+### R151 — Sample Manager (the big one)
 
 - Page: `/#/samples`
 - List view: table with filters (material, status, generation, date range)
@@ -706,7 +706,7 @@ Plans, not code:
 - Sample picker component (used in experiment forms)
 - Create form: auto-name generator based on material + date
 
-### R142 — Unified Experiments Page
+### R152 — Unified Experiments Page
 
 - Existing pages (`hydroPage`, `electrodePage`, `electrochemPage`) STAY (legacy mode)
 - New `experimentsPage` consolidated view:
@@ -722,7 +722,7 @@ Plans, not code:
   - Derived metrics summary
 - Create form: branches by `type`, with type-specific condition fields
 
-### R143 — DataAssets Manager
+### R153 — DataAssets Manager
 
 - Page: `/#/data-assets` or embedded in experiment detail
 - List view: grouped by sample, by format, by experiment
@@ -735,14 +735,14 @@ Plans, not code:
 - Upload modal: file → auto-detect format → metadata form
 - Cross-experiment search: "all CV on samples derived from MoS2"
 
-### R144 — Lineage UI
+### R154 — Lineage UI
 
 - Visual graph (e.g., d3.js or simple HTML/CSS tree)
 - Embedded in Sample detail, Experiment detail, DataAsset detail
 - Expandable nodes
 - Click node → navigate to entity
 
-### R145 — Backward compat audit + bulk migration
+### R155 — Backward compat audit + bulk migration
 
 - Audit checklist: all existing pages still work
 - Bulk migration script (opt-in)
@@ -811,7 +811,7 @@ Firestore cost estimate (per month):
 
 ---
 
-## 12. Open questions (resolve before R140)
+## 12. Open questions (resolve before R150)
 
 - [ ] **Naming auto-generator algorithm**: Sample default name `{materialFormula}-batch-{YYYY-MM-DD}-{counter}` — confirm or alternative?
 - [ ] **Experiment code prefix**: Keep HT/E/EC/INK or unify to single `EXP-{YYYY}-{counter}`?
@@ -823,20 +823,20 @@ Firestore cost estimate (per month):
 
 ---
 
-## 13. Round breakdown (Phase B.5: R140-R145)
+## 13. Round breakdown (Phase B.5: R150-R155)
 
 | Round | Scope | Effort | Dependencies |
 |---|---|---|---|
-| **R140** | Materials ontology + Firestore setup + Materials browser page | 3-5 days | Firestore rules deployed |
-| **R141** | Samples collection + CRUD + Sample picker component + Sample detail page | 7-10 days | R140 done |
-| **R142** | Experiments unified collection + adapter layer + Experiments page | 7-10 days | R141 done |
-| **R143** | DataAssets collection + upload flow rewrite + cross-experiment search | 5-7 days | R142 done |
-| **R144** | Lineage UI (visual graph) + integrated into Sample/Experiment/DataAsset details | 5-7 days | R141-R143 done |
-| **R145** | Backward compat audit + bulk migration script + docs update | 3-5 days | All above |
+| **R150** | Materials ontology + Firestore setup + Materials browser page | 3-5 days | Firestore rules deployed |
+| **R151** | Samples collection + CRUD + Sample picker component + Sample detail page | 7-10 days | R150 done |
+| **R152** | Experiments unified collection + adapter layer + Experiments page | 7-10 days | R151 done |
+| **R153** | DataAssets collection + upload flow rewrite + cross-experiment search | 5-7 days | R152 done |
+| **R154** | Lineage UI (visual graph) + integrated into Sample/Experiment/DataAsset details | 5-7 days | R151-R153 done |
+| **R155** | Backward compat audit + bulk migration script + docs update | 3-5 days | All above |
 
 **Total**: 30-44 days realistic (calendar, not full-time). Spread over 8-12 weeks given other work.
 
-**Critical path**: R140 → R141 → R142 → R143 (must be sequential). R144 can overlap with R143 end.
+**Critical path**: R150 → R151 → R152 → R153 (must be sequential). R154 can overlap with R153 end.
 
 **Risk buffer**: +20% for unknowns. Expect 10-14 weeks total.
 
@@ -882,3 +882,24 @@ R145 done when:
 ---
 
 *This is a living document. Updates as design evolves through R140-R145 implementation.*
+
+---
+
+## 17. Long-term context
+
+> Added R143 (May 10 2026) — sync với strategic vision report.
+
+This Phase B.5 spec implements **Priority 1 (Unified Research Schema) + Priority 2 (Experiment Lineage)** từ `Labbook_Bku_Long_Term_Platform_Roadmap_Report.pdf`. See `docs/long-term-roadmap.md` for:
+
+- 3-phase strategic vision (5-10 năm): Scientific SaaS → Research OS → Scientific Platform
+- Mapping report priorities ↔ rounds
+- Other priorities NOT in this spec but planned later:
+  - **Priority 3** (Event-driven Architecture) → Phase B.6+
+  - **Priority 4** (Internal REST APIs) → Phase B.7+
+  - **Priority 5** (Plugin Architecture) → Phase C+
+- Architecture evolution: frontend, backend (hybrid PostgreSQL long-term), scientific compute (Python services), AI layer
+- Cross-cutting concerns: metadata quality, versioning, provenance tracking, observability, security & compliance
+- Test strategy: phase-end (cuối Phase B.5 = sau R155)
+
+**Round numbering note (R143)**: Phase B.5 originally drafted as R140-R145 nhưng Phase B AI work đã ship R140-R142 (docs A2, Chandra fix, BM25 indexPaper) before this spec started → renumbered R150-R155 to avoid conflict. R143-R149 reserved cho Phase B closure (test backfill, eval expansion, Chandra resilience, etc.).
+

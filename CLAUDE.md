@@ -35,9 +35,11 @@ LabBook BKU là **web app quản lý phòng thí nghiệm hoá**. Stack:
 | Optimization workflow | [.claude/skills/coding/optimize.md](./.claude/skills/coding/optimize.md) |
 | Origin Lab integration | [.claude/skills/labbook/origin-integration.md](./.claude/skills/labbook/origin-integration.md) |
 | Future features | [ROADMAP.md](./ROADMAP.md) |
+| **Long-term roadmap (5-10 yr)** | [docs/long-term-roadmap.md](./docs/long-term-roadmap.md) |
+| Phase B.5 Research Schema design | [docs/research-schema.md](./docs/research-schema.md) |
 | Recent changes | [CHANGELOG.md](./CHANGELOG.md) |
 
-## Current state (as of Round 126, May 8 2026)
+## Current state (as of Round 142, May 10 2026)
 
 ### Pre-AI (Round 1-104)
 - ✅ **Tests**: 62/62 pass (Vitest)
@@ -80,9 +82,18 @@ LabBook BKU là **web app quản lý phòng thí nghiệm hoá**. Stack:
 - Atomic via `runTransaction` — `tryReserveSlot` (new) / `tryReserveSlotForUpdate` (drag/resize, with self-exclusion)
 - Stale cleanup: `cleanupStaleLocks` admin-only, throttle 5min, drops `tmp_*` >60s và slots cho bookings không còn
 
+### AI Module Phase B done (Round 130-142, May 9-10 2026)
+- ✅ **B.1** (R130-R136): Paper pipeline (upload → Chandra OCR → chunk → embed Voyage 3-large → Firestore vector)
+- ✅ **B.2** (R137a-c2): Hybrid retrieval (vector + BM25 + RRF), Voyage rerank-2.5, eval framework
+- ✅ **B.3** (R138 a/b1/b2): Claude proxy infrastructure, searchPapers tool, NotebookLM-style citation chips
+- ✅ **B.4** (R140-R142): Stress-test A2 doc, Chandra trim newline fix, BM25 indexPaper implementation
+- 11 Cloud Functions deployed, 10 tools (6 read + 4 action) + searchPapers RAG tool
+- Stress-test verified: 20 papers, ~3575 chunks, ~$0.20 cost, 3 search modes working
+
 ### Next
-- 🔄 **Phase B resume** (Round 127+): Compliance KB (Nghị định 24/2026 + 4 phụ lục JSON)
-- Hoặc commercial roadmap: multi-tenant rules, rate limiting, email verification, billing
+- 📋 **Phase B closure** (R143-R149): docs sync (this round), test BM25 module, eval expansion, Chandra resilience
+- 📋 **Phase B.5** (R150-R155): Unified Research Schema — see `docs/research-schema.md`
+- 📋 Hoặc commercial roadmap (parallel): multi-tenant, rate limiting, email verify, billing
 
 ## Round numbering
 

@@ -2,6 +2,55 @@
 
 Concise version history. For full git log: `git log --oneline`.
 
+## [Round 143 — Roadmap sync + long-term reference] - 2026-05-10
+
+### Added
+- `docs/long-term-roadmap.md` — strategic vision 5-10 năm map với rounds.
+  Sources: `Labbook_Bku_Long_Term_Platform_Roadmap_Report.pdf` (received May 10).
+  Maps Priority 1-5 ↔ Phase B.5 / B.6+ / B.7+ / C+; 3-phase timeline (Scientific SaaS → Research OS → Scientific Platform).
+- `docs/research-schema.md` Section 17 — long-term context reference.
+- `ROADMAP.md` Test Strategy section — phase-end testing decision.
+
+### Modified
+- `docs/research-schema.md` — renumber Phase B.5 R140-R145 → R150-R155 (Phase B.4 R140-R142 đã ship).
+- `ROADMAP.md` — add Phase B.4 + Phase B.5 + Phase B.6+ sections; reference long-term doc; Phase C-1 renumber note (now R156-R171).
+- `CLAUDE.md` — Current state bump R126 → R142; add long-term-roadmap.md + research-schema.md to Quick navigation; Next pointer updated.
+
+## [Round 142 — BM25 indexPaper implementation] - 2026-05-10
+
+### Added — Final stage of RAG pipeline
+- `functions/src/handlers/index-paper.ts` — new handler:
+  - `indexPaperCore(paperId)` — Pub/Sub triggerable, idempotent, pattern matches `embedChunksCore` (R135).
+  - `indexPaper` HTTP wrapper for manual retry / debugging (superadmin only).
+- Hook in `paper-pipeline-router.ts` case `'embedded'` → `indexPaperCore` (was logging "not implemented yet").
+- Status flow: `embedded` → `indexing` → `indexed` (terminal).
+
+### Modified
+- `firestore.indexes.json` — field exemption for `aiCorpusStats.documentFrequency` (R142b: fixes "too many index entries" — Firestore auto-indexes map subfields, vocab >40k tokens hits limit).
+- `functions/src/handlers/backfill-bm25.ts` — memory 1GiB → 2GiB, STATS_BATCH_SIZE 500 → 200 (R142c: fixes SIGABRT during corpus stats rebuild on 3575-chunk corpus).
+- `functions/src/index.ts` — exported `indexPaper`.
+
+### Verified
+- All 3 search modes (vector/bm25/hybrid) return relevant results from 20-paper corpus (~3575 chunks indexed, ~30-50k vocab tokens).
+- Stress-test query "WO3 WS2 hybrid HER" surfaces synergistic WO3·2H2O/WS2 paper as top hit consistently.
+- Latency: vector 631ms, bm25 1602ms, hybrid 892ms, all + Voyage rerank-2.5.
+
+## [Round 141 — Chandra API key trim newline] - 2026-05-10
+
+### Fixed
+- `functions/src/handlers/chandra-proxy.ts` — `chandraKey.value().trim()` strips trailing newline.
+- Root cause: Secret Manager values often carry trailing newline when created via `echo "KEY" | gcloud secrets versions add`. Newline was injected into `X-API-Key` header → Datalab returned 401 "Invalid API key".
+- Symptom: ~18-min downtime mid-stress-test A2 (2026-05-09 13:14-13:33 UTC), 4 papers required retry after key rotation + redeploy.
+
+## [Round 140 — Stress-test A2 documentation] - 2026-05-10
+
+### Added
+- `docs/stress-tests/2026-05-09-A2.md` filled — 13/14 papers indexed end-to-end, Chandra incident logged.
+- Aggregate metrics: 3575 chunks, 1.1M embed tokens, ~$0.20 Voyage cost, ~9 min effective wall time.
+- Outlier paper documented: surface-chemistry (8MB → 499 pages → 1138 chunks → 9 Voyage batches, max 128/batch respected).
+- Action items: paper #10 (27MB) failed (Chandra free tier quota, not bug), `indexPaper` BM25 stage gap → addressed in R142.
+
+
 ## [Round 138 — a + b1 + b2a + b2b (fix2..5)] - 2026-05-09
 
 ### Added — Phase B.3: Claude proxy + Tier 1 RAG with NotebookLM-style citations
