@@ -38,7 +38,7 @@ import type { TokenizeResult } from "../bm25/types";
 
 const FIRESTORE_DB = "labbook";
 const COLLECTION = "aiChunks";
-const STATS_BATCH_SIZE = 500;  // chunks per stats update transaction
+const STATS_BATCH_SIZE = 200;  // R142c: was 500, reduced to keep peak memory low during stats rebuild
 
 interface BackfillRequest {
   dryRun?: boolean;
@@ -63,7 +63,7 @@ export const backfillBM25 = onRequest(
   {
     region: "asia-southeast1",
     timeoutSeconds: 540,
-    memory: "1GiB",
+    memory: "2GiB",  // R142c: was 1GiB, OOM during stats rebuild
     cors: true,
   },
   async (req, res) => {

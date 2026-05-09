@@ -73,5 +73,11 @@
       ]
     }
   ],
-  "fieldOverrides": []
+  "fieldOverrides": [
+    {
+      "collectionGroup": "aiCorpusStats",
+      "fieldPath": "documentFrequency",
+      "indexes": []
+    }
+  ]
 }

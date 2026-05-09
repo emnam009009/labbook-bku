@@ -15,6 +15,7 @@ import * as admin from "firebase-admin";
 import { logger } from "../utils/logger";
 import { chunkPaperCore } from "../handlers/chunk-paper";
 import { embedChunksCore } from "../handlers/embed-chunks";
+import { indexPaperCore } from "../handlers/index-paper";
 import { defineSecret } from "firebase-functions/params";
 
 const voyageKey = defineSecret("VOYAGE_API_KEY");
@@ -65,8 +66,8 @@ export const paperPipelineRouter = onMessagePublished(
           await embedChunksCore(paperId);
           break;
         case "embedded":
-          // R136+: trigger indexing
-          logger.info(`[router] Stage 'embedded' - indexPaper not implemented yet (R136+)`);
+          // R142: trigger BM25 indexing (final pipeline stage)
+          await indexPaperCore(paperId);
           break;
         case "indexed":
           // Pipeline complete
