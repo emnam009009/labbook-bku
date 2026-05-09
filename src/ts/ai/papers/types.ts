@@ -27,7 +27,8 @@ export type ProcessingStatus =
   | "chunking"     // Smart chunking in progress
   | "chunked"      // Ready for embedding
   | "embedding"    // Generating embeddings
-  | "indexed"      // Done — searchable in RAG
+  | "embedded"     // Embeddings done — backend writes this (R135 paperPipelineRouter)
+  | "indexed"      // Legacy — kept for backward compat with older docs
   | "error";       // Processing failed
 
 export interface UploadProgress {

@@ -50,6 +50,7 @@ function renderStatusBadge(paper: Paper): string {
     chunking:   { label: "Đang chunk", cls: "is-running", icon: "⏳" },
     chunked:    { label: "Đã chunk",   cls: "is-success", icon: "✓" },
     embedding:  { label: "Đang embed", cls: "is-running", icon: "⏳" },
+    embedded:   { label: "Sẵn sàng",   cls: "is-ready",   icon: "✅" },
     indexed:    { label: "Sẵn sàng",   cls: "is-ready",   icon: "🔍" },
     error:      { label: "Lỗi",        cls: "is-error",   icon: "✗" },
   };
