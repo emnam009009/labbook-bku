@@ -11,6 +11,7 @@ import { searchExperiments } from "./experiments";
 import { getBookings } from "./bookings";
 import { listMembers } from "./members";
 import { getCurrentDate } from "./utils";
+import { searchPapers } from "./papers";  // R138b1
 
 export interface ToolDefinition {
   name: string;
@@ -202,6 +203,34 @@ export const TOOLS: Record<string, ToolDefinition> = {
       properties: {},
     },
     handler: async () => getCurrentDate(),
+  },
+
+  // R138b1 — RAG over paper library
+  searchPapers: {
+    name: "searchPapers",
+    description:
+      "Tra cứu các đoạn (chunks) liên quan từ thư viện papers của lab. Dùng khi user hỏi về khái niệm/phương pháp khoa học mà có thể có trong papers đã upload (vd: 'cyclic voltammetry', 'tổng hợp Ni(OH)2', 'DFT band gap', 'Mott-Schottky'). Trả về top-K chunks có position (1-indexed) để cite [1], [2]; mỗi chunk có paperTitle, sectionPath, text. KHÔNG dùng cho data nội bộ lab (chemicals/equipment/experiments — đã có tools riêng).",
+    parameters: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description:
+            "Câu hỏi/từ khóa khoa học. Tốt nhất dùng tiếng Anh nếu papers chủ yếu tiếng Anh, nhưng tiếng Việt và mixed cũng work. Vd: 'cyclic voltammetry redox peaks', 'NiFe layered double hydroxide synthesis'.",
+        },
+        limit: {
+          type: "number",
+          description: "Số chunks trả về. Default 5, max 10.",
+        },
+        paperId: {
+          type: "string",
+          description:
+            "Optional: scope tìm kiếm trong 1 paper cụ thể (paperId từ aiPapers collection). Để trống để tìm toàn corpus.",
+        },
+      },
+      required: ["query"],
+    },
+    handler: searchPapers,
   },
 };
 
@@ -460,3 +489,31 @@ Object.assign(TOOLS, ACTION_TOOLS_DEFS);
 // Workaround: mutate the array in place to include action tool names
 TOOL_NAMES.push(...ACTION_TOOL_NAMES.filter((n) => !TOOL_NAMES.includes(n)));
 
+
+// ============================================================
+// R138a — Anthropic tool format adapter
+// ============================================================
+//
+// Anthropic Messages API tool format differs from Gemini:
+//   Gemini:    { name, description, parameters: <JSON Schema> }
+//   Anthropic: { name, description, input_schema: <JSON Schema> }
+//
+// We re-shape the Gemini tool definitions to the Anthropic shape on demand.
+// Prompt-cache friendly: tool list is stable across requests.
+
+export function getAnthropicToolDefinitions(): any[] {
+  const geminiTools = getGeminiToolDefinitions();
+  // Gemini wraps everything under a single { functionDeclarations: [...] } object.
+  // Flatten to a list and re-shape.
+  const declarations: any[] = [];
+  for (const t of geminiTools) {
+    if (Array.isArray(t?.functionDeclarations)) {
+      declarations.push(...t.functionDeclarations);
+    }
+  }
+  return declarations.map((d) => ({
+    name: d.name,
+    description: d.description || "",
+    input_schema: d.parameters || { type: "object", properties: {} },
+  }));
+}

@@ -20,13 +20,19 @@
  *   { "ok": false, "error": "Tool not found: ..." }
  */
 import { onRequest } from "firebase-functions/v2/https";
+import { defineSecret } from "firebase-functions/params";
 import { logger } from "../utils/logger";
 import { verifyAuth, AuthError } from "../utils/auth";
 import { executeTool, TOOL_NAMES, ACTION_TOOL_NAMES } from "../tools/registry";
 
+// R138b1: searchPapers tool needs Voyage embeddings + rerank — declare secret
+// so it is available via process.env.VOYAGE_API_KEY inside the tool.
+const voyageKey = defineSecret("VOYAGE_API_KEY");
+
 export const toolExecutor = onRequest(
   {
     region: "asia-southeast1",
+    secrets: [voyageKey],
     timeoutSeconds: 60,
     memory: "256MiB",
   },

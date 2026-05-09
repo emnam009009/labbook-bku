@@ -17,6 +17,10 @@ export const PRICING = {
   "gemini-2.0-flash":  { inputPer1M: 0.075, outputPer1M: 0.30 },
   "gemini-2.5-flash":  { inputPer1M: 0.075, outputPer1M: 0.30 },
   "gemini-2.5-pro":    { inputPer1M: 1.25,  outputPer1M: 5.00 },
+  // Anthropic Claude (https://platform.claude.com/docs/en/about-claude/pricing) — R138a
+  "claude-sonnet-4-6":         { inputPer1M: 3.00,  outputPer1M: 15.00 },
+  "claude-opus-4-7":           { inputPer1M: 5.00,  outputPer1M: 25.00 },
+  "claude-haiku-4-5-20251001": { inputPer1M: 1.00,  outputPer1M: 5.00 },
 } as const;
 
 export type ModelId = keyof typeof PRICING;

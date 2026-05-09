@@ -31,6 +31,7 @@ export { paperPipelineRouter } from "./triggers/paper-pipeline-router";  // Roun
 export { searchPapers } from "./handlers/search-papers";  // Round 136a
 export { backfillBM25 } from "./handlers/backfill-bm25";  // Round 137a
 export { runEval } from "./handlers/run-eval";  // Round 137b-eval+obs
+export { claudeProxy } from "./handlers/claude-proxy";  // Round 138a (Tier 2/3)
 
 // Python service bridge (Round 107+)
 export { pythonBridge } from "./handlers/python-bridge";
