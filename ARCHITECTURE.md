@@ -2,7 +2,7 @@
 
 Tài liệu này mô tả kiến trúc, luồng dữ liệu, và quy ước code của LabBook BKU.
 
-> **Last updated**: Round 127 (May 8 2026), sau Pre-Commercial Audit (R116-R126).
+> **Last updated**: Round 138 (May 9 2026), sau Phase B.3 (RAG with NotebookLM citations).
 > Cho deep-dive về AI module xem `AI_ARCHITECTURE.md`. Cho debug regression xem `AUDIT_LOG.md`.
 
 ---
@@ -337,9 +337,14 @@ Không cần "refresh button" — UI luôn đồng bộ với DB.
 │   ├── title               # Auto-generated 3-6 word VN title (R113)
 │   └── createdAt, updatedAt
 │
-├── actionAudit/{ts}        # AI action commit audit log (R115)
+├── actionAudit/{ts}        # AI action commit audit log (R115, R129)
 │   ├── uid, action, args, targetPath, resultKey
 │   └── ts
+│
+├── aiPapers/_shared/{paperId}/    # Paper metadata shared across users (R130-R136)
+│   ├── title, authors, year, source, uploadedBy
+│   ├── ocrStatus, chunkStatus, embedStatus  # Pipeline state per stage
+│   └── filename, storageUrl
 │
 ├── history/{id}            # User actions audit log (admin only)
 └── settings/
@@ -350,6 +355,43 @@ Không cần "refresh button" — UI luôn đồng bộ với DB.
 Rules chi tiết: `database.rules.json`. Storage rules: `storage.rules`.
 
 **Region**: Tất cả ở `asia-southeast1` (Singapore). RTDB URL: `https://lab-manager-268a6-default-rtdb.asia-southeast1.firebasedatabase.app`.
+
+---
+
+## 🗄 Firestore schema (Phase B+, named DB `labbook`)
+
+Phase B introduced Firestore alongside RTDB. RTDB stays primary for realtime app data; Firestore handles vector search, BM25 inverted index, traces. Same project, separate DB instance named `labbook` (region `asia-southeast1`).
+
+```
+labbook (Firestore)/
+├── paperChunks/{chunkId}              # R134 chunking pipeline output
+│   ├── paperId, chunkIndex, sectionPath
+│   ├── text, tokenCount
+│   ├── embedding (1024-dim vector)    # R135 Voyage voyage-3-large
+│   └── createdAt
+│
+├── bm25Tokens/{paperId}_{chunkId}     # R137a BM25 inverted index
+│   ├── tokens: [{ term, count }, ...]
+│   ├── docLength, paperId, chunkId
+│   └── createdAt
+│
+├── aiTraces/{traceId}                 # R137b LLM observability
+│   ├── parentTraceId, spans: [...]
+│   ├── totalCostUSD, totalLatencyMs
+│   ├── userId, query, mode
+│   └── status, createdAt
+│
+└── evalRuns/{runId}                   # R137b RAG evaluation runs
+    ├── version, totalQueries
+    ├── metrics: { mrr, p_at_10, ndcg }
+    └── createdAt, queryResults: [...]
+```
+
+**Vector search**: composite index trong `firestore.indexes.json` enables KNN over `paperChunks.embedding` (cosine distance). Filter by `paperId` for scoped search.
+
+**BM25**: tokens written via `backfillBM25` Cloud Function. Hybrid retrieval merges vector + BM25 scores via Reciprocal Rank Fusion (RRF).
+
+**Trace sink**: `FirestoreTraceSink` writes to `aiTraces` (commercial-ready abstraction; can swap to BigQuery for analytics scale).
 
 ---
 
@@ -458,17 +500,57 @@ window.openModal = openModal;
 
 Triển khai trong `functions/src/`. Deploy: `firebase deploy --only functions`.
 
+### LLM proxies (Tier 1-3)
+
 | Function | Trigger | Purpose |
 |---|---|---|
-| `geminiProxy` | HTTPS (SSE) | Stream Gemini 2.5 Flash với tool calling loop, max 5 iter (R111) |
-| `toolExecutor` | HTTPS | Dispatch 9 tools (6 read + 3 action draft generators), role gate (R112+R115a) |
+| `geminiProxy` | HTTPS (SSE) | Tier 1 — Gemini 2.5 Flash with tool calling loop, max 5 iter (R111) |
+| `claudeProxy` | HTTPS (SSE) | Tier 2/3 — Claude Sonnet 4.6 / Opus 4.7 / Haiku 4.5 (R138a). Anthropic Messages API wrapper, raw fetch, no SDK. SSE normalize: `{text}`, `{toolUse}`, `[DONE]`. NO_SAMPLING_PARAMS gate for Opus 4.7. |
+
+### Tool execution & action commit
+
+| Function | Trigger | Purpose |
+|---|---|---|
+| `toolExecutor` | HTTPS | Dispatch 11 tools (6 read + 4 action draft + 1 RAG), role gate (R112+R115a+R129+R138b1) |
+| `confirmAction` | HTTPS | Commit action draft → RTDB + actionAudit, superadmin verify (R115, R129a-fix validTypes) |
+
+### Speech I/O
+
+| Function | Trigger | Purpose |
+|---|---|---|
 | `speechProxy` | HTTPS | Cloud Speech v2 Chirp 2 STT (vi-VN single, R114) |
-| `confirmAction` | HTTPS | Commit action draft → RTDB + actionAudit, superadmin verify (R115) |
-| `python-bridge` | HTTPS | Tới python-service (Phase C+) |
 
-**Secret manager**: `GEMINI_API_KEY` (Secret Manager, not env var).
+### Paper RAG pipeline (Pub/Sub event chain)
 
-**Service account**: Default compute SA `478810777276-compute@developer.gserviceaccount.com` với roles `Cloud Speech Client` + `Firebase Admin`.
+| Function | Trigger | Purpose |
+|---|---|---|
+| `chandraProxy` | HTTPS | OCR PDF via Chandra (datalab.to) — page-level layout extraction (R133) |
+| `chunkPaper` | Pub/Sub `paper-uploaded` | Section-aware chunking (R134) — header detection, ~500-token chunks, sectionPath tracking |
+| `paperPipelineRouter` | Pub/Sub `paper-chunked` | Routes to embedding stage (R135) — Voyage voyage-3-large, batch 32 |
+| `searchPapers` | HTTPS | Hybrid search endpoint (R136a→R137c2) — vector + BM25 + RRF + Voyage rerank-2.5 |
+| `backfillBM25` | HTTPS (admin only) | Backfills BM25 tokens for existing chunks (R137a one-time job) |
+| `runEval` | HTTPS (admin only) | Runs RAG eval over ground-truth queries (R137b — MRR, P@K, NDCG) |
+
+**Pipeline state**: Each stage updates RTDB `aiPapers/_shared/{paperId}/{ocrStatus|chunkStatus|embedStatus}` for frontend progress UI.
+
+**Pub/Sub topics**: `paper-uploaded` → `paper-chunked` → (embed) → `paper-ready`.
+
+### Secrets (Google Secret Manager)
+
+- `GEMINI_API_KEY` — geminiProxy
+- `ANTHROPIC_API_KEY` — claudeProxy (R138a)
+- `VOYAGE_API_KEY` — paperPipelineRouter (embed) + searchPapers (rerank) + toolExecutor (R138b1)
+- `CHANDRA_API_KEY` — chandraProxy
+
+**Service account**: Default compute SA `478810777276-compute@developer.gserviceaccount.com` với roles `Cloud Speech Client` + `Firebase Admin` + `Pub/Sub Publisher` + `Secret Manager Secret Accessor`.
+
+**IAM note**: After deploying NEW Cloud Functions, must explicitly grant `allUsers` invoker policy:
+```bash
+gcloud run services add-iam-policy-binding [function-name] \
+  --region=asia-southeast1 --member=allUsers --role=roles/run.invoker \
+  --project=lab-manager-268a6
+```
+(Existing functions keep their IAM after redeploy; only NEW functions need this.)
 
 ---
 
@@ -489,9 +571,113 @@ Pattern (xem `scripts/migrate-notifications-r122.mjs`):
 
 ---
 
+## 🤖 AI Module integration architecture (Phase A + B)
+
+Cho deep-dive xem `AI_ARCHITECTURE.md`. Section này tóm tắt integration points giữa AI module và rest of app.
+
+### Tool registry pattern
+
+Tools live in `functions/src/tools/` and dispatch via `toolExecutor` Cloud Function:
+
+```
+functions/src/tools/
+├── registry.ts          # TOOL_DEFS_GEMINI + TOOL_DEFS_ANTHROPIC + TOOLS map
+├── chemicals.ts         # 6 read tools query RTDB
+├── equipment.ts         # cached collection scans, returns matched records
+├── experiments.ts       # filters by category (HT-/E-/EC-/INK-)
+├── bookings.ts          # date-range + status filters
+├── members.ts           # role + name search
+├── utils.ts             # getCurrentDate (VN timezone)
+├── papers.ts            # searchPapers — RAG (R138b1)
+└── actions.ts           # 4 draft generators + commitDraft
+```
+
+**Tool format dual-shape**: `registry.ts` exports both Gemini-shaped (`functionDeclarations`) and Anthropic-shaped (`input_schema`) definitions. Single source of truth, two formats. claudeProxy uses Anthropic shape; geminiProxy uses Gemini shape.
+
+### Action tool pattern (R115b draft + confirm)
+
+Write tools NEVER commit directly to RTDB. Pattern:
+
+1. `toolExecutor` invokes draft generator → returns `{type: "X-draft", ...preview}`
+2. Frontend `gemini-client.ts` detects draft type → embeds `<!--AI_DRAFT:base64-->` marker into stream
+3. `markdown-render.ts` extracts marker before render → calls `confirmation-card.ts` to render UI card
+4. User clicks "Xác nhận" → POST to `confirmAction` Cloud Function
+5. `confirmAction` re-validates draft type (validTypes whitelist), checks superadmin role, commits to RTDB
+6. Logs to `actionAudit/{ts}` for compliance
+
+**Whitelist guard**: `confirm-action.ts` has explicit `validTypes` array. Adding a new action tool requires updating this list (regression: bug H R129a-fix). See AUDIT_LOG.md regression checklist #11.
+
+### RAG retrieval flow (Phase B)
+
+```
+User query
+  ↓
+geminiProxy → tool calling loop
+  ↓ (AI decides to call searchPapers)
+toolExecutor → searchPapers tool
+  ↓
+SearchEngine (createSearchEngine "hybrid")
+  ↓ parallel: vector search + BM25 search
+  ↓ Reciprocal Rank Fusion (RRF) merges scores
+  ↓ Top-30 candidates
+Voyage Reranker → rerank-2.5 API
+  ↓ Top-K (default 5)
+enrichTitles() — RTDB lookup paper title
+  ↓
+Return chunks with position 1..K
+  ↓
+geminiProxy embeds <!--AI_CITATIONS:base64--> marker
+  ↓
+Frontend extracts → stores citations keyed by msgId
+  ↓ markdown render with strip marker
+DOM walk: [N] → <span class="citation-chip">
+  ↓
+User clicks chip → popover with paper title, section, full chunk text
+```
+
+**Trace recording**: every stage writes spans to `aiTraces` Firestore collection (R137b observability). Use `runEval` Cloud Function to evaluate retrieval quality on ground-truth queries.
+
+### Marker pattern (reusable)
+
+R115b established `<!--AI_*-->` marker for embedding tool results into streaming text. R138b2b extended for citations. Reusable for future tools needing rich UI:
+
+```typescript
+// Backend: encode payload, embed marker into stream
+const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+const marker = `\n\n<!--AI_TYPE:${b64}-->\n\n`;
+allAccumulated += marker;
+
+// Frontend: extract before markdown render, store data, strip from text
+const re = /<!--AI_TYPE:([A-Za-z0-9+/=]+)-->/g;
+text.replace(re, (match, b64) => {
+  const data = JSON.parse(decodeURIComponent(escape(atob(b64))));
+  storeData(msgId, data);
+  return ""; // strip
+});
+
+// Post-render: walk DOM, decorate text patterns
+walkTextNodes(container, regex, (match, data) => {
+  // replace match with custom span/widget
+});
+```
+
+### Streaming bubble msgId migration (R138b2b-fix4)
+
+Streaming assistant bubbles have NO msgId until `appendMessage` saves to RTDB. Solution:
+
+1. During stream: citations stored under key `""` (empty string)
+2. `onComplete` callback: `appendMessage` returns realMsgId
+3. `migrateCitations("", realMsgId)` moves data
+4. `assistantMsgEl.dataset.msgId = realMsgId`
+5. Re-run `attachCitationChips(contentEl, realMsgId)` to render chips
+
+This pattern applies to any tool result needing post-stream UI binding.
+
+---
+
 ## 🐛 Tech debt + open issues
 
-### Done (R116-R126)
+### Done (R116-R126) — Pre-Commercial Audit
 - ✅ Auth listener leak (R116)
 - ✅ Presence stuck online (R116)
 - ✅ XSS edit modal (R116)
@@ -509,6 +695,23 @@ Pattern (xem `scripts/migrate-notifications-r122.mjs`):
 - ✅ Admin-only import/export gate (R124)
 - ✅ File picker không trigger (R124)
 - ✅ VN diacritics qr-labels (R124)
+
+### Done (R129) — Add 4th action tool
+- ✅ recordExperimentResultDraft tool — partial update với HT-/EC- detection
+- ✅ confirmAction validTypes whitelist (R129a-fix)
+- ✅ Diff card visualization (R129b)
+
+### Done (R130-R138) — Phase B AI RAG
+- ✅ Paper upload + Chandra OCR (R130-R133)
+- ✅ Section-aware chunking (R134)
+- ✅ Voyage embeddings via Pub/Sub chain (R135)
+- ✅ Vector search backend + frontend (R136)
+- ✅ Hybrid retrieval — BM25 + RRF (R137a)
+- ✅ Eval framework + observability (R137b)
+- ✅ Voyage rerank-2.5 + confidence UI (R137c)
+- ✅ Claude proxy (Tier 2/3 infrastructure, R138a)
+- ✅ searchPapers tool integration (R138b1)
+- ✅ NotebookLM-style citation chips with popover (R138b2b)
 
 ### Còn lại (priority Low)
 - `main.ts` ~1500 lines, cần split thành sub-modules
