@@ -1,5 +1,13 @@
 # LabBook BKU — AI Architecture
 
+> **Status (May 9 2026, post R138)**: Phase A done, Phase B.1-B.3 done, Phase B.4+ planned.
+> This document captures the original design vision (v2.0, R110-R114 era) plus implementation
+> reality from Phase B (R130-R138). Design sections describe intended behavior; reality
+> sections (5.4, 5.5) describe what was actually built. Roadmap (Section 17) reflects current
+> status.
+>
+> For module integration with the rest of the app, see `ARCHITECTURE.md` Section 🤖 (R138e).
+
 **Version**: 2.0
 **Last updated**: 2026-05-07
 **Status**: Active (Round 105 foundation applied)
@@ -96,19 +104,33 @@ LabBook BKU AI là một **hệ sinh thái AI Research Platform** chuyên cho la
 
 ### Tier 2 — Spectrum Analyzer (Claude Sonnet 4.6)
 
+Model string: `claude-sonnet-4-6` (R138a deployed via claudeProxy).
+
 **Use cases**: "Phân tích file XRD này", "Tính Eg từ phổ UV-Vis", "Mẫu nào có HER tốt nhất?"
 
 Hoạt động trên **24 spectrum types** thuộc 6 nhóm (xem Section 12).
 
-**Cost**: ~$0.06/query trung bình.
+**Cost**: ~$0.06/query trung bình ($3/$15 per 1M tokens).
 
 ### Tier 3 — Research Agent (Claude Opus 4.7)
+
+Model string: `claude-opus-4-7` (R138a deployed). NO_SAMPLING_PARAMS gate active —
+neither `temperature` nor `top_p` sent for this model.
 
 **Use cases**: "Em tổng hợp WS₂ QDs trên WO₃, Eg=3.05 eV, làm sao tăng HER?"
 
 Multi-step reasoning: decompose → retrieve → cross-verify → reflect → synthesize → cite.
 
-**Cost**: ~$0.30/query trung bình.
+**Cost**: ~$0.30/query trung bình ($5/$25 per 1M tokens).
+
+### Bonus — Haiku 4.5 (cheap classification / batch)
+
+Model string: `claude-haiku-4-5-20251001`. Available for cost-sensitive subtasks
+(intent routing, summarization). $1/$5 per 1M tokens.
+
+**Status (R138)**: claudeProxy infrastructure deployed and tested. Frontend `claude-client.ts`
++ tier router NOT yet wired into AI Chat (deferred to R138b2c+). Currently all AI Chat
+queries route Tier 1 (Gemini Flash) regardless of complexity.
 
 ### Routing Logic
 
@@ -455,6 +477,129 @@ interface LabFact {
   tags: string[];
 }
 ```
+
+### 5.4 Implementation reality (R130-R138)
+
+What actually shipped diverges from the v2.0 design above. This section
+documents the real implementation. For Cloud Functions deployment details
+see `ARCHITECTURE.md` Section ☁️.
+
+**Ingestion (R130-R136)**:
+- Sources: web upload only (Zotero/Drive sync deferred — was Phase B nice-to-have)
+- OCR: Chandra (datalab.to) via `chandraProxy` Cloud Function — page-level layout-aware
+- Vision for figures: NOT implemented (deferred — Chandra extracts figure captions but
+  doesn't analyze figure content)
+- Metadata: NOT auto-fetched from Crossref (deferred). Title/authors come from PDF
+  metadata or user input on upload.
+- Chunking: section-aware via `chunkPaper` Cloud Function (R134) — header detection,
+  ~500 token chunks, sectionPath tracking. NO contextual pre-prep (Anthropic technique
+  deferred — chunks store raw text only)
+- Embedding: Voyage `voyage-3-large` (1024-dim) via `paperPipelineRouter` (R135).
+  MatSciBERT alternative deferred.
+- Storage: Firestore named DB `labbook` collections `paperChunks`, `bm25Tokens`
+  (NOT generic `paper_chunks` as in design schema)
+
+**Retrieval (R137a-c2)**:
+- Query analysis: NO multi-aspect decomposition (deferred — single query single retrieve)
+- Hybrid: vector (Firestore KNN) + BM25 (Firestore inverted index `bm25Tokens`) → RRF
+- Top-30 candidates → Voyage `rerank-2.5` → top-K (default 5)
+- Confidence Grader (CRAG): NOT implemented. Confidence badges on frontend derived
+  from `rerankScore` thresholds (≥0.85 green, 0.65-0.85 blue, etc.)
+- Reflection loop: NOT implemented (deferred — single-pass generation)
+- Citations: position-based `[1]`, `[2]` (1-indexed) embedded by `searchPapers` tool
+
+**Storage schema reality** (vs design above):
+
+| Design field | Reality field | Notes |
+|---|---|---|
+| `paper_chunks` | `paperChunks` (camelCase) | Firestore convention |
+| `paper_id` | `paperId` | |
+| `chunk_index` | `chunkIndex` | |
+| `contextual_text` | (not used) | Contextual pre-prep deferred |
+| `embedding` | `embedding` | 1024-dim, voyage-3-large |
+| `metadata.section` | `sectionPath` (top-level, string) | Section paths like "Results > Cyclic Voltammetry" |
+| `metadata.figures_in_chunk` | (not used) | Figure tracking deferred |
+| `tags` | (not used) | Tag extraction deferred |
+| `papers` | `aiPapers/_shared` (RTDB, not Firestore) | Realtime status updates needed for upload UI |
+| `lab_memory` | NOT IMPLEMENTED | Episodic memory deferred to Phase B.6+ |
+
+**Tools (R138b1)**:
+- 1 RAG tool: `searchPapers(query, limit?, paperId?, mode?)` — wraps SearchEngine + reranker
+- Returns chunks array with `position` 1..K, `paperTitle`, `sectionPath`, `text` (truncated 800 chars), scores
+
+**LLM tiering reality (R138a + b2a)**:
+- Tier 1 (Gemini Flash): WIRED — currently all AI Chat queries
+- Tier 2 (Sonnet 4.6): claudeProxy deployed, frontend NOT wired
+- Tier 3 (Opus 4.7): claudeProxy deployed, frontend NOT wired
+- Intent router (Flash dispatcher): NOT implemented (single-tier flow, defer to R138b2c+)
+
+### 5.5 Citation chip pipeline (R138b2b)
+
+NotebookLM-style interactive citations. End-to-end flow:
+
+```
+1. Tool execution
+   ────────────
+   geminiProxy → tool calling loop
+     ↓ (AI calls searchPapers)
+   toolExecutor dispatches
+     ↓
+   functions/src/tools/papers.ts → SearchEngine + Reranker
+     ↓
+   Returns {chunks: [{position, paperTitle, sectionPath, text, ...}, ...]}
+
+2. Marker embed (gemini-client.ts)
+   ──────────────────────────────
+   For each searchPapers tool result:
+     citations = {1: chunk1, 2: chunk2, ...}
+     b64 = btoa(JSON.stringify(citations))
+     marker = `\n\n<!--AI_CITATIONS:${b64}-->\n\n`
+     append to streaming text
+
+3. Frontend extract (citation-popover.ts preprocessCitationMarkers)
+   ───────────────────────────────────────────────────────────────
+   Scan text for /<!--AI_CITATIONS:([A-Za-z0-9+/=]+)-->/g
+   Decode → store in module-level Map<msgId, CitationsForMessage>
+   Strip marker from text
+
+4. Markdown render (message-bubble.ts)
+   ───────────────────────────────────
+   text = preprocessDraftMarkers(preprocessCitationMarkers(rawText, msgId))
+   html = await renderMarkdown(text)  // marked + KaTeX + DOMPurify
+   contentEl.innerHTML = html
+
+5. DOM post-process (citation-popover.ts attachCitationChips)
+   ──────────────────────────────────────────────────────────
+   TreeWalker over text nodes (skip CODE/PRE/existing chips)
+   Match /\[(\d{1,2}(?:\s*,\s*\d{1,2})*)\]/g
+     - Single [1]: 1 chip
+     - Combo [2, 4]: 2 chips [2][4] side-by-side
+   Replace with <span class="citation-chip" data-msg-id="..." data-position="N">[N]</span>
+
+6. Click handler (global delegation)
+   ────────────────────────────────
+   Click on .citation-chip → showCitationPopover(msgId, position)
+   Popover modal renders: paperTitle, sectionPath, full chunk text, rerankScore
+   ESC / × / outside click → hideCitationPopover
+
+7. Persistence
+   ───────────
+   Marker REMAINS in stored RTDB text aiConversations/{uid}/{convId}/messages/{msgId}/text
+   On conversation reload, step 3-5 re-execute → chips re-render
+   No separate `citations` field saved (Map is in-memory per session)
+
+8. Streaming bubble msgId migration (fix4)
+   ───────────────────────────────────────
+   During stream, msgEl has no msgId yet → citations stored under "" key
+   onComplete callback (message-handler.ts):
+     realMsgId = await appendMessage(...)
+     msgEl.dataset.msgId = realMsgId
+     migrateCitations("", realMsgId)
+     attachCitationChips(contentEl, realMsgId)
+```
+
+**Marker pattern is reusable** for future tools needing rich UI (charts, tables,
+interactive widgets). Pattern documented in `ARCHITECTURE.md` Section 🤖.
 
 ---
 
@@ -927,39 +1072,84 @@ Weekly admin dashboard:
 
 ## 17. Implementation Roadmap
 
-### Phase A — Foundation (Round 105-115) ✅ Started
-
-| Round | Status | Task |
-|---|---|---|
-| 105 | ✅ Done | TypeScript skeleton: 75 stub files, 38 folders, 6 analyzer groups |
-| 106 | ⏳ Next | Firebase Blaze + Cloud Functions skeleton |
-| 107 | 📋 | Python service skeleton (FastAPI + Docker + Cloud Run) |
-| 108 | 📋 | AI Chat sidetab UI shell (slide-out, ⌘J) |
-| 109 | 📋 | Conversation schema RTDB + load/save/list |
-| 110 | 📋 | Markdown + KaTeX + image rendering |
-| 111 | 📋 | Tier 1 routing + Gemini Flash |
-| 112 | 📋 | Tier 1 tools: chemicals, equipment, bookings |
-| 113 | 📋 | Tier 1 tools: history, members, inventory |
-| 114 | 📋 | Compliance KB (Nghị định 24/2026) |
-| 115 | 📋 | Web Speech API (ASR + TTS, vi-VN) |
-
-### Phase B — RAG Infrastructure (Round 116-128)
+### Phase A — Foundation (Round 105-115 + R129) ✅ DONE
 
 | Round | Task |
 |---|---|
-| 116 | Paper upload UI + queue + dedup |
-| 117 | Chandra OCR integration (Cloud Function proxy) |
-| 118 | PDF extraction pipeline (text + figures + metadata) |
-| 119 | Smart chunking (section-aware, overlap) |
-| 120 | Contextual pre-prep (Anthropic technique) |
-| 121 | Voyage-3 embedding pipeline |
-| 122 | Firestore Vector Search index + queries |
-| 123 | BM25 keyword index (Lunr.js) |
-| 124 | Hybrid retrieval (RRF fusion) |
-| 125 | Voyage rerank-2.5 integration |
-| 126 | Citation tracking + UI display |
-| 127 | Paper Library page (browse, search, filter) |
-| 128 | Zotero + Drive sync + MatSciBERT alt embedding |
+| 105 | ✅ TypeScript skeleton: stubs, analyzer subfolders, .env, .gitignore |
+| 106 | ✅ Firebase Blaze + Cloud Functions skeleton |
+| 107 | ⏸️ Python service deferred (no use case yet) |
+| 108-108b | ✅ AI Chat sidetab UI shell + draggable FAB |
+| 109 | ✅ Conversation schema RTDB `aiConversations/{uid}/{convId}` |
+| 110 | ✅ Markdown + KaTeX + highlight.js + DOMPurify |
+| 111-111b | ✅ Real Gemini Flash via geminiProxy + CSP for cloudfunctions.net |
+| 112-112c | ✅ Tool calling — 6 read tools (chemicals, equipment, experiments, bookings, members, getCurrentDate) |
+| 113-113b | ✅ Streaming fixes (race + stuck), Stop/Regenerate/auto-rename, error toast |
+| 114 | ⏸️ Compliance KB deferred (Nghị định 24/2026 — no use case in lab) |
+| 114-actual | ✅ Cloud Speech v2 Chirp 2 STT (vi-VN) |
+| 115a | ✅ Action tools — 3 draft generators (createExperiment, updateChemicalStock, createBooking) |
+| 115b | ✅ Confirmation card pattern with AI_DRAFT marker |
+| 115c-d | ✅ confirmAction Cloud Function + commitDraft + actionAudit |
+| 116-126 | ✅ Pre-Commercial Audit — 14 bugs + 3 features (see AUDIT_LOG.md) |
+| 127-128 | ✅ Documentation phase (CLAUDE.md, ARCHITECTURE.md, AGENTS.md updates) |
+| 129 | ✅ 4th action tool — recordExperimentResultDraft (HT-/EC- detection, diff card) |
+
+### Phase B — RAG Infrastructure (Round 130-138) ✅ DONE
+
+Deviations from original plan: Zotero/Drive sync deferred, contextual pre-prep deferred,
+MatSciBERT alt deferred. See Section 5.4 for full reality vs design diff.
+
+| Round | Task | Status |
+|---|---|---|
+| 130-131 | Paper upload UI + Storage + RTDB metadata | ✅ |
+| 132 | Paper library list + filters | ✅ |
+| 133 | Chandra OCR integration via chandraProxy | ✅ |
+| 134 | Section-aware chunking (chunkPaper Cloud Function) | ✅ |
+| 135 | Voyage embedding via Pub/Sub chain (paperPipelineRouter) | ✅ |
+| 136 | Vector search backend + frontend UI | ✅ |
+| 137a | BM25 inverted index in Firestore | ✅ |
+| 137b | RAG eval framework + observability (tracer, cost, MRR/P@K/NDCG) | ✅ |
+| 137c1-c2 | Voyage rerank-2.5 + frontend confidence badges | ✅ |
+| 138a | Claude proxy infrastructure (Sonnet/Opus/Haiku) | ✅ |
+| 138a-fix | Drop top_p (Anthropic mutual exclusion) | ✅ |
+| 138b1 | searchPapers tool integration | ✅ |
+| 138b1-fix | Correct R137b interface usage | ✅ |
+| 138b1-fix2 | enrichTitles via RTDB | ✅ |
+| 138b2a | Tier 1 RAG verified end-to-end | ✅ |
+| 138b2b | NotebookLM-style citation chips with popover | ✅ |
+| 138b2b-fix2..5 | Anchor fixes, CSS append, msgId migration, combo regex | ✅ |
+
+**Baseline metrics** (10 seed queries, 3 papers, 678 chunks, R137c2):
+- Hybrid + rerank: MRR=1.0, P@10=0.95, NDCG=0.99
+- Latency: 520ms warm, 3-4s cold (Voyage rerank dominates)
+
+### Phase B.4 — Knowledge Graph (planned)
+
+Triggers: lab needs citation network, cross-paper discovery.
+
+- Citation extraction (regex + references parser + OpenAlex enrichment)
+- Entity extraction (compounds, methods, conditions via Gemini Flash structured output)
+- Neo4j AuraDB Free (200K nodes, 400K edges) or Firestore graph collection
+- Graph-aware retrieval (multi-hop queries: "papers citing this method")
+
+### Phase B.5 — Research Schema Foundation (planned)
+
+Triggers: cross-experiment analytics, AI provenance-aware reasoning.
+
+- Define unified entities: Sample, Material, Experiment, DataAsset, Instrument
+- Non-breaking domain layer (parallel to existing flat collections)
+- Lineage tracking (sample → experiment → measurement → metric)
+- Material ontology (formula, category, known properties, references)
+- Frontend lineage UI (Sample detail page shows experiment chain)
+
+### Phase B.6 — Synthesis + Memory (planned)
+
+Triggers: B.4 + B.5 stable.
+
+- Query router (intent classification: factual / synthesis / discovery)
+- Synthesis chain (gather → group → compare → summarize)
+- Frontend synthesis report UI
+- Episodic Lab Memory schema + auto-extract from experiments + verified-by-lead promotion
 
 ### Phase C-1 — Optical & Structural Analyzers (Round 129-145)
 
