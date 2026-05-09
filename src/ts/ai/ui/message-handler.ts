@@ -28,7 +28,7 @@ import {
   scrollToBottom,
   removeMessageBubble,
 } from "./message-bubble";
-import { migrateCitations, attachCitationChips } from "./citation-popover";
+import { migrateCitations } from "./citation-popover";
 import { streamLlm } from "../llm/llm-router";
 import { getSystemPrompt } from "../llm/system-prompt";
 import { LlmMessage } from "../llm/types";
@@ -165,17 +165,18 @@ export async function sendUserMessage(text: string): Promise<void> {
             text: fullText,
             tier: 1,
           });
-          // R138b2b-fix4: bind real msgId to streaming bubble + re-render chips.
-          // During streaming, citations were stored under msgId="" (empty)
-          // because the bubble had no ID yet. Now migrate to real msgId
-          // and re-run chip-ify so [N] markers become clickable chips.
+          // R138b2b-fix4 + R140-fix: bind real msgId, migrate citations,
+          // then re-render via updateMessageText to guarantee chips attach
+          // (avoids race with any pending last-chunk updateMessageText).
           if (realMsgId && assistantMsgEl) {
             assistantMsgEl.dataset.msgId = realMsgId;
             migrateCitations("", realMsgId);
-            const contentEl = assistantMsgEl.querySelector(
-              ".ai-msg__content",
-            ) as HTMLElement | null;
-            if (contentEl) attachCitationChips(contentEl, realMsgId);
+            // Final re-render: msgId now valid, so updateMessageText's
+            // preprocessCitationMarkers + attachCitationChips path runs
+            // correctly. This is the LAST DOM write for this message;
+            // no further onChunk can race past this point because
+            // streamCompleted=true and the stream loop has exited.
+            await updateMessageText(assistantMsgEl, fullText, true);
           }
           scrollToBottom();
         },
