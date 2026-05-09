@@ -53,6 +53,14 @@ Pending features và improvements đã thảo luận. Owner Nam quyết định 
 - Voice STT (vi-VN Chirp 2) + TTS (browser native)
 - Confirmation card pattern cho write operations
 
+### AI Module Phase B.1-B.3 (Round 130-138) ✅ DONE
+- **B.1** (R130-R136): Paper pipeline (upload → Chandra OCR → chunk → embed Voyage 3-large → Firestore vector)
+- **B.2** (R137a-R137c2): Hybrid retrieval (vector + BM25 + RRF), Voyage rerank-2.5, eval framework, observability traces
+- **B.3** (R138 a/b1/b2): Claude proxy infrastructure, searchPapers tool, NotebookLM-style citation chips
+- Tier 1 RAG (Gemini Flash + searchPapers + chips) live in AI Chat
+- 11 Cloud Functions deployed: geminiProxy, claudeProxy, toolExecutor, speechProxy, confirmAction, chunkPaper, paperPipelineRouter, searchPapers, backfillBM25, runEval, chandraProxy
+- 10 tools: 6 read (chemicals, equipment, experiments, bookings, members, date) + 4 action (createExperiment, updateChemicalStock, createBooking, recordExperimentResult) + 1 RAG (searchPapers)
+
 
 ---
 

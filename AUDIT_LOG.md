@@ -520,3 +520,104 @@ src/ts/ai/llm/
     - Build: `dist/assets/index-*.js` có string "diff-table" và type literal
     - Live: `curl https://lab-manager-268a6.web.app/assets/index-*.js | grep type` — verify deploy synced
 13. **AI không gọi action tool mới?** → Check `system-prompt.ts` có tool description + examples chưa. Symptom: AI generate text giả thay vì gọi tool.
+
+
+---
+
+## R138 — Phase B.3: Claude proxy + RAG with citations (2026-05-09)
+
+### Sub-rounds shipped
+
+| Round | What | Files |
+|---|---|---|
+| R138a | Claude proxy Cloud Function | `functions/src/handlers/claude-proxy.ts` (NEW), `tools/registry.ts` (Anthropic format), `index.ts`, `observability/cost-calculator.ts` |
+| R138a-fix | Drop `top_p` (Anthropic mutual exclusion with temperature) | `claude-proxy.ts` line ~120 |
+| R138b1 | searchPapers tool | `functions/src/tools/papers.ts` (NEW), `handlers/tool-executor.ts`, `tools/registry.ts`, `src/ts/ai/llm/system-prompt.ts` |
+| R138b1-fix | Correct R137b interfaces (SearchEngineContext, SearchQuery, RerankerInput shapes) | `papers.ts` |
+| R138b1-fix2 | enrichTitles via RTDB instead of Firestore | `papers.ts` |
+| R138b2a | Tier 1 RAG verified end-to-end | (no code — registry add was sufficient) |
+| R138b2b | NotebookLM-style citation chips | `src/ts/ai/ui/citation-popover.ts` (NEW), `gemini-client.ts`, `message-bubble.ts`, `message-handler.ts`, `ai-chat.css` |
+| R138b2b-fix2 | Correct 2-space indentation anchors in message-bubble.ts | `message-bubble.ts` |
+| R138b2b-fix3 | Append missing CSS | `ai-chat.css` |
+| R138b2b-fix4 | Migrate citations `""` → realMsgId in onComplete | `citation-popover.ts`, `message-handler.ts` |
+| R138b2b-fix5 | Regex supports `[N, M]` combo | `citation-popover.ts` |
+
+### Regression checklist (extends Pre-Commercial Audit checklist above)
+
+14. **Claude proxy returns 400 from Anthropic?** → Check if both `temperature` and `top_p`
+    set in request body. Anthropic rejects mutual exclusion. Drop `top_p`.
+    Symptom: 400 error with body containing "cannot both be specified".
+
+15. **searchPapers returns wrong paperTitle (= paperId)?** → Check `enrichTitles()` lookup
+    path. Production schema is RTDB `aiPapers/_shared/{paperId}/title`, NOT Firestore
+    `aiPapers/{id}.title`. Match pattern in `handlers/search-papers.ts` line ~120.
+
+16. **searchPapers TS compile errors `engine.search` argument shapes?** → Read
+    `functions/src/search/types.ts` for current interfaces. As of R137b:
+    `engine.search(query: SearchQuery, ctx: SearchEngineContext)` — query is OBJECT
+    `{text, limit, paperId?}`, NOT a string. `VoyageReranker` constructor takes options
+    object `{apiKey, model}`, NOT positional args. `reranker.rerank(input: RerankerInput)`
+    takes `{query, candidates, topK}`.
+
+17. **Citation chips render only after F5, not on streaming?** → Check `onComplete` callback
+    in `message-handler.ts` (around line 159):
+    - Must capture `realMsgId` from `await appendMessage(...)`
+    - Must call `migrateCitations("", realMsgId)` to move data from streaming key
+    - Must call `attachCitationChips(contentEl, realMsgId)` to re-run chip-ify
+    - Must set `assistantMsgEl.dataset.msgId = realMsgId`
+    Symptom: streaming shows plain `[1]` `[2]` text, F5 reload shows cyan chips
+    (because reload renders via `renderMessageMarkdown` initial path which uses `msg.id`
+    directly).
+
+18. **Citation chip combo `[2, 4]` shows as plain text?** → Check regex in
+    `citation-popover.ts` `attachCitationChips()`. Must be
+    `/\[(\d{1,2}(?:\s*,\s*\d{1,2})*)\]/g`, NOT `/\[(\d{1,2})\]/g` (single only).
+    Inner loop must split positions and render multiple chips per match.
+
+19. **Test chip injected manually but not cyan?** → Check CSS deployed. Run
+    `grep "citation-chip" src/css/ai-chat.css` — must have at least 3 rules
+    (`.citation-chip`, `:hover`, `:active`). If missing, R138b2b-fix3 CSS append
+    didn't run; rerun and rebuild.
+
+20. **Citation popover opens but display: none?** → CSS `.citation-popover` has
+    `display: flex` rule, but inline style `display: none` set in `ensurePopoverEl()`.
+    `showCitationPopover()` overrides via `pop.style.display = "flex"`. If popover
+    still hidden, check parent has `position: relative/absolute` blocking.
+
+### Marker pattern (reusable for future tools)
+
+R115b established the `<!--AI_*-->` marker pattern for embedding tool results into
+streaming text. R138b2b extended it for citations. Pattern:
+
+```typescript
+// Backend (gemini-client.ts after toolResults loop):
+const json = JSON.stringify(payload);
+const b64 = btoa(unescape(encodeURIComponent(json)));
+const marker = `\n\n<!--AI_TYPE:${b64}-->\n\n`;
+allAccumulated += marker;
+cb.onChunk(allAccumulated);
+
+// Frontend (preprocess BEFORE renderMarkdown):
+const re = /<!--AI_TYPE:([A-Za-z0-9+/=]+)-->/g;
+text.replace(re, (match, b64) => {
+  const json = decodeURIComponent(escape(atob(b64)));
+  const data = JSON.parse(json);
+  // store/dispatch as needed
+  return ""; // strip marker from rendered text
+});
+```
+
+Future tool results that need rich UI (charts, tables, interactive widgets) should
+follow this pattern: marker → preprocess → strip → custom render.
+
+### Architecture notes
+
+- **claudeProxy is NOT yet used in production AI Chat** as of R138. Only Tier 1 (Gemini
+  Flash) is wired. Tier 2 (Sonnet) and Tier 3 (Opus) require frontend `claude-client.ts`
+  parallel to `gemini-client.ts` + tier router heuristics. Deferred to R138b2c+.
+- **Citations persistence**: marker stays in stored RTDB text `aiConversations/{uid}/
+  {convId}/messages/{msgId}/text`. On conversation reload, marker re-extracted by
+  `preprocessCitationMarkers` in `renderMessageMarkdown` initial path. No separate
+  `citations` field saved (deferred — current approach works fine).
+- **Backward compat**: tin nhắn cũ (saved before R138 deploy) không có marker → no chips.
+  This is fine; old conversations remain readable, just without interactive citations.

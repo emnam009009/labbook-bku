@@ -2,6 +2,91 @@
 
 Concise version history. For full git log: `git log --oneline`.
 
+## [Round 138 — a + b1 + b2a + b2b (fix2..5)] - 2026-05-09
+
+### Added — Phase B.3: Claude proxy + Tier 1 RAG with NotebookLM-style citations
+
+**R138a — Claude proxy infrastructure** (`functions/src/handlers/claude-proxy.ts`):
+- New Cloud Function `claudeProxy` (asia-southeast1, 540s timeout, 512MiB)
+- Anthropic Messages API wrapper (raw fetch, no SDK)
+- SSE stream normalization: `data: {"text":"..."}`, `data: {"toolUse":{id,name,input}}`, terminal `[DONE]`
+- Tool format translation (Anthropic `input_schema` ↔ internal Gemini-shaped tool defs)
+- Models supported: `claude-sonnet-4-6`, `claude-opus-4-7`, `claude-haiku-4-5-20251001`
+- `NO_SAMPLING_PARAMS_MODELS` gate for Opus 4.7 (drops `temperature` for that model)
+- **R138a-fix**: dropped `top_p` from request body (Anthropic mutual exclusion with `temperature`)
+- ANTHROPIC_API_KEY secret created, IAM allUsers invoker policy applied
+- Cost pricing added in `cost-calculator.ts`: Sonnet $3/$15, Opus $5/$25, Haiku $1/$5 per 1M tokens
+
+**R138b1 — searchPapers tool integration** (`functions/src/tools/papers.ts`):
+- New tool wrapping R137b SearchEngine + R137c1 reranker DIRECTLY (no HTTP roundtrip)
+- 1-indexed `position` field for `[N]` citation marker support
+- Hybrid mode default; reranker optional via config
+- VOYAGE_API_KEY wired into `toolExecutor` secrets array
+- **R138b1-fix**: corrected interface usage — `SearchEngineContext = {embed, firestore}`,
+  `engine.search(query: SearchQuery, ctx)` (object args), `VoyageReranker(opts)`,
+  `reranker.rerank(input)`. Initial implementation guessed wrong shapes.
+- **R138b1-fix2**: `enrichTitles()` switched from Firestore lookup to RTDB
+  `aiPapers/_shared/{paperId}/title` (matches R136a/R137b pattern in production search-papers.ts)
+- System prompt updated (`src/ts/ai/llm/system-prompt.ts`):
+  - searchPapers added to READ TOOLS list with usage examples
+  - Citation rules: AI must cite `[position]` after scientific claims, never invent positions
+
+**R138b2a — Tier 1 RAG verified end-to-end**:
+- No code changes — gemini-client.ts already had R112 tool execution loop
+- Adding searchPapers to registry was sufficient → AI auto-calls tool → response cites `[1]` `[2]`
+- Verified: Gemini Flash + searchPapers tool returns response with markdown citations
+
+**R138b2b — NotebookLM-style citation chips** (`src/ts/ai/ui/citation-popover.ts`):
+- Backend embeds `<!--AI_CITATIONS:base64-->` marker after searchPapers tool execution
+  (parallel pattern to R115b `<!--AI_DRAFT:-->` marker)
+- Frontend extracts marker, stores citations keyed by message ID
+- DOM post-process: `[N]` text nodes → `<span class="citation-chip">` cyan pill
+- Click chip → modal popover with paper title, section path, full chunk text, rerank score
+- ESC / outside click / × button → close popover; dark mode aware
+
+**R138b2b sub-fixes** (5 iterations to ship):
+- **fix2**: corrected message-bubble.ts indentation anchors (production uses 2-space, not 4)
+- **fix3**: appended missing CSS for chip + popover styles (~120 lines in `ai-chat.css`)
+- **fix4**: `migrateCitations(from, to)` helper — streaming bubble has no msgId initially,
+  citations stored under `""` key during stream, migrated to real msgId via `onComplete`
+  callback after `appendMessage` returns the persistent ID
+- **fix5**: regex updated to match combined citations like `[2, 4]` or `[1, 2, 3]`,
+  rendering as multiple chips `[2][4]` side-by-side (single citation `[1]` still works)
+
+### Modified
+- `functions/src/handlers/tool-executor.ts` — declared VOYAGE_API_KEY secret
+- `functions/src/tools/registry.ts` — searchPapers tool definition (Gemini + Anthropic shapes)
+- `functions/src/index.ts` — exported claudeProxy
+- `functions/src/observability/cost-calculator.ts` — Claude pricing tiers
+- `src/ts/ai/llm/gemini-client.ts` — embed AI_CITATIONS marker for searchPapers tool result
+- `src/ts/ai/llm/system-prompt.ts` — searchPapers usage + citation rules + 2 examples
+- `src/ts/ai/ui/message-bubble.ts` — preprocess citations BEFORE markdown, attach chips AFTER
+- `src/ts/ai/ui/message-handler.ts` — onComplete migrates citations from `""` → real msgId
+- `src/css/ai-chat.css` — citation chip + popover styles (~120 lines)
+
+### Files NEW
+- `functions/src/handlers/claude-proxy.ts` (~340 LOC)
+- `functions/src/tools/papers.ts` (~210 LOC)
+- `src/ts/ai/ui/citation-popover.ts` (~290 LOC)
+
+### Lessons
+- Anthropic API rejects requests with both `temperature` and `top_p` set; drop `top_p`
+- Tool result handlers MUST follow exact existing interface contracts (R137b shapes); guessing
+  field names from memory fails. Read source first, code second.
+- Streaming bubbles have no msgId until `appendMessage` saves to RTDB. Citation storage must
+  use placeholder key during stream + migrate on completion.
+- AI cites combined positions `[2, 4]` even when system prompt says separate; regex must
+  handle both forms.
+- Production indentation is 2-space across most TS files (verified via `cat -A`); `cat -n`
+  output's line-number prefix can be misread as indent. Use raw bytes for anchor checks.
+
+### Cost (verified runtime)
+- searchPapers tool: ~600ms warm, ~5s cold (mostly Voyage rerank API latency)
+- Claude proxy not yet wired into AI Chat (Tier 2/3 deferred to R138b2c)
+- Tier 1 RAG (Gemini Flash + searchPapers): essentially free (Voyage trial credits + Gemini free tier)
+
+---
+
 ## [Round 137c — c1 + c1-fix + c2] - 2026-05-08
 
 ### Added — Voyage rerank-2.5 + frontend confidence UI
