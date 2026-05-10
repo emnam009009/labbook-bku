@@ -1,5 +1,71 @@
 # CHANGELOG
 
+## R152d-1 — Bulk migration Cloud Function (Phase B.5) (2026-05-10)
+
+### Added
+- `functions/src/triggers/migrate-legacy-experiments.ts` (new):
+  Gen2 HTTP function `migrateLegacyExperiments` (asia-southeast1, Node 24,
+  timeout 540s, memory 512MiB).
+
+  - Auth: requires `role=superadmin` custom claim
+  - Body: `{ mode: "dry-run"|"confirm", legacyCollection: "hydro"|"electrode"|"electrochem"|"all", batchLimit?: number }`
+  - Reads RTDB legacy collections, synthesizes `Experiment` shape with
+    `legacyRef={collection, id}`, writes to Firestore `experiments/`.
+  - Idempotent: skips entries already migrated (queries by
+    `legacyRef.collection + legacyRef.id`).
+  - Backup-first (in confirm mode): dumps legacy JSON to
+    `migrationBackups/{R152d-{timestamp}}` Firestore subcollection BEFORE
+    any writes. Recovery point if needed.
+  - Batched writes: 500 docs/batch (Firestore limit).
+  - Returns: per-collection results + totals + backupId + durationMs.
+
+- `functions/src/index.ts`: export `migrateLegacyExperiments`.
+
+### Adapter mapping (best-effort)
+Per spec §6.1, legacy → Experiment fields:
+- `type` derived from collection: hydro→hydrothermal, electrode→electrode-prep,
+  electrochem→electrochemistry
+- `code` from data.code or legacyId
+- `operatorId` from data.uid or data.person (fallback "")
+- `performedAt` from data.date or data.createdAt (fallback serverTimestamp)
+- `status` from data.locked ? "completed" : (data.status || "completed")
+- `inputSamples`/`outputSamples`/`conditions`/`tags` empty (no equivalents
+  in legacy; lab user can edit experiments later via R152c-2 form)
+- `legacyRef` immutable per Firestore rules R152b
+
+### Production deploy + invocation
+```bash
+cd functions && npm run build && cd ..
+firebase deploy --only functions:migrateLegacyExperiments
+
+# Get superadmin ID token (browser console signed in as nvhn.7202@gmail.com):
+#   firebase.auth().currentUser.getIdToken().then(t => console.log(t))
+
+# Test dry-run hydro:
+curl -X POST https://asia-southeast1-lab-manager-268a6.cloudfunctions.net/migrateLegacyExperiments \
+  -H "Authorization: Bearer ${ID_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{"mode":"dry-run","legacyCollection":"hydro"}'
+
+# Or use Firebase Console > Functions > migrateLegacyExperiments > Test panel
+```
+
+### Recovery (if migration goes wrong)
+- Backup at `experiments` DB > migrationBackups/{R152d-timestamp}
+- Manual restore via admin SDK script (not implemented yet — R152d-3 if needed)
+- Worst case: delete migrated docs by `legacyRef != null`, RTDB legacy is
+  read-only forever (untouched by migration)
+
+### Out of scope (future)
+- R152d-2: UI button in admin page to invoke this function
+- R152d-3: Reverse migration / restore from backup
+- R152e: Adapter UI showing legacy + new merged in same list
+
+### Files
+- functions/src/triggers/migrate-legacy-experiments.ts (new)
+- functions/src/index.ts (export added)
+- CHANGELOG.md (this entry)
+
 ## R152c-2 — Experiments form with type-specific schema (Approach C) (2026-05-10)
 
 ### Added

@@ -48,3 +48,7 @@ export { confirmAction } from "./handlers/confirm-action";
 
 // R150c-followup: Auto-sync role claim from RTDB users/{uid}/role
 export { syncRoleClaim } from "./triggers/sync-role-claim";
+
+
+// R152d-1: Bulk migration legacy RTDB → Firestore experiments
+export { migrateLegacyExperiments } from "./triggers/migrate-legacy-experiments";
