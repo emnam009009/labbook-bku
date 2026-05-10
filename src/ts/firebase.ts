@@ -74,7 +74,7 @@ export const auth = getAuth(app)
 export const storage = getStorage(app)
 // R150b: Firestore default DB (NOT named DB `labbook` from research-schema.md §2;
 // Phase B already shipped against default DB)
-export const fdb = getFirestore(app)
+export const fdb = getFirestore(app, "labbook")
 
 // ── Connect to emulator neu chay voi VITE_USE_EMULATOR=true ──
 if (import.meta.env.VITE_USE_EMULATOR === 'true') {

@@ -1,5 +1,62 @@
 # CHANGELOG
 
+## R150c-fix3 — Trigger deferred until GCIP (2026-05-10)
+
+### Issue
+`beforeUserCreated` blocking trigger requires Google Cloud Identity Platform
+(GCIP), a paid upgrade of Firebase Auth. Project currently uses standard
+Firebase Auth → deploy fails with `OPERATION_NOT_ALLOWED: Blocking Functions
+may only be configured for GCIP projects`.
+
+v1 `auth.user().onCreate()` (non-blocking, GCIP not required) cannot run on
+Node 24 (Gen1 limit) — also fails.
+
+### Fix
+Removed trigger export from `functions/src/index.ts`. Trigger source code
+moved to `functions/src/triggers/on-auth-create.ts.deferred-until-gcip`
+(kept as reference, not compiled).
+
+### New user signup workflow (until GCIP)
+Manual: run migration script when new users register.
+```bash
+node scripts/migrate-tenant-claims-r150c.mjs --dry-run
+node scripts/migrate-tenant-claims-r150c.mjs --confirm
+```
+Lab BKU has ~8 users, signups infrequent → manual is acceptable.
+
+### Restore at Phase E (commercial launch)
+1. Upgrade Firebase Auth → GCIP in Firebase Console
+2. Rename `.deferred-until-gcip` back to `.ts`
+3. Re-add export in `functions/src/index.ts`
+4. `firebase deploy --only functions:setTenantOnCreate`
+
+GCIP cost: free 50 MAU, $0.0055/user/month after. Negligible at lab scale.
+
+
+## R150c-fix2 — DB name + Node 24 trigger fix (2026-05-10)
+
+Issue 1: `firestore.rules` deployed to DB `labbook` (correct per
+`firebase.json`). But R150a/b service code used `getFirestore(app)` =
+default DB. Mismatch — frontend writes would go to wrong DB.
+
+Fix: `src/ts/firebase.ts` now `getFirestore(app, "labbook")`.
+
+This corrects R150a/b CHANGELOG claim that Phase B shipped against
+default DB — wrong, Phase B used named DB `labbook` since R134.
+
+Issue 2: v1 `auth.user().onCreate()` runs Gen1 which doesn't support
+Node 24 (project default). Deploy failed.
+
+Fix: switched to v2 `beforeUserCreated` blocking trigger. Sets claim via
+return value, runs on Node 24.
+
+### Verify
+```bash
+npm run typecheck
+cd functions && npm run build && cd ..
+firebase deploy --only functions:setTenantOnCreate
+```
+
 ## R150c — Firestore rules + tenant claim migration (2026-05-10)
 
 ### Phase 1: Files only (no deploy)

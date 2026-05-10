@@ -119,3 +119,6 @@ dist-types/
 
 # Patch script idempotency markers
 .R*_APPLIED
+
+# Firebase CLI debug logs
+*-debug.log
