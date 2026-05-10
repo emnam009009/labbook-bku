@@ -21,9 +21,21 @@ export default defineConfig({
       include: [
       'src/ts/utils/**/*.js',
       'functions/src/bm25/chemistry-patterns.ts',
+      'functions/src/bm25/stemmer.ts',
+      'functions/src/bm25/stopwords.ts',
+      'functions/src/bm25/tokenizer.ts',
+      'functions/src/bm25/types.ts',
       'functions/src/search/rrf.ts',
     ],
       exclude: ['src/ts/**/*.test.js'],
+    },
+    // R145a: CJS interop for `natural` (Porter stemmer) and `stopwords-iso`.
+    // These packages are CommonJS; without `inline`, Vitest's ESM loader
+    // throws on transitive imports from functions/src/bm25/*.
+    server: {
+      deps: {
+        inline: [/^natural/, /^stopwords-iso/],
+      },
     },
   },
 })

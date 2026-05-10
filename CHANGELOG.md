@@ -1,5 +1,84 @@
 # CHANGELOG
 
+## R145a — BM25 backend test coverage + CJS interop (2026-05-10)
+
+### Context
+R144 covered pure-logic modules of BM25 (chemistry-patterns, RRF). R145a
+extends coverage to the remaining backend BM25 files: stemmer (Porter v2
+via `natural` CJS), stopwords (`stopwords-iso` CJS + VI hardcoded list +
+chemistry whitelist), tokenizer (the orchestrator), and types (constants).
+
+The BM25 module is now ~80% covered. Remaining gaps: corpus-stats,
+bm25-engine, hybrid-engine — all need Firestore mocks (R146+).
+
+### Strategy: Option Y — CJS interop via Vitest server.deps.inline
+Two npm packages used by the BM25 backend are CommonJS-only:
+  - `natural` (Porter v2 stemmer)
+  - `stopwords-iso` (179 English stopwords)
+
+Root project is ESM (`"type": "module"`), so Vitest crashes on transitive
+CJS imports without configuration. Three options were considered:
+  - X: Mock both packages → fast but tests fake behavior, drift risk
+  - Y: Configure CJS interop → tests real behavior, one-time setup cost
+  - Z: Skip EN-specific tests → low coverage, deferred debt
+
+Chose Y for long-term value: the same CJS/ESM problem will recur when
+testing Firebase Admin SDK (R145b), Firestore SDK (Phase B.5), and any
+backend lib added later. Solving it once = template for future rounds.
+
+If interop fails on a given environment, EN-specific tests (Porter stems
+"running" → "run") fail with clear errors. Plan B: fall back to Option Z
+for affected tests, document follow-up.
+
+### Added
+- `tests/bm25/types.test.ts` — 3 cases. Locks TOKENIZER_VERSION=2,
+  DEFAULT_K1=1.5, DEFAULT_B=0.75, Firestore path constants.
+- `tests/bm25/stemmer.test.ts` — 12 cases. Chemistry bypass, Porter stem
+  for EN -ing/-ed/-s, VI no-stem lowercase, mixed/empty edge cases.
+- `tests/bm25/stopwords.test.ts` — 25 cases. VI hardcoded list,
+  chemistry whitelist (V/A/M/T/K/eV/mV/pH...), EN via stopwords-iso,
+  mixed language fallthrough, detectLanguage heuristic (4% diacritic
+  threshold + 15% English ratio for mixed).
+- `tests/bm25/tokenizer.test.ts` — 25 cases including 5 integration:
+  realistic EN materials science abstract, VI abstract, mixed VI+EN,
+  determinism check, re-export wiring.
+
+### Changed
+- `vitest.config.js`:
+  - `coverage.include` extended to track the 4 new BM25 source files.
+  - Added `server.deps.inline: [/^natural/, /^stopwords-iso/]` to enable
+    CJS interop. This is the canonical Vite/Vitest pattern for letting
+    ESM test code import CJS-only packages.
+
+### Known limitations
+- `mixed` language test (`tokenize` integration) accepts either "mixed"
+  or "vi" because detectLanguage thresholds are sensitive to exact
+  character ratios. Not strict because behavior is heuristic, not API.
+- If `natural` package version changes Porter stemmer output (rare),
+  tests like `running` → `run` may need updating.
+
+### Out of scope (deferred)
+- Action tools tests (createExperimentDraft, updateChemicalStock,
+  createBooking) — need Firebase Admin SDK mocks → R145b.
+- BM25 engines (bm25-engine, hybrid-engine, engine) — need corpus +
+  Firestore mocks → R146.
+- Frontend `src/ts/ai/rag/retrieval/bm25.ts` — separate code path,
+  may have own logic divergent from backend → R147 if needed.
+
+### Verify
+```bash
+npm test            # expect 168+ tests pass (108 existing + ~60 new)
+npm run typecheck   # expect 0 errors
+```
+
+### Files touched
+- tests/bm25/types.test.ts (new)
+- tests/bm25/stemmer.test.ts (new)
+- tests/bm25/stopwords.test.ts (new)
+- tests/bm25/tokenizer.test.ts (new)
+- vitest.config.js (modified — coverage + server.deps.inline)
+- CHANGELOG.md (this entry)
+
 ## R144 — BM25 pure logic test coverage (2026-05-10)
 
 ### Context
