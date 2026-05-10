@@ -26,6 +26,24 @@ import {
   connectStorageEmulator,
 } from 'firebase/storage'
 
+// R150b: Firestore client SDK (Phase B.5)
+import {
+  getFirestore,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  query as fsQuery,
+  where,
+  orderBy,
+  limit as fsLimit,
+  serverTimestamp as fsServerTimestamp,
+  Timestamp,
+  connectFirestoreEmulator,
+} from 'firebase/firestore'
+
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -54,6 +72,9 @@ const app  = initializeApp(firebaseConfig)
 export const db   = getDatabase(app)
 export const auth = getAuth(app)
 export const storage = getStorage(app)
+// R150b: Firestore default DB (NOT named DB `labbook` from research-schema.md §2;
+// Phase B already shipped against default DB)
+export const fdb = getFirestore(app)
 
 // ── Connect to emulator neu chay voi VITE_USE_EMULATOR=true ──
 if (import.meta.env.VITE_USE_EMULATOR === 'true') {
@@ -62,6 +83,8 @@ if (import.meta.env.VITE_USE_EMULATOR === 'true') {
   connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true })
   connectDatabaseEmulator(db, '127.0.0.1', 9000)
   connectStorageEmulator(storage, '127.0.0.1', 9199)
+  // R150b: Firestore emulator (port 8080 default)
+  connectFirestoreEmulator(fdb, '127.0.0.1', 8080)
 }
 
 export {
@@ -73,6 +96,9 @@ export {
   updatePassword, EmailAuthProvider, reauthenticateWithCredential,
   browserLocalPersistence, setPersistence,
   createUserWithEmailAndPassword,
+  // R150b: Firestore client primitives
+  collection, doc, getDoc, getDocs, setDoc, updateDoc,
+  fsQuery, where, orderBy, fsLimit, fsServerTimestamp, Timestamp,
 }
 
 // ── Basic CRUD helpers ─────────────────────────────────────────

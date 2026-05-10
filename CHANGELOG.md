@@ -1,5 +1,63 @@
 # CHANGELOG
 
+## R150b — Firestore client + Materials CRUD service (2026-05-10)
+
+### Context
+Second micro-round of R150 (Phase B.5 R1). Bootstraps Firestore client
+SDK in the frontend (first time — Phase B used firebase-admin only on
+backend). Implements Materials CRUD service per spec §3.1.
+
+### Added
+- `src/ts/firebase.ts`: Firestore client init + emulator wiring +
+  re-exports of primitives (collection, doc, getDoc, getDocs, setDoc,
+  updateDoc, query/where/orderBy/limit, serverTimestamp, Timestamp).
+- `src/ts/services/materials.ts` (new file):
+  - `getMaterial(id, tenantId)` — single doc read with tenant check
+  - `listMaterials({tenantId, category, limit})` — paginated list
+  - `searchMaterials(q, {tenantId, limit})` — substring match across
+    formula/name/aliases (in-memory filter, acceptable up to ~1000 docs)
+  - `createMaterial(input, uid, tenantId)` — admin-only write (rules R150c)
+  - `updateMaterial(id, patch, uid)` — partial update with updatedAt refresh
+  - `checkFormulaExists(formula, tenantId)` — uniqueness pre-check
+  - `deleteMaterial` INTENTIONALLY OMITTED per design (mark deprecated only)
+- `tests/services/materials.test.ts` (new file): ~16 test cases across
+  getMaterial, listMaterials, searchMaterials, createMaterial,
+  updateMaterial, checkFormulaExists.
+
+### Mock strategy
+`vi.mock("firebase/firestore")` at module level + `vi.mock("../../src/ts/firebase")`
+to short-circuit the wrapper's initializeApp side effects. Both test
+file and service resolve `firebase/firestore` from root node_modules
+→ same resolution path → mock works (unlike R145b case where
+functions/node_modules caused bypass).
+
+In-memory store (`mockDocs[]`) reset in `beforeEach`. Filters from
+where/orderBy/limit are attached to query and applied in mocked
+getDocs implementation.
+
+### Changed
+- `vitest.config.js`: extend `coverage.include` with materials.ts.
+
+### Out of scope (deferred)
+- R150c: tenant claim migration + Firestore rules update + production
+  deploy (the riskier round)
+- R150d: Materials browser UI page
+- R150e: Connect chemicals → materials via formula match
+- R150f: Documentation sync (research-schema.md `labbook` named DB → default DB)
+
+### Verify
+```bash
+npm run typecheck   # expect 0 errors
+npm test            # expect 175+ pass (161 + ~16 new)
+```
+
+### Files touched
+- src/ts/firebase.ts (modified — Firestore additions)
+- src/ts/services/materials.ts (new)
+- tests/services/materials.test.ts (new)
+- vitest.config.js (modified — coverage)
+- CHANGELOG.md (this entry)
+
 ## R150a — Material entity types (2026-05-10)
 
 ### Context

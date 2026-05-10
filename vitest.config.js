@@ -26,6 +26,7 @@ export default defineConfig({
       'functions/src/bm25/tokenizer.ts',
       'functions/src/bm25/types.ts',
       'functions/src/search/rrf.ts',
+      'src/ts/services/materials.ts',
     ],
       exclude: ['src/ts/**/*.test.js'],
     },
