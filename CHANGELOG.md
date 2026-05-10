@@ -1,5 +1,41 @@
 # CHANGELOG
 
+## R150e — Connect chemicals → materials (one-way) (2026-05-10)
+
+### Added
+Materials detail modal now includes "Hóa chất trong kho" section listing
+all chemicals (from `window.cache.chemicals`) whose formula matches the
+material's formula (case-insensitive). Each entry shows name, vendor,
+purity, stock + unit. Click → navigates to chemicals page.
+
+If no matches: shows "Không có chai hóa chất nào trùng công thức..."
+message.
+
+### Design notes
+- One-way link only (Materials → Chemicals lookup). Chemicals page NOT
+  modified — too large, too risky to touch this round.
+- Uses formula matching, NOT a stored `materialRef` field on chemicals.
+  Trade-off: simple + automatic, but matches all chemicals with same
+  formula even if user didn't intend the link. Acceptable since formula
+  is canonical identifier.
+- Click chemical → just opens chemicals page (no auto-filter to specific
+  chemical). Filter can be added in follow-up if needed.
+
+### Files
+- src/ts/pages/materials.ts: added `renderLinkedChemicals()` helper,
+  invoked inside `openMaterialDetail`.
+- CHANGELOG.md (this entry).
+
+### Verify
+```bash
+npm run typecheck && npm run build
+```
+
+Browser test:
+- Open Material detail → expect "Hóa chất trong kho" section
+- If material formula matches a chemical's formula → see chemical entry
+- Click chemical → chemicals page opens
+
 ## R150d-2 — Materials CRUD UI + search (2026-05-10)
 
 ### Added

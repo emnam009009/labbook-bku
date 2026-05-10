@@ -145,6 +145,9 @@ export function openMaterialDetail(id: string): void {
       `${(m.references || []).length} paper(s) — link UI in R150e</div>`
     : "";
 
+  // R150e: lookup chemicals matching this material's formula
+  const chemicalsHtml = renderLinkedChemicals(m.formula);
+
   const bodyEl = document.getElementById("modal-material-detail-body");
   if (bodyEl) {
     bodyEl.innerHTML = `
@@ -156,6 +159,7 @@ export function openMaterialDetail(id: string): void {
       ${aliasesHtml}
       ${propsHtml ? `<div class="mt-4"><h3 class="font-semibold mb-2">Known properties</h3>${propsHtml}</div>` : ""}
       ${refsHtml}
+      ${chemicalsHtml}
       <div class="text-xs text-gray-400 mt-4 pt-3 border-t">
         ID: <span class="font-mono">${escapeHtml(m.id)}</span><br>
         Tenant: <span class="font-mono">${escapeHtml(m.tenantId)}</span>
@@ -163,6 +167,71 @@ export function openMaterialDetail(id: string): void {
     `;
   }
   openModal("modal-material-detail");
+}
+
+/**
+ * R150e: Find chemicals in window.cache.chemicals with matching formula
+ * (case-insensitive). Returns HTML section or empty string if none.
+ */
+function renderLinkedChemicals(formula: string): string {
+  const cache = (window as any).cache;
+  if (!cache || !cache.chemicals) return "";
+
+  const normFormula = (formula || "").trim().toLowerCase();
+  if (!normFormula) return "";
+
+  // cache.chemicals is keyed object — iterate values
+  const matches: Array<{ key: string; data: any }> = [];
+  for (const key of Object.keys(cache.chemicals)) {
+    const c = cache.chemicals[key];
+    if (!c) continue;
+    const cFormula = (c.formula || "").trim().toLowerCase();
+    if (cFormula && cFormula === normFormula) {
+      matches.push({ key, data: c });
+    }
+  }
+
+  if (matches.length === 0) {
+    return `
+      <div class="mt-4 pt-3 border-t">
+        <h3 class="font-semibold mb-2">Hóa chất trong kho</h3>
+        <div class="text-xs text-gray-500">
+          Không có chai hóa chất nào trùng công thức "${escapeHtml(formula)}" trong kho.
+        </div>
+      </div>
+    `;
+  }
+
+  const rows = matches.map(({ key, data }) => {
+    const name = escapeHtml(data.name || "(không tên)");
+    const vendor = escapeHtml(data.vendor || "");
+    const stock = data.stock != null ? String(data.stock) : "—";
+    const unit = escapeHtml(data.unit || "");
+    const purity = data.purity != null ? `${data.purity}%` : "";
+    return `
+      <div class="flex items-center justify-between py-2 border-b border-gray-100 cursor-pointer hover:bg-gray-50"
+           data-action="show-page" data-page="chemicals">
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium truncate">${name}</div>
+          <div class="text-xs text-gray-500">${vendor}${vendor && purity ? " · " : ""}${purity}</div>
+        </div>
+        <div class="text-sm font-mono text-gray-700 ml-2">${escapeHtml(stock)} ${unit}</div>
+      </div>
+    `;
+  }).join("");
+
+  return `
+    <div class="mt-4 pt-3 border-t">
+      <h3 class="font-semibold mb-2">
+        Hóa chất trong kho
+        <span class="text-xs font-normal text-gray-500">(${matches.length} chai)</span>
+      </h3>
+      <div>${rows}</div>
+      <div class="text-xs text-gray-400 mt-2">
+        Click 1 chai để mở trang Hóa chất.
+      </div>
+    </div>
+  `;
 }
 
 export function openMaterialForm(editing: Material | null = null): void {
