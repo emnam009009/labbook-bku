@@ -18,7 +18,11 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
-      include: ['src/ts/utils/**/*.js'],
+      include: [
+      'src/ts/utils/**/*.js',
+      'functions/src/bm25/chemistry-patterns.ts',
+      'functions/src/search/rrf.ts',
+    ],
       exclude: ['src/ts/**/*.test.js'],
     },
   },

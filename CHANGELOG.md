@@ -1,5 +1,54 @@
 # CHANGELOG
 
+## R144 — BM25 pure logic test coverage (2026-05-10)
+
+### Context
+Phase B (R105-R143) closed. Phase B.5 (R150-R155) Research Schema overhaul
+will touch search/RAG via R152 (Experiments unified collection) and Phase
+B.6 AI integration. BM25 + RRF have been production code since R137a/b but
+had zero unit test coverage — silent regression risk before schema-touching
+rounds. R144 adds targeted tests for the pure-logic modules (no Firebase,
+no CJS deps) that are most likely to break invisibly under refactor.
+
+### Added
+- `tests/bm25/chemistry-patterns.test.ts` — 15+ test cases covering
+  `isChemistryToken`, `isPureNumber`, `isShortUnitToken`. Verifies that
+  domain tokens (MoS2, WO3, LiFePO4, Cu2+, 25°C, XRD, EIS, α/Ω, DOIs) are
+  preserved as-is and plain English words / pure numbers are rejected.
+- `tests/search/rrf.test.ts` — 10+ test cases covering `rrfMerge`. Verifies
+  the canonical RRF formula `1 / (k + rank)`, multi-list fusion, k
+  sensitivity, topK truncation, ties, edge cases (empty lists, topK=0,
+  metadata preservation).
+
+### Changed
+- `vitest.config.js` — extended `coverage.include` to track
+  `functions/src/bm25/chemistry-patterns.ts` and
+  `functions/src/search/rrf.ts`.
+
+### Out of scope (deferred)
+- `functions/src/bm25/tokenizer.ts` — transitively imports `natural` (CJS)
+  via `stemmer.ts`. Needs Vitest CJS shim or separate `functions/`-scoped
+  test runner. Defer to R145+.
+- `functions/src/bm25/stopwords.ts` — uses `require("stopwords-iso")`
+  inside lazy loader. Same CJS issue. Defer.
+- `functions/src/bm25/stemmer.ts` — direct CJS dep on `natural`. Defer.
+- BM25 / search engines (`bm25-engine.ts`, `hybrid-engine.ts`,
+  `engine.ts`) — need corpus + Firestore mocks. Defer to R146+.
+- Action tools (`createExperimentDraft`, `updateChemicalStock`,
+  `createBooking`) — need RTDB + auth mocks. Defer to R147+.
+
+### Verify
+```bash
+npm test            # expect 87+ passing (62 existing + 25 new)
+npm run typecheck   # expect 0 errors
+```
+
+### Files touched
+- tests/bm25/chemistry-patterns.test.ts (new)
+- tests/search/rrf.test.ts (new)
+- vitest.config.js (modified)
+- CHANGELOG.md (this entry)
+
 Concise version history. For full git log: `git log --oneline`.
 
 ## [Round 143 — Roadmap sync + long-term reference] - 2026-05-10
