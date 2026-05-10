@@ -1,5 +1,60 @@
 # CHANGELOG
 
+## R150a — Material entity types (2026-05-10)
+
+### Context
+First sub-round of R150 (Phase B.5 R1). Phase B.5 implements the unified
+research schema (Materials, Samples, Experiments, DataAssets, Instruments)
+per `docs/research-schema.md`. R150 is divided into micro-rounds:
+
+  - R150a: Material types ← this round
+  - R150b: Firestore client bootstrap + Materials CRUD service
+  - R150c: tenant-claim migration + Firestore rules update + deploy
+  - R150d: Materials browser UI
+  - R150e: Connect chemicals → materials
+  - R150f: Documentation sync (reconcile spec with reality)
+
+### Scope (intentionally narrow)
+Only TypeScript interface definitions. No runtime code, no service, no
+test, no deploy. Risk floor for opening Phase B.5.
+
+### Added
+- `src/ts/types/research.ts` (new file):
+  - `ResearchTimestamp` — union shim avoiding `firebase/firestore` import
+    at the type level. Concrete services pick canonical form in R150b.
+  - `Material`, `MaterialCategory`, `MaterialKnownProperties`,
+    `MaterialExternalIds` interfaces matching spec §3.1.
+
+### Design decisions locked (assumed from memory; please verify)
+1. **Storage**: Firestore default DB, NOT the named DB `labbook`
+   mentioned in spec §2. Phase B (R130-R143) shipped against the default
+   DB; spec is outdated. R150f will reconcile.
+2. **Material formula uniqueness**: per tenant (not global). Spec §12
+   listed this as open; memory records resolution as per-tenant.
+3. **Permission model**: lab-wide read (any authenticated user with
+   matching tenantId) + role-based write (admin/superadmin only).
+   Spec §12 listed this as open; memory records this resolution.
+4. **Delete policy**: never. Mark deprecated via field or subcategory.
+
+### Out of scope (deferred)
+- Sample, Experiment, DataAsset, Instrument types → R151-R154
+- Firestore client SDK in `src/ts/firebase.ts` → R150b
+- Materials CRUD service + tests → R150b
+- Tenant claim migration → R150c (production deploy round)
+- Firestore rules update for `/materials/{id}` → R150c
+- Materials browser page → R150d
+- Chemicals integration → R150e
+
+### Verify
+```bash
+npm run typecheck   # expect 0 errors
+npm test            # expect 161/161 still pass (no test changes)
+```
+
+### Files touched
+- src/ts/types/research.ts (new)
+- CHANGELOG.md (this entry)
+
 ## R145a — BM25 backend test coverage + CJS interop (2026-05-10)
 
 ### Context
