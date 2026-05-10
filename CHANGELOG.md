@@ -1,5 +1,67 @@
 # CHANGELOG
 
+## R153a — DataAsset entity foundation (Phase B.5) (2026-05-10)
+
+### Added
+
+#### Types (`src/ts/types/research.ts`)
+- `DataAssetType`: 14-value union (xrd, sem, tem, raman, ftir, uv-vis,
+  uv-vis-drs, pl, eds, xps, electrochem-csv, image, document, other)
+- `DataAssetAnalysisStatus`: none/pending/analyzed/failed
+- `DataAsset`: full interface (40+ fields) — id, tenantId, experimentId,
+  sampleId?, type, subType, fileName, fileSize, mimeType, storagePath,
+  notes, tags, analysisStatus, metadata, uploadedAt/By, createdAt/By,
+  updatedAt/By
+- `CreateDataAssetInput` / `UpdateDataAssetInput`
+
+#### Service (`src/ts/services/data-assets.ts` — new ~280 LOC)
+- `uploadDataAsset(file, input, onProgress?)`: upload to Storage +
+  create Firestore doc (with timestamp prefix to avoid collisions)
+- `getDataAssetURL(asset)`: resolve Firebase Storage download URL
+- `listByExperiment(experimentId)`: query by exp + tenant, ordered desc
+- `listByType(type)`: gallery query
+- `getDataAsset(id)`: single fetch
+- `updateDataAsset(id, patch)`: metadata only (file immutable)
+- `deleteDataAsset(id)`: best-effort (Firestore first, then Storage)
+- Helpers: `formatFileSize`, `tsToDate`
+- Mime allowlist per type (defensive client-side check)
+- Path: `dataAssets/{tenantId}/{experimentId}/{timestamp}-{filename}`
+
+#### Firestore rules (`firestore.rules`)
+- `dataAssets/{assetId}` match block:
+  - read: any authed user with matching tenantId
+  - create: member/admin/superadmin + uploadedBy=auth.uid + tenant match
+  - update: uploader OR admin/superadmin (10+ immutable fields incl
+    experimentId, storagePath, fileName, fileSize, audit fields)
+  - delete: uploader OR admin/superadmin
+
+#### Firestore indexes (`firestore.indexes.json`)
+- `tenantId + experimentId + uploadedAt DESC` (list by experiment)
+- `tenantId + type + uploadedAt DESC` (gallery by type)
+
+#### Storage rules (`storage.rules`)
+- `dataAssets/{tenantId}/{experimentId}/{fileName}`:
+  - read: any authed user
+  - create: member+ role, ≤25MB
+  - update: never (file immutable)
+  - delete: uploader (metadata.uid) OR admin/superadmin
+
+### Out of scope (subsequent sub-rounds)
+- R153b: UI panel attach DataAsset in experiment detail
+- R153c: DataAssets gallery page (replace overview attachments)
+- R153d: Classifier integration (auto-detect type from filename/content)
+- R153e: PDF export integration
+- R153f: Cleanup remove old attachments code
+
+### Storage paths
+- Legacy: `attachments/{refType}/{refId}/{fileName}` (kept untouched)
+- New:    `dataAssets/{tenantId}/{experimentId}/{ts}-{fileName}` (R153a+)
+
+### Deploy required
+- Firestore rules: `firebase deploy --only firestore:rules`
+- Firestore indexes: `firebase deploy --only firestore:indexes`
+- Storage rules: `firebase deploy --only storage`
+
 ## R152d-2 — Migration UI card in settings (Phase B.5) (2026-05-10)
 
 ### Added

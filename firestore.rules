@@ -133,6 +133,46 @@ service cloud.firestore {
         && request.auth.token.role in ["admin", "superadmin"];
     }
 
+    // ── dataAssets (R153a — Phase B.5) ────────────────────
+    // File attachments for experiments. Tenant-scoped.
+    // experimentId immutable (file always belongs to original experiment).
+    // storagePath immutable (file is immutable; metadata can be updated).
+    // uploader OR admin/superadmin can update/delete.
+    match /dataAssets/{assetId} {
+      allow read: if isSignedIn() && tenantMatch(resource.data);
+
+      allow create: if isSignedIn()
+        && request.auth.token.role in ["member", "admin", "superadmin"]
+        && tenantMatch(request.resource.data)
+        && request.resource.data.uploadedBy == request.auth.uid
+        && request.resource.data.createdBy == request.auth.uid;
+
+      allow update: if isSignedIn()
+        && tenantMatch(resource.data)
+        && tenantMatch(request.resource.data)
+        // Immutable fields
+        && request.resource.data.tenantId == resource.data.tenantId
+        && request.resource.data.experimentId == resource.data.experimentId
+        && request.resource.data.storagePath == resource.data.storagePath
+        && request.resource.data.fileName == resource.data.fileName
+        && request.resource.data.fileSize == resource.data.fileSize
+        && request.resource.data.uploadedBy == resource.data.uploadedBy
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        // Authorized = uploader OR admin/superadmin
+        && (
+          resource.data.uploadedBy == request.auth.uid
+          || request.auth.token.role in ["admin", "superadmin"]
+        );
+
+      allow delete: if isSignedIn()
+        && tenantMatch(resource.data)
+        && (
+          resource.data.uploadedBy == request.auth.uid
+          || request.auth.token.role in ["admin", "superadmin"]
+        );
+    }
+
     // ── Default deny ──────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;
