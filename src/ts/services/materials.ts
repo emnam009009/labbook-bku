@@ -153,21 +153,23 @@ export async function createMaterial(
   const id = `mat-${safeFormula}-${Date.now()}`;
   const ref = doc(fdb, COLLECTION, id);
 
-  const payload: Omit<Material, "id"> = {
+  const payload: any = {
     formula: input.formula,
     name: input.name,
     aliases: input.aliases ?? [],
     category: input.category,
-    subcategory: input.subcategory,
     knownProperties: input.knownProperties ?? {},
     references: input.references ?? [],
-    externalIds: input.externalIds,
     tenantId,
-    createdAt: fsServerTimestamp() as any,
+    createdAt: fsServerTimestamp(),
     createdBy: uid,
-    updatedAt: fsServerTimestamp() as any,
+    updatedAt: fsServerTimestamp(),
     updatedBy: uid,
   };
+  // R150b-fix2: only include optional fields when defined.
+  // Firestore rejects undefined values.
+  if (input.subcategory !== undefined) payload.subcategory = input.subcategory;
+  if (input.externalIds !== undefined) payload.externalIds = input.externalIds;
 
   await setDoc(ref, payload);
   return id;

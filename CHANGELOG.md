@@ -1,5 +1,59 @@
 # CHANGELOG
 
+## R150c-followup — Role claim migration + auto-sync (2026-05-10)
+
+### Context
+R150c set `tenantId` claim but NOT `role` claim. Firestore rules for
+materials require `role=admin|superadmin` → all UI writes failing with
+PERMISSION_DENIED until role claim is migrated.
+
+### Added
+- `scripts/migrate-role-claims-r150c-fu.mjs` (new): bulk migration that
+  reads RTDB `users/{uid}/role` and sets as Firebase Auth custom claim.
+  Preserves tenantId from R150c. Idempotent. --dry-run / --confirm flags.
+
+- `functions/src/triggers/sync-role-claim.ts` (new): RTDB v2
+  `onValueWritten` trigger on `/users/{uid}/role`. Auto-updates role
+  claim whenever admin changes role in RTDB. Gen2, Node 24, no GCIP.
+
+- `functions/src/index.ts` (modified): export `syncRoleClaim`.
+
+### Production deploy procedure (3 steps)
+```bash
+# Step 1: Bulk migrate role claim for existing users
+node scripts/migrate-role-claims-r150c-fu.mjs --dry-run
+# Review output: ~8 users with their roles
+node scripts/migrate-role-claims-r150c-fu.mjs --confirm
+# Users must sign out + back in for new claim to take effect
+
+# Step 2: Build + deploy trigger
+cd functions && npm run build && cd ..
+firebase deploy --only functions:syncRoleClaim
+
+# Step 3: Verify in browser
+# - Admin user signs out + back in
+# - Open Materials page → click "Thêm vật liệu"
+# - Submit valid material → expect SUCCESS (not PERMISSION_DENIED)
+```
+
+### Rollback
+```bash
+# Clear role claim (rerun migration with empty role) — manual edit script needed
+# OR re-run R150c migration (which doesn't touch role)
+firebase functions:delete syncRoleClaim --region asia-southeast1
+```
+
+### Future: commercial fork
+When upgrading to GCIP, the v2 `beforeUserCreated` trigger (deferred in
+R150c) can also set initial role on signup based on invite code. For now
+new signups get role from existing RTDB workflow (admin approval flow).
+
+### Files
+- scripts/migrate-role-claims-r150c-fu.mjs (new)
+- functions/src/triggers/sync-role-claim.ts (new)
+- functions/src/index.ts (modified)
+- CHANGELOG.md (this entry)
+
 ## R150e — Connect chemicals → materials (one-way) (2026-05-10)
 
 ### Added

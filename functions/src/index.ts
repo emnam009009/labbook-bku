@@ -44,3 +44,7 @@ export { toolExecutor } from "./handlers/tool-executor";  // Round 112+
 export { confirmAction } from "./handlers/confirm-action";
 
 
+
+
+// R150c-followup: Auto-sync role claim from RTDB users/{uid}/role
+export { syncRoleClaim } from "./triggers/sync-role-claim";
