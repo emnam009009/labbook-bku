@@ -42,3 +42,7 @@ export { toolExecutor } from "./handlers/tool-executor";  // Round 112+
 
 // Round 115a: AI action confirmation endpoint
 export { confirmAction } from "./handlers/confirm-action";
+
+
+// R150c: Auto-set tenantId claim on user creation (Phase B.5)
+export { setTenantOnCreate } from "./triggers/on-auth-create";

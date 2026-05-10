@@ -1,5 +1,85 @@
 # CHANGELOG
 
+## R150c — Firestore rules + tenant claim migration (2026-05-10)
+
+### Phase 1: Files only (no deploy)
+This patch creates files but does NOT deploy. Production deploy is
+4-step manual process documented below.
+
+### Added
+- `scripts/migrate-tenant-claims-r150c.mjs` — bulk-set
+  `tenantId="default"` custom claim for all existing Firebase Auth
+  users. Idempotent, supports --dry-run preview.
+- `scripts/test-firestore-rules-r150c.mjs` — emulator-based rules
+  test covering aiChunks (R134a preserved) + materials (new) for read,
+  create, update, delete with tenant isolation.
+- `functions/src/triggers/on-auth-create.ts` — Cloud Function trigger
+  auto-setting tenantId claim for all future user signups. Region
+  asia-southeast1.
+
+### Changed
+- `firestore.rules` — added /materials/{id} block:
+  - read: authed + matching tenantId
+  - create: admin/superadmin claim + matching tenantId + createdBy=auth.uid
+  - update: admin/superadmin + immutable fields (tenantId, formula,
+    createdBy, createdAt)
+  - delete: always denied (mark deprecated instead per design)
+  Preserves R134a aiChunks block unchanged.
+- `functions/src/index.ts` — exports new `setTenantOnCreate` trigger.
+
+### Production deploy procedure (4 steps, manual)
+```bash
+# Step 1: Install rules-testing dep (one-time)
+npm i -D @firebase/rules-unit-testing
+
+# Step 2: Test rules on emulator
+firebase emulators:start --only firestore &
+node scripts/test-firestore-rules-r150c.mjs
+# Expect: all tests pass. Stop emulator (Ctrl+C).
+
+# Step 3: Bulk migration (production Auth)
+node scripts/migrate-tenant-claims-r150c.mjs --dry-run
+# Review output: ~50 users will receive tenantId="default"
+node scripts/migrate-tenant-claims-r150c.mjs --confirm
+# Users must sign out + sign back in for claims to refresh in tokens
+
+# Step 4: Deploy rules + Cloud Function trigger
+cd functions && npm run build && cd ..
+firebase deploy --only firestore:rules,functions:setTenantOnCreate
+# Verify: lab user can still read aiChunks (existing).
+# Verify: admin can create test material via Console / app.
+```
+
+### Rollback procedure
+If rules cause issues:
+```bash
+git checkout HEAD~1 firestore.rules
+firebase deploy --only firestore:rules
+```
+If migration causes issues:
+```bash
+# Clear tenantId claims (rerun script with --confirm after editing
+# TARGET_TENANT to null, OR write a custom clear script)
+```
+
+### Out of scope (deferred)
+- R150d: Materials browser UI (next round)
+- Role check via custom claim — currently rules check `request.auth.token.role`
+  but custom claim only has `tenantId`. Admin role check effectively
+  always returns false, meaning create/update on materials is BLOCKED
+  until role claims are also migrated. **Important: until R150c-followup
+  adds role claims, materials writes work only via admin SDK / Cloud
+  Functions.** This is acceptable for Phase B.5 since UI for create
+  comes in R150d and can route through Cloud Function if needed.
+
+### Files touched
+- firestore.rules (modified)
+- scripts/migrate-tenant-claims-r150c.mjs (new)
+- scripts/test-firestore-rules-r150c.mjs (new)
+- functions/src/triggers/on-auth-create.ts (new)
+- functions/src/index.ts (modified — append export)
+- CHANGELOG.md (this entry)
+
 ## R150b — Firestore client + Materials CRUD service (2026-05-10)
 
 ### Context
