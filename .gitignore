@@ -116,3 +116,6 @@ python-service/build/
 # TypeScript build info
 *.tsbuildinfo
 dist-types/
+
+# Patch script idempotency markers
+.R*_APPLIED
