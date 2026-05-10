@@ -55,6 +55,16 @@ export function attachGlobalDelegation() {
     }, 250);
   });
 
+  // R151d-2: Parent search typeahead (real-time, no debounce — small list)
+  document.body.addEventListener('input', function(e) {
+    const t = (e.target as HTMLElement);
+    if (!t || (t as HTMLInputElement).id !== 'smp-parent-search') return;
+    const val = (t as HTMLInputElement).value || '';
+    if (typeof (window as any).searchParentsHandler === 'function') {
+      (window as any).searchParentsHandler(val);
+    }
+  });
+
   document.body.addEventListener('click', function(e) {
     const target = e.target.closest('[data-action]');
     if (!target) return;
@@ -129,6 +139,18 @@ export function attachGlobalDelegation() {
       case 'submit-sample-form':
         if (typeof window.submitSampleForm === 'function') window.submitSampleForm();
         break;
+
+      // R151d-2: Lineage picker
+      case 'add-parent-badge': {
+        const pid = target.dataset.id;
+        if (pid && typeof window.addParentBadge === 'function') window.addParentBadge(pid);
+        break;
+      }
+      case 'remove-parent-badge': {
+        const pid = target.dataset.id;
+        if (pid && typeof window.removeParentBadge === 'function') window.removeParentBadge(pid);
+        break;
+      }
 
       // Auth
       case 'do-login':                if (typeof window.doLogin === 'function') window.doLogin(); break;

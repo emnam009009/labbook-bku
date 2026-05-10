@@ -804,6 +804,18 @@
               <input type="text" id="smp-tags" placeholder="catalyst-test, publish-2026">
             </div>
             <div class="form-group" style="grid-column:1/-1">
+              <label>Lineage — Parent samples (R151d-2)</label>
+              <div style="position:relative">
+                <input type="text" id="smp-parent-search" placeholder="Gõ tên/composition mẫu cha..." autocomplete="off">
+                <div id="smp-parent-suggestions" style="position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #E2E8F0;border-radius:6px;max-height:200px;overflow-y:auto;z-index:10;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.08)"></div>
+              </div>
+              <div id="smp-parent-badges" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;min-height:24px"></div>
+              <div style="font-size:11px;color:var(--text-3);margin-top:4px">
+                Để trống = fresh synthesis (no parents). 1 parent = derived. 2+ parents = composite.<br>
+                Generation và rootMaterials sẽ tự tính.
+              </div>
+            </div>
+            <div class="form-group" style="grid-column:1/-1">
               <label>Notes</label>
               <textarea id="smp-notes" rows="3" placeholder="Ghi chú..."></textarea>
             </div>

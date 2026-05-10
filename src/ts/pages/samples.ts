@@ -46,6 +46,8 @@ const STATUS_COLORS: Record<SampleStatus, string> = {
 let _cache: Sample[] | null = null;
 let _editingSample: Sample | null = null;
 let _searchQuery = "";
+// R151d-2: lineage picker state
+let _selectedParents: string[] = [];
 
 export async function renderSamples(): Promise<void> {
   const root = document.getElementById("page-samples");
@@ -162,7 +164,11 @@ export function openSampleDetail(id: string): void {
 
   const parentsHtml = (s.parents || []).length > 0
     ? `<div class="mt-3"><span class="text-xs text-gray-500">Derived from ${s.parents.length} parent(s):</span><br>` +
-      s.parents.map((p) => `<span class="badge font-mono text-xs">${escapeHtml(p)}</span>`).join(" ") +
+      s.parents.map((p) => {
+        const parent = _cache?.find((x) => x.id === p);
+        const label = parent ? parent.name : p;
+        return `<span class="badge font-mono text-xs cursor-pointer hover:underline" data-action="open-sample-detail" data-id="${escapeHtml(p)}" title="${escapeHtml(p)}">${escapeHtml(label)}</span>`;
+      }).join(" ") +
       `</div>`
     : `<div class="mt-3 text-xs text-gray-500">Fresh synthesis (no parents)</div>`;
 
@@ -235,6 +241,7 @@ export function openSampleForm(editing: Sample | null = null): void {
     if (locationEl) locationEl.value = editing.storageLocation || "";
     if (tagsEl) tagsEl.value = (editing.tags || []).join(", ");
     if (notesEl) notesEl.value = editing.notes || "";
+    _selectedParents = [...(editing.parents || [])];
   } else {
     if (nameEl) { nameEl.value = ""; nameEl.readOnly = false; }
     if (shortCodeEl) shortCodeEl.value = "";
@@ -246,7 +253,14 @@ export function openSampleForm(editing: Sample | null = null): void {
     if (locationEl) locationEl.value = "";
     if (tagsEl) tagsEl.value = "";
     if (notesEl) notesEl.value = "";
+    _selectedParents = [];
   }
+
+  // R151d-2: render parent badges + clear search
+  renderParentBadges();
+  const searchEl = document.getElementById("smp-parent-search") as HTMLInputElement | null;
+  if (searchEl) searchEl.value = "";
+  hideParentSuggestions();
 
   openModal("modal-sample-form");
 }
@@ -289,19 +303,26 @@ export async function submitSampleForm(): Promise<void> {
     return;
   }
 
+  // R151d-2: compute lineage from selected parents
+  const lineage = computeLineageFromParents(_selectedParents, materialRef);
+
   try {
     if (_editingSample) {
       const patch: any = {
         composition,
         status,
         tags,
+        // R151d-2: also update lineage (admins editing)
+        parents: _selectedParents,
+        rootMaterials: lineage.rootMaterials,
+        generation: lineage.generation,
+        isComposite: lineage.isComposite,
       };
       if (shortCode !== undefined) patch.shortCode = shortCode || undefined;
       if (materialRef !== undefined) patch.materialRef = materialRef || undefined;
       if (amount !== undefined) patch.amount = amount;
       if (storageLocation !== undefined) patch.storageLocation = storageLocation || undefined;
       if (notes !== undefined) patch.notes = notes || undefined;
-      // Strip undefined values (avoid Firestore reject)
       const cleanPatch: any = {};
       for (const k of Object.keys(patch)) {
         if (patch[k] !== undefined) cleanPatch[k] = patch[k];
@@ -313,13 +334,14 @@ export async function submitSampleForm(): Promise<void> {
         composition,
         status,
         tags,
+        parents: _selectedParents,
+        rootMaterials: lineage.rootMaterials,
+        generation: lineage.generation,
+        isComposite: lineage.isComposite,
       };
       if (name) input.name = name;
       if (shortCode) input.shortCode = shortCode;
-      if (materialRef) {
-        input.materialRef = materialRef;
-        input.rootMaterials = [materialRef];
-      }
+      if (materialRef) input.materialRef = materialRef;
       if (amount) {
         input.amount = amount;
         input.initialAmount = amount;
@@ -346,11 +368,140 @@ export async function searchSamplesHandler(query: string): Promise<void> {
   await renderSamples();
 }
 
+// ────────────────────────────────────────────────────────────
+// R151d-2: Lineage helpers
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Compute lineage fields from selected parent IDs + materialRef.
+ * Parents looked up via _cache.
+ */
+function computeLineageFromParents(
+  parentIds: string[],
+  materialRef: string | undefined,
+): { rootMaterials: string[]; generation: number; isComposite: boolean } {
+  if (!_cache || parentIds.length === 0) {
+    // Fresh synthesis
+    return {
+      rootMaterials: materialRef ? [materialRef] : [],
+      generation: 0,
+      isComposite: false,
+    };
+  }
+
+  const rootMatsSet = new Set<string>();
+  let maxGen = 0;
+  for (const pid of parentIds) {
+    const parent = _cache.find((s) => s.id === pid);
+    if (!parent) continue;
+    for (const r of parent.rootMaterials || []) rootMatsSet.add(r);
+    if ((parent.generation ?? 0) > maxGen) maxGen = parent.generation ?? 0;
+  }
+  // Also include this sample's own materialRef in roots (if specified)
+  if (materialRef) rootMatsSet.add(materialRef);
+
+  return {
+    rootMaterials: Array.from(rootMatsSet),
+    generation: maxGen + 1,
+    isComposite: parentIds.length >= 2,
+  };
+}
+
+/**
+ * Render badges for currently selected parent samples.
+ */
+function renderParentBadges(): void {
+  const badgesEl = document.getElementById("smp-parent-badges");
+  if (!badgesEl) return;
+  if (_selectedParents.length === 0) {
+    badgesEl.innerHTML = '<span class="text-xs text-gray-400">Chưa chọn parent</span>';
+    return;
+  }
+  badgesEl.innerHTML = _selectedParents.map((pid) => {
+    const sample = _cache?.find((s) => s.id === pid);
+    const label = sample ? `${sample.name} (${sample.composition})` : pid;
+    return `
+      <span class="badge" style="display:inline-flex;align-items:center;gap:4px;background:#EEF2FF;color:#3730A3;padding:3px 8px;border-radius:12px;font-size:12px">
+        <span class="font-mono" title="${escapeHtml(pid)}">${escapeHtml(label)}</span>
+        <button type="button" data-action="remove-parent-badge" data-id="${escapeHtml(pid)}"
+          style="background:none;border:none;cursor:pointer;color:#3730A3;font-weight:bold;padding:0 2px"
+          aria-label="Xóa">×</button>
+      </span>
+    `;
+  }).join("");
+}
+
+/**
+ * Show typeahead suggestions filtered by query, excluding already-selected
+ * and the currently editing sample (can't be parent of itself).
+ */
+function showParentSuggestions(query: string): void {
+  const suggestionsEl = document.getElementById("smp-parent-suggestions");
+  if (!suggestionsEl || !_cache) return;
+
+  const q = query.trim().toLowerCase();
+  if (!q) {
+    hideParentSuggestions();
+    return;
+  }
+
+  const editingId = _editingSample?.id;
+  const candidates = _cache.filter((s) => {
+    if (s.id === editingId) return false;
+    if (_selectedParents.includes(s.id)) return false;
+    return s.name.toLowerCase().includes(q)
+      || s.composition.toLowerCase().includes(q)
+      || (s.shortCode || "").toLowerCase().includes(q);
+  }).slice(0, 8);
+
+  if (candidates.length === 0) {
+    suggestionsEl.innerHTML = '<div style="padding:8px;color:#9CA3AF;font-size:13px">Không tìm thấy mẫu khớp</div>';
+    suggestionsEl.style.display = "block";
+    return;
+  }
+
+  suggestionsEl.innerHTML = candidates.map((s) => `
+    <div data-action="add-parent-badge" data-id="${escapeHtml(s.id)}"
+         style="padding:8px;cursor:pointer;border-bottom:1px solid #F3F4F6"
+         onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='white'">
+      <div class="font-mono text-sm">${escapeHtml(s.name)}</div>
+      <div class="text-xs text-gray-500">${escapeHtml(s.composition)}${s.shortCode ? ` · ${escapeHtml(s.shortCode)}` : ""} · Gen ${s.generation ?? 0}</div>
+    </div>
+  `).join("");
+  suggestionsEl.style.display = "block";
+}
+
+function hideParentSuggestions(): void {
+  const el = document.getElementById("smp-parent-suggestions");
+  if (el) el.style.display = "none";
+}
+
+export function addParentBadge(id: string): void {
+  if (!_selectedParents.includes(id)) _selectedParents.push(id);
+  renderParentBadges();
+  hideParentSuggestions();
+  // Clear search input
+  const searchEl = document.getElementById("smp-parent-search") as HTMLInputElement | null;
+  if (searchEl) searchEl.value = "";
+}
+
+export function removeParentBadge(id: string): void {
+  _selectedParents = _selectedParents.filter((p) => p !== id);
+  renderParentBadges();
+}
+
+export function searchParentsHandler(query: string): void {
+  showParentSuggestions(query);
+}
+
 (window as any).renderSamples = renderSamples;
 (window as any).openSampleDetail = openSampleDetail;
 (window as any).openSampleForm = openSampleForm;
 (window as any).submitSampleForm = submitSampleForm;
 (window as any).searchSamplesHandler = searchSamplesHandler;
+(window as any).addParentBadge = addParentBadge;
+(window as any).removeParentBadge = removeParentBadge;
+(window as any).searchParentsHandler = searchParentsHandler;
 
 (window as any).openSampleFormFromDetail = function() {
   if (_editingSample) {

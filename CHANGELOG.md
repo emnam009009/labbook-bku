@@ -1,5 +1,41 @@
 # CHANGELOG
 
+## R151d-2 — Sample lineage picker + auto-compute (2026-05-10)
+
+### Added
+- Sample form lineage block:
+  - Typeahead input "Gõ tên/composition mẫu cha..."
+  - Suggestions dropdown (filters cache by name/composition/shortCode,
+    excludes already selected + sample being edited)
+  - Click suggestion → adds badge with X button to remove
+- Auto-compute on submit:
+  - `rootMaterials` = union of parents' rootMaterials ∪ ([materialRef]
+    if specified)
+  - `generation` = max(parent.generation) + 1, hoặc 0 if no parents
+  - `isComposite` = parents.length >= 2
+- Detail modal: parent IDs become clickable badges → navigates to that
+  sample's detail (uses existing open-sample-detail handler)
+
+### samples.ts new exports
+- `addParentBadge(id)` / `removeParentBadge(id)` — manage selection
+- `searchParentsHandler(query)` — typeahead suggestions
+
+### global-delegation.ts
+- 2 new click cases: add-parent-badge, remove-parent-badge
+- 1 new input listener for #smp-parent-search
+
+### Out of scope (future)
+- MaterialRef dropdown picker (still text input)
+- Lineage tree visual graph (R154)
+- Cycle detection (sample picking ancestor as parent — Firestore won't
+  prevent, app-level check could be added but rare in practice)
+
+### Files
+- src/ts/pages/samples.ts (extended)
+- index.html (lineage block in form modal)
+- src/ts/services/global-delegation.ts (2 cases + 1 listener)
+- CHANGELOG.md (this entry)
+
 ## R151d-1 — Sample CRUD form (no lineage) (2026-05-10)
 
 ### Added
