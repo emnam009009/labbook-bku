@@ -27,6 +27,20 @@ export function attachGlobalDelegation() {
   if (document.body._globalDelegated) return;
   document.body._globalDelegated = true;
 
+  // R150d-2: Input handler for search-materials (debounced)
+  let _matSearchTimer: any = null;
+  document.body.addEventListener('input', function(e) {
+    const t = (e.target as HTMLElement);
+    if (!t || !(t as any).dataset || (t as any).dataset.inputAction !== 'search-materials') return;
+    clearTimeout(_matSearchTimer);
+    const val = (t as HTMLInputElement).value || '';
+    _matSearchTimer = setTimeout(() => {
+      if (typeof (window as any).searchMaterialsHandler === 'function') {
+        (window as any).searchMaterialsHandler(val);
+      }
+    }, 250);
+  });
+
   document.body.addEventListener('click', function(e) {
     const target = e.target.closest('[data-action]');
     if (!target) return;
@@ -66,6 +80,23 @@ export function attachGlobalDelegation() {
       case 'save-equipment':   if (typeof window.saveEquipment === 'function') window.saveEquipment(); break;
       case 'save-booking':     if (typeof window.saveBooking === 'function') window.saveBooking(); break;
       case 'save-member':      if (typeof window.saveMember === 'function') window.saveMember(); break;
+
+      // R150d-2: Materials CRUD
+      case 'open-material-detail': {
+        const id = target.dataset.id;
+        if (id && typeof window.openMaterialDetail === 'function') window.openMaterialDetail(id);
+        break;
+      }
+      case 'open-material-form':
+        if (typeof window.openMaterialForm === 'function') window.openMaterialForm(null);
+        break;
+      case 'edit-material':
+        if (typeof window.closeModal === 'function') window.closeModal('modal-material-detail');
+        if (typeof window.openMaterialFormFromDetail === 'function') window.openMaterialFormFromDetail();
+        break;
+      case 'submit-material-form':
+        if (typeof window.submitMaterialForm === 'function') window.submitMaterialForm();
+        break;
 
       // Auth
       case 'do-login':                if (typeof window.doLogin === 'function') window.doLogin(); break;

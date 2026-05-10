@@ -1329,6 +1329,13 @@ const _pageLoaders = {
     window.toggleChemGroup = m.toggleChemGroup;
     if (typeof window.renderChemicals === 'function') window.renderChemicals();
   },
+  // R150d-1: Materials browser (Phase B.5)
+  materials: async () => {
+    const m = await import('./pages/materials.js');
+    window.renderMaterials = m.renderMaterials;
+    window.openMaterialDetail = m.openMaterialDetail;
+    if (typeof window.renderMaterials === 'function') window.renderMaterials();
+  },
   booking: async () => {
     const m = await import('./pages/booking.js');
     window.renderBooking = m.renderBooking;

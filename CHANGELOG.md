@@ -1,5 +1,76 @@
 # CHANGELOG
 
+## R150d-2 — Materials CRUD UI + search (2026-05-10)
+
+### Added
+- "Thêm vật liệu" button (admin-only) in page header.
+- Form modal `#modal-material-form` (create + edit modes).
+- Edit button in detail modal footer (admin-only).
+- Search input with 250ms debounced filter.
+- materials.ts: openMaterialForm, submitMaterialForm,
+  searchMaterialsHandler, openMaterialFormFromDetail bridge.
+- global-delegation.ts: 4 new click cases + 1 input listener.
+
+### Known limitation
+Firestore rules require role admin/superadmin claim, but role claim NOT
+migrated yet (R150c only set tenantId). createMaterial/updateMaterial
+will fail with PERMISSION_DENIED until role claim migration round.
+UI shows error toast with explanation.
+
+### Files
+- src/ts/pages/materials.ts (rewritten)
+- index.html (page header, detail modal footer, form modal)
+- src/ts/services/global-delegation.ts (4 cases + input listener)
+- CHANGELOG.md (this entry)
+
+## R150d-1 — Materials browser (list view) (2026-05-10)
+
+### Context
+First user-visible page of Phase B.5. Renders materials list grouped by
+category, click card to view detail modal. Empty state when no data
+(create UI deferred to R150d-2).
+
+### Added
+- `src/ts/pages/materials.ts` (new file): renderMaterials() loads from
+  service via Firestore listMaterials, groups by category in fixed order
+  (TMD → oxide → perovskite → MOF → carbon → alloy → polymer → salt →
+  composite → other), renders responsive grid of cards. Card click
+  opens detail modal showing formula, name, aliases, knownProperties,
+  references count, ID, tenantId.
+- `index.html`:
+  - Sidebar item "Vật liệu" before "Hóa chất" entry, atom-like SVG icon.
+  - Page section `<div id="page-materials">` with content placeholder.
+  - Detail modal `#modal-material-detail`.
+- `src/ts/main.ts`: `materials` entry in `_pageLoaders` map for lazy
+  load. Wires `window.renderMaterials` + `window.openMaterialDetail`.
+
+### Out of scope (R150d-2+)
+- Create/edit material form
+- Search/filter UI
+- Connect to chemicals page (link by formula)
+- Edit on cards
+- Pagination (current limit 500 in service)
+- Delegation handler for `data-action="open-material-detail"` — needs to
+  be added to `services/global-delegation.js` to call window.openMaterialDetail.
+  **Page works visually but card click won't open modal until R150d-1-fix1
+  or R150d-2 wires the delegation.**
+
+### Verify
+```bash
+npm run typecheck
+npm run build
+npm run dev
+# Open browser, click "Vật liệu" in sidebar, expect:
+# - Empty state message ("Chưa có vật liệu nào. CRUD UI sẽ thêm ở R150d-2.")
+# - No console errors
+```
+
+### Files touched
+- src/ts/pages/materials.ts (new)
+- index.html (sidebar + section + modal)
+- src/ts/main.ts (lazy loader entry)
+- CHANGELOG.md (this entry)
+
 ## R150c-fix3 — Trigger deferred until GCIP (2026-05-10)
 
 ### Issue

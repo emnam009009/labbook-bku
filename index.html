@@ -248,6 +248,10 @@
         <div class="sidebar-item" data-action="show-page" data-page="booking" data-tip="Đăng ký sử dụng thiết bị" role="button" tabindex="0" aria-label="Đăng ký sử dụng thiết bị">
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="15" r="2"/></svg>
         <span data-label>Đăng ký TB</span></div>
+        <!-- R150d-1: Materials browser (Phase B.5) -->
+        <div class="sidebar-item" data-action="show-page" data-page="materials" data-tip="Vật liệu" role="button" tabindex="0" aria-label="Vật liệu">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"/></svg>
+        <span data-label>Vật liệu</span></div>
         <div class="sidebar-item" data-action="show-page" data-page="chemicals" data-tip="Hóa chất" role="button" tabindex="0" aria-label="Hóa chất">
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 3h6l1 6H8L9 3z"/><path d="M8 9l-3 12h14L16 9"/></svg>
         <span data-label>Hóa chất</span></div>
@@ -666,6 +670,99 @@
       </div>
 
       <!-- CHEMICALS -->
+      <!-- R150d-1 + R150d-2: Materials browser + CRUD (Phase B.5) -->
+      <div class="page" id="page-materials">
+        <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
+          <div>
+            <h1 class="page-title" style="color:#0F172A !important">Vật liệu (Materials)</h1>
+            <p class="page-subtitle">Ontology vật liệu nghiên cứu — TMD, oxide, perovskite, MOF, ...</p>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary admin-only btn-lg-action" data-action="open-material-form" style="display:none;margin-top:36px">
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Thêm vật liệu
+            </button>
+          </div>
+        </div>
+        <div class="flex gap-2 mb-4 flex-wrap items-center" style="margin-top:8px">
+          <div style="position:relative;flex:1;min-width:200px">
+            <input class="search-input" id="mat-search" type="text" placeholder="Tìm theo formula, tên, alias..."
+                   data-input-action="search-materials" style="width:100%;padding-right:32px">
+          </div>
+        </div>
+        <div data-materials-content></div>
+      </div>
+
+      <!-- R150d-1 + R150d-2: Material detail modal (with Edit button) -->
+      <div class="modal" id="modal-material-detail" style="display:none">
+        <div class="modal-overlay" data-action="close-modal" data-modal="modal-material-detail"></div>
+        <div class="modal-content" style="max-width:600px">
+          <div class="modal-header">
+            <h2>Chi tiết vật liệu</h2>
+            <button class="modal-close" data-action="close-modal" data-modal="modal-material-detail" aria-label="Đóng">×</button>
+          </div>
+          <div class="modal-body" id="modal-material-detail-body"></div>
+          <div class="modal-footer">
+            <button class="btn" data-action="close-modal" data-modal="modal-material-detail">Đóng</button>
+            <button class="btn btn-primary admin-only" data-action="edit-material" style="display:none">Sửa</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- R150d-2: Material form modal (create + edit) -->
+      <div class="modal-overlay" id="modal-material-form" role="dialog" aria-modal="true" aria-labelledby="modal-material-form-title">
+        <div class="modal" style="max-width:600px">
+          <div class="modal-header">
+            <div class="modal-title" id="modal-material-form-title">Thêm vật liệu</div>
+            <button class="modal-close" type="button" aria-label="Đóng" data-action="close-modal" data-modal="modal-material-form">✕</button>
+          </div>
+          <div class="form-grid" style="padding:8px 0">
+            <div class="form-group">
+              <label>Công thức (formula) *</label>
+              <input type="text" id="mat-formula" placeholder="MoS2" style="font-family:monospace">
+              <div style="font-size:11px;color:var(--text-3);margin-top:2px">Không sửa được sau khi tạo</div>
+            </div>
+            <div class="form-group">
+              <label>Tên hiển thị *</label>
+              <input type="text" id="mat-name" placeholder="Molybdenum disulfide">
+            </div>
+            <div class="form-group" style="grid-column:1/-1">
+              <label>Aliases (cách nhau dấu phẩy)</label>
+              <input type="text" id="mat-aliases" placeholder="MoS₂, Molybdenite">
+            </div>
+            <div class="form-group">
+              <label>Category *</label>
+              <select class="cs-select" id="mat-category">
+                <option value="TMD">TMD</option>
+                <option value="oxide">Oxide</option>
+                <option value="perovskite">Perovskite</option>
+                <option value="MOF">MOF</option>
+                <option value="alloy">Alloy</option>
+                <option value="polymer">Polymer</option>
+                <option value="carbon">Carbon</option>
+                <option value="salt">Salt</option>
+                <option value="composite">Composite</option>
+                <option value="other" selected>Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Subcategory (tự do)</label>
+              <input type="text" id="mat-subcategory" placeholder="2D-TMD">
+            </div>
+            <div class="form-group" style="grid-column:1/-1">
+              <label>Known properties (JSON object)</label>
+              <textarea id="mat-properties" rows="6" style="font-family:monospace;font-size:13px"
+                placeholder='{"bandgap": 1.8, "structure": "2H"}'></textarea>
+              <div style="font-size:11px;color:var(--text-3);margin-top:2px">Để trống nếu chưa có. Phải là JSON object hợp lệ.</div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn" data-action="close-modal" data-modal="modal-material-form">Hủy</button>
+            <button class="btn btn-primary" data-action="submit-material-form">Lưu</button>
+          </div>
+        </div>
+      </div>
+
       <div class="page" id="page-chemicals">
         <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
           <div>
