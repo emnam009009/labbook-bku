@@ -100,6 +100,39 @@ service cloud.firestore {
         && request.auth.token.role in ["admin", "superadmin"];
     }
 
+    // ── experiments (R152b — Phase B.5) ───────────────────
+    // Same pattern as samples. legacyRef field is immutable to prevent
+    // tampering with audit trail.
+    match /experiments/{expId} {
+      allow read: if isSignedIn() && tenantMatch(resource.data);
+
+      allow create: if isSignedIn()
+        && request.auth.token.role in ["member", "admin", "superadmin"]
+        && tenantMatch(request.resource.data)
+        && request.resource.data.createdBy == request.auth.uid;
+
+      allow update: if isSignedIn()
+        && tenantMatch(resource.data)
+        && tenantMatch(request.resource.data)
+        // Immutable fields (incl. legacyRef for audit trail)
+        && request.resource.data.tenantId == resource.data.tenantId
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && (
+          (resource.data.legacyRef == null && request.resource.data.legacyRef == null)
+          || (resource.data.legacyRef != null && request.resource.data.legacyRef == resource.data.legacyRef)
+        )
+        // Authorized = creator OR admin/superadmin
+        && (
+          resource.data.createdBy == request.auth.uid
+          || request.auth.token.role in ["admin", "superadmin"]
+        );
+
+      allow delete: if isSignedIn()
+        && tenantMatch(resource.data)
+        && request.auth.token.role in ["admin", "superadmin"];
+    }
+
     // ── Default deny ──────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;

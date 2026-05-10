@@ -1,5 +1,54 @@
 # CHANGELOG
 
+## R152b — Experiments service + adapter + tests + rules (2026-05-10)
+
+### Added
+- `src/ts/services/experiments.ts` (new):
+  - `getExperiment`, `listExperiments`, `listExperimentsBySample`
+    (handles input+output sample queries, dedupes)
+  - `getExperimentMerged` — adapter pattern (§6.1): tries Firestore
+    first, falls back to RTDB hydro/electrode/electrochem with
+    `adaptLegacyExperiment` synthesizer
+  - `createExperiment` with auto-code (HT/E/EC/INK/SYN/SG/CVD/...)
+  - `updateExperiment`, `setExperimentStatus`
+  - `deleteExperiment` intentionally NOT exported (use status="abandoned")
+- `tests/services/experiments.test.ts` (new): ~15 cases covering
+  Firestore branch (legacy adapter not tested — defensive code).
+  Mocks fbGet to always return null.
+
+### Changed
+- `firestore.rules`: append `/experiments/{id}` block.
+  - Same pattern as samples
+  - **legacyRef is immutable** to preserve audit trail integrity
+- `vitest.config.js`: extend coverage with experiments.ts.
+
+### Backward compat strategy (spec §6.3)
+- Legacy RTDB collections stay read-only forever
+- All NEW writes go to Firestore experiments collection
+- `getExperimentMerged` lazy-reads both — caller doesn't care about source
+- Existing experiments.ts page (1500+ LOC) NOT modified — still writes
+  to legacy RTDB. R152c will introduce unified UI page that uses new
+  Firestore writes.
+
+### Production deploy procedure
+```bash
+npm run typecheck && npm test
+firebase deploy --only firestore:rules
+```
+
+### Out of scope (R152c+)
+- Unified Experiments UI page → R152c
+- Bulk migration script (admin Cloud Function) → R152d
+- Modify legacy experiments.ts to dual-write → defer indefinitely
+  (not needed since legacy stays read-only)
+
+### Files
+- src/ts/services/experiments.ts (new)
+- tests/services/experiments.test.ts (new)
+- firestore.rules (append /experiments block)
+- vitest.config.js (coverage)
+- CHANGELOG.md (this entry)
+
 ## R152a — Experiment entity types (2026-05-10)
 
 ### Context

@@ -28,6 +28,7 @@ export default defineConfig({
       'functions/src/search/rrf.ts',
       'src/ts/services/materials.ts',
       'src/ts/services/samples.ts',
+      'src/ts/services/experiments.ts',
     ],
       exclude: ['src/ts/**/*.test.js'],
     },
