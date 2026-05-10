@@ -75,6 +75,34 @@ export function attachGlobalDelegation() {
     }
   });
 
+  // R152c-2: Experiment form type change → re-render conditions
+  document.body.addEventListener('change', function(e) {
+    const t = (e.target as HTMLElement);
+    if (!t || !(t as any).dataset || (t as any).dataset.changeAction !== 'experiment-form-type-change') return;
+    const val = (t as HTMLSelectElement).value || '';
+    if (typeof (window as any).changeExperimentFormType === 'function') {
+      (window as any).changeExperimentFormType(val);
+    }
+  });
+
+  // R152c-2: Sample picker search inputs (input + output)
+  document.body.addEventListener('input', function(e) {
+    const t = (e.target as HTMLElement);
+    if (!t || !(t as any).dataset) return;
+    const action = (t as any).dataset.inputAction;
+    if (action === 'search-exp-input-samples') {
+      const val = (t as HTMLInputElement).value || '';
+      if (typeof (window as any).searchExpInputSamplesHandler === 'function') {
+        (window as any).searchExpInputSamplesHandler(val);
+      }
+    } else if (action === 'search-exp-output-samples') {
+      const val = (t as HTMLInputElement).value || '';
+      if (typeof (window as any).searchExpOutputSamplesHandler === 'function') {
+        (window as any).searchExpOutputSamplesHandler(val);
+      }
+    }
+  });
+
   document.body.addEventListener('click', function(e) {
     const target = e.target.closest('[data-action]');
     if (!target) return;
@@ -166,6 +194,33 @@ export function attachGlobalDelegation() {
       case 'open-experiment-detail': {
         const id = target.dataset.id;
         if (id && typeof window.openExperimentDetail === 'function') window.openExperimentDetail(id);
+        break;
+      }
+      // R152c-2: Experiments form
+      case 'open-experiment-form':
+        if (typeof window.openExperimentForm === 'function') window.openExperimentForm();
+        break;
+      case 'submit-experiment-form':
+        if (typeof window.submitExperimentForm === 'function') window.submitExperimentForm();
+        break;
+      case 'exp-add-input-sample': {
+        const id = target.dataset.id;
+        if (id && typeof window.addExpInputSample === 'function') window.addExpInputSample(id);
+        break;
+      }
+      case 'exp-add-output-sample': {
+        const id = target.dataset.id;
+        if (id && typeof window.addExpOutputSample === 'function') window.addExpOutputSample(id);
+        break;
+      }
+      case 'exp-remove-input-sample': {
+        const id = target.dataset.id;
+        if (id && typeof window.removeExpInputSample === 'function') window.removeExpInputSample(id);
+        break;
+      }
+      case 'exp-remove-output-sample': {
+        const id = target.dataset.id;
+        if (id && typeof window.removeExpOutputSample === 'function') window.removeExpOutputSample(id);
         break;
       }
 

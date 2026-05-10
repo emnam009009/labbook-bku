@@ -725,16 +725,16 @@
             <p class="page-subtitle">Mẫu vật cụ thể trong lab — lifecycle, lineage, storage</p>
           </div>
           <div style="display:flex;gap:8px">
-            <button class="btn btn-primary btn-lg-action" data-action="open-sample-form" style="margin-top:36px">
+            <button class="btn btn-primary btn-lg-action lb-header-action-btn" data-action="open-sample-form">
               <svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Thêm mẫu
             </button>
           </div>
         </div>
-        <div class="flex gap-2 mb-4 flex-wrap items-center" style="margin-top:8px">
-          <div style="position:relative;flex:1;min-width:200px">
+        <div class="lb-filter-row">
+          <div class="lb-search-wrap">
             <input class="search-input" id="smp-search" type="text" placeholder="Tìm theo tên, shortCode, composition, tag..."
-                   data-input-action="search-samples" style="width:100%;padding-right:32px">
+                   data-input-action="search-samples">
           </div>
         </div>
         <div data-samples-content></div>
@@ -743,7 +743,7 @@
       <!-- R151c + R151d-1: Sample detail modal (with Edit button) -->
       <div class="modal" id="modal-sample-detail" style="display:none">
         <div class="modal-overlay" data-action="close-modal" data-modal="modal-sample-detail"></div>
-        <div class="modal-content" style="max-width:600px">
+        <div class="modal-content lb-modal-w-600">
           <div class="modal-header">
             <h2>Chi tiết mẫu</h2>
             <button class="modal-close" data-action="close-modal" data-modal="modal-sample-detail" aria-label="Đóng">×</button>
@@ -756,16 +756,22 @@
         </div>
       </div>
 
-      <!-- R152c-1: Unified Experiments page (Phase B.5) -->
+      <!-- R152c-1 + R152c-2: Unified Experiments page (Phase B.5) -->
       <div class="page" id="page-experiments-unified">
         <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
           <div>
             <h1 class="page-title" style="color:#0F172A !important">Thí nghiệm (Experiments unified)</h1>
             <p class="page-subtitle">Schema mới gộp HT/Electrode/Electrochem. Legacy pages vẫn còn để dùng song song.</p>
           </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary btn-lg-action lb-header-action-btn" data-action="open-experiment-form">
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Thêm thí nghiệm
+            </button>
+          </div>
         </div>
-        <div class="flex gap-2 mb-4 flex-wrap items-center" style="margin-top:8px">
-          <select class="cs-select" id="exp-filter-type" data-change-action="filter-experiments-type" style="min-width:200px">
+        <div class="lb-filter-row">
+          <select class="cs-select" id="exp-filter-type" data-change-action="filter-experiments-type">
             <option value="">Tất cả loại</option>
             <option value="synthesis">Synthesis</option>
             <option value="hydrothermal">Hydrothermal</option>
@@ -787,7 +793,7 @@
       <!-- R152c-1: Experiment detail modal -->
       <div class="modal" id="modal-experiment-detail" style="display:none">
         <div class="modal-overlay" data-action="close-modal" data-modal="modal-experiment-detail"></div>
-        <div class="modal-content" style="max-width:680px">
+        <div class="modal-content lb-modal-w-680">
           <div class="modal-header">
             <h2>Chi tiết thí nghiệm</h2>
             <button class="modal-close" data-action="close-modal" data-modal="modal-experiment-detail" aria-label="Đóng">×</button>
@@ -799,18 +805,120 @@
         </div>
       </div>
 
+      <!-- R152c-2: Experiment form modal (create with type-specific schema) -->
+      <div class="modal-overlay" id="modal-experiment-form" role="dialog" aria-modal="true" aria-labelledby="modal-experiment-form-title">
+        <div class="modal lb-modal-w-760 lb-modal-scroll">
+          <div class="modal-header">
+            <div class="modal-title" id="modal-experiment-form-title">Thêm thí nghiệm</div>
+            <button class="modal-close" type="button" aria-label="Đóng" data-action="close-modal" data-modal="modal-experiment-form">✕</button>
+          </div>
+          <div class="lb-modal-scroll-body">
+
+            <!-- Common fields -->
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Code (để trống = auto-gen)</label>
+                <input type="text" id="exp-form-code" placeholder="HT-2026-05-10-001" style="font-family:monospace">
+              </div>
+              <div class="form-group">
+                <label>Type *</label>
+                <select class="cs-select" id="exp-form-type" data-change-action="experiment-form-type-change">
+                  <option value="synthesis">Synthesis</option>
+                  <option value="hydrothermal" selected>Hydrothermal</option>
+                  <option value="sol-gel">Sol-gel</option>
+                  <option value="cvd">CVD</option>
+                  <option value="annealing">Annealing</option>
+                  <option value="electrode-prep">Electrode prep</option>
+                  <option value="ink-formulation">Ink</option>
+                  <option value="measurement">Measurement</option>
+                  <option value="electrochemistry">Electrochemistry</option>
+                  <option value="characterization">Characterization</option>
+                  <option value="photocatalysis">Photocatalysis</option>
+                  <option value="photoelectrochemistry">PEC</option>
+                  <option value="compute">Compute</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Status</label>
+                <select class="cs-select" id="exp-form-status">
+                  <option value="planned">Planned</option>
+                  <option value="in-progress">In progress</option>
+                  <option value="completed" selected>Completed</option>
+                  <option value="failed">Failed</option>
+                  <option value="abandoned">Abandoned</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Performed at</label>
+                <input type="datetime-local" id="exp-form-performed-at">
+              </div>
+            </div>
+
+            <!-- Input samples -->
+            <div class="form-group lb-fg-full" style="margin-top:12px">
+              <label>Input samples (consumed)</label>
+              <div class="lb-search-wrap">
+                <input type="text" id="exp-input-sample-search" placeholder="Tìm sample input..." autocomplete="off"
+                       data-input-action="search-exp-input-samples">
+                <div class="lb-suggestions" id="exp-input-sample-suggestions"></div>
+              </div>
+              <div class="lb-badges-row" id="exp-input-samples-badges"></div>
+            </div>
+
+            <!-- Output samples -->
+            <div class="form-group lb-fg-full" style="margin-top:8px">
+              <label>Output samples (produced)</label>
+              <div class="lb-search-wrap">
+                <input type="text" id="exp-output-sample-search" placeholder="Tìm sample output..." autocomplete="off"
+                       data-input-action="search-exp-output-samples">
+                <div class="lb-suggestions" id="exp-output-sample-suggestions"></div>
+              </div>
+              <div class="lb-badges-row" id="exp-output-samples-badges"></div>
+            </div>
+
+            <!-- Type-specific conditions -->
+            <div class="lb-form-divider">
+              <h3 class="font-semibold mb-2">Conditions</h3>
+              <div class="form-grid" id="exp-conditions-section"></div>
+            </div>
+
+            <!-- Trailing common fields -->
+            <div class="form-grid lb-form-divider">
+              <div class="form-group lb-fg-full">
+                <label>Conclusion</label>
+                <textarea id="exp-form-conclusion" rows="2" placeholder="Kết luận..."></textarea>
+              </div>
+              <div class="form-group lb-fg-full">
+                <label>Tags (cách nhau dấu phẩy)</label>
+                <input type="text" id="exp-form-tags" placeholder="HER, MoS2-batch-001">
+              </div>
+              <div class="form-group lb-fg-full">
+                <label>Notes</label>
+                <textarea id="exp-form-notes" rows="3" placeholder="Ghi chú..."></textarea>
+              </div>
+            </div>
+
+          </div>
+          <div class="modal-footer">
+            <button class="btn" data-action="close-modal" data-modal="modal-experiment-form">Hủy</button>
+            <button class="btn btn-primary" data-action="submit-experiment-form">Lưu</button>
+          </div>
+        </div>
+      </div>
+
       <!-- R151d-1: Sample form modal (create + edit, no lineage UI yet) -->
       <div class="modal-overlay" id="modal-sample-form" role="dialog" aria-modal="true" aria-labelledby="modal-sample-form-title">
-        <div class="modal" style="max-width:640px">
+        <div class="modal lb-modal-w-640">
           <div class="modal-header">
             <div class="modal-title" id="modal-sample-form-title">Thêm mẫu</div>
             <button class="modal-close" type="button" aria-label="Đóng" data-action="close-modal" data-modal="modal-sample-form">✕</button>
           </div>
           <div class="form-grid" style="padding:8px 0">
-            <div class="form-group" style="grid-column:1/-1">
+            <div class="form-group lb-fg-full">
               <label>Tên mẫu (để trống = auto-gen)</label>
-              <input type="text" id="smp-name" placeholder="MoS2-batch-2026-05-10-001" style="font-family:monospace">
-              <div style="font-size:11px;color:var(--text-3);margin-top:2px">Auto-generate format: {composition}-batch-{date}-{counter}</div>
+              <input type="text" id="smp-name" placeholder="MoS2-batch-2026-05-10-001" class="font-mono">
+              <div class="lb-hint">Auto-generate format: {composition}-batch-{date}-{counter}</div>
             </div>
             <div class="form-group">
               <label>Short code</label>
@@ -818,12 +926,12 @@
             </div>
             <div class="form-group">
               <label>Composition *</label>
-              <input type="text" id="smp-composition" placeholder="MoS2" style="font-family:monospace">
+              <input type="text" id="smp-composition" placeholder="MoS2" class="font-mono">
             </div>
             <div class="form-group">
               <label>Material ref (ID)</label>
-              <input type="text" id="smp-materialref" placeholder="mat-MoS2-..." style="font-family:monospace;font-size:12px">
-              <div style="font-size:11px;color:var(--text-3);margin-top:2px">Picker UI ở R151d-2</div>
+              <input type="text" id="smp-materialref" placeholder="mat-MoS2-..." class="font-mono">
+              <div class="lb-hint">Picker UI ở R151d-2</div>
             </div>
             <div class="form-group">
               <label>Status</label>
@@ -837,9 +945,9 @@
             </div>
             <div class="form-group">
               <label>Amount</label>
-              <div style="display:flex;gap:6px">
-                <input type="number" step="0.01" id="smp-amount-value" placeholder="50" style="flex:1">
-                <input type="text" id="smp-amount-unit" placeholder="mg" style="width:70px">
+              <div class="lb-amount-pair">
+                <input type="number" step="0.01" id="smp-amount-value" placeholder="50">
+                <input type="text" id="smp-amount-unit" placeholder="mg">
               </div>
             </div>
             <div class="form-group" style="grid-column:1/-1">
@@ -850,14 +958,14 @@
               <label>Tags (cách nhau dấu phẩy)</label>
               <input type="text" id="smp-tags" placeholder="catalyst-test, publish-2026">
             </div>
-            <div class="form-group" style="grid-column:1/-1">
+            <div class="form-group lb-fg-full">
               <label>Lineage — Parent samples (R151d-2)</label>
-              <div style="position:relative">
+              <div class="lb-search-wrap">
                 <input type="text" id="smp-parent-search" placeholder="Gõ tên/composition mẫu cha..." autocomplete="off">
-                <div id="smp-parent-suggestions" style="position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #E2E8F0;border-radius:6px;max-height:200px;overflow-y:auto;z-index:10;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.08)"></div>
+                <div class="lb-suggestions" id="smp-parent-suggestions"></div>
               </div>
-              <div id="smp-parent-badges" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;min-height:24px"></div>
-              <div style="font-size:11px;color:var(--text-3);margin-top:4px">
+              <div class="lb-badges-row" id="smp-parent-badges"></div>
+              <div class="lb-hint">
                 Để trống = fresh synthesis (no parents). 1 parent = derived. 2+ parents = composite.<br>
                 Generation và rootMaterials sẽ tự tính.
               </div>

@@ -228,6 +228,8 @@ function generateExperimentCode(type: ExperimentType): string {
     annealing: "ANN",
     measurement: "MEAS",
     characterization: "CHAR",
+    photocatalysis: "PC",
+    photoelectrochemistry: "PEC",
     compute: "COMP",
     other: "EXP",
   };

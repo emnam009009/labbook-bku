@@ -122,8 +122,7 @@ function renderCard(s: Sample): string {
   const tags = (s.tags || []).slice(0, 2).map((t) => escapeHtml(t)).join(", ");
 
   return `
-    <div class="card p-3 cursor-pointer hover:shadow-md transition" style="background:white;border:1px solid #E2E8F0;border-radius:8px"
-         data-action="open-sample-detail" data-id="${escapeHtml(s.id)}">
+    <div class="lb-card" data-action="open-sample-detail" data-id="${escapeHtml(s.id)}">
       <div class="flex items-start justify-between gap-2 mb-1">
         <div class="font-mono text-sm font-semibold flex-1 min-w-0 truncate" style="color:#0F172A" title="${name}">${name}</div>
         ${genBadge}
@@ -414,18 +413,16 @@ function renderParentBadges(): void {
   const badgesEl = document.getElementById("smp-parent-badges");
   if (!badgesEl) return;
   if (_selectedParents.length === 0) {
-    badgesEl.innerHTML = '<span class="text-xs text-gray-400">Chưa chọn parent</span>';
+    badgesEl.innerHTML = '<span class="lb-badge-empty">Chưa chọn parent</span>';
     return;
   }
   badgesEl.innerHTML = _selectedParents.map((pid) => {
     const sample = _cache?.find((s) => s.id === pid);
     const label = sample ? `${sample.name} (${sample.composition})` : pid;
     return `
-      <span class="badge" style="display:inline-flex;align-items:center;gap:4px;background:#EEF2FF;color:#3730A3;padding:3px 8px;border-radius:12px;font-size:12px">
+      <span class="lb-rmbadge lb-rmbadge--parent">
         <span class="font-mono" title="${escapeHtml(pid)}">${escapeHtml(label)}</span>
-        <button type="button" data-action="remove-parent-badge" data-id="${escapeHtml(pid)}"
-          style="background:none;border:none;cursor:pointer;color:#3730A3;font-weight:bold;padding:0 2px"
-          aria-label="Xóa">×</button>
+        <button type="button" data-action="remove-parent-badge" data-id="${escapeHtml(pid)}" aria-label="Xóa">×</button>
       </span>
     `;
   }).join("");
@@ -455,25 +452,23 @@ function showParentSuggestions(query: string): void {
   }).slice(0, 8);
 
   if (candidates.length === 0) {
-    suggestionsEl.innerHTML = '<div style="padding:8px;color:#9CA3AF;font-size:13px">Không tìm thấy mẫu khớp</div>';
-    suggestionsEl.style.display = "block";
+    suggestionsEl.innerHTML = '<div class="lb-suggestions-empty">Không tìm thấy mẫu khớp</div>';
+    suggestionsEl.classList.add("lb-show");
     return;
   }
 
   suggestionsEl.innerHTML = candidates.map((s) => `
-    <div data-action="add-parent-badge" data-id="${escapeHtml(s.id)}"
-         style="padding:8px;cursor:pointer;border-bottom:1px solid #F3F4F6"
-         onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='white'">
+    <div class="lb-suggestion-item" data-action="add-parent-badge" data-id="${escapeHtml(s.id)}">
       <div class="font-mono text-sm">${escapeHtml(s.name)}</div>
       <div class="text-xs text-gray-500">${escapeHtml(s.composition)}${s.shortCode ? ` · ${escapeHtml(s.shortCode)}` : ""} · Gen ${s.generation ?? 0}</div>
     </div>
   `).join("");
-  suggestionsEl.style.display = "block";
+  suggestionsEl.classList.add("lb-show");
 }
 
 function hideParentSuggestions(): void {
   const el = document.getElementById("smp-parent-suggestions");
-  if (el) el.style.display = "none";
+  if (el) el.classList.remove("lb-show");
 }
 
 export function addParentBadge(id: string): void {

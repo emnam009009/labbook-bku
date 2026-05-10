@@ -283,6 +283,8 @@ export type ExperimentType =
   | "measurement"        // generic measurement (XRD, Raman, ...)
   | "electrochemistry"   // legacy: electrochem/ (CV/LSV/EIS/Tafel/GCD)
   | "characterization"   // SEM/TEM/XPS/UV-Vis/PL/FTIR
+  | "photocatalysis"     // R152c-2: dye degradation under light
+  | "photoelectrochemistry" // R152c-2: PEC measurements (LSV, chronoamp, PEIS)
   | "compute"            // simulation (DFT, MD)
   | "other";
 

@@ -1,5 +1,62 @@
 # CHANGELOG
 
+## R152c-2 — Experiments form with type-specific schema (Approach C) (2026-05-10)
+
+### Added
+- `ExperimentType` enum: 2 new values
+  - `photocatalysis` (prefix PC)
+  - `photoelectrochemistry` (prefix PEC)
+- Form modal `#modal-experiment-form` (create only — edit deferred)
+  with type-driven UI:
+  - Common fields (code, type, status, performedAt)
+  - Type changes → conditions section re-renders with type-specific fields
+  - Input samples + output samples picker (typeahead like R151d-2,
+    color-coded badges: red=input, green=output)
+  - Trailing fields (conclusion, tags, notes)
+- 6 type schemas (literature-derived for hydrothermal,
+  electrode-prep, electrochemistry, ink-formulation, photocatalysis,
+  photoelectrochemistry). Other 8 types: empty schema, fall back to
+  notes-only.
+- `TYPE_CONDITIONS_SCHEMA` defines each schema with `ConditionField`
+  (key/label/type/units/options/required/hint).
+- Form helpers: `renderConditionsSection`, `collectConditions`,
+  `validateRequiredConditions`, type change preserves matching keys.
+- Sample picker reuses lazy load + cache pattern.
+
+### global-delegation.ts
+- 6 new click cases: open-experiment-form, submit-experiment-form,
+  exp-add-input-sample, exp-add-output-sample,
+  exp-remove-input-sample, exp-remove-output-sample
+- 1 new change listener: experiment-form-type-change
+- 2 new input listeners: search-exp-input-samples,
+  search-exp-output-samples
+
+### Out of scope (future)
+- Edit existing experiment (only create now; can add R152c-3)
+- Bulk migration legacy → Firestore (R152d)
+- Schema for remaining 8 types (synthesis, sol-gel, CVD, annealing,
+  measurement, characterization, compute, other) — extend incrementally
+
+### Files
+- src/ts/types/research.ts (extend ExperimentType enum)
+- src/ts/services/experiments.ts (extend prefix map for PC/PEC)
+- src/ts/pages/experiments-unified.ts (schema + form helpers + handlers)
+- index.html (page header Add button + form modal)
+- src/ts/services/global-delegation.ts (6 cases + 3 listeners)
+- CHANGELOG.md (this entry)
+
+### Verify
+```bash
+npm run typecheck && npm run build
+```
+
+Browser test:
+1. Click "Thêm thí nghiệm" → form opens with hydrothermal default
+2. Change type → conditions section re-renders with type-specific fields
+3. Required fields with red asterisk, validation on submit
+4. Sample pickers (input/output) typeahead
+5. Submit hydrothermal example → expect success toast + card appears
+
 ## R152c-1 — Unified Experiments page list view (2026-05-10)
 
 ### Added

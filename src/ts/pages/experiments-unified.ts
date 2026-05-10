@@ -14,7 +14,7 @@
 import { listExperiments } from "../services/experiments.js";
 import type { Experiment, ExperimentType, ExperimentStatus } from "../types/research.js";
 import { escapeHtml } from "../utils/format.js";
-import { openModal } from "../ui/modal.js";
+import { openModal, closeModal } from "../ui/modal.js";
 
 const TYPE_LABELS: Record<ExperimentType, string> = {
   synthesis: "Synthesis",
@@ -27,6 +27,8 @@ const TYPE_LABELS: Record<ExperimentType, string> = {
   measurement: "Measurement",
   electrochemistry: "Electrochemistry",
   characterization: "Characterization",
+  photocatalysis: "Photocatalysis",
+  photoelectrochemistry: "PEC (Photoelectrochemistry)",
   compute: "Compute",
   other: "Other",
 };
@@ -93,7 +95,9 @@ export async function renderExperimentsUnified(): Promise<void> {
   const typeOrder: ExperimentType[] = [
     "synthesis", "hydrothermal", "sol-gel", "cvd", "annealing",
     "electrode-prep", "ink-formulation", "measurement",
-    "electrochemistry", "characterization", "compute", "other",
+    "electrochemistry", "characterization",
+    "photocatalysis", "photoelectrochemistry",
+    "compute", "other",
   ];
 
   const html = typeOrder
@@ -128,8 +132,7 @@ function renderCard(e: Experiment): string {
   const isLegacy = !!e.legacyRef;
 
   return `
-    <div class="card p-3 cursor-pointer hover:shadow-md transition" style="background:white;border:1px solid #E2E8F0;border-radius:8px"
-         data-action="open-experiment-detail" data-id="${escapeHtml(e.id)}">
+    <div class="lb-card" data-action="open-experiment-detail" data-id="${escapeHtml(e.id)}">
       <div class="flex items-start justify-between gap-2 mb-1">
         <div class="font-mono text-sm font-semibold flex-1 min-w-0 truncate" style="color:#0F172A">${code}</div>
         <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:${statusColor};white-space:nowrap">
@@ -273,6 +276,534 @@ export async function filterExperimentsByType(type: ExperimentType | ""): Promis
   await renderExperimentsUnified();
 }
 
+// ════════════════════════════════════════════════════════════
+// R152c-2: Type-specific conditions schema (Approach C)
+// ════════════════════════════════════════════════════════════
+
+export type ConditionFieldType = "number" | "text" | "select" | "number-with-unit";
+
+export interface ConditionField {
+  key: string;
+  label: string;
+  type: ConditionFieldType;
+  units?: string[];           // for number-with-unit
+  options?: string[];         // for select
+  required?: boolean;
+  hint?: string;              // small helper text
+  placeholder?: string;
+}
+
+const TYPE_CONDITIONS_SCHEMA: Partial<Record<ExperimentType, ConditionField[]>> = {
+  hydrothermal: [
+    { key: "temperature", label: "Temperature", type: "number-with-unit", units: ["°C", "K"], required: true },
+    { key: "duration", label: "Duration", type: "number-with-unit", units: ["h", "min"], required: true },
+    { key: "vesselType", label: "Vessel", type: "select", options: ["Teflon-lined autoclave", "stainless steel autoclave", "glass", "other"] },
+    { key: "vesselVolumeML", label: "Vessel volume (mL)", type: "number" },
+    { key: "fillRatioPercent", label: "Fill ratio (%)", type: "number" },
+    { key: "pH", label: "pH", type: "number" },
+    { key: "atmosphere", label: "Atmosphere", type: "select", options: ["air", "Ar", "N2", "vacuum"] },
+    { key: "precursorMolarRatio", label: "Precursor molar ratio", type: "text", placeholder: "S/Mo = 4:1" },
+    { key: "additives", label: "Additives", type: "text", placeholder: "l-cysteine, urea, F-127" },
+  ],
+  "electrode-prep": [
+    { key: "substrate", label: "Substrate", type: "select", required: true,
+      options: ["glassy carbon", "FTO", "ITO", "Ni foam", "carbon paper", "Cu foil", "other"] },
+    { key: "substrateAreaCm2", label: "Substrate area (cm²)", type: "number", required: true },
+    { key: "coatingMethod", label: "Coating method", type: "select", required: true,
+      options: ["drop-casting", "spin-coating", "spray", "electrodeposition", "doctor-blade", "other"] },
+    { key: "catalystLoadingMg", label: "Catalyst loading (mg)", type: "number" },
+    { key: "loadingMgPerCm2", label: "Loading density (mg/cm²)", type: "number" },
+    { key: "inkRefId", label: "Ink reference (ID/notes)", type: "text" },
+    { key: "bindingAgent", label: "Binder", type: "select", options: ["Nafion", "PVDF", "PTFE", "none", "other"] },
+    { key: "dryingTemp", label: "Drying temp", type: "number-with-unit", units: ["°C", "K"] },
+    { key: "dryingDuration", label: "Drying time", type: "number-with-unit", units: ["min", "h"] },
+  ],
+  electrochemistry: [
+    { key: "technique", label: "Technique", type: "select", required: true,
+      options: ["CV", "LSV", "EIS", "Tafel", "Chronoamperometry", "GCD", "OCP", "other"] },
+    { key: "electrolyteName", label: "Electrolyte", type: "text", required: true, placeholder: "0.5 M H2SO4" },
+    { key: "electrolytePH", label: "Electrolyte pH", type: "number" },
+    { key: "referenceElectrode", label: "Reference electrode", type: "select", required: true,
+      options: ["Ag/AgCl", "SCE", "RHE", "Hg/HgO", "other"] },
+    { key: "counterElectrode", label: "Counter electrode", type: "select", required: true,
+      options: ["Pt wire", "Pt foil", "graphite rod", "other"] },
+    { key: "workingArea", label: "Working area (cm²)", type: "number" },
+    { key: "vStart", label: "V start (V vs ref)", type: "number" },
+    { key: "vEnd", label: "V end (V vs ref)", type: "number" },
+    { key: "scanRate", label: "Scan rate", type: "number-with-unit", units: ["mV/s", "V/s"], hint: "for CV/LSV" },
+    { key: "cycles", label: "Cycles", type: "number", hint: "for CV" },
+    { key: "frequency", label: "Frequency range", type: "text", placeholder: "100 kHz - 0.1 Hz", hint: "for EIS" },
+    { key: "amplitude", label: "AC amplitude (mV)", type: "number", hint: "for EIS" },
+    { key: "iRCompensation", label: "iR compensation (%)", type: "number" },
+    { key: "atmosphere", label: "Atmosphere/Purge", type: "select", options: ["N2", "Ar", "O2", "air"] },
+  ],
+  "ink-formulation": [
+    { key: "catalystMassMg", label: "Catalyst mass (mg)", type: "number", required: true },
+    { key: "solventComposition", label: "Solvent", type: "text", required: true, placeholder: "water/IPA 4:1" },
+    { key: "solventVolumeML", label: "Total solvent volume (mL)", type: "number", required: true },
+    { key: "bindingAgent", label: "Binder", type: "select", options: ["Nafion 5%", "PVDF", "PTFE", "none", "other"] },
+    { key: "binderVolumeUL", label: "Binder volume (μL)", type: "number" },
+    { key: "sonicationDurationMin", label: "Sonication duration (min)", type: "number" },
+    { key: "sonicationType", label: "Sonication type", type: "select", options: ["bath", "probe", "none"] },
+  ],
+  photocatalysis: [
+    { key: "pollutantName", label: "Pollutant/dye", type: "select", required: true,
+      options: ["MB (methylene blue)", "MO (methyl orange)", "RhB", "BG", "BPB", "phenol", "other"] },
+    { key: "pollutantConcentrationMgL", label: "Initial concentration (mg/L)", type: "number", required: true },
+    { key: "catalystMassMg", label: "Catalyst mass (mg)", type: "number", required: true },
+    { key: "solutionVolumeML", label: "Solution volume (mL)", type: "number", required: true },
+    { key: "lightSource", label: "Light source", type: "select", required: true,
+      options: ["Xe lamp", "Hg lamp", "simulated sunlight AM1.5G", "visible LED", "UV LED", "sunlight", "other"] },
+    { key: "lightPowerW", label: "Light power (W)", type: "number" },
+    { key: "lightIntensity", label: "Light intensity", type: "text", placeholder: "100 mW/cm² (1 sun)" },
+    { key: "distanceCm", label: "Distance light-sample (cm)", type: "number" },
+    { key: "darkAdsorptionMin", label: "Dark adsorption (min)", type: "number", hint: "thường 30-60 min" },
+    { key: "irradiationDurationMin", label: "Irradiation duration (min)", type: "number", required: true },
+    { key: "samplingIntervalMin", label: "Sampling interval (min)", type: "number" },
+    { key: "pH", label: "Initial pH", type: "number" },
+    { key: "atmosphere", label: "Atmosphere", type: "select", options: ["air", "N2 (anaerobic)", "O2 (saturated)"] },
+    { key: "scavenger", label: "Scavenger", type: "text", placeholder: "t-BuOH for OH" },
+    { key: "analysisMethod", label: "Analysis method", type: "select", required: true,
+      options: ["UV-Vis", "HPLC", "COD", "TOC", "other"] },
+  ],
+  photoelectrochemistry: [
+    { key: "technique", label: "Technique", type: "select", required: true,
+      options: ["LSV", "chronoamperometry (light on/off)", "EIS (PEIS)", "IPCE", "Mott-Schottky", "OCP", "other"] },
+    { key: "electrolyteName", label: "Electrolyte", type: "text", required: true },
+    { key: "electrolytePH", label: "Electrolyte pH", type: "number" },
+    { key: "referenceElectrode", label: "Reference electrode", type: "select", required: true,
+      options: ["Ag/AgCl", "SCE", "RHE", "Hg/HgO", "other"] },
+    { key: "counterElectrode", label: "Counter electrode", type: "select", required: true,
+      options: ["Pt wire", "Pt foil", "graphite", "other"] },
+    { key: "lightSource", label: "Light source", type: "select", required: true,
+      options: ["Xe lamp 300W", "Xe lamp 500W", "simulated sunlight AM1.5G", "visible LED", "UV LED", "monochromator", "other"] },
+    { key: "lightIntensityMWcm2", label: "Light intensity (mW/cm²)", type: "number" },
+    { key: "spectralFilter", label: "Filter", type: "text", placeholder: "AM1.5G, λ>420 nm" },
+    { key: "illuminationMode", label: "Illumination mode", type: "select", options: ["front-side", "back-side", "both"] },
+    { key: "biasV", label: "Bias (V vs ref)", type: "number", hint: "for chronoamp" },
+    { key: "vStart", label: "V start (V vs ref)", type: "number", hint: "for LSV" },
+    { key: "vEnd", label: "V end (V vs ref)", type: "number", hint: "for LSV" },
+    { key: "scanRate", label: "Scan rate (mV/s)", type: "number" },
+    { key: "frequency", label: "Frequency range", type: "text", hint: "for PEIS", placeholder: "10 kHz - 0.01 Hz" },
+    { key: "amplitude", label: "AC amplitude (mV)", type: "number" },
+    { key: "chopperFrequency", label: "Light chopper (Hz)", type: "number", hint: "for transient" },
+    { key: "workingArea", label: "Working/Illuminated area (cm²)", type: "number" },
+    { key: "atmosphere", label: "Atmosphere/Purge", type: "select", options: ["N2", "Ar", "O2", "air"] },
+  ],
+};
+
+
+// ════════════════════════════════════════════════════════════
+// R152c-2: Form state + helpers
+// ════════════════════════════════════════════════════════════
+
+let _formType: ExperimentType = "hydrothermal";
+let _formInputSamples: string[] = [];
+let _formOutputSamples: string[] = [];
+let _samplePickerCache: any[] | null = null;
+
+/**
+ * Render conditions section based on selected type.
+ * Common values (matching keys) preserved when type changes.
+ */
+function renderConditionsSection(type: ExperimentType): string {
+  const schema = TYPE_CONDITIONS_SCHEMA[type] || [];
+  if (schema.length === 0) {
+    return `<div class="text-sm text-gray-500 py-3">
+      Type "${escapeHtml(TYPE_LABELS[type] || type)}" chưa có schema chi tiết.
+      Conditions để trống hoặc dùng "Notes" bên dưới.
+    </div>`;
+  }
+  return schema.map(renderConditionField).join("");
+}
+
+function renderConditionField(f: ConditionField): string {
+  const id = `exp-cond-${f.key}`;
+  const required = f.required ? '<span class="lb-req">*</span>' : "";
+  const hint = f.hint ? `<div class="lb-hint">${escapeHtml(f.hint)}</div>` : "";
+
+  if (f.type === "number") {
+    return `
+      <div class="form-group">
+        <label>${escapeHtml(f.label)} ${required}</label>
+        <input type="number" step="any" id="${id}" data-cond-key="${escapeHtml(f.key)}"
+               placeholder="${escapeHtml(f.placeholder || "")}">
+        ${hint}
+      </div>
+    `;
+  }
+  if (f.type === "text") {
+    return `
+      <div class="form-group">
+        <label>${escapeHtml(f.label)} ${required}</label>
+        <input type="text" id="${id}" data-cond-key="${escapeHtml(f.key)}"
+               placeholder="${escapeHtml(f.placeholder || "")}">
+        ${hint}
+      </div>
+    `;
+  }
+  if (f.type === "select") {
+    const options = (f.options || []).map((o) =>
+      `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`
+    ).join("");
+    return `
+      <div class="form-group">
+        <label>${escapeHtml(f.label)} ${required}</label>
+        <select class="cs-select" id="${id}" data-cond-key="${escapeHtml(f.key)}" data-cond-kind="select">
+          <option value="">— chọn —</option>
+          ${options}
+        </select>
+        ${hint}
+      </div>
+    `;
+  }
+  if (f.type === "number-with-unit") {
+    const units = (f.units || []).map((u) =>
+      `<option value="${escapeHtml(u)}">${escapeHtml(u)}</option>`
+    ).join("");
+    return `
+      <div class="form-group">
+        <label>${escapeHtml(f.label)} ${required}</label>
+        <div class="lb-num-unit">
+          <input type="number" step="any" id="${id}-value" data-cond-key="${escapeHtml(f.key)}" data-cond-kind="value-unit-value"
+                 placeholder="${escapeHtml(f.placeholder || "")}">
+          <select class="cs-select" id="${id}-unit" data-cond-key="${escapeHtml(f.key)}" data-cond-kind="value-unit-unit">
+            ${units}
+          </select>
+        </div>
+        ${hint}
+      </div>
+    `;
+  }
+  return "";
+}
+
+/**
+ * Collect form values into ExperimentConditions object.
+ * Skip empty fields; for number-with-unit, only emit if both value+unit set.
+ */
+function collectConditions(): any {
+  const result: any = {};
+  const schema = TYPE_CONDITIONS_SCHEMA[_formType] || [];
+  for (const f of schema) {
+    const id = `exp-cond-${f.key}`;
+    if (f.type === "number") {
+      const el = document.getElementById(id) as HTMLInputElement | null;
+      const v = el?.value.trim();
+      if (v !== undefined && v !== "") {
+        const num = parseFloat(v);
+        if (!isNaN(num)) result[f.key] = num;
+      }
+    } else if (f.type === "text" || f.type === "select") {
+      const el = document.getElementById(id) as HTMLInputElement | HTMLSelectElement | null;
+      const v = (el?.value ?? "").trim();
+      if (v) result[f.key] = v;
+    } else if (f.type === "number-with-unit") {
+      const valueEl = document.getElementById(`${id}-value`) as HTMLInputElement | null;
+      const unitEl = document.getElementById(`${id}-unit`) as HTMLSelectElement | null;
+      const vStr = valueEl?.value.trim();
+      const u = unitEl?.value.trim();
+      if (vStr && u) {
+        const num = parseFloat(vStr);
+        if (!isNaN(num)) result[f.key] = { value: num, unit: u };
+      }
+    }
+  }
+  return result;
+}
+
+/**
+ * Validate required fields filled. Returns array of missing labels.
+ */
+function validateRequiredConditions(): string[] {
+  const missing: string[] = [];
+  const schema = TYPE_CONDITIONS_SCHEMA[_formType] || [];
+  for (const f of schema) {
+    if (!f.required) continue;
+    const id = `exp-cond-${f.key}`;
+    if (f.type === "number-with-unit") {
+      const valueEl = document.getElementById(`${id}-value`) as HTMLInputElement | null;
+      const unitEl = document.getElementById(`${id}-unit`) as HTMLSelectElement | null;
+      if (!valueEl?.value.trim() || !unitEl?.value.trim()) missing.push(f.label);
+    } else {
+      const el = document.getElementById(id) as HTMLInputElement | HTMLSelectElement | null;
+      if (!el?.value.trim()) missing.push(f.label);
+    }
+  }
+  return missing;
+}
+
+/**
+ * Open create form. Resets all state.
+ */
+export function openExperimentForm(): void {
+  _formType = "hydrothermal";
+  _formInputSamples = [];
+  _formOutputSamples = [];
+
+  const codeEl = document.getElementById("exp-form-code") as HTMLInputElement | null;
+  const typeEl = document.getElementById("exp-form-type") as HTMLSelectElement | null;
+  const statusEl = document.getElementById("exp-form-status") as HTMLSelectElement | null;
+  const performedAtEl = document.getElementById("exp-form-performed-at") as HTMLInputElement | null;
+  const conclusionEl = document.getElementById("exp-form-conclusion") as HTMLTextAreaElement | null;
+  const tagsEl = document.getElementById("exp-form-tags") as HTMLInputElement | null;
+  const notesEl = document.getElementById("exp-form-notes") as HTMLTextAreaElement | null;
+
+  if (codeEl) codeEl.value = "";
+  if (typeEl) typeEl.value = "hydrothermal";
+  if (statusEl) statusEl.value = "completed";
+  if (performedAtEl) {
+    const now = new Date();
+    performedAtEl.value = now.toISOString().slice(0, 16); // datetime-local
+  }
+  if (conclusionEl) conclusionEl.value = "";
+  if (tagsEl) tagsEl.value = "";
+  if (notesEl) notesEl.value = "";
+
+  renderConditionsForCurrentType();
+  renderInputSamplesBadges();
+  renderOutputSamplesBadges();
+
+  // Clear sample pickers
+  const inSearchEl = document.getElementById("exp-input-sample-search") as HTMLInputElement | null;
+  const outSearchEl = document.getElementById("exp-output-sample-search") as HTMLInputElement | null;
+  if (inSearchEl) inSearchEl.value = "";
+  if (outSearchEl) outSearchEl.value = "";
+  hideSampleSuggestions("input");
+  hideSampleSuggestions("output");
+
+  openModal("modal-experiment-form");
+}
+
+function renderConditionsForCurrentType(): void {
+  const sectionEl = document.getElementById("exp-conditions-section");
+  if (!sectionEl) return;
+  // Snapshot current values to restore matching keys
+  const currentValues = collectConditions();
+  sectionEl.innerHTML = renderConditionsSection(_formType);
+  // Restore matching keys
+  const newSchema = TYPE_CONDITIONS_SCHEMA[_formType] || [];
+  for (const f of newSchema) {
+    if (!(f.key in currentValues)) continue;
+    const v = currentValues[f.key];
+    const id = `exp-cond-${f.key}`;
+    if (f.type === "number-with-unit" && v && typeof v === "object") {
+      const valueEl = document.getElementById(`${id}-value`) as HTMLInputElement | null;
+      const unitEl = document.getElementById(`${id}-unit`) as HTMLSelectElement | null;
+      if (valueEl) valueEl.value = String(v.value);
+      if (unitEl) unitEl.value = String(v.unit);
+    } else {
+      const el = document.getElementById(id) as HTMLInputElement | HTMLSelectElement | null;
+      if (el) el.value = typeof v === "object" ? JSON.stringify(v) : String(v);
+    }
+  }
+}
+
+export function changeExperimentFormType(newType: ExperimentType): void {
+  _formType = newType;
+  renderConditionsForCurrentType();
+}
+
+// ─── Sample picker (input + output) ───
+
+async function ensureSamplePickerCache(): Promise<any[]> {
+  if (_samplePickerCache) return _samplePickerCache;
+  try {
+    const { listSamples } = await import("../services/samples.js");
+    _samplePickerCache = await listSamples({ limit: 500 });
+  } catch (err) {
+    console.error("[exp form] sample picker cache load failed:", err);
+    _samplePickerCache = [];
+  }
+  return _samplePickerCache;
+}
+
+function renderInputSamplesBadges(): void {
+  const el = document.getElementById("exp-input-samples-badges");
+  if (!el) return;
+  if (_formInputSamples.length === 0) {
+    el.innerHTML = '<span class="text-xs text-gray-400">Chưa chọn input sample</span>';
+    return;
+  }
+  el.innerHTML = _formInputSamples.map((sid) => {
+    const s = _samplePickerCache?.find((x) => x.id === sid);
+    const label = s ? `${s.name}` : sid;
+    return `
+      <span class="lb-rmbadge lb-rmbadge--input">
+        <span class="font-mono" title="${escapeHtml(sid)}">${escapeHtml(label)}</span>
+        <button type="button" data-action="exp-remove-input-sample" data-id="${escapeHtml(sid)}" aria-label="Xóa">×</button>
+      </span>
+    `;
+  }).join("");
+}
+
+function renderOutputSamplesBadges(): void {
+  const el = document.getElementById("exp-output-samples-badges");
+  if (!el) return;
+  if (_formOutputSamples.length === 0) {
+    el.innerHTML = '<span class="text-xs text-gray-400">Chưa chọn output sample</span>';
+    return;
+  }
+  el.innerHTML = _formOutputSamples.map((sid) => {
+    const s = _samplePickerCache?.find((x) => x.id === sid);
+    const label = s ? `${s.name}` : sid;
+    return `
+      <span class="lb-rmbadge lb-rmbadge--output">
+        <span class="font-mono" title="${escapeHtml(sid)}">${escapeHtml(label)}</span>
+        <button type="button" data-action="exp-remove-output-sample" data-id="${escapeHtml(sid)}" aria-label="Xóa">×</button>
+      </span>
+    `;
+  }).join("");
+}
+
+async function showSampleSuggestions(query: string, kind: "input" | "output"): Promise<void> {
+  const suggestionsEl = document.getElementById(`exp-${kind}-sample-suggestions`);
+  if (!suggestionsEl) return;
+
+  const q = query.trim().toLowerCase();
+  if (!q) {
+    hideSampleSuggestions(kind);
+    return;
+  }
+
+  const cache = await ensureSamplePickerCache();
+  const selected = kind === "input" ? _formInputSamples : _formOutputSamples;
+  const candidates = cache.filter((s) => {
+    if (selected.includes(s.id)) return false;
+    return s.name.toLowerCase().includes(q)
+      || (s.composition || "").toLowerCase().includes(q)
+      || (s.shortCode || "").toLowerCase().includes(q);
+  }).slice(0, 8);
+
+  if (candidates.length === 0) {
+    suggestionsEl.innerHTML = '<div class="lb-suggestions-empty">Không tìm thấy mẫu khớp</div>';
+    suggestionsEl.classList.add("lb-show");
+    return;
+  }
+
+  suggestionsEl.innerHTML = candidates.map((s) => `
+    <div class="lb-suggestion-item" data-action="exp-add-${kind}-sample" data-id="${escapeHtml(s.id)}">
+      <div class="font-mono text-sm">${escapeHtml(s.name)}</div>
+      <div class="text-xs text-gray-500">${escapeHtml(s.composition || "")}</div>
+    </div>
+  `).join("");
+  suggestionsEl.classList.add("lb-show");
+}
+
+function hideSampleSuggestions(kind: "input" | "output"): void {
+  const el = document.getElementById(`exp-${kind}-sample-suggestions`);
+  if (el) el.classList.remove("lb-show");
+}
+
+export async function addExpInputSample(id: string): Promise<void> {
+  if (!_formInputSamples.includes(id)) _formInputSamples.push(id);
+  renderInputSamplesBadges();
+  hideSampleSuggestions("input");
+  const searchEl = document.getElementById("exp-input-sample-search") as HTMLInputElement | null;
+  if (searchEl) searchEl.value = "";
+}
+
+export async function addExpOutputSample(id: string): Promise<void> {
+  if (!_formOutputSamples.includes(id)) _formOutputSamples.push(id);
+  renderOutputSamplesBadges();
+  hideSampleSuggestions("output");
+  const searchEl = document.getElementById("exp-output-sample-search") as HTMLInputElement | null;
+  if (searchEl) searchEl.value = "";
+}
+
+export function removeExpInputSample(id: string): void {
+  _formInputSamples = _formInputSamples.filter((x) => x !== id);
+  renderInputSamplesBadges();
+}
+
+export function removeExpOutputSample(id: string): void {
+  _formOutputSamples = _formOutputSamples.filter((x) => x !== id);
+  renderOutputSamplesBadges();
+}
+
+export async function searchExpInputSamplesHandler(query: string): Promise<void> {
+  await showSampleSuggestions(query, "input");
+}
+
+export async function searchExpOutputSamplesHandler(query: string): Promise<void> {
+  await showSampleSuggestions(query, "output");
+}
+
+// ─── Submit ───
+
+export async function submitExperimentForm(): Promise<void> {
+  const { auth } = await import("../firebase.js");
+  const uid = auth.currentUser?.uid;
+  if (!uid) {
+    (window as any).showToast?.("Bạn cần đăng nhập", "error");
+    return;
+  }
+
+  const code = (document.getElementById("exp-form-code") as HTMLInputElement | null)?.value.trim() || undefined;
+  const typeEl = document.getElementById("exp-form-type") as HTMLSelectElement | null;
+  const type = (typeEl?.value || "hydrothermal") as ExperimentType;
+  const statusEl = document.getElementById("exp-form-status") as HTMLSelectElement | null;
+  const status = (statusEl?.value || "completed") as ExperimentStatus;
+  const performedAtStr = (document.getElementById("exp-form-performed-at") as HTMLInputElement | null)?.value;
+  const conclusion = (document.getElementById("exp-form-conclusion") as HTMLTextAreaElement | null)?.value.trim();
+  const tagsRaw = (document.getElementById("exp-form-tags") as HTMLInputElement | null)?.value || "";
+  const notes = (document.getElementById("exp-form-notes") as HTMLTextAreaElement | null)?.value.trim();
+
+  // Validate required conditions
+  const missing = validateRequiredConditions();
+  if (missing.length > 0) {
+    (window as any).showToast?.(`Thiếu fields bắt buộc: ${missing.join(", ")}`, "error");
+    return;
+  }
+
+  const conditions = collectConditions();
+  const tags = tagsRaw.split(",").map((s) => s.trim()).filter(Boolean);
+
+  let performedAt: any = undefined;
+  if (performedAtStr) {
+    const d = new Date(performedAtStr);
+    if (!isNaN(d.getTime())) performedAt = d.getTime();
+  }
+
+  try {
+    const { createExperiment } = await import("../services/experiments.js");
+    const input: any = {
+      type,
+      inputSamples: _formInputSamples,
+      outputSamples: _formOutputSamples,
+      conditions,
+      status,
+      tags,
+    };
+    if (code) input.code = code;
+    if (performedAt !== undefined) input.performedAt = performedAt;
+    if (conclusion) input.conclusion = conclusion;
+    if (notes) input.notes = notes;
+
+    await createExperiment(input, uid);
+    (window as any).showToast?.("Đã tạo experiment", "success");
+    closeModal("modal-experiment-form");
+    await renderExperimentsUnified();
+  } catch (err: any) {
+    console.error("[submitExperimentForm]", err);
+    const msg = err?.message?.includes("PERMISSION_DENIED") || err?.code === "permission-denied"
+      ? "Không có quyền (rules check role member/admin/superadmin)."
+      : `Lỗi: ${err?.message || err}`;
+    (window as any).showToast?.(msg, "error");
+  }
+}
+
+// ─── Window assignments ───
+
 (window as any).renderExperimentsUnified = renderExperimentsUnified;
 (window as any).openExperimentDetail = openExperimentDetail;
 (window as any).filterExperimentsByType = filterExperimentsByType;
+(window as any).openExperimentForm = openExperimentForm;
+(window as any).changeExperimentFormType = changeExperimentFormType;
+(window as any).submitExperimentForm = submitExperimentForm;
+(window as any).addExpInputSample = addExpInputSample;
+(window as any).addExpOutputSample = addExpOutputSample;
+(window as any).removeExpInputSample = removeExpInputSample;
+(window as any).removeExpOutputSample = removeExpOutputSample;
+(window as any).searchExpInputSamplesHandler = searchExpInputSamplesHandler;
+(window as any).searchExpOutputSamplesHandler = searchExpOutputSamplesHandler;
