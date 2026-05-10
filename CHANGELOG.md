@@ -1,5 +1,29 @@
 # CHANGELOG
 
+## R151d-1 — Sample CRUD form (no lineage) (2026-05-10)
+
+### Added
+- "Thêm mẫu" button in samples page header.
+- Search input with 250ms debounce (name, shortCode, composition, tags).
+- Form modal `#modal-sample-form` (create + edit). Fields: name (auto-gen
+  if empty), shortCode, composition (required), materialRef (text input
+  for now), status, amount (value+unit), storageLocation, tags, notes.
+- Edit button in detail modal footer.
+- samples.ts: openSampleForm, submitSampleForm, searchSamplesHandler,
+  openSampleFormFromDetail bridge.
+- global-delegation.ts: 3 click cases + 1 input listener.
+
+### Out of scope (R151d-2)
+- Lineage parents picker (multi-select samples)
+- Auto-compute rootMaterials + generation from parents
+- MaterialRef dropdown picker (currently text input — admin pastes ID)
+
+### Files touched
+- src/ts/pages/samples.ts (rewritten with form handlers)
+- index.html (page header, detail footer, form modal)
+- src/ts/services/global-delegation.ts (3 cases + input listener)
+- CHANGELOG.md (this entry)
+
 ## R151c — Samples browser (list view) (2026-05-10)
 
 ### Added

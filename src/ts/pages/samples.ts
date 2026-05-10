@@ -1,21 +1,27 @@
 /**
- * pages/samples.ts — Sample browser list view (R151c)
+ * pages/samples.ts — Sample browser + CRUD (R151c + R151d-1)
  *
- * Phase B.5 second user-visible page. Lists samples grouped by status,
- * click card → detail modal.
+ * R151c: list grouped by status, detail modal
+ * R151d-1: CRUD form (no lineage), search, edit
  *
- * Out of scope (R151d/e):
- *   - Create/edit form
- *   - Lineage tree visualization
- *   - Material link in detail
+ * Out of scope (R151d-2):
+ *   - Lineage parents picker
+ *   - Auto-compute rootMaterials + generation
+ *   - MaterialRef dropdown picker (using text input for now)
  */
 
 // @ts-nocheck
 
-import { listSamples } from "../services/samples.js";
+import {
+  listSamples,
+  searchSamples,
+  createSample,
+  updateSample,
+} from "../services/samples.js";
 import type { Sample, SampleStatus } from "../types/research.js";
 import { escapeHtml } from "../utils/format.js";
-import { openModal } from "../ui/modal.js";
+import { openModal, closeModal } from "../ui/modal.js";
+import { auth } from "../firebase.js";
 
 const STATUS_LABELS: Record<SampleStatus, string> = {
   available: "Available (sẵn dùng)",
@@ -30,14 +36,16 @@ const STATUS_ORDER: SampleStatus[] = [
 ];
 
 const STATUS_COLORS: Record<SampleStatus, string> = {
-  available: "#10B981",   // green
-  "in-use": "#3B82F6",    // blue
-  consumed: "#6B7280",    // gray
-  archived: "#9CA3AF",    // light gray
-  discarded: "#EF4444",   // red
+  available: "#10B981",
+  "in-use": "#3B82F6",
+  consumed: "#6B7280",
+  archived: "#9CA3AF",
+  discarded: "#EF4444",
 };
 
 let _cache: Sample[] | null = null;
+let _editingSample: Sample | null = null;
+let _searchQuery = "";
 
 export async function renderSamples(): Promise<void> {
   const root = document.getElementById("page-samples");
@@ -49,24 +57,27 @@ export async function renderSamples(): Promise<void> {
 
   let items: Sample[];
   try {
-    items = await listSamples({ limit: 500 });
+    if (_searchQuery.trim()) {
+      items = await searchSamples(_searchQuery, { limit: 500 });
+    } else {
+      items = await listSamples({ limit: 500 });
+    }
     _cache = items;
   } catch (err) {
     console.error("[samples] load failed:", err);
     contentEl.innerHTML =
-      '<div class="text-red-600 py-8 text-center">Không tải được dữ liệu Samples. ' +
-      'Kiểm tra Firestore rules và tenantId claim.</div>';
+      '<div class="text-red-600 py-8 text-center">Không tải được dữ liệu Samples.</div>';
     return;
   }
 
   if (items.length === 0) {
-    contentEl.innerHTML =
-      '<div class="text-gray-500 py-8 text-center">Chưa có sample nào. ' +
-      'CRUD UI sẽ thêm ở R151d.</div>';
+    const msg = _searchQuery.trim()
+      ? `Không tìm thấy mẫu khớp "${escapeHtml(_searchQuery)}".`
+      : 'Chưa có mẫu nào. Bấm "Thêm mẫu" để bắt đầu.';
+    contentEl.innerHTML = `<div class="text-gray-500 py-8 text-center">${msg}</div>`;
     return;
   }
 
-  // Group by status
   const byStatus = new Map<SampleStatus, Sample[]>();
   for (const s of items) {
     const status = s.status || "available";
@@ -92,8 +103,7 @@ export async function renderSamples(): Promise<void> {
           </div>
         </section>
       `;
-    })
-    .join("");
+    }).join("");
 
   contentEl.innerHTML = html;
 }
@@ -129,6 +139,7 @@ export function openSampleDetail(id: string): void {
   if (!_cache) return;
   const s = _cache.find((x) => x.id === id);
   if (!s) return;
+  _editingSample = s;
 
   const props: Array<[string, string]> = [];
   props.push(["Composition", s.composition]);
@@ -142,13 +153,12 @@ export function openSampleDetail(id: string): void {
   if (s.initialAmount) props.push(["Initial amount", `${s.initialAmount.value} ${s.initialAmount.unit}`]);
   if (s.storageLocation) props.push(["Location", s.storageLocation]);
 
-  const propsHtml = props
-    .map(([k, v]) => `
-      <div class="flex justify-between py-1 border-b border-gray-100">
-        <span class="text-sm text-gray-600">${escapeHtml(k)}</span>
-        <span class="text-sm font-mono text-right">${escapeHtml(v)}</span>
-      </div>
-    `).join("");
+  const propsHtml = props.map(([k, v]) => `
+    <div class="flex justify-between py-1 border-b border-gray-100">
+      <span class="text-sm text-gray-600">${escapeHtml(k)}</span>
+      <span class="text-sm font-mono text-right">${escapeHtml(v)}</span>
+    </div>
+  `).join("");
 
   const parentsHtml = (s.parents || []).length > 0
     ? `<div class="mt-3"><span class="text-xs text-gray-500">Derived from ${s.parents.length} parent(s):</span><br>` +
@@ -193,5 +203,157 @@ export function openSampleDetail(id: string): void {
   openModal("modal-sample-detail");
 }
 
+/**
+ * Open create/edit form (R151d-1).
+ * editing=null → create mode; else edit (name field readonly to keep audit trail).
+ */
+export function openSampleForm(editing: Sample | null = null): void {
+  _editingSample = editing;
+
+  const titleEl = document.getElementById("modal-sample-form-title");
+  const nameEl = document.getElementById("smp-name") as HTMLInputElement | null;
+  const shortCodeEl = document.getElementById("smp-shortcode") as HTMLInputElement | null;
+  const compositionEl = document.getElementById("smp-composition") as HTMLInputElement | null;
+  const materialRefEl = document.getElementById("smp-materialref") as HTMLInputElement | null;
+  const statusEl = document.getElementById("smp-status") as HTMLSelectElement | null;
+  const amountValueEl = document.getElementById("smp-amount-value") as HTMLInputElement | null;
+  const amountUnitEl = document.getElementById("smp-amount-unit") as HTMLInputElement | null;
+  const locationEl = document.getElementById("smp-location") as HTMLInputElement | null;
+  const tagsEl = document.getElementById("smp-tags") as HTMLInputElement | null;
+  const notesEl = document.getElementById("smp-notes") as HTMLTextAreaElement | null;
+
+  if (titleEl) titleEl.textContent = editing ? "Sửa mẫu" : "Thêm mẫu";
+
+  if (editing) {
+    if (nameEl) { nameEl.value = editing.name || ""; nameEl.readOnly = true; }
+    if (shortCodeEl) shortCodeEl.value = editing.shortCode || "";
+    if (compositionEl) compositionEl.value = editing.composition || "";
+    if (materialRefEl) materialRefEl.value = editing.materialRef || "";
+    if (statusEl) statusEl.value = editing.status || "available";
+    if (amountValueEl) amountValueEl.value = editing.amount ? String(editing.amount.value) : "";
+    if (amountUnitEl) amountUnitEl.value = editing.amount?.unit || "";
+    if (locationEl) locationEl.value = editing.storageLocation || "";
+    if (tagsEl) tagsEl.value = (editing.tags || []).join(", ");
+    if (notesEl) notesEl.value = editing.notes || "";
+  } else {
+    if (nameEl) { nameEl.value = ""; nameEl.readOnly = false; }
+    if (shortCodeEl) shortCodeEl.value = "";
+    if (compositionEl) compositionEl.value = "";
+    if (materialRefEl) materialRefEl.value = "";
+    if (statusEl) statusEl.value = "available";
+    if (amountValueEl) amountValueEl.value = "";
+    if (amountUnitEl) amountUnitEl.value = "";
+    if (locationEl) locationEl.value = "";
+    if (tagsEl) tagsEl.value = "";
+    if (notesEl) notesEl.value = "";
+  }
+
+  openModal("modal-sample-form");
+}
+
+export async function submitSampleForm(): Promise<void> {
+  const uid = auth.currentUser?.uid;
+  if (!uid) {
+    (window as any).showToast?.("Bạn cần đăng nhập", "error");
+    return;
+  }
+
+  const name = (document.getElementById("smp-name") as HTMLInputElement | null)?.value.trim() || "";
+  const shortCode = (document.getElementById("smp-shortcode") as HTMLInputElement | null)?.value.trim();
+  const composition = (document.getElementById("smp-composition") as HTMLInputElement | null)?.value.trim() || "";
+  const materialRef = (document.getElementById("smp-materialref") as HTMLInputElement | null)?.value.trim();
+  const status = ((document.getElementById("smp-status") as HTMLSelectElement | null)?.value || "available") as SampleStatus;
+  const amountValueStr = (document.getElementById("smp-amount-value") as HTMLInputElement | null)?.value.trim();
+  const amountUnit = (document.getElementById("smp-amount-unit") as HTMLInputElement | null)?.value.trim();
+  const storageLocation = (document.getElementById("smp-location") as HTMLInputElement | null)?.value.trim();
+  const tagsRaw = (document.getElementById("smp-tags") as HTMLInputElement | null)?.value || "";
+  const notes = (document.getElementById("smp-notes") as HTMLTextAreaElement | null)?.value.trim();
+
+  if (!composition) {
+    (window as any).showToast?.("Cần nhập composition", "error");
+    return;
+  }
+
+  const tags = tagsRaw.split(",").map((s) => s.trim()).filter(Boolean);
+
+  let amount: { value: number; unit: string } | undefined;
+  if (amountValueStr && amountUnit) {
+    const v = parseFloat(amountValueStr);
+    if (isNaN(v)) {
+      (window as any).showToast?.("Amount phải là số", "error");
+      return;
+    }
+    amount = { value: v, unit: amountUnit };
+  } else if (amountValueStr || amountUnit) {
+    (window as any).showToast?.("Amount cần cả value và unit", "error");
+    return;
+  }
+
+  try {
+    if (_editingSample) {
+      const patch: any = {
+        composition,
+        status,
+        tags,
+      };
+      if (shortCode !== undefined) patch.shortCode = shortCode || undefined;
+      if (materialRef !== undefined) patch.materialRef = materialRef || undefined;
+      if (amount !== undefined) patch.amount = amount;
+      if (storageLocation !== undefined) patch.storageLocation = storageLocation || undefined;
+      if (notes !== undefined) patch.notes = notes || undefined;
+      // Strip undefined values (avoid Firestore reject)
+      const cleanPatch: any = {};
+      for (const k of Object.keys(patch)) {
+        if (patch[k] !== undefined) cleanPatch[k] = patch[k];
+      }
+      await updateSample(_editingSample.id, cleanPatch, uid);
+      (window as any).showToast?.("Đã cập nhật mẫu", "success");
+    } else {
+      const input: any = {
+        composition,
+        status,
+        tags,
+      };
+      if (name) input.name = name;
+      if (shortCode) input.shortCode = shortCode;
+      if (materialRef) {
+        input.materialRef = materialRef;
+        input.rootMaterials = [materialRef];
+      }
+      if (amount) {
+        input.amount = amount;
+        input.initialAmount = amount;
+      }
+      if (storageLocation) input.storageLocation = storageLocation;
+      if (notes) input.notes = notes;
+      await createSample(input, uid);
+      (window as any).showToast?.("Đã thêm mẫu", "success");
+    }
+    closeModal("modal-sample-form");
+    _editingSample = null;
+    await renderSamples();
+  } catch (err: any) {
+    console.error("[submitSampleForm]", err);
+    const msg = err?.message?.includes("PERMISSION_DENIED") || err?.code === "permission-denied"
+      ? "Không có quyền (rules check role member/admin/superadmin)."
+      : `Lỗi: ${err?.message || err}`;
+    (window as any).showToast?.(msg, "error");
+  }
+}
+
+export async function searchSamplesHandler(query: string): Promise<void> {
+  _searchQuery = query || "";
+  await renderSamples();
+}
+
 (window as any).renderSamples = renderSamples;
 (window as any).openSampleDetail = openSampleDetail;
+(window as any).openSampleForm = openSampleForm;
+(window as any).submitSampleForm = submitSampleForm;
+(window as any).searchSamplesHandler = searchSamplesHandler;
+
+(window as any).openSampleFormFromDetail = function() {
+  if (_editingSample) {
+    openSampleForm(_editingSample);
+  }
+};

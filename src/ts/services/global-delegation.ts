@@ -41,6 +41,20 @@ export function attachGlobalDelegation() {
     }, 250);
   });
 
+  // R151d-1: Input handler for search-samples (debounced)
+  let _smpSearchTimer: any = null;
+  document.body.addEventListener('input', function(e) {
+    const t = (e.target as HTMLElement);
+    if (!t || !(t as any).dataset || (t as any).dataset.inputAction !== 'search-samples') return;
+    clearTimeout(_smpSearchTimer);
+    const val = (t as HTMLInputElement).value || '';
+    _smpSearchTimer = setTimeout(() => {
+      if (typeof (window as any).searchSamplesHandler === 'function') {
+        (window as any).searchSamplesHandler(val);
+      }
+    }, 250);
+  });
+
   document.body.addEventListener('click', function(e) {
     const target = e.target.closest('[data-action]');
     if (!target) return;
@@ -104,6 +118,17 @@ export function attachGlobalDelegation() {
         if (id && typeof window.openSampleDetail === 'function') window.openSampleDetail(id);
         break;
       }
+      // R151d-1: Sample CRUD
+      case 'open-sample-form':
+        if (typeof window.openSampleForm === 'function') window.openSampleForm(null);
+        break;
+      case 'edit-sample':
+        if (typeof window.closeModal === 'function') window.closeModal('modal-sample-detail');
+        if (typeof window.openSampleFormFromDetail === 'function') window.openSampleFormFromDetail();
+        break;
+      case 'submit-sample-form':
+        if (typeof window.submitSampleForm === 'function') window.submitSampleForm();
+        break;
 
       // Auth
       case 'do-login':                if (typeof window.doLogin === 'function') window.doLogin(); break;

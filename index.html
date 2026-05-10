@@ -713,18 +713,30 @@
         </div>
       </div>
 
-      <!-- R151c: Samples browser page (Phase B.5) -->
+      <!-- R151c + R151d-1: Samples browser + CRUD (Phase B.5) -->
       <div class="page" id="page-samples">
         <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
           <div>
             <h1 class="page-title" style="color:#0F172A !important">Mẫu (Samples)</h1>
             <p class="page-subtitle">Mẫu vật cụ thể trong lab — lifecycle, lineage, storage</p>
           </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary btn-lg-action" data-action="open-sample-form" style="margin-top:36px">
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Thêm mẫu
+            </button>
+          </div>
+        </div>
+        <div class="flex gap-2 mb-4 flex-wrap items-center" style="margin-top:8px">
+          <div style="position:relative;flex:1;min-width:200px">
+            <input class="search-input" id="smp-search" type="text" placeholder="Tìm theo tên, shortCode, composition, tag..."
+                   data-input-action="search-samples" style="width:100%;padding-right:32px">
+          </div>
         </div>
         <div data-samples-content></div>
       </div>
 
-      <!-- R151c: Sample detail modal -->
+      <!-- R151c + R151d-1: Sample detail modal (with Edit button) -->
       <div class="modal" id="modal-sample-detail" style="display:none">
         <div class="modal-overlay" data-action="close-modal" data-modal="modal-sample-detail"></div>
         <div class="modal-content" style="max-width:600px">
@@ -735,6 +747,70 @@
           <div class="modal-body" id="modal-sample-detail-body"></div>
           <div class="modal-footer">
             <button class="btn" data-action="close-modal" data-modal="modal-sample-detail">Đóng</button>
+            <button class="btn btn-primary" data-action="edit-sample">Sửa</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- R151d-1: Sample form modal (create + edit, no lineage UI yet) -->
+      <div class="modal-overlay" id="modal-sample-form" role="dialog" aria-modal="true" aria-labelledby="modal-sample-form-title">
+        <div class="modal" style="max-width:640px">
+          <div class="modal-header">
+            <div class="modal-title" id="modal-sample-form-title">Thêm mẫu</div>
+            <button class="modal-close" type="button" aria-label="Đóng" data-action="close-modal" data-modal="modal-sample-form">✕</button>
+          </div>
+          <div class="form-grid" style="padding:8px 0">
+            <div class="form-group" style="grid-column:1/-1">
+              <label>Tên mẫu (để trống = auto-gen)</label>
+              <input type="text" id="smp-name" placeholder="MoS2-batch-2026-05-10-001" style="font-family:monospace">
+              <div style="font-size:11px;color:var(--text-3);margin-top:2px">Auto-generate format: {composition}-batch-{date}-{counter}</div>
+            </div>
+            <div class="form-group">
+              <label>Short code</label>
+              <input type="text" id="smp-shortcode" placeholder="MS-001">
+            </div>
+            <div class="form-group">
+              <label>Composition *</label>
+              <input type="text" id="smp-composition" placeholder="MoS2" style="font-family:monospace">
+            </div>
+            <div class="form-group">
+              <label>Material ref (ID)</label>
+              <input type="text" id="smp-materialref" placeholder="mat-MoS2-..." style="font-family:monospace;font-size:12px">
+              <div style="font-size:11px;color:var(--text-3);margin-top:2px">Picker UI ở R151d-2</div>
+            </div>
+            <div class="form-group">
+              <label>Status</label>
+              <select class="cs-select" id="smp-status">
+                <option value="available" selected>Available</option>
+                <option value="in-use">In use</option>
+                <option value="consumed">Consumed</option>
+                <option value="archived">Archived</option>
+                <option value="discarded">Discarded</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Amount</label>
+              <div style="display:flex;gap:6px">
+                <input type="number" step="0.01" id="smp-amount-value" placeholder="50" style="flex:1">
+                <input type="text" id="smp-amount-unit" placeholder="mg" style="width:70px">
+              </div>
+            </div>
+            <div class="form-group" style="grid-column:1/-1">
+              <label>Storage location</label>
+              <input type="text" id="smp-location" placeholder="Tủ A1, ngăn 3">
+            </div>
+            <div class="form-group" style="grid-column:1/-1">
+              <label>Tags (cách nhau dấu phẩy)</label>
+              <input type="text" id="smp-tags" placeholder="catalyst-test, publish-2026">
+            </div>
+            <div class="form-group" style="grid-column:1/-1">
+              <label>Notes</label>
+              <textarea id="smp-notes" rows="3" placeholder="Ghi chú..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn" data-action="close-modal" data-modal="modal-sample-form">Hủy</button>
+            <button class="btn btn-primary" data-action="submit-sample-form">Lưu</button>
           </div>
         </div>
       </div>
