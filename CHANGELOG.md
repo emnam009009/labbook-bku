@@ -1,5 +1,51 @@
 # CHANGELOG
 
+## R151b — Samples CRUD service + tests + rules (2026-05-10)
+
+### Added
+- `src/ts/services/samples.ts` (new): CRUD service parallel materials.ts
+  - `getSample`, `listSamples`, `listSamplesByRootMaterial`,
+    `searchSamples`, `createSample`, `updateSample`, `setSampleStatus`
+  - `deleteSample` intentionally NOT exported (use status="discarded")
+  - Lineage-aware: `listSamplesByRootMaterial` uses `array-contains`
+    on denormalized `rootMaterials` field for fast queries
+  - Auto-generates sample name "{composition}-batch-{date}-{counter}"
+    when not provided
+  - Skips undefined optional fields (R150b-fix2 lesson learned)
+- `tests/services/samples.test.ts` (new): ~17 cases covering all read
+  paths (getSample tenant isolation, listSamples filters, lineage
+  queries, search), all writes (createSample auto-name + explicit,
+  validation, updateSample, setSampleStatus).
+
+### Changed
+- `firestore.rules`: append `/samples/{id}` block.
+  - read: authed + tenant
+  - create: role in [member, admin, superadmin] + createdBy=auth.uid
+  - update: creator OR admin/superadmin (with immutable fields)
+  - delete: admin/superadmin only
+  Preserves materials (R150c) + aiChunks (R134a) blocks.
+- `vitest.config.js`: extend coverage.include with samples.ts.
+
+### Production deploy procedure (manual after green tests)
+```bash
+npm run typecheck
+npm test
+cd functions && npm run build && cd ..   # safety
+firebase deploy --only firestore:rules
+```
+
+### Out of scope (R151c+)
+- Sample browser UI list → R151c
+- Sample CRUD form + lineage display → R151d
+- Material ↔ Sample bidirectional link → R151e
+
+### Files touched
+- src/ts/services/samples.ts (new)
+- tests/services/samples.test.ts (new)
+- firestore.rules (append /samples block)
+- vitest.config.js (coverage)
+- CHANGELOG.md (this entry)
+
 ## R151a — Sample entity types (2026-05-10)
 
 ### Context

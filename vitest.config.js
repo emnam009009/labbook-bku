@@ -27,6 +27,7 @@ export default defineConfig({
       'functions/src/bm25/types.ts',
       'functions/src/search/rrf.ts',
       'src/ts/services/materials.ts',
+      'src/ts/services/samples.ts',
     ],
       exclude: ['src/ts/**/*.test.js'],
     },

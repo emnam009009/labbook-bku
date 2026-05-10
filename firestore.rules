@@ -69,6 +69,37 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ── samples (R151b — Phase B.5) ───────────────────────
+    // Read: any authed user with matching tenantId.
+    // Create: member/admin/superadmin role + createdBy=auth.uid + tenant match.
+    // Update: creator OR admin/superadmin.
+    // Delete: admin/superadmin only (rare; prefer status="discarded").
+    match /samples/{sampleId} {
+      allow read: if isSignedIn() && tenantMatch(resource.data);
+
+      allow create: if isSignedIn()
+        && request.auth.token.role in ["member", "admin", "superadmin"]
+        && tenantMatch(request.resource.data)
+        && request.resource.data.createdBy == request.auth.uid;
+
+      allow update: if isSignedIn()
+        && tenantMatch(resource.data)
+        && tenantMatch(request.resource.data)
+        // Immutable fields
+        && request.resource.data.tenantId == resource.data.tenantId
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        // Authorized = creator OR admin/superadmin
+        && (
+          resource.data.createdBy == request.auth.uid
+          || request.auth.token.role in ["admin", "superadmin"]
+        );
+
+      allow delete: if isSignedIn()
+        && tenantMatch(resource.data)
+        && request.auth.token.role in ["admin", "superadmin"];
+    }
+
     // ── Default deny ──────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;
