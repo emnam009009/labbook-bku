@@ -1,5 +1,43 @@
 # CHANGELOG
 
+## R152a — Experiment entity types (2026-05-10)
+
+### Context
+Third sub-round of Phase B.5 (R3 in spec, opens after Material/Sample).
+Parallel R150a/R151a strategy: types only, no runtime, no service.
+
+### Added
+Appended to `src/ts/types/research.ts`:
+- `ExperimentType` — 12-value union covering synthesis, hydrothermal,
+  electrochemistry, characterization, compute, etc.
+- `ExperimentStatus` — planned / in-progress / completed / failed /
+  abandoned
+- `ExperimentConditionValue<U>` — value + unit pair
+- `ExperimentConditions` — temperature/duration/pressure/pH/atmosphere
+  enumerated common fields + index signature for type-specific extras
+- `ExperimentLegacyRef` — backward-compat pointer to legacy RTDB
+  hydro/electrode/electrochem
+- `ExperimentDerivedMetrics` — loose object (full structured metrics
+  → DataAsset in R153)
+- `Experiment` interface matching spec §3.3 with full lineage
+  (inputSamples/outputSamples/parentExperiment), legacy bridge, audit.
+
+### Out of scope (deferred)
+- R152b: Firestore service (adapter pattern reading both legacy +
+  new) + tests + rules
+- R152c: Unified Experiments UI page
+- R152d/e: Bulk migration script + admin Cloud Function (§6.2)
+
+### Verify
+```bash
+npm run typecheck   # expect 0 errors
+npm test            # expect 197/197 (no test changes)
+```
+
+### Files touched
+- src/ts/types/research.ts (appended Experiment types)
+- CHANGELOG.md (this entry)
+
 ## R151d-2 — Sample lineage picker + auto-compute (2026-05-10)
 
 ### Added
