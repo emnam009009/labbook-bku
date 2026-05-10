@@ -1,5 +1,39 @@
 # CHANGELOG
 
+## R151a — Sample entity types (2026-05-10)
+
+### Context
+First sub-round of R151 (Phase B.5 R2). Parallel R150a strategy: types
+only, no runtime code, no service, no UI, no deploy.
+
+### Added
+Appended to `src/ts/types/research.ts`:
+- `SampleStatus` — lifecycle enum (available, in-use, consumed,
+  archived, discarded)
+- `SynthesisMethod` — common methods (hydrothermal, sol-gel, CVD, ...)
+  with string fallback
+- `SampleAmount` — value + unit
+- `Sample` interface matching spec §3.2 with lineage (parents,
+  rootMaterials denormalized, generation), origin
+  (synthesisExperimentRef, synthesisMethod, synthesisDate), lifecycle
+  (status, amount, location), annotations (notes, tags), audit.
+
+### Out of scope (deferred to R151b/c/d/e)
+- R151b: Firestore service (CRUD) + tests + rules deploy
+- R151c: Sample browser UI list
+- R151d: Sample CRUD form + lineage display
+- R151e: Sample ↔ Material link
+
+### Verify
+```bash
+npm run typecheck   # expect 0 errors
+npm test            # expect 180/180 (no test changes)
+```
+
+### Files touched
+- src/ts/types/research.ts (appended Sample types)
+- CHANGELOG.md (this entry)
+
 ## R150c-followup — Role claim migration + auto-sync (2026-05-10)
 
 ### Context
