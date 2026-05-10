@@ -1336,6 +1336,13 @@ const _pageLoaders = {
     window.openMaterialDetail = m.openMaterialDetail;
     if (typeof window.renderMaterials === 'function') window.renderMaterials();
   },
+  // R151c: Samples browser (Phase B.5)
+  samples: async () => {
+    const m = await import('./pages/samples.js');
+    window.renderSamples = m.renderSamples;
+    window.openSampleDetail = m.openSampleDetail;
+    if (typeof window.renderSamples === 'function') window.renderSamples();
+  },
   booking: async () => {
     const m = await import('./pages/booking.js');
     window.renderBooking = m.renderBooking;

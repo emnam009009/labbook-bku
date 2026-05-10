@@ -98,6 +98,13 @@ export function attachGlobalDelegation() {
         if (typeof window.submitMaterialForm === 'function') window.submitMaterialForm();
         break;
 
+      // R151c: Samples
+      case 'open-sample-detail': {
+        const id = target.dataset.id;
+        if (id && typeof window.openSampleDetail === 'function') window.openSampleDetail(id);
+        break;
+      }
+
       // Auth
       case 'do-login':                if (typeof window.doLogin === 'function') window.doLogin(); break;
       case 'do-register':             if (typeof window.doRegister === 'function') window.doRegister(); break;

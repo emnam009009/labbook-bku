@@ -252,6 +252,10 @@
         <div class="sidebar-item" data-action="show-page" data-page="materials" data-tip="Vật liệu" role="button" tabindex="0" aria-label="Vật liệu">
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"/></svg>
         <span data-label>Vật liệu</span></div>
+        <!-- R151c: Samples browser (Phase B.5) -->
+        <div class="sidebar-item" data-action="show-page" data-page="samples" data-tip="Mẫu (Samples)" role="button" tabindex="0" aria-label="Mẫu">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h6v4l4 16H5l4-16V2z"/><line x1="9" y1="6" x2="15" y2="6"/></svg>
+        <span data-label>Mẫu</span></div>
         <div class="sidebar-item" data-action="show-page" data-page="chemicals" data-tip="Hóa chất" role="button" tabindex="0" aria-label="Hóa chất">
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 3h6l1 6H8L9 3z"/><path d="M8 9l-3 12h14L16 9"/></svg>
         <span data-label>Hóa chất</span></div>
@@ -705,6 +709,32 @@
           <div class="modal-footer">
             <button class="btn" data-action="close-modal" data-modal="modal-material-detail">Đóng</button>
             <button class="btn btn-primary admin-only" data-action="edit-material" style="display:none">Sửa</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- R151c: Samples browser page (Phase B.5) -->
+      <div class="page" id="page-samples">
+        <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
+          <div>
+            <h1 class="page-title" style="color:#0F172A !important">Mẫu (Samples)</h1>
+            <p class="page-subtitle">Mẫu vật cụ thể trong lab — lifecycle, lineage, storage</p>
+          </div>
+        </div>
+        <div data-samples-content></div>
+      </div>
+
+      <!-- R151c: Sample detail modal -->
+      <div class="modal" id="modal-sample-detail" style="display:none">
+        <div class="modal-overlay" data-action="close-modal" data-modal="modal-sample-detail"></div>
+        <div class="modal-content" style="max-width:600px">
+          <div class="modal-header">
+            <h2>Chi tiết mẫu</h2>
+            <button class="modal-close" data-action="close-modal" data-modal="modal-sample-detail" aria-label="Đóng">×</button>
+          </div>
+          <div class="modal-body" id="modal-sample-detail-body"></div>
+          <div class="modal-footer">
+            <button class="btn" data-action="close-modal" data-modal="modal-sample-detail">Đóng</button>
           </div>
         </div>
       </div>

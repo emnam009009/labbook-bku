@@ -1,5 +1,31 @@
 # CHANGELOG
 
+## R151c — Samples browser (list view) (2026-05-10)
+
+### Added
+- `src/ts/pages/samples.ts` (new): renderSamples groups by status
+  (available / in-use / consumed / archived / discarded with color
+  dots), card click opens detail modal showing all fields including
+  parents lineage list and rootMaterials.
+- `index.html`:
+  - Sidebar item "Mẫu" after "Vật liệu", flask SVG icon.
+  - Page section + detail modal.
+- `src/ts/main.ts`: `samples` entry in `_pageLoaders`.
+- `src/ts/services/global-delegation.ts`: open-sample-detail handler.
+
+### Out of scope (R151d/e)
+- CRUD form (R151d)
+- Lineage tree visual graph (R151d or R154)
+- Click parent sampleId in detail → navigate to that sample (R151d)
+- Material ↔ Sample bidirectional link UI (R151e)
+
+### Files touched
+- src/ts/pages/samples.ts (new)
+- index.html (sidebar + section + detail modal)
+- src/ts/main.ts (lazy loader entry)
+- src/ts/services/global-delegation.ts (1 case)
+- CHANGELOG.md (this entry)
+
 ## R151b — Samples CRUD service + tests + rules (2026-05-10)
 
 ### Added
