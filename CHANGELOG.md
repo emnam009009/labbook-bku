@@ -1,5 +1,33 @@
 # CHANGELOG
 
+## R152d-2 — Migration UI card in settings (Phase B.5) (2026-05-10)
+
+### Added
+- `src/ts/services/migration.ts` (new): wraps fetch to
+  `migrateLegacyExperiments` function with Bearer token.
+  Exports `callMigration(mode, collection)` + `isSuperadmin()`.
+- `src/ts/pages/settings.ts`: appended migration card render +
+  3 click handlers (dryrun, confirm, reset).
+- `index.html`: new card section in page-settings (hidden by default,
+  shown only for superadmin via JS).
+
+### Workflow
+1. Settings page → card visible only for superadmin
+2. "Tổng quan" → dry-run mode all → show per-collection breakdown
+3. If willMigrate > 0: "Bắt đầu migrate" button → confirm mode all
+4. Result inline: migrated counts + backup ID + duration
+5. Toast notification on success/error
+
+### Out of scope (future)
+- R152d-3: Reverse migration / restore from backup
+- R152e: Adapter UI showing legacy + new merged in same list
+
+### Files
+- src/ts/services/migration.ts (new, ~85 LOC)
+- src/ts/pages/settings.ts (~150 LOC appended)
+- index.html (1 card section added)
+- CHANGELOG.md (this entry)
+
 ## R152d-1 — Bulk migration Cloud Function (Phase B.5) (2026-05-10)
 
 ### Added
