@@ -1343,6 +1343,14 @@ const _pageLoaders = {
     window.openSampleDetail = m.openSampleDetail;
     if (typeof window.renderSamples === 'function') window.renderSamples();
   },
+  // R152c-1: Unified experiments (Phase B.5)
+  'experiments-unified': async () => {
+    const m = await import('./pages/experiments-unified.js');
+    window.renderExperimentsUnified = m.renderExperimentsUnified;
+    window.openExperimentDetail = m.openExperimentDetail;
+    window.filterExperimentsByType = m.filterExperimentsByType;
+    if (typeof window.renderExperimentsUnified === 'function') window.renderExperimentsUnified();
+  },
   booking: async () => {
     const m = await import('./pages/booking.js');
     window.renderBooking = m.renderBooking;

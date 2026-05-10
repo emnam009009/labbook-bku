@@ -1,5 +1,39 @@
 # CHANGELOG
 
+## R152c-1 — Unified Experiments page list view (2026-05-10)
+
+### Added
+- `src/ts/pages/experiments-unified.ts` (new): renderExperimentsUnified
+  reads from Firestore, groups by type. Detail modal shows code, type,
+  status, conditions (formatted with units), input/output samples
+  (clickable → navigate to sample detail), derived metrics,
+  conclusion, tags, notes, legacyRef badge.
+- `index.html`:
+  - Sidebar item "TN mới" after "Mẫu", flask SVG.
+  - Page section with type filter dropdown.
+  - Detail modal #modal-experiment-detail.
+- `src/ts/main.ts`: experiments-unified entry in _pageLoaders.
+- `src/ts/services/global-delegation.ts`: open-experiment-detail case +
+  filter type change listener (uses data-change-action pattern).
+
+### Coexistence with legacy pages
+Legacy pages (Thủy nhiệt / Chuẩn bị điện cực / Đo điện hóa) remain
+in sidebar, still active. New page shows ONLY Firestore experiments
+(empty until R152c-2 form created or R152d bulk migration runs).
+Empty state explains this.
+
+### Out of scope
+- R152c-2: CRUD form with type-specific conditions UI
+- R152d: Bulk migration script (admin Cloud Function)
+- R152e: Adapter UI showing legacy + new merged in same list
+
+### Files
+- src/ts/pages/experiments-unified.ts (new)
+- index.html (sidebar + page section + detail modal)
+- src/ts/main.ts (lazy loader)
+- src/ts/services/global-delegation.ts (1 case + 1 change listener)
+- CHANGELOG.md (this entry)
+
 ## R152b — Experiments service + adapter + tests + rules (2026-05-10)
 
 ### Added

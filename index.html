@@ -256,6 +256,10 @@
         <div class="sidebar-item" data-action="show-page" data-page="samples" data-tip="Mẫu (Samples)" role="button" tabindex="0" aria-label="Mẫu">
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h6v4l4 16H5l4-16V2z"/><line x1="9" y1="6" x2="15" y2="6"/></svg>
         <span data-label>Mẫu</span></div>
+        <!-- R152c-1: Unified experiments browser (Phase B.5) -->
+        <div class="sidebar-item" data-action="show-page" data-page="experiments-unified" data-tip="Thí nghiệm (mới)" role="button" tabindex="0" aria-label="Thí nghiệm mới">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.5L4.5 19a2 2 0 001.7 3h11.6a2 2 0 001.7-3L14 9.5V2"/><line x1="8" y1="2" x2="16" y2="2"/></svg>
+        <span data-label>TN mới</span></div>
         <div class="sidebar-item" data-action="show-page" data-page="chemicals" data-tip="Hóa chất" role="button" tabindex="0" aria-label="Hóa chất">
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 3h6l1 6H8L9 3z"/><path d="M8 9l-3 12h14L16 9"/></svg>
         <span data-label>Hóa chất</span></div>
@@ -748,6 +752,49 @@
           <div class="modal-footer">
             <button class="btn" data-action="close-modal" data-modal="modal-sample-detail">Đóng</button>
             <button class="btn btn-primary" data-action="edit-sample">Sửa</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- R152c-1: Unified Experiments page (Phase B.5) -->
+      <div class="page" id="page-experiments-unified">
+        <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
+          <div>
+            <h1 class="page-title" style="color:#0F172A !important">Thí nghiệm (Experiments unified)</h1>
+            <p class="page-subtitle">Schema mới gộp HT/Electrode/Electrochem. Legacy pages vẫn còn để dùng song song.</p>
+          </div>
+        </div>
+        <div class="flex gap-2 mb-4 flex-wrap items-center" style="margin-top:8px">
+          <select class="cs-select" id="exp-filter-type" data-change-action="filter-experiments-type" style="min-width:200px">
+            <option value="">Tất cả loại</option>
+            <option value="synthesis">Synthesis</option>
+            <option value="hydrothermal">Hydrothermal</option>
+            <option value="sol-gel">Sol-gel</option>
+            <option value="cvd">CVD</option>
+            <option value="annealing">Annealing</option>
+            <option value="electrode-prep">Electrode prep</option>
+            <option value="ink-formulation">Ink</option>
+            <option value="measurement">Measurement</option>
+            <option value="electrochemistry">Electrochemistry</option>
+            <option value="characterization">Characterization</option>
+            <option value="compute">Compute</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div data-experiments-content></div>
+      </div>
+
+      <!-- R152c-1: Experiment detail modal -->
+      <div class="modal" id="modal-experiment-detail" style="display:none">
+        <div class="modal-overlay" data-action="close-modal" data-modal="modal-experiment-detail"></div>
+        <div class="modal-content" style="max-width:680px">
+          <div class="modal-header">
+            <h2>Chi tiết thí nghiệm</h2>
+            <button class="modal-close" data-action="close-modal" data-modal="modal-experiment-detail" aria-label="Đóng">×</button>
+          </div>
+          <div class="modal-body" id="modal-experiment-detail-body"></div>
+          <div class="modal-footer">
+            <button class="btn" data-action="close-modal" data-modal="modal-experiment-detail">Đóng</button>
           </div>
         </div>
       </div>

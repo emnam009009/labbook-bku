@@ -65,6 +65,16 @@ export function attachGlobalDelegation() {
     }
   });
 
+  // R152c-1: Experiments type filter change
+  document.body.addEventListener('change', function(e) {
+    const t = (e.target as HTMLElement);
+    if (!t || !(t as any).dataset || (t as any).dataset.changeAction !== 'filter-experiments-type') return;
+    const val = (t as HTMLSelectElement).value || '';
+    if (typeof (window as any).filterExperimentsByType === 'function') {
+      (window as any).filterExperimentsByType(val);
+    }
+  });
+
   document.body.addEventListener('click', function(e) {
     const target = e.target.closest('[data-action]');
     if (!target) return;
@@ -149,6 +159,13 @@ export function attachGlobalDelegation() {
       case 'remove-parent-badge': {
         const pid = target.dataset.id;
         if (pid && typeof window.removeParentBadge === 'function') window.removeParentBadge(pid);
+        break;
+      }
+
+      // R152c-1: Experiments unified
+      case 'open-experiment-detail': {
+        const id = target.dataset.id;
+        if (id && typeof window.openExperimentDetail === 'function') window.openExperimentDetail(id);
         break;
       }
 
