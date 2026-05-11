@@ -16,6 +16,13 @@ import type { Experiment, ExperimentType, ExperimentStatus } from "../types/rese
 import { escapeHtml } from "../utils/format.js";
 import { openModal, closeModal } from "../ui/modal.js";
 
+// R153b: DataAsset integration
+import {
+  uploadDataAsset, listByExperiment, getDataAssetURL,
+  deleteDataAsset, formatFileSize, tsToDate,
+} from "../services/data-assets.js";
+import type { DataAsset, DataAssetType } from "../types/research.js";
+
 const TYPE_LABELS: Record<ExperimentType, string> = {
   synthesis: "Synthesis",
   hydrothermal: "Hydrothermal",
@@ -261,6 +268,12 @@ export function openExperimentDetail(id: string): void {
       ${conclusionHtml}
       ${tagsHtml}
       ${notesHtml}
+      <div class="mt-4 pt-3 border-t">
+        <h3 class="font-semibold mb-2">Tệp đính kèm</h3>
+        <div id="exp-detail-dataassets" class="lb-da-section">
+          <div class="lb-hint">Đang tải...</div>
+        </div>
+      </div>
       ${legacyHtml}
       <div class="text-xs text-gray-400 mt-4 pt-3 border-t">
         ID: <span class="font-mono">${escapeHtml(e.id)}</span><br>
@@ -269,6 +282,8 @@ export function openExperimentDetail(id: string): void {
     `;
   }
   openModal("modal-experiment-detail");
+  // R153b: Async load DataAssets for this experiment
+  void renderDataAssetsSection(e.id);
 }
 
 export async function filterExperimentsByType(type: ExperimentType | ""): Promise<void> {
@@ -807,3 +822,169 @@ export async function submitExperimentForm(): Promise<void> {
 (window as any).removeExpOutputSample = removeExpOutputSample;
 (window as any).searchExpInputSamplesHandler = searchExpInputSamplesHandler;
 (window as any).searchExpOutputSamplesHandler = searchExpOutputSamplesHandler;
+
+
+// ═══════════════════════════════════════════════════════════
+// R153b — DataAssets section in experiment detail modal
+// ═══════════════════════════════════════════════════════════
+
+const _DA_TYPE_LABELS: Record<DataAssetType, string> = {
+  'xrd':              'XRD',
+  'sem':              'SEM',
+  'tem':              'TEM',
+  'raman':            'Raman',
+  'ftir':             'FTIR',
+  'uv-vis':           'UV-Vis',
+  'uv-vis-drs':       'UV-Vis DRS',
+  'pl':               'PL',
+  'eds':              'EDS',
+  'xps':              'XPS',
+  'electrochem-csv':  'Điện hóa (CV/LSV/EIS)',
+  'image':            'Ảnh',
+  'document':         'Tài liệu',
+  'other':            'Khác',
+};
+
+function detectDataAssetType(fileName: string, mimeType: string): DataAssetType {
+  const lower = fileName.toLowerCase();
+  if (/^image\//.test(mimeType)) return 'image';
+  if (/^application\/pdf$/.test(mimeType) || lower.endsWith('.pdf')) return 'document';
+  if (lower.endsWith('.csv')) {
+    if (/cv[-_]/.test(lower) || /lsv/.test(lower) || /eis/.test(lower) || /tafel/.test(lower)) return 'electrochem-csv';
+    if (/xrd|2theta|pattern/.test(lower)) return 'xrd';
+    if (/raman/.test(lower)) return 'raman';
+    if (/ftir|ir[-_]/.test(lower)) return 'ftir';
+    if (/uv|vis|drs/.test(lower)) return 'uv-vis';
+    if (/pl[-_]|photolum/.test(lower)) return 'pl';
+    if (/xps/.test(lower)) return 'xps';
+    return 'electrochem-csv';
+  }
+  if (/^application\/.*excel/.test(mimeType) || lower.endsWith('.xlsx')) return 'electrochem-csv';
+  return 'other';
+}
+
+function fmtUploadDate(da: DataAsset): string {
+  const d = tsToDate(da.uploadedAt);
+  if (!d) return '—';
+  return d.toLocaleString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+async function renderDataAssetsSection(experimentId: string): Promise<void> {
+  const el = document.getElementById('exp-detail-dataassets');
+  if (!el) return;
+  let assets: DataAsset[] = [];
+  try {
+    assets = await listByExperiment(experimentId);
+  } catch (err: any) {
+    el.innerHTML = `<div class="lb-hint" style="color:#EF4444">Lỗi tải: ${escapeHtml(err?.message || String(err))}</div>`;
+    return;
+  }
+  const typeOptions = (Object.keys(_DA_TYPE_LABELS) as DataAssetType[]).map(t =>
+    `<option value="${t}">${escapeHtml(_DA_TYPE_LABELS[t])}</option>`
+  ).join('');
+  const listHtml = assets.length === 0
+    ? `<div class="lb-hint">Chưa có tệp đính kèm.</div>`
+    : `<div class="lb-da-list">${assets.map(da => `
+        <div class="lb-da-item" data-asset-id="${escapeHtml(da.id)}">
+          <div class="lb-da-item-main">
+            <span class="lb-da-type-badge" data-type="${escapeHtml(da.type)}">${escapeHtml(_DA_TYPE_LABELS[da.type] || da.type)}</span>
+            <span class="lb-da-name" title="${escapeHtml(da.fileName)}">${escapeHtml(da.fileName)}</span>
+          </div>
+          <div class="lb-da-item-meta">
+            <span>${escapeHtml(formatFileSize(da.fileSize))}</span>
+            <span>${escapeHtml(fmtUploadDate(da))}</span>
+            <button type="button" class="lb-da-btn lb-da-btn--download" data-action="da-download" data-asset-id="${escapeHtml(da.id)}" title="Tải về">⬇</button>
+            <button type="button" class="lb-da-btn lb-da-btn--delete" data-action="da-delete" data-asset-id="${escapeHtml(da.id)}" data-asset-name="${escapeHtml(da.fileName)}" title="Xóa">×</button>
+          </div>
+        </div>
+      `).join('')}</div>`;
+  el.innerHTML = `
+    ${listHtml}
+    <div class="lb-da-upload" data-experiment-id="${escapeHtml(experimentId)}">
+      <select class="cs-select lb-da-type-select" id="da-upload-type-${escapeHtml(experimentId)}">
+        ${typeOptions}
+      </select>
+      <input type="file" class="lb-da-file" id="da-upload-file-${escapeHtml(experimentId)}" data-input-action="da-file-pick" data-experiment-id="${escapeHtml(experimentId)}">
+      <div class="lb-da-progress" id="da-progress-${escapeHtml(experimentId)}" style="display:none">
+        <div class="lb-da-progress-bar"><div class="lb-da-progress-fill" style="width:0%"></div></div>
+        <span class="lb-da-progress-text">0%</span>
+      </div>
+    </div>
+  `;
+}
+
+(window as any).renderDataAssetsSection = renderDataAssetsSection;
+
+export async function handleDataAssetFilePick(experimentId: string): Promise<void> {
+  const fileInput = document.getElementById(`da-upload-file-${experimentId}`) as HTMLInputElement | null;
+  const typeSelect = document.getElementById(`da-upload-type-${experimentId}`) as HTMLSelectElement | null;
+  const progressEl = document.getElementById(`da-progress-${experimentId}`);
+  const progressFill = progressEl?.querySelector('.lb-da-progress-fill') as HTMLElement | null;
+  const progressText = progressEl?.querySelector('.lb-da-progress-text') as HTMLElement | null;
+  if (!fileInput || !typeSelect || !fileInput.files || fileInput.files.length === 0) return;
+  const file = fileInput.files[0];
+  // Auto-suggest type if user hasn't manually changed
+  if (!typeSelect.dataset.userPicked) {
+    const detected = detectDataAssetType(file.name, file.type);
+    typeSelect.value = detected;
+  }
+  const type = typeSelect.value as DataAssetType;
+  if (progressEl) progressEl.style.display = '';
+  try {
+    await uploadDataAsset(file, { experimentId, type }, (pct) => {
+      if (progressFill) progressFill.style.width = `${pct}%`;
+      if (progressText) progressText.textContent = `${pct}%`;
+    });
+    if (typeof (window as any).showToast === 'function') {
+      (window as any).showToast(`Đã tải lên: ${file.name}`, 'success');
+    }
+    await renderDataAssetsSection(experimentId);
+  } catch (err: any) {
+    if (typeof (window as any).showToast === 'function') {
+      (window as any).showToast(`Lỗi tải lên: ${err?.message || err}`, 'error');
+    }
+    if (progressEl) progressEl.style.display = 'none';
+  }
+}
+
+(window as any).handleDataAssetFilePick = handleDataAssetFilePick;
+
+export async function handleDataAssetDownload(assetId: string): Promise<void> {
+  try {
+    // Fetch the asset doc to get storagePath
+    const { getDataAsset } = await import('../services/data-assets.js');
+    const asset = await getDataAsset(assetId);
+    if (!asset) {
+      if (typeof (window as any).showToast === 'function') {
+        (window as any).showToast('Không tìm thấy tệp', 'error');
+      }
+      return;
+    }
+    const url = await getDataAssetURL(asset);
+    // Open in new tab (browser handles download via Storage URL)
+    window.open(url, '_blank', 'noopener,noreferrer');
+  } catch (err: any) {
+    if (typeof (window as any).showToast === 'function') {
+      (window as any).showToast(`Lỗi tải về: ${err?.message || err}`, 'error');
+    }
+  }
+}
+
+(window as any).handleDataAssetDownload = handleDataAssetDownload;
+
+export async function handleDataAssetDelete(assetId: string, assetName: string, experimentId: string): Promise<void> {
+  if (!confirm(`Xóa "${assetName}"?\nHành động này không thể hoàn tác.`)) return;
+  try {
+    await deleteDataAsset(assetId);
+    if (typeof (window as any).showToast === 'function') {
+      (window as any).showToast(`Đã xóa: ${assetName}`, 'success');
+    }
+    await renderDataAssetsSection(experimentId);
+  } catch (err: any) {
+    if (typeof (window as any).showToast === 'function') {
+      (window as any).showToast(`Lỗi xóa: ${err?.message || err}`, 'error');
+    }
+  }
+}
+
+(window as any).handleDataAssetDelete = handleDataAssetDelete;

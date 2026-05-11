@@ -1,5 +1,52 @@
 # CHANGELOG
 
+## R153b — DataAssets UI in experiment detail (Phase B.5) (2026-05-10)
+
+### Added
+- "Tệp đính kèm" section in experiment detail modal:
+  - Lists existing DataAssets after async fetch (listByExperiment)
+  - Each item shows: type badge (color-coded), filename, size, upload
+    date, download button, delete button
+  - Type auto-detect from extension as default suggestion when user
+    picks a file (CSV → electrochem-csv/xrd/raman based on filename
+    keywords; PDF → document; image/* → image)
+  - User can override auto-detect via dropdown before file pick
+  - Upload progress bar (Storage upload progress events)
+  - Toast notifications on success/error
+
+### Files
+- src/ts/pages/experiments-unified.ts:
+  - Imported data-assets service + types
+  - Modified openExperimentDetail body to insert new section
+  - Added renderDataAssetsSection async fn
+  - Added handleDataAssetFilePick / Download / Delete fns
+  - Exposed all 4 fns to window for delegation calls
+- src/ts/services/global-delegation.ts:
+  - Appended attachDataAssetDelegation IIFE (idempotent flag)
+  - Click handlers: da-download, da-delete
+  - Change handler: da-file-pick, type-select user-picked tracking
+- src/css/labbook-extras.css:
+  - Added .lb-da-* utility classes (~110 lines):
+    section/list/item layouts, color-coded type badges per
+    DataAssetType, upload zone, progress bar
+- CHANGELOG.md (this entry)
+
+### UX flow
+1. User opens experiment detail modal → async fetch DataAssets
+2. List shows under "Tệp đính kèm" header
+3. Below list: dropdown (type) + file input + progress bar (hidden)
+4. User picks file → auto-detect type → upload to Storage with progress
+5. On success: toast + re-render list
+6. Delete: confirm dialog → delete Firestore doc + Storage file → toast
+
+### Out of scope (R153c+)
+- Drag-drop upload zone
+- Type batch upload (multiple files at once)
+- DataAssets gallery page (cross-experiment view)
+- Classifier integration with PCA/peak detection
+- PDF export of DataAssets
+
+
 ## R153a — DataAsset entity foundation (Phase B.5) (2026-05-10)
 
 ### Added

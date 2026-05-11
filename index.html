@@ -791,16 +791,15 @@
       </div>
 
       <!-- R152c-1: Experiment detail modal -->
-      <div class="modal" id="modal-experiment-detail" style="display:none">
-        <div class="modal-overlay" data-action="close-modal" data-modal="modal-experiment-detail"></div>
-        <div class="modal-content lb-modal-w-680">
+      <div class="modal-overlay" id="modal-experiment-detail" role="dialog" aria-modal="true">
+        <div class="modal lb-modal-w-680">
           <div class="modal-header">
             <h2>Chi tiết thí nghiệm</h2>
-            <button class="modal-close" data-action="close-modal" data-modal="modal-experiment-detail" aria-label="Đóng">×</button>
+            <button class="modal-close" type="button" data-action="close-modal" data-modal="modal-experiment-detail" aria-label="Đóng">×</button>
           </div>
           <div class="modal-body" id="modal-experiment-detail-body"></div>
           <div class="modal-footer">
-            <button class="btn" data-action="close-modal" data-modal="modal-experiment-detail">Đóng</button>
+            <button class="btn" type="button" data-action="close-modal" data-modal="modal-experiment-detail">Đóng</button>
           </div>
         </div>
       </div>

@@ -815,3 +815,50 @@ export function attachGlobalDelegation() {
     }
   });
 }
+
+
+// ═══════════════════════════════════════════════════════════
+// R153b — DataAsset action handlers (delegation extension)
+// ═══════════════════════════════════════════════════════════
+
+(function attachDataAssetDelegation() {
+  const flag = '__dataAssetDelegationAttached';
+  if ((document.body as any)[flag]) return;
+  (document.body as any)[flag] = true;
+
+  // Click delegation: download, delete, type-select user-picked tracking
+  document.body.addEventListener('click', async (e: Event) => {
+    const target = (e.target as HTMLElement)?.closest('[data-action]') as HTMLElement | null;
+    if (!target) return;
+    const action = target.dataset.action;
+    if (action === 'da-download') {
+      const id = target.dataset.assetId;
+      if (id && typeof (window as any).handleDataAssetDownload === 'function') {
+        await (window as any).handleDataAssetDownload(id);
+      }
+    } else if (action === 'da-delete') {
+      const id = target.dataset.assetId;
+      const name = target.dataset.assetName || '(unknown)';
+      const expWrap = target.closest('[data-experiment-id]') as HTMLElement | null;
+      const expId = expWrap?.dataset.experimentId;
+      if (id && expId && typeof (window as any).handleDataAssetDelete === 'function') {
+        await (window as any).handleDataAssetDelete(id, name, expId);
+      }
+    }
+  });
+
+  // Change delegation: file pick triggers upload; mark type-select as user-picked
+  document.body.addEventListener('change', async (e: Event) => {
+    const target = e.target as HTMLElement | null;
+    if (!target) return;
+    if (target.matches?.('[data-input-action="da-file-pick"]')) {
+      const expId = (target as HTMLInputElement).dataset.experimentId;
+      if (expId && typeof (window as any).handleDataAssetFilePick === 'function') {
+        await (window as any).handleDataAssetFilePick(expId);
+      }
+    } else if (target.matches?.('.lb-da-type-select')) {
+      // Mark as user-picked so auto-detect doesn't override
+      (target as HTMLSelectElement).dataset.userPicked = '1';
+    }
+  });
+})();
