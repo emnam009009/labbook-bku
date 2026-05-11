@@ -965,3 +965,94 @@ body .ai-suggestion-card__desc {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   R158c-p6: AI FAB Carbon button redesign
+   ═══════════════════════════════════════════════════════════════════
+   Refactor .ai-fab từ circle gradient cyan → rounded square solid
+   primary với Carbon button pattern.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── FAB base ────────────────────────────────────────────── */
+body .ai-fab {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: var(--cds-radius-md) !important;  /* 8px Carbon */
+  background: var(--primary) !important;
+  border: none !important;
+  color: white !important;
+  box-shadow: var(--cds-shadow-02) !important;
+  transition:
+    background var(--cds-motion-fast-02) var(--cds-motion-ease-productive),
+    box-shadow var(--cds-motion-fast-02) var(--cds-motion-ease-productive) !important;
+  cursor: pointer !important;
+}
+
+/* ── FAB hover — lift via shadow only ────────────────────── */
+body .ai-fab:hover {
+  background: var(--primary-hover) !important;
+  box-shadow: var(--cds-shadow-03) !important;
+  transform: none !important;  /* NO scale bouncy */
+  color: white !important;
+}
+
+/* ── FAB active (pressed) ────────────────────────────────── */
+body .ai-fab:active {
+  background: var(--primary-active) !important;
+  box-shadow: var(--cds-shadow-01) !important;
+  transform: none !important;
+}
+
+/* ── FAB focus ring ──────────────────────────────────────── */
+body .ai-fab:focus-visible {
+  outline: 2px solid var(--cds-focus);
+  outline-offset: 2px;
+}
+
+/* ── Drag state — slightly stronger shadow, no scale ─────── */
+body .ai-fab.is-dragging {
+  cursor: grabbing !important;
+  transition: none !important;
+  box-shadow: var(--cds-shadow-04) !important;
+  transform: none !important;  /* override scale(1.08) */
+  background: var(--primary-hover) !important;
+}
+
+body .ai-fab.is-dragging:hover {
+  transform: none !important;
+}
+
+/* ── Mobile: grab cursor adjust ──────────────────────────── */
+@media (hover: none) {
+  body .ai-fab {
+    cursor: pointer !important;
+  }
+}
+
+body .ai-fab:not(.is-dragging) {
+  cursor: pointer !important;
+}
+
+/* ── Icon size — Carbon 20px ─────────────────────────────── */
+body .ai-fab__icon {
+  width: 20px !important;
+  height: 20px !important;
+  stroke-width: 2 !important;
+}
+
+/* ── Hint tooltip (if any) ──────────────────────────────── */
+body .ai-fab__hint {
+  background: var(--cds-text-primary) !important;
+  color: var(--cds-text-on-color) !important;
+  font-size: 11px !important;
+  padding: 4px 8px !important;
+  border-radius: var(--cds-radius-sm) !important;
+  box-shadow: var(--cds-shadow-02) !important;
+}
+
+/* ── FAB hidden when sidetab open (preserve existing) ────── */
+body .ai-sidetab.is-open ~ body .ai-fab,
+body.ai-sidetab-open body .ai-fab {
+  opacity: 0 !important;
+  pointer-events: none;
+}
