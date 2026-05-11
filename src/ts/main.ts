@@ -20,7 +20,7 @@ import '../css/attachments.css'
 import '../css/ai-chat.css'  // Round 108: AI chat sidetab
 
 // AI Chat Sidetab (Round 108)
-import { initAiChatSidetab, initAiToolsSidetab } from './ai/ui'  // Round 108, R131b
+import { initAiChatSidetab, initAiToolsSidetab } from '@/domains/ai/ui'  // Round 108, R131b
 
 // ── Import Firebase ───────────────────────────────────────
 import { db, ref, push, onValue, fbListen, fbPush, fbSet, fbGet, fbDel, update, updatePassword } from './firebase.js'
@@ -31,7 +31,7 @@ import { escapeHtml, escapeJs, vals, fuzzy, normalizeSub, formatChemical, fmtDat
 import { flashRow, setText, setHtml } from './utils/dom.js'
 import { getPersonName, canDelete, canEdit, syncAuthState } from './utils/auth-helpers.js'
 import { safeAsync } from './utils/async.js'
-import { logHistory } from './services/history-log.js'
+import { logHistory } from '@/domains/history/service'
 import { attachGlobalDelegation } from './services/global-delegation.js'
 // Round 58e: 2 file moi tach tu inline <script> trong index.html
 import './services/threads-bg.js'
@@ -45,16 +45,16 @@ import { showPage, toggleSidebarSection, toggleHistory, switchElectrodeTab } fro
 // ── Import listeners + render dispatcher + dashboard (Phần 3) ──
 import { startListeners, stopListeners, updateChatFabBadge } from './services/listeners.js'
 import { renderAll } from './services/render-dispatcher.js'
-import { renderDash } from './pages/dashboard.js'
-import './pages/data-assets.js';
-import './pages/lineage.js';
+import { renderDash } from '@/domains/dashboard/page'
+import '@/domains/data-assets/page';
+import '@/domains/lineage/page';
 
 // ── Theme picker ──────────────────────────────────────────
 import { initTheme } from './services/theme.js'
 import './services/theme-picker-ui.js'
 import { initStyle } from './services/theme-manager.js'
-import './pages/settings.js'
-import { initMemberFilter } from './services/member-filter.js'
+import '@/domains/users/settings'
+import { initMemberFilter } from '@/domains/members/filter'
 
 // ── Import experiment pages (Phần 4) ─────────────────────
 // [LAZY] experiments page imported on-demand via pageChange event listener
@@ -63,7 +63,7 @@ import { initMemberFilter } from './services/member-filter.js'
 // [LAZY] chemicals page imported on-demand via pageChange event listener
 
 // ── Import ink page (Phần 5b) ────────────────────────────
-import { renderInk } from './pages/ink.js'
+import { renderInk } from '@/domains/inventory/ink/page'
 
 // ── Import equipment page (Phần 5c) ──────────────────────
 // [LAZY] equipment page imported on-demand via pageChange event listener
@@ -72,16 +72,16 @@ import { renderInk } from './pages/ink.js'
 // ── Import members + history + users + avatar (Phần 6) ──
 // [LAZY] members page imported on-demand via pageChange event listener
 // [LAZY] history page imported on-demand via pageChange event listener
-import { renderReports } from './pages/reports.js'
+import { renderReports } from '@/domains/reports/page'
 import { resetPage } from './utils/pagination.js'
 // [LAZY] users page imported on-demand via pageChange event listener (see bottom of file)
-import { toggleAvatarMenu, changeAvatar, resetAvatar, updateAvatarUI } from './services/avatar.js'
+import { toggleAvatarMenu, changeAvatar, resetAvatar, updateAvatarUI } from '@/domains/members/avatar'
 
 import { printSingleLabel, printBulkLabels, showLabelChoiceDialog } from './services/qr-labels.js'
 import { initUrlRouter } from './services/url-router.js'
 import './services/sticky-header.js'
-import { initBookingSuggestions } from './services/booking-suggestions.js'
-import { initPdfReport } from './services/pdf-report.js'
+import { initBookingSuggestions } from '@/domains/bookings/suggestions'
+import { initPdfReport } from '@/domains/reports/legacy-monthly-report'
 // ── Import save handlers (Phần 7a) ───────────────────────
 import {
   saveHydro, saveElectrode, saveElectrochem, saveMember,
@@ -111,7 +111,7 @@ import {
   lockItem, unlockItem, lockInk, unlockInk,
   startEditGroup, addGroup, deleteGroup, renderGroupList, addChemGroup, delChemGroup,
   renderEqGroupList, updateEqGroupSelects, addEqGroup, delEqGroup
-} from './services/group-lock-mgmt.js'
+} from '@/domains/bookings/locks'
 
 // ── Import custom selects + form helpers (Phần 8a) ──────
 import {
@@ -129,7 +129,7 @@ import {
 // ── Import auth flow handlers (Phần 8c) ─────────────────
 import {
   doLogin, doLogout, doRegister, togglePasswordVisibility, switchAuthTab
-} from './pages/auth-flow.js'
+} from '@/domains/users/auth-flow'
 
 // ── Import form helpers + update selects (Phần 8d) ──────
 import {
@@ -926,11 +926,11 @@ if (_loginScreen) initThreads(_loginScreen, { color: [0.05, 0.58, 0.53], amplitu
 import './labbook-extensions.js'
 import './services/global-search.js'
 import './services/excel-export.js'
-import './services/notifications.js'
-import './services/notifications-hooks.js'
+import '@/domains/notifications/service'
+import '@/domains/notifications/hooks'
 import './services/a11y-enhancements.js'
 import './services/custom-select-keyboard.js'
-import './services/avatar-menu-a11y.js'
+import '@/domains/members/avatar-a11y'
 import './services/bulk-actions.js'
 import './services/bulk-multi-select.js'
 import './services/date-range-filter.js'
@@ -1304,57 +1304,57 @@ document.addEventListener('DOMContentLoaded', () => {
 const _loadedPages = new Set();
 const _pageLoaders = {
   users: async () => {
-    const m = await import('./pages/users.js');
+    const m = await import('@/domains/users/page');
     window.renderUsers = m.renderUsers;
     // After load: trigger initial render if user is on this page
     if (typeof window.renderUsers === 'function') window.renderUsers();
   },
   history: async () => {
-    const m = await import('./pages/history.js');
+    const m = await import('@/domains/history/page');
     window.renderHistory = m.renderHistory;
     if (typeof window.renderHistory === 'function') window.renderHistory();
   },
   members: async () => {
-    const m = await import('./pages/members.js');
+    const m = await import('@/domains/members/page');
     window.renderMembers = m.renderMembers;
     if (typeof window.renderMembers === 'function') window.renderMembers();
   },
   equipment: async () => {
-    const m = await import('./pages/equipment.js');
+    const m = await import('@/domains/inventory/equipment/page');
     window.renderEquipment = m.renderEquipment;
     window.toggleEqGroup = m.toggleEqGroup;
     if (typeof window.renderEquipment === 'function') window.renderEquipment();
   },
   chemicals: async () => {
-    const m = await import('./pages/chemicals.js');
+    const m = await import('@/domains/inventory/chemicals/page');
     window.renderChemicals = m.renderChemicals;
     window.toggleChemGroup = m.toggleChemGroup;
     if (typeof window.renderChemicals === 'function') window.renderChemicals();
   },
   // R150d-1: Materials browser (Phase B.5)
   materials: async () => {
-    const m = await import('./pages/materials.js');
+    const m = await import('@/domains/materials/page');
     window.renderMaterials = m.renderMaterials;
     window.openMaterialDetail = m.openMaterialDetail;
     if (typeof window.renderMaterials === 'function') window.renderMaterials();
   },
   // R151c: Samples browser (Phase B.5)
   samples: async () => {
-    const m = await import('./pages/samples.js');
+    const m = await import('@/domains/samples/page');
     window.renderSamples = m.renderSamples;
     window.openSampleDetail = m.openSampleDetail;
     if (typeof window.renderSamples === 'function') window.renderSamples();
   },
   // R152c-1: Unified experiments (Phase B.5)
   'experiments-unified': async () => {
-    const m = await import('./pages/experiments-unified.js');
+    const m = await import('@/domains/experiments/page');
     window.renderExperimentsUnified = m.renderExperimentsUnified;
     window.openExperimentDetail = m.openExperimentDetail;
     window.filterExperimentsByType = m.filterExperimentsByType;
     if (typeof window.renderExperimentsUnified === 'function') window.renderExperimentsUnified();
   },
   booking: async () => {
-    const m = await import('./pages/booking.js');
+    const m = await import('@/domains/bookings/page');
     window.renderBooking = m.renderBooking;
     // Other window.* functions (saveBooking, approveBooking, etc.) are
     // assigned at top level inside booking.js when the module evaluates
@@ -1365,21 +1365,21 @@ const _pageLoaders = {
     try { initBookingSuggestions(); } catch(e) { console.warn('[lazy booking] suggestions init:', e); }
   },
   hydro: async () => {
-    const m = await import('./pages/experiments.js');
+    const m = await import('@/domains/experiments/page-legacy');
     window.renderHydro = m.renderHydro;
     window.renderElectrode = m.renderElectrode;
     window.renderElectrochem = m.renderElectrochem;
     if (typeof window.renderHydro === 'function') window.renderHydro();
   },
   electrode: async () => {
-    const m = await import('./pages/experiments.js');
+    const m = await import('@/domains/experiments/page-legacy');
     window.renderHydro = m.renderHydro;
     window.renderElectrode = m.renderElectrode;
     window.renderElectrochem = m.renderElectrochem;
     if (typeof window.renderElectrode === 'function') window.renderElectrode();
   },
   ec: async () => {
-    const m = await import('./pages/experiments.js');
+    const m = await import('@/domains/experiments/page-legacy');
     window.renderHydro = m.renderHydro;
     window.renderElectrode = m.renderElectrode;
     window.renderElectrochem = m.renderElectrochem;
@@ -1455,7 +1455,7 @@ window.openAttachmentsExportModal = function(opts) {
 let _chatModulePromise = null;
 function _loadChatModule() {
   if (!_chatModulePromise) {
-    _chatModulePromise = import('./pages/chat.js').then(m => {
+    _chatModulePromise = import('@/domains/chat/page').then(m => {
       // Replace proxy with real functions
       window.cleanupChat = m.cleanupChat;
       window.initChat = m.initChat;
@@ -1507,7 +1507,7 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
 let _overviewPagePromise: Promise<any> | null = null;
 function _loadOverviewPage(): Promise<any> {
   if (!_overviewPagePromise) {
-    _overviewPagePromise = import('./pages/overview.js');
+    _overviewPagePromise = import('@/domains/dashboard/overview');
   }
   return _overviewPagePromise;
 }

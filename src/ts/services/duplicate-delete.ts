@@ -28,7 +28,7 @@
 
 import { canEdit, getPersonName } from '../utils/auth-helpers.js'
 import { vals } from '../utils/format.js'
-import { logHistory as logHistoryRaw } from './history-log.js'
+import { logHistory as logHistoryRaw } from "@/domains/history/service"
 const logHistory = logHistoryRaw as any
 import { db, ref, update, onValue, fbDel, fbPush, fbGet, incrementStock } from '../firebase.js'
 

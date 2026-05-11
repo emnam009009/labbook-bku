@@ -13,7 +13,7 @@
  *  - _renderTimer: timer của debounce
  */
 
-import { renderDash } from '../pages/dashboard.js'
+import { renderDash } from '@/domains/dashboard/page'
 
 let _renderTimer: ReturnType<typeof setTimeout> | null = null;
 

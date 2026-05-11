@@ -2,8 +2,8 @@
 // @ts-nocheck — UI component — DOM manipulation, deferred typing until Next.js port.
 // Modal "Xuất dữ liệu" — chọn ảnh + page size + orientation → preview → download
 
-import { listAttachments, ATTACHMENT_CATEGORIES } from '../services/attachments.js';
-import { generatePdfReport, downloadBlob, PAGE_SIZES } from '../services/pdf/pdf-report.js';
+import { listAttachments, ATTACHMENT_CATEGORIES } from '@/domains/data-assets/attachments';
+import { generatePdfReport, downloadBlob, PAGE_SIZES } from '@/domains/reports/pdf-export';
 import { showToast } from './toast.js';
 import { openPdfLightbox } from './pdf-preview-lightbox.js';
 

@@ -17,7 +17,7 @@ import * as d3sel from 'd3-selection';
 import * as d3force from 'd3-force';
 import * as d3zoom from 'd3-zoom';
 import * as d3drag from 'd3-drag';
-import type { LineageGraph } from '../services/lineage-service.js';
+import type { LineageGraph } from '@/domains/lineage/service';
 
 // Color per node type
 const NODE_COLORS: Record<string, string> = {
