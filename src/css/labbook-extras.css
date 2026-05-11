@@ -578,3 +578,45 @@
   font-size: 13px;
   color: #6B7280;
 }
+
+
+/* R153d — Classifier hint inline */
+.lb-da-classify-hint {
+  flex-basis: 100%;
+  font-size: 11px;
+  color: #047857;
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  border-radius: 4px;
+  padding: 4px 8px;
+  margin-top: 4px;
+}
+
+.lb-da-classify-hint strong {
+  font-weight: 600;
+  color: #065F46;
+}
+
+
+/* R156e — Inline plot preview in DataAsset modal */
+.lb-da-plot-container {
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 14px;
+  min-height: 360px;
+}
+
+.lb-da-plot-status {
+  text-align: center;
+  font-size: 12px;
+  color: #475569;
+  margin-top: 8px;
+}
+
+#da-plot-canvas {
+  display: block;
+  width: 100% !important;
+  height: 380px !important;
+  max-width: 100%;
+}

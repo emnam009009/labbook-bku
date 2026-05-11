@@ -1,5 +1,72 @@
 # CHANGELOG
 
+## R156e — Inline plot preview for DataAssets (Phase B.5+) (2026-05-10)
+
+### Added
+- Inline Chart.js plot in DataAsset preview modal (R153c gallery card click)
+- Plottable types: xrd, raman, ftir, uv-vis, uv-vis-drs, pl, xps, eds, electrochem-csv
+- Triggered when mimeType is text/* or known data extension (.csv/.tsv/.txt/.xy/.dat/.emsa/.spc/.cor)
+
+### Architecture (reuse existing toolkit)
+- Parser: `services/parsers/index.ts::parseDataFile(file, category)` — handles JCAMP-DX, CSV, Excel, CorrWare
+- Plot: `services/plot/plot-preview.ts::renderPreview(canvas, parsed)` — Chart.js 4.5
+- Mapping DataAssetType → parser category in PARSER_CATEGORY_MAP
+
+### Flow
+1. User clicks DataAsset card in gallery → preview modal opens
+2. If plottable: canvas placeholder rendered with "Đang tải..." status
+3. Async: fetch file from Storage URL → new File() → parseDataFile → renderPreview
+4. Status updates: tải → phân tích → vẽ → "N điểm dữ liệu"
+5. Errors caught + shown inline (red text)
+
+### Files
+- src/ts/pages/data-assets.ts: added imports, PARSER_CATEGORY_MAP, renderInlinePlot fn, isPlottable check
+- src/css/labbook-extras.css: .lb-da-plot-container style
+
+### Out of scope
+- R156f: Tauc plot toggle in preview (UV-Vis DRS)
+- R156g: Peak detection overlay
+- R156h: Export plot PNG/SVG
+- R157+: Python Cloud Run for advanced analysis (JCPDS, Scherrer)
+
+## R153d — Content-aware classifier for DataAsset uploads (Phase B.5) (2026-05-10)
+
+### Added
+- Content-aware file classifier (replacing R153b filename-only heuristic):
+  - Reads first 10KB of file via FileReader.text()
+  - Parses CSV/TSV/space-separated header + 5-10 data rows
+  - Auto-detects delimiter (comma, tab, semicolon, space)
+  - Heuristic match per DataAssetType:
+    * XRD: 2θ 5-90°, header `theta`/`position`/`angle`
+    * Raman: 100-4000 cm⁻¹, header `wavenumber`/`shift`
+    * FTIR: 400-4000 cm⁻¹, header `absorbance`/`transmittance`
+    * UV-Vis: 200-1100 nm, header `wavelength`
+    * PL: filename `pl`/`photolum` + emission/intensity columns
+    * XPS: header `binding energy`/`BE`
+    * EDS: header `element`/`weight%`/`atomic%`
+    * Electrochem: header `potential`/`current`/`voltage` or CV/LSV/EIS keywords
+  - Returns {type, confidence 0-1, reason}
+- Image classification: SEM/TEM/EDS keyword in filename
+- Office files (xlsx/docx): → document
+
+### UX
+- Confidence ≥ 0.8: auto-select dropdown silently
+- 0.5 ≤ confidence < 0.8: pre-select + green hint "🔍 Đã phát hiện: X (Y%)"
+- < 0.5: fallback to R153b filename heuristic
+
+### Files
+- src/ts/services/data-assets.ts: added classifyDataAssetFile() export
+  + helpers (readFileHead, parseCSVHead, isColumnInRange, classifyTextContent)
+- src/ts/pages/experiments-unified.ts: handleDataAssetFilePick now async-classify
+  before setting dropdown
+- src/css/labbook-extras.css: .lb-da-classify-hint style
+
+### Out of scope
+- Binary file content sniff (.xy, .spc, .vms) — kept extension-based
+- Auto-detect SEM/TEM from image dimensions/scale bar (needs OCR)
+- R153e: PDF export integration
+- R153f: Cleanup legacy attachments code
+
 ## R153c — DataAssets gallery page (Phase B.5) (2026-05-10)
 
 ### Added

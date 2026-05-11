@@ -20,6 +20,7 @@ import { openModal, closeModal } from "../ui/modal.js";
 import {
   uploadDataAsset, listByExperiment, getDataAssetURL,
   deleteDataAsset, formatFileSize, tsToDate,
+  classifyDataAssetFile,
 } from "../services/data-assets.js";
 import type { DataAsset, DataAssetType } from "../types/research.js";
 
@@ -923,10 +924,33 @@ export async function handleDataAssetFilePick(experimentId: string): Promise<voi
   const progressText = progressEl?.querySelector('.lb-da-progress-text') as HTMLElement | null;
   if (!fileInput || !typeSelect || !fileInput.files || fileInput.files.length === 0) return;
   const file = fileInput.files[0];
-  // Auto-suggest type if user hasn't manually changed
+
+  // R153d: Content-aware classifier
   if (!typeSelect.dataset.userPicked) {
-    const detected = detectDataAssetType(file.name, file.type);
-    typeSelect.value = detected;
+    try {
+      const result = await classifyDataAssetFile(file);
+      if (result.confidence >= 0.5) {
+        typeSelect.value = result.type;
+        // Show classifier hint inline below upload zone
+        const uploadEl = typeSelect.closest('.lb-da-upload') as HTMLElement | null;
+        if (uploadEl) {
+          let hint = uploadEl.querySelector('.lb-da-classify-hint') as HTMLElement | null;
+          if (!hint) {
+            hint = document.createElement('div');
+            hint.className = 'lb-da-classify-hint';
+            uploadEl.appendChild(hint);
+          }
+          const pct = Math.round(result.confidence * 100);
+          hint.innerHTML = `🔍 Đã phát hiện: <strong>${result.type}</strong> (${pct}%) — ${result.reason}`;
+        }
+      } else {
+        // Fallback to filename-only heuristic (R153b original)
+        typeSelect.value = detectDataAssetType(file.name, file.type);
+      }
+    } catch (err) {
+      console.warn('[classify] Error', err);
+      typeSelect.value = detectDataAssetType(file.name, file.type);
+    }
   }
   const type = typeSelect.value as DataAssetType;
   if (progressEl) progressEl.style.display = '';

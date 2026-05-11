@@ -10,6 +10,9 @@ import {
 import type { DataAsset, DataAssetType } from "../types/research.js";
 import { escapeHtml } from "../utils/format.js";
 import { openModal } from "../ui/modal.js";
+// R156e: plot preview reuse
+import { parseDataFile, canAutoPlot } from "../services/parsers/index.js";
+import { renderPreview } from "../services/plot/plot-preview.js";
 
 const TENANT_ID = "default";
 
@@ -24,6 +27,19 @@ const TYPE_ORDER: DataAssetType[] = [
   'xrd', 'sem', 'tem', 'raman', 'ftir', 'uv-vis', 'uv-vis-drs', 'pl',
   'eds', 'xps', 'electrochem-csv', 'image', 'document', 'other',
 ];
+
+// R156e: map DataAssetType → parser category (for plot preview)
+const PARSER_CATEGORY_MAP: Partial<Record<DataAssetType, string>> = {
+  'xrd': 'xrd',
+  'raman': 'raman',
+  'ftir': 'ftir',
+  'uv-vis': 'uvvis',
+  'uv-vis-drs': 'uvvis-drs',
+  'pl': 'pl',
+  'xps': 'xps',
+  'eds': 'eds',
+  'electrochem-csv': 'electrochem',
+};
 
 let _cache: DataAsset[] | null = null;
 let _filterType: DataAssetType | "" = "";
@@ -180,6 +196,12 @@ export async function openDataAssetPreview(assetId: string): Promise<void> {
 
   const isImage = /^image\//.test(asset.mimeType);
   const isPdf = asset.mimeType === 'application/pdf';
+  // R156e: spectrum file types that we can parse + plot
+  const parserCategory = PARSER_CATEGORY_MAP[asset.type];
+  const isPlottable = !!parserCategory &&
+    (/^text\//.test(asset.mimeType) || asset.mimeType === '' ||
+     /^application\/octet-stream$/.test(asset.mimeType) ||
+     /\.(csv|tsv|txt|xy|dat|emsa|spc|cor)$/i.test(asset.fileName));
 
   let url = '';
   try {
@@ -194,7 +216,12 @@ export async function openDataAssetPreview(assetId: string): Promise<void> {
     ? `<img src="${escapeHtml(url)}" alt="" style="max-width:100%;border-radius:6px;display:block;margin:0 auto">`
     : isPdf
       ? `<iframe src="${escapeHtml(url)}" style="width:100%;height:70vh;border:1px solid #E2E8F0;border-radius:6px"></iframe>`
-      : `<div class="lb-hint">Loại tệp này không xem trực tiếp được. Tải về để mở.</div>`;
+      : isPlottable
+        ? `<div class="lb-da-plot-container">
+             <canvas id="da-plot-canvas" style="max-width:100%"></canvas>
+             <div class="lb-hint lb-da-plot-status" id="da-plot-status">Đang tải dữ liệu...</div>
+           </div>`
+        : `<div class="lb-hint">Loại tệp này không xem trực tiếp được. Tải về để mở.</div>`;
 
   bodyEl.innerHTML = `
     <div class="font-mono text-lg font-bold" style="color:#0F172A;word-break:break-all">${escapeHtml(asset.fileName)}</div>
@@ -226,6 +253,51 @@ export async function openDataAssetPreview(assetId: string): Promise<void> {
     </div>
   `;
   openModal("modal-dataasset-preview");
+
+  // R156e: async render plot if plottable
+  if (isPlottable && parserCategory) {
+    void renderInlinePlot(asset, url, parserCategory);
+  }
+}
+
+// R156e: fetch file from Storage URL → parse → render Chart.js
+async function renderInlinePlot(asset: DataAsset, url: string, category: string): Promise<void> {
+  const canvas = document.getElementById('da-plot-canvas') as HTMLCanvasElement | null;
+  const statusEl = document.getElementById('da-plot-status');
+  if (!canvas) return;
+  try {
+    if (statusEl) statusEl.textContent = 'Đang tải tệp...';
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const blob = await resp.blob();
+    const file = new File([blob], asset.fileName, { type: asset.mimeType || 'text/plain' });
+
+    if (statusEl) statusEl.textContent = 'Đang phân tích...';
+    const parsed = await parseDataFile(file, category);
+
+    if (!parsed || !parsed.x || !parsed.y || parsed.x.length === 0) {
+      if (statusEl) {
+        statusEl.textContent = 'Không phân tích được dữ liệu để vẽ.';
+        statusEl.style.color = '#EF4444';
+      }
+      return;
+    }
+
+    if (statusEl) statusEl.textContent = `Đang vẽ (${parsed.x.length} điểm)...`;
+    await renderPreview(canvas, parsed, {
+      title: `${asset.type.toUpperCase()} — ${asset.fileName}`,
+    });
+    if (statusEl) {
+      statusEl.textContent = `${parsed.x.length} điểm dữ liệu`;
+      statusEl.style.color = '#0D9488';
+    }
+  } catch (err: any) {
+    console.error('[da-plot] render failed', err);
+    if (statusEl) {
+      statusEl.textContent = `Lỗi: ${err?.message || String(err)}`;
+      statusEl.style.color = '#EF4444';
+    }
+  }
 }
 
 (window as any).renderDataAssetsPage = renderDataAssetsPage;
