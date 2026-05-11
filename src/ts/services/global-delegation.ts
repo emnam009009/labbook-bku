@@ -349,7 +349,7 @@ export function attachGlobalDelegation() {
         if (typeof window.onAiToolsTabSwitch === 'function') window.onAiToolsTabSwitch(target);
         break;
       case 'ai-tools-resize-start':
-        if (typeof window.onAiToolsResizeStart === 'function' && ev) window.onAiToolsResizeStart(target, ev);
+        if (typeof window.onAiToolsResizeStart === 'function' && e) window.onAiToolsResizeStart(target, e);
         break;
       // ════════ Paper Library (Round 132b) ════════
       case 'ai-paper-pick':
@@ -369,7 +369,7 @@ export function attachGlobalDelegation() {
         if (typeof window.onPaperSearchSubmit === 'function') window.onPaperSearchSubmit();
         break;
       case 'ai-paper-search-keydown':
-        if (typeof window.onPaperSearchKeydown === 'function' && ev) window.onPaperSearchKeydown(target, ev);
+        if (typeof window.onPaperSearchKeydown === 'function' && e) window.onPaperSearchKeydown(target, e);
         break;
       case 'ai-paper-search-clear':
         if (typeof window.onPaperSearchClear === 'function') window.onPaperSearchClear();
