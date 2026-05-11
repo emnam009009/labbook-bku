@@ -1,4 +1,4 @@
-name: CI
+name: CI / Test + Build
 
 on:
   pull_request:
@@ -6,43 +6,84 @@ on:
   push:
     branches: [main]
 
+# Cancel previous runs if new commit pushed (save Actions minutes)
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  test:
+  test-and-build:
     name: Test + Build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: 20
+          cache: npm
 
-      - name: Install dependencies
+      - name: Install root dependencies
         run: npm ci
+
+      - name: Install functions dependencies
+        run: |
+          if [ -d functions ]; then
+            cd functions
+            npm ci
+          fi
+
+      - name: TypeScript typecheck (root)
+        run: npm run typecheck
+        # If 'typecheck' script doesn't exist yet, fallback to tsc --noEmit
+        # Add to package.json: "typecheck": "tsc --noEmit"
+
+      - name: TypeScript typecheck (functions)
+        run: |
+          if [ -d functions ]; then
+            cd functions
+            npm run build --if-present
+          fi
 
       - name: Run tests
         run: npm test
+        env:
+          # Vitest sometimes needs these even if tests don't touch env
+          NODE_OPTIONS: --max-old-space-size=4096
 
-      - name: Build production
+      - name: Build production bundle
         run: npm run build
         env:
-          # Build cần các biến này, nhưng dùng giá trị giả cho CI
-          # vì build chỉ check syntax + bundling, không kết nối Firebase thật
-          VITE_FIREBASE_API_KEY: dummy-for-ci
-          VITE_FIREBASE_AUTH_DOMAIN: dummy.firebaseapp.com
-          VITE_FIREBASE_DATABASE_URL: https://dummy.firebaseio.com
-          VITE_FIREBASE_PROJECT_ID: dummy
-          VITE_FIREBASE_STORAGE_BUCKET: dummy.appspot.com
-          VITE_FIREBASE_MESSAGING_SENDER_ID: '000000000000'
-          VITE_FIREBASE_APP_ID: '1:000000000000:web:dummy'
+          # Dummy Firebase config for build-time validation
+          # Real values from GitHub Secrets when deploying staging/prod
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY || 'ci-dummy-key' }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN || 'ci-dummy.firebaseapp.com' }}
+          VITE_FIREBASE_DATABASE_URL: ${{ secrets.VITE_FIREBASE_DATABASE_URL || 'https://ci-dummy.firebaseio.com' }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID || 'ci-dummy' }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET || 'ci-dummy.appspot.com' }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID || '000000000000' }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID || '1:000:web:000' }}
+
+      - name: Bundle size report
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ -d dist ]; then
+            echo "## Bundle size" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            du -sh dist/* | sort -h >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "Total dist:" >> $GITHUB_STEP_SUMMARY
+            du -sh dist >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Upload build artifacts
+        if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: dist-${{ github.sha }}
+          name: dist-${{ github.event.pull_request.number }}
           path: dist/
           retention-days: 7

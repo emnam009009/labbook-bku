@@ -122,3 +122,6 @@ dist-types/
 
 # Firebase CLI debug logs
 *-debug.log
+
+# Patch script applied markers (legacy patch workflow)
+.*_APPLIED
