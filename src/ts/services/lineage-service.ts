@@ -170,7 +170,7 @@ export async function buildLineageGraph(experiment: Experiment): Promise<Lineage
           refId: m.id,
           type: 'material',
           label: m.formula || m.id.slice(0, 8),
-          sublabel: m.shortName,
+          sublabel: m.formula,
         });
         edges.push({ source: mId, target: sId, type: 'composed_of' });
       }
@@ -274,7 +274,7 @@ export async function buildFullLineageGraph(): Promise<LineageGraph> {
       refId: m.id,
       type: 'material',
       label: m.formula || m.id.slice(0, 8),
-      sublabel: m.shortName,
+      sublabel: m.formula,
     });
   }
 
