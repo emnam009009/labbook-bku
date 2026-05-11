@@ -260,6 +260,10 @@
         <div class="sidebar-item" data-action="show-page" data-page="dataassets" data-tip="Phổ dữ liệu (DataAssets)" role="button" tabindex="0" aria-label="Phổ dữ liệu">
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19h18"/><path d="M4 16l3-7 3 4 3-10 3 8 4-3"/></svg>
         <span data-label>Phổ DL</span></div>
+        <!-- R154-2a: Lineage tổng (Phase B.5) -->
+        <div class="sidebar-item" data-action="show-page" data-page="lineage" data-tip="Lineage tổng quan" role="button" tabindex="0" aria-label="Lineage tổng">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="12" r="2.5"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><line x1="7.5" y1="7" x2="11" y2="11"/><line x1="16.5" y1="7" x2="13" y2="11"/><line x1="11" y1="13" x2="7.5" y2="17"/><line x1="13" y1="13" x2="16.5" y2="17"/></svg>
+        <span data-label>Lineage</span></div>
         <div class="sidebar-item" data-action="show-page" data-page="chemicals" data-tip="Hóa chất" role="button" tabindex="0" aria-label="Hóa chất">
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 3h6l1 6H8L9 3z"/><path d="M8 9l-3 12h14L16 9"/></svg>
         <span data-label>Hóa chất</span></div>
@@ -799,6 +803,23 @@
         </div>
         <div class="lb-da-filter-chips" id="da-filter-chips"></div>
         <div class="lb-da-gallery" id="da-gallery"></div>
+      </div>
+      <!-- R154-2a: Lineage tổng page -->
+      <div class="page" id="page-lineage">
+        <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
+          <div>
+            <h1 class="page-title" style="color:#0F172A !important">Lineage tổng quan</h1>
+            <p class="page-subtitle">Quan hệ giữa tất cả vật liệu, mẫu, thí nghiệm và tệp đính kèm trong lab.</p>
+          </div>
+        </div>
+        <div class="lb-lineage-legend">
+          <span><span class="lb-lineage-dot" style="background:#7C3AED"></span>Vật liệu</span>
+          <span><span class="lb-lineage-dot" style="background:#0D9488"></span>Mẫu</span>
+          <span><span class="lb-lineage-dot" style="background:#F59E0B"></span>Thí nghiệm</span>
+          <span><span class="lb-lineage-dot" style="background:#3B82F6"></span>Tệp đính kèm</span>
+        </div>
+        <div id="lineage-page-container" class="lb-lineage-page-container"></div>
+        <div id="lineage-page-status" class="lb-hint" style="text-align:center;margin-top:8px"></div>
       </div>
       <!-- R153c: DataAsset preview modal -->
       <div class="modal-overlay" id="modal-dataasset-preview" role="dialog" aria-modal="true">

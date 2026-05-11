@@ -47,6 +47,7 @@ import { startListeners, stopListeners, updateChatFabBadge } from './services/li
 import { renderAll } from './services/render-dispatcher.js'
 import { renderDash } from './pages/dashboard.js'
 import './pages/data-assets.js';
+import './pages/lineage.js';
 
 // ── Theme picker ──────────────────────────────────────────
 import { initTheme } from './services/theme.js'

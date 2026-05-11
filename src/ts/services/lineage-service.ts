@@ -227,3 +227,115 @@ export async function buildLineageGraph(experiment: Experiment): Promise<Lineage
 
   return { nodes, edges };
 }
+
+
+// ═══════════════════════════════════════════════════════════
+// R154-2a — Full lab lineage (all entities)
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Build a complete lineage graph for the whole tenant: all materials,
+ * samples, experiments, and dataAssets with their relationships.
+ *
+ * Performance: 1 query per collection (4 queries total).
+ * Each entity becomes a node; edges are derived from foreign keys.
+ *
+ * For lab BKU scale (~10-100 entities), this is instant.
+ * For commercial scale (>1000), use buildFilteredLineageGraph (R154-2b).
+ */
+export async function buildFullLineageGraph(): Promise<LineageGraph> {
+  const nodes: LineageNode[] = [];
+  const edges: LineageEdge[] = [];
+  const seenNodes = new Set<string>();
+
+  function addNode(n: LineageNode): void {
+    if (seenNodes.has(n.id)) return;
+    seenNodes.add(n.id);
+    nodes.push(n);
+  }
+
+  // Fetch all 4 collections in parallel
+  const [matSnap, smpSnap, expSnap, daSnap] = await Promise.all([
+    getDocs(query(collection(fdb, "materials"), where("tenantId", "==", TENANT_ID))).catch(() => null),
+    getDocs(query(collection(fdb, "samples"), where("tenantId", "==", TENANT_ID))).catch(() => null),
+    getDocs(query(collection(fdb, "experiments"), where("tenantId", "==", TENANT_ID))).catch(() => null),
+    getDocs(query(collection(fdb, "dataAssets"), where("tenantId", "==", TENANT_ID))).catch(() => null),
+  ]);
+
+  const materials = matSnap ? matSnap.docs.map(d => ({ id: d.id, ...d.data() } as Material)) : [];
+  const samples = smpSnap ? smpSnap.docs.map(d => ({ id: d.id, ...d.data() } as Sample)) : [];
+  const experiments = expSnap ? expSnap.docs.map(d => ({ id: d.id, ...d.data() } as Experiment)) : [];
+  const dataAssets = daSnap ? daSnap.docs.map(d => ({ id: d.id, ...d.data() } as DataAsset)) : [];
+
+  // 1. Material nodes
+  for (const m of materials) {
+    addNode({
+      id: `mat:${m.id}`,
+      refId: m.id,
+      type: 'material',
+      label: m.formula || m.id.slice(0, 8),
+      sublabel: m.shortName,
+    });
+  }
+
+  // 2. Sample nodes + composed_of edges
+  for (const s of samples) {
+    const sId = `smp:${s.id}`;
+    addNode({
+      id: sId,
+      refId: s.id,
+      type: 'sample',
+      label: s.shortCode || s.name || s.id.slice(0, 8),
+      sublabel: s.composition,
+    });
+    // Material → Sample edge
+    if (s.materialRef && seenNodes.has(`mat:${s.materialRef}`)) {
+      edges.push({ source: `mat:${s.materialRef}`, target: sId, type: 'composed_of' });
+    }
+    // Parent samples
+    for (const pid of s.parents || []) {
+      if (seenNodes.has(`smp:${pid}`)) {
+        edges.push({ source: `smp:${pid}`, target: sId, type: 'parent' });
+      }
+    }
+  }
+
+  // 3. Experiment nodes + input/output edges
+  for (const e of experiments) {
+    const eId = `exp:${e.id}`;
+    addNode({
+      id: eId,
+      refId: e.id,
+      type: 'experiment',
+      label: e.code || e.id.slice(0, 8),
+      sublabel: e.type,
+    });
+    for (const sid of e.inputSamples || []) {
+      if (seenNodes.has(`smp:${sid}`)) {
+        edges.push({ source: `smp:${sid}`, target: eId, type: 'input' });
+      }
+    }
+    for (const sid of e.outputSamples || []) {
+      if (seenNodes.has(`smp:${sid}`)) {
+        edges.push({ source: eId, target: `smp:${sid}`, type: 'output' });
+      }
+    }
+  }
+
+  // 4. DataAsset nodes + attached edges
+  for (const da of dataAssets) {
+    const daId = `da:${da.id}`;
+    addNode({
+      id: daId,
+      refId: da.id,
+      type: 'dataasset',
+      label: da.fileName.length > 25 ? da.fileName.slice(0, 22) + '...' : da.fileName,
+      sublabel: da.type,
+    });
+    if (seenNodes.has(`exp:${da.experimentId}`)) {
+      edges.push({ source: `exp:${da.experimentId}`, target: daId, type: 'attached' });
+    }
+  }
+
+  return { nodes, edges };
+}

@@ -1,5 +1,39 @@
 # CHANGELOG
 
+## R154-2a — Cross-experiment lineage page (Phase B.5) (2026-05-10)
+
+### Added
+- New sidebar item "Lineage" (route: `lineage`) after "Phổ DL"
+- New page section `page-lineage` with full-height D3 force graph
+- Service `buildFullLineageGraph()`:
+  - 4 parallel queries (materials, samples, experiments, dataAssets)
+  - Build complete graph: nodes per entity + edges from FK references
+  - Edges: composed_of (mat→smp), parent (smp→smp), input/output
+    (smp↔exp), attached (exp→da)
+- Page `lineage.ts`:
+  - Auto-render on pageChange event
+  - Counts per type displayed in status
+  - Reuses renderLineageGraph from R154-1 (no duplication)
+- Legend showing 4 entity types color-coded
+
+### Performance
+- 4 parallel Firestore queries (1 per collection)
+- Client-side graph build (~10ms for ~50 entities)
+- D3 force layout handles <500 nodes smoothly
+
+### Files
+- src/ts/services/lineage-service.ts: appended buildFullLineageGraph (~80 LOC)
+- src/ts/pages/lineage.ts (new ~45 LOC)
+- src/ts/main.ts: import lineage.js
+- index.html: sidebar item + page section
+- src/css/labbook-extras.css: .lb-lineage-page-container
+
+### Out of scope (R154-2b/R154-3)
+- Filter UI (by material/type) — defer until lab data grows >100 entities
+- Search bar
+- Layout switcher (force/hierarchical/radial)
+- Export PNG/SVG
+
 ## R154-1 — Per-experiment lineage graph modal (Phase B.5) (2026-05-10)
 
 ### Added
