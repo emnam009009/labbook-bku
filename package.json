@@ -1,6 +1,6 @@
 {
   "name": "labbook-bku",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "LabBook — Hệ thống quản lý Lab Vật liệu BKU",
   "type": "module",
   "scripts": {
