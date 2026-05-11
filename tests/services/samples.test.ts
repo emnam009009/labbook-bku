@@ -113,7 +113,7 @@ import {
   createSample,
   updateSample,
   setSampleStatus,
-} from "../../src/ts/services/samples";
+} from "../../src/ts/domains/samples/service";
 
 function seedSample(overrides: Partial<any> = {}): any {
   const base = {

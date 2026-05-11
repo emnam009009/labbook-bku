@@ -23,7 +23,7 @@
 import { db, ref, update, fbPush, fbGet, incrementStock } from '../firebase.js'
 import { vals } from '../utils/format.js'
 import { getPersonName } from '../utils/auth-helpers.js'
-import { logHistory } from './history-log.js'
+import { logHistory } from "@/domains/history/service"
 import { updateDisplayName } from '../auth.js'
 
 // ── Helper: kiểm tra mã trùng trong collection ───────────

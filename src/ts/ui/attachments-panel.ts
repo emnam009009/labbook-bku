@@ -15,7 +15,7 @@ import {
   deleteAttachment,
   updateAttachmentCategory,
   updateAttachmentAxisSettings,
-} from '../services/attachments.js';
+} from '@/domains/data-assets/attachments';
 import { showToast } from './toast.js';
 import { canDelete } from '../utils/auth-helpers.js';
 import { escapeHtml, fmtDate } from '../utils/format.js';

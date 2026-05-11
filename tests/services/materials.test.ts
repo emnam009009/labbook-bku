@@ -123,7 +123,7 @@ import {
   createMaterial,
   updateMaterial,
   checkFormulaExists,
-} from "../../src/ts/services/materials";
+} from "../../src/ts/domains/materials/service";
 
 // ────────────────────────────────────────────────────────────
 // Helpers

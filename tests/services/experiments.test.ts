@@ -110,7 +110,7 @@ import {
   createExperiment,
   updateExperiment,
   setExperimentStatus,
-} from "../../src/ts/services/experiments";
+} from "../../src/ts/domains/experiments/service";
 
 function seedExperiment(overrides: Partial<any> = {}): any {
   const base = {

@@ -5,7 +5,7 @@
 // ⚠️ DEPRECATED (R155 — Phase B.5): scheduled for removal in Phase E
 // (Next.js + Carbon rewrite). New data uses DataAssets service
 // (src/ts/services/data-assets.ts). Don't add features here.
-import { listAttachments } from '../services/attachments.js';
+import { listAttachments } from '@/domains/data-assets/attachments';
 import { escapeHtml } from '../utils/format.js';
 import {
   GROUPS,
@@ -13,7 +13,7 @@ import {
   classifyByGroup,
   renderAccordionGroup,
   type ClassifierItem,
-} from '../services/attachment-classifier.js';
+} from '@/domains/data-assets/classifier';
 
 const EMPTY_MSG_PER_EXP =
   'Chưa có ảnh nào trong nhóm này. Hãy upload ảnh hoặc bấm "Lưu đồ thị" trong preview.';
