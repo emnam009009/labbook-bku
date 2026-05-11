@@ -746,3 +746,222 @@ body .ai-msg--assistant .ai-msg__content .katex-display {
   border-radius: var(--cds-radius-sm);
   overflow-x: auto;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   R158c-p5: AI Input area + suggestion cards Carbon style
+   ═══════════════════════════════════════════════════════════════════
+   Carbon TextArea + Tile pattern applied lên existing .ai-input-* and
+   .ai-suggestion-* classes.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Input area wrapper ──────────────────────────────────── */
+body .ai-input-area {
+  padding: var(--cds-spacing-04) var(--cds-spacing-05) var(--cds-spacing-05) !important;
+  border-top: 1px solid var(--cds-border-subtle-01) !important;
+  background: var(--cds-layer-02) !important;
+}
+
+/* ── Input + send wrap (Carbon TextArea pattern) ─────────── */
+body .ai-input-wrap {
+  background: var(--cds-field-01) !important;
+  border: 1px solid var(--cds-border-subtle-01) !important;
+  border-radius: var(--cds-radius-md) !important;
+  transition:
+    border-color var(--cds-motion-fast-02) var(--cds-motion-ease-productive),
+    box-shadow var(--cds-motion-fast-02) var(--cds-motion-ease-productive) !important;
+  padding: 0 !important;
+}
+
+body .ai-input-wrap:focus-within {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.18) !important;
+}
+
+/* ── Textarea ────────────────────────────────────────────── */
+body .ai-input {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  color: var(--cds-text-primary) !important;
+  font-size: var(--cds-type-body-01) !important;
+  font-family: inherit !important;
+  line-height: 1.5 !important;
+  padding: 10px 44px 10px 12px !important;  /* right padding for send btn */
+  resize: none;
+  min-height: 40px;
+  max-height: 200px;
+}
+
+body .ai-input::placeholder {
+  color: var(--cds-text-placeholder) !important;
+  font-style: normal;
+}
+
+/* ── Send button — Carbon primary icon button (inside input) ── */
+body .ai-send-btn {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: var(--cds-radius-sm) !important;
+  background: var(--primary) !important;
+  color: white !important;
+  border: none !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--cds-motion-fast-02) var(--cds-motion-ease-productive) !important;
+}
+
+body .ai-send-btn:hover:not(:disabled) {
+  background: var(--primary-hover) !important;
+  color: white !important;
+  transform: none !important;  /* no scale */
+  box-shadow: none !important;
+}
+
+body .ai-send-btn:active:not(:disabled) {
+  background: var(--primary-active) !important;
+}
+
+body .ai-send-btn:disabled {
+  background: var(--cds-button-disabled) !important;
+  color: var(--cds-text-disabled) !important;
+  cursor: not-allowed;
+  opacity: 1 !important;
+}
+
+body .ai-send-btn svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+body .ai-send-btn:focus-visible {
+  outline: 2px solid var(--cds-focus);
+  outline-offset: 2px;
+}
+
+/* Ensure wrap is positioning context for send button */
+body .ai-input-wrap {
+  position: relative;
+}
+
+/* ── Hint text (Ctrl + Enter để gửi · Esc để đóng) ──────── */
+body .ai-input-hint {
+  margin-top: 6px !important;
+  font-size: 11px !important;
+  color: var(--cds-text-helper) !important;
+  display: flex !important;
+  align-items: center;
+  gap: 4px;
+  justify-content: center;
+}
+
+/* kbd tags styled as Carbon-light chips */
+body .ai-input-hint kbd {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px !important;
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+  font-size: 10px !important;
+  background: var(--cds-layer-03) !important;
+  color: var(--cds-text-secondary) !important;
+  border: 1px solid var(--cds-border-subtle-01) !important;
+  border-radius: var(--cds-radius-sm) !important;
+  box-shadow: none !important;
+  font-weight: var(--cds-type-weight-medium);
+  margin: 0 2px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Welcome suggestion cards (Carbon Tile pattern)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Grid container ──────────────────────────────────────── */
+body .ai-suggestion-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--cds-spacing-04) !important;
+  padding: 0 !important;
+  margin-top: var(--cds-spacing-05);
+}
+
+/* ── Card — Carbon Tile (clickable variant) ──────────────── */
+body .ai-suggestion-card {
+  background: var(--cds-layer-02) !important;
+  border: 1px solid var(--cds-border-subtle-01) !important;
+  border-radius: var(--cds-radius-md) !important;
+  padding: var(--cds-spacing-04) !important;
+  cursor: pointer;
+  transition:
+    background var(--cds-motion-fast-02) var(--cds-motion-ease-productive),
+    border-color var(--cds-motion-fast-02) var(--cds-motion-ease-productive),
+    transform var(--cds-motion-fast-02) var(--cds-motion-ease-productive) !important;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: none !important;
+}
+
+body .ai-suggestion-card:hover {
+  background: var(--cds-background-hover) !important;
+  border-color: var(--cds-border-subtle-02) !important;
+  transform: none !important;  /* no scale (Carbon productive) */
+  box-shadow: var(--cds-shadow-01) !important;
+}
+
+body .ai-suggestion-card:active {
+  background: var(--cds-background-active) !important;
+  transform: none !important;
+}
+
+body .ai-suggestion-card:focus-visible {
+  outline: 2px solid var(--cds-focus);
+  outline-offset: 2px;
+}
+
+/* ── Card icon — small primary accent, no solid background ── */
+body .ai-suggestion-card__icon {
+  width: 28px !important;
+  height: 28px !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  color: var(--primary) !important;
+  padding: 0 !important;
+}
+
+body .ai-suggestion-card__icon svg {
+  width: 20px !important;
+  height: 20px !important;
+  stroke: currentColor !important;
+  stroke-width: 2 !important;
+}
+
+/* ── Card title ──────────────────────────────────────────── */
+body .ai-suggestion-card__title {
+  font-size: var(--cds-type-heading-01) !important;
+  font-weight: var(--cds-type-weight-semibold) !important;
+  color: var(--cds-text-primary) !important;
+  margin: 0 !important;
+  letter-spacing: -0.01em;
+}
+
+/* ── Card description ───────────────────────────────────── */
+body .ai-suggestion-card__desc {
+  font-size: 12px !important;
+  color: var(--cds-text-secondary) !important;
+  line-height: 1.5;
+  margin: 0 !important;
+}
+
+/* ── Mobile: stack vertically ────────────────────────────── */
+@media (max-width: 480px) {
+  body .ai-suggestion-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
