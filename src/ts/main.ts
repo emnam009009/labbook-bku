@@ -8,6 +8,7 @@
 
 // ── Import CSS ───────────────────────────────────────────
 import '../css/carbon-tokens.css'  // R158b-p1: Carbon design tokens layer
+import '../css/carbon-shell.css'   // R158c-p1: Carbon UI Shell layout  // R158b-p1: Carbon design tokens layer
 import '../css/main.css'
 import '../css/components.css'
 import '../css/mobile-ux.css'

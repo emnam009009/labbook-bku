@@ -1,0 +1,157 @@
+/**
+ * Carbon UI Shell — LabBook BKU
+ *
+ * IBM Carbon Design System UI Shell pattern adapted cho LabBook:
+ *   - Left primary nav (existing .sidebar)
+ *   - Main content area (existing .site-main)
+ *   - Right side panel slot (AI Sidetab, future tools panels)
+ *
+ * Reference: https://carbondesignsystem.com/components/UI-shell-header/usage/
+ *
+ * R158c Phase 1 — May 11 2026
+ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   SIDE PANEL PATTERN (Carbon Side Panel)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/**
+ * .cds-side-panel — Right-side slide-in container
+ * Used by: AI sidetab, future filter panels, detail panels
+ *
+ * Standard sizes (Carbon spec):
+ *   - sm: 256px
+ *   - md: 320px (default, used cho AI chat)
+ *   - lg: 480px
+ *   - xl: 640px (full reading width)
+ */
+.cds-side-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 320px;
+  max-width: 100vw;
+  background: var(--cds-layer-02);
+  border-left: 1px solid var(--cds-border-subtle-01);
+  box-shadow: var(--cds-shadow-03);
+  display: flex;
+  flex-direction: column;
+  z-index: 9000;
+  transform: translateX(100%);
+  transition: transform var(--cds-motion-moderate-02) var(--cds-motion-ease-productive);
+}
+
+.cds-side-panel.is-open {
+  transform: translateX(0);
+}
+
+.cds-side-panel--sm { width: 256px; }
+.cds-side-panel--md { width: 320px; }
+.cds-side-panel--lg { width: 480px; }
+.cds-side-panel--xl { width: 640px; }
+
+/* Mobile fallback */
+@media (max-width: 768px) {
+  .cds-side-panel {
+    width: 100vw !important;
+  }
+}
+
+/* ───────────────────────────────────────────────────────────
+   SIDE PANEL — Internal structure (Carbon spec)
+   ─────────────────────────────────────────────────────────── */
+
+.cds-side-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--cds-spacing-05) var(--cds-spacing-05);
+  min-height: 48px;
+  border-bottom: 1px solid var(--cds-border-subtle-01);
+  flex-shrink: 0;
+}
+
+.cds-side-panel__title {
+  font-size: var(--cds-type-heading-02);
+  font-weight: var(--cds-type-weight-semibold);
+  color: var(--cds-text-primary);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.cds-side-panel__close {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--cds-radius-sm);
+  cursor: pointer;
+  color: var(--cds-text-secondary);
+  transition: background var(--cds-motion-fast-02);
+}
+
+.cds-side-panel__close:hover {
+  background: var(--cds-background-hover);
+  color: var(--cds-text-primary);
+}
+
+.cds-side-panel__close svg {
+  width: 16px;
+  height: 16px;
+}
+
+.cds-side-panel__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--cds-spacing-05);
+}
+
+.cds-side-panel__footer {
+  flex-shrink: 0;
+  padding: var(--cds-spacing-04) var(--cds-spacing-05);
+  border-top: 1px solid var(--cds-border-subtle-01);
+  background: var(--cds-layer-01);
+}
+
+/* ───────────────────────────────────────────────────────────
+   SIDE PANEL — Backdrop scrim (Carbon spec: 32% opacity)
+   ─────────────────────────────────────────────────────────── */
+
+.cds-side-panel-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.32);  /* Slate-900 alpha */
+  z-index: 8999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--cds-motion-moderate-01);
+}
+
+.cds-side-panel-scrim.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FOCUS RING (Carbon spec: 2px outline + 2px offset)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.cds-side-panel__close:focus-visible,
+.cds-side-panel__body :focus-visible {
+  outline: 2px solid var(--cds-focus);
+  outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   UTILITY — Side panel as docked (no scrim, content area shrinks)
+   Linear-style alternative (not used by default)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.cds-shell--has-side-panel-docked .site-main {
+  margin-right: 320px;
+  transition: margin-right var(--cds-motion-moderate-02) var(--cds-motion-ease-productive);
+}
