@@ -143,17 +143,17 @@ async function buildLabelsPageHtml(records: LabelRecord[], type: string, config:
         }
         .qr-toolbar {
           position: fixed; top: 12px; right: 12px;
-          background: #0d9488; color: white;
+          background: #0EA5E9; color: white;
           padding: 10px 16px; border-radius: 8px;
           box-shadow: 0 4px 12px rgba(0,0,0,0.15);
           display: flex; gap: 8px; z-index: 9999;
         }
         .qr-toolbar button {
-          background: white; color: #0d9488; border: none;
+          background: white; color: #0EA5E9; border: none;
           padding: 6px 14px; border-radius: 4px;
           font-weight: 600; cursor: pointer; font-size: 13px;
         }
-        .qr-toolbar button:hover { background: #f0fdfa; }
+        .qr-toolbar button:hover { background: #F0F9FF; }
       </style>
     </head>
     <body>

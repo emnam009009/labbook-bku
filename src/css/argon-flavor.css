@@ -5,8 +5,10 @@
    Stronger selectors to win against .site-sidebar
 ═══════════════════════════════════════════════════════════════ */
 
+/* R158b_p1_fix: gradient teal/teal-3 → solid var(--primary) — 2026-05-11 */
+
 :root {
-  --gradient-primary: linear-gradient(135deg, var(--teal) 0%, var(--teal-3) 100%);
+  --gradient-primary: var(--primary);
   --gradient-info:    linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
   --gradient-success: linear-gradient(135deg, #10b981 0%, #34d399 100%);
   --gradient-warn:    linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
@@ -58,7 +60,7 @@ nav.site-sidebar .sidebar-brand {
 nav.site-sidebar .sidebar-brand-icon {
   width: 36px; height: 36px;
   border-radius: 10px;
-  background: var(--gradient-primary);
+  background: var(--primary);
   box-shadow: var(--shadow-teal);
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
@@ -141,7 +143,7 @@ nav.site-sidebar .sidebar-item:hover > svg {
   color: var(--teal);
 }
 nav.site-sidebar .sidebar-item.active {
-  background: var(--gradient-primary) !important;
+  background: var(--primary) !important;
   color: white !important;
   box-shadow: var(--shadow-teal) !important;
 }
@@ -213,7 +215,7 @@ nav.site-sidebar .sidebar-footer #avatar-btn {
    BUTTONS
 ═══════════════════════════════════════════════════════════════ */
 .btn-primary {
-  background: var(--gradient-primary) !important;
+  background: var(--primary) !important;
   color: white !important;
   border: none !important;
   box-shadow: var(--shadow-teal) !important;
@@ -410,7 +412,7 @@ body nav.site-sidebar.sidebar .sidebar-brand {
 body nav.site-sidebar.sidebar .sidebar-brand-icon {
   width: 36px; height: 36px;
   border-radius: 10px;
-  background: var(--gradient-primary);
+  background: var(--primary);
   box-shadow: var(--shadow-teal);
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
@@ -598,8 +600,8 @@ body:not(.page-dashboard) #floating-topbar {
 
 /* Convert flat icon backgrounds to gradient (card 1, 2, 4 still use flat colors in inline style) */
 .stat-card div[style*="background:var(--teal-light)"] {
-  background: linear-gradient(135deg, var(--teal) 0%, var(--teal-3) 100%) !important;
-  box-shadow: 0 4px 12px rgba(var(--teal-rgb), 0.3) !important;
+  background: var(--primary) !important;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3) !important;
   width: 44px !important;
   height: 44px !important;
   border-radius: 10px !important;
@@ -732,7 +734,7 @@ table .badge,
 }
 .stat-card.stat-card-r30 .stat-icon svg { width: 20px; height: 20px; }
 
-.stat-icon-teal    { background: linear-gradient(135deg, var(--teal) 0%, var(--teal-3) 100%); box-shadow: 0 4px 12px rgba(var(--teal-rgb), 0.3); }
+.stat-icon-teal    { background: var(--primary); box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3); }
 .stat-icon-info    { background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%); box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
 .stat-icon-success { background: linear-gradient(135deg, #10b981 0%, #34d399 100%); box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
 .stat-icon-warn    { background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); box-shadow: 0 4px 12px rgba(245,158,11,0.3); }
@@ -783,7 +785,7 @@ table .badge,
 .stat-card.stat-card-r30 .stat-icon {
   box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
 }
-.stat-card.stat-card-r30 .stat-icon.stat-icon-teal    { box-shadow: 0 4px 12px rgba(var(--teal-rgb), 0.3) !important; }
+.stat-card.stat-card-r30 .stat-icon.stat-icon-teal    { box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3) !important; }
 .stat-card.stat-card-r30 .stat-icon.stat-icon-info    { box-shadow: 0 4px 12px rgba(59,130,246,0.3) !important; }
 .stat-card.stat-card-r30 .stat-icon.stat-icon-success { box-shadow: 0 4px 12px rgba(16,185,129,0.3) !important; }
 .stat-card.stat-card-r30 .stat-icon.stat-icon-warn    { box-shadow: 0 4px 12px rgba(245,158,11,0.3) !important; }

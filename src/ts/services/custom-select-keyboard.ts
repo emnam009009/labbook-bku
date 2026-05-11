@@ -238,9 +238,9 @@
     .cs-modal-opt.kb-active,
     .cs-filter-opt.kb-active,
     .custom-select-option.kb-active {
-      background: var(--teal-light, rgba(13,148,136,0.12)) !important;
-      color: var(--teal, #0d9488) !important;
-      outline: 2px solid var(--teal, #0d9488);
+      background: var(--teal-light, rgba(14,165,233,0.12)) !important;
+      color: var(--teal, #0EA5E9) !important;
+      outline: 2px solid var(--teal, #0EA5E9);
       outline-offset: -2px;
     }
   `;

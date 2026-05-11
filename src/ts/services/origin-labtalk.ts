@@ -150,7 +150,7 @@ yl.text$ = "${yLabel}";${axisBlock}
 
 // === Plot line: teal color (matches web preview) ===
 // Origin color index 14 = "Royal" (close to teal); use RGB for exact match
-set %C -c color(13,148,136);
+set %C -c color(14,165,233);
 set %C -w 1500;  // line thickness 1.5 pt (units: 1/1000 pt)
 
 // === Bring graph to front ===

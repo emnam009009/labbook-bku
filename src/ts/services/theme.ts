@@ -10,8 +10,8 @@ interface ThemePreset {
 const PRESETS: Record<string, ThemePreset> = {
   teal: {
     name: 'Xanh teal',
-    swatch: '#0d9488',
-    vars: { '--teal': '#0d9488', '--teal-2': '#14b8a6', '--teal-3': '#2dd4bf', '--teal-light': '#f0fdfa' }
+    swatch: '#0EA5E9',
+    vars: { '--teal': '#0EA5E9', '--teal-2': '#0284C7', '--teal-3': '#38BDF8', '--teal-light': '#F0F9FF' }
   },
   cyan: {
     name: 'Xanh cyan',
@@ -46,7 +46,7 @@ function applyVars(vars: Record<string, string>): void {
 }
 
 /**
- * Convert "#0d9488" → "13, 148, 136"
+ * Convert "#0EA5E9" → "14, 165, 233"
  */
 function hexToRgbString(hex: string): string | null {
   hex = hex.replace('#', '');

@@ -13,14 +13,14 @@
   // ── Read theme color from CSS variable ─────────────────────────────
   function getThemeColor(): { primary: string; light: string } {
     const root = getComputedStyle(document.documentElement);
-    const teal = root.getPropertyValue('--teal').trim() || '#0d9488';
-    const tealLight = root.getPropertyValue('--teal-light').trim() || 'rgba(13, 148, 136, 0.1)';
+    const teal = root.getPropertyValue('--teal').trim() || '#0EA5E9';
+    const tealLight = root.getPropertyValue('--teal-light').trim() || 'rgba(14, 165, 233, 0.1)';
     return { primary: teal, light: tealLight };
   }
 
   // Convert hex to rgba
   function hexToRgba(hex: string, alpha: number): string {
-    if (!hex || !hex.startsWith('#')) return `rgba(13, 148, 136, ${alpha})`;
+    if (!hex || !hex.startsWith('#')) return `rgba(14, 165, 233, ${alpha})`;
     const h = hex.replace('#', '');
     const r = parseInt(h.substring(0, 2), 16);
     const g = parseInt(h.substring(2, 4), 16);

@@ -218,7 +218,7 @@ function renderDatePicker() {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
       const label = `Tháng ${d.getMonth() + 1}/${d.getFullYear()}`
       const isSelected = _filterFrom && _filterFrom.getFullYear() === d.getFullYear() && _filterFrom.getMonth() === d.getMonth()
-      const bg = isSelected ? 'var(--teal-light, #f0fdfa)' : 'transparent'
+      const bg = isSelected ? 'var(--teal-light, #F0F9FF)' : 'transparent'
       const fg = isSelected ? 'var(--teal)' : '#0f172a'
       const border = isSelected ? '1.5px solid var(--teal)' : '1px solid #e2e8f0'
       months.push(`<button data-reports-action="set-month" data-year="${d.getFullYear()}" data-month="${d.getMonth()}" style="padding:6px 12px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:${bg};color:${fg};border:${border};transition:all 0.15s">${label}</button>`)
@@ -237,7 +237,7 @@ function renderDatePicker() {
       const q = totalQ % 4
       const label = `Q${q + 1}/${year}`
       const isSelected = _filterFrom && _filterFrom.getFullYear() === year && Math.floor(_filterFrom.getMonth() / 3) === q
-      const bg = isSelected ? 'var(--teal-light, #f0fdfa)' : 'transparent'
+      const bg = isSelected ? 'var(--teal-light, #F0F9FF)' : 'transparent'
       const fg = isSelected ? 'var(--teal)' : '#0f172a'
       const border = isSelected ? '1.5px solid var(--teal)' : '1px solid #e2e8f0'
       quarters.push(`<button data-reports-action="set-quarter" data-year="${year}" data-quarter="${q}" style="padding:6px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:${bg};color:${fg};border:${border};transition:all 0.15s">${label}</button>`)
@@ -302,7 +302,7 @@ async function renderTypeCountCard() {
       <span style="font-size:14px;color:#64748b;font-weight:600">Tổng: <strong style="color:var(--teal)">${total}</strong></span>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:10px;margin-bottom:16px">
-      <div style="padding:12px;background:rgba(13,148,136,0.08);border-radius:8px;border-left:3px solid var(--teal)">
+      <div style="padding:12px;background:rgba(14,165,233,0.08);border-radius:8px;border-left:3px solid var(--teal)">
         <div style="font-size:11.5px;color:#64748b;font-weight:600;text-transform:uppercase">Thủy nhiệt</div>
         <div style="font-size:24px;font-weight:700;color:var(--teal);margin-top:4px">${hydro.length}</div>
       </div>
@@ -343,8 +343,8 @@ async function renderTypeCountCard() {
       labels: ['Thủy nhiệt', 'Điện cực', 'Điện hóa'],
       datasets: [{
         data: [hydro.length, electrode.length, electrochem.length],
-        backgroundColor: ['rgba(13,148,136,0.85)', 'rgba(99,102,241,0.85)', 'rgba(249,115,22,0.85)'],
-        borderColor: ['#0d9488', '#6366f1', '#f97316'],
+        backgroundColor: ['rgba(14,165,233,0.85)', 'rgba(99,102,241,0.85)', 'rgba(249,115,22,0.85)'],
+        borderColor: ['#0EA5E9', '#6366f1', '#f97316'],
         borderWidth: 1.5,
         borderRadius: 6,
       }]
@@ -388,7 +388,7 @@ async function renderChemicalsCard() {
   const isAdmin = !!(window.currentAuth?.isAdmin)
   if (!isAdmin) {
     card.innerHTML = `
-      <h3 style="margin:0;font-size:16px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="color:#0d9488;"><path d="M7 19a3 3 0 0 1-2-5.243L5 13l2-2 2 2 1 .757a3 3 0 0 1-3 5.243"/><path d="M12.56 6.6a10 10 0 0 1 .203-.495 11 11 0 0 1 1.196-2.054 11 11 0 0 1 1.196 2.054 10 10 0 0 1 1.063 4.024c0 1.31-.4 2.535-1.082 3.541"/><path d="M17 9c0-3-2-7-5-7s-5 4-5 7"/></svg>Tiêu thụ hóa chất</h3>
+      <h3 style="margin:0;font-size:16px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="color:#0EA5E9;"><path d="M7 19a3 3 0 0 1-2-5.243L5 13l2-2 2 2 1 .757a3 3 0 0 1-3 5.243"/><path d="M12.56 6.6a10 10 0 0 1 .203-.495 11 11 0 0 1 1.196-2.054 11 11 0 0 1 1.196 2.054 10 10 0 0 1 1.063 4.024c0 1.31-.4 2.535-1.082 3.541"/><path d="M17 9c0-3-2-7-5-7s-5 4-5 7"/></svg>Tiêu thụ hóa chất</h3>
       <div style="margin-top:12px;padding:14px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:6px;font-size:13px;color:#92400e">
         Báo cáo này chỉ dành cho admin/superadmin (cần quyền đọc lịch sử thao tác).
       </div>
@@ -402,7 +402,7 @@ async function renderChemicalsCard() {
   // Header
   let html = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-      <h3 style="margin:0;font-size:16px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="color:#0d9488;"><path d="M7 19a3 3 0 0 1-2-5.243L5 13l2-2 2 2 1 .757a3 3 0 0 1-3 5.243"/><path d="M12.56 6.6a10 10 0 0 1 .203-.495 11 11 0 0 1 1.196-2.054 11 11 0 0 1 1.196 2.054 10 10 0 0 1 1.063 4.024c0 1.31-.4 2.535-1.082 3.541"/><path d="M17 9c0-3-2-7-5-7s-5 4-5 7"/></svg>Tiêu thụ hóa chất</h3>
+      <h3 style="margin:0;font-size:16px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="color:#0EA5E9;"><path d="M7 19a3 3 0 0 1-2-5.243L5 13l2-2 2 2 1 .757a3 3 0 0 1-3 5.243"/><path d="M12.56 6.6a10 10 0 0 1 .203-.495 11 11 0 0 1 1.196-2.054 11 11 0 0 1 1.196 2.054 10 10 0 0 1 1.063 4.024c0 1.31-.4 2.535-1.082 3.541"/><path d="M17 9c0-3-2-7-5-7s-5 4-5 7"/></svg>Tiêu thụ hóa chất</h3>
       <span style="font-size:14px;color:#64748b;font-weight:600">${data.length} loại đã dùng</span>
     </div>
   `
@@ -466,8 +466,8 @@ async function renderChemicalsCard() {
       labels: top10.map(r => r.name + ' (' + r.unit + ')'),
       datasets: [{
         data: top10.map(r => r.total),
-        backgroundColor: 'rgba(13,148,136,0.75)',
-        borderColor: '#0d9488',
+        backgroundColor: 'rgba(14,165,233,0.75)',
+        borderColor: '#0EA5E9',
         borderWidth: 1.2,
         borderRadius: 4,
       }]

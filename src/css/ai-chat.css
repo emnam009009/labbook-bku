@@ -1,6 +1,6 @@
 /**
  * AI Chat Sidetab — Round 108
- * Theme: Cyan (#06B6D4) — phân biệt thị giác với app teal (#0d9488)
+ * Theme: Cyan (#06B6D4) — phân biệt thị giác với app teal (#0EA5E9)
  *
  * Components:
  * - .ai-fab: Floating action button (góc dưới phải)
@@ -13,6 +13,8 @@
  *
  * NOT to be confused with .cw-* (existing user-to-user chat widget)
  */
+
+/* R158b_p1_fix2: teal hex → cyan (2026-05-11) */
 
 /* ──────────────────────────────────────────────────────────
  * Tokens (cyan AI theme)

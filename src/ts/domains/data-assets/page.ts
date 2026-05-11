@@ -303,7 +303,7 @@ async function renderInlinePlot(asset: DataAsset, url: string, category: string)
     });
     if (statusEl) {
       statusEl.textContent = `${parsed.x.length} điểm dữ liệu`;
-      statusEl.style.color = '#0D9488';
+      statusEl.style.color = '#0EA5E9';
     }
 
     // R156g: show Tauc controls for UV-Vis types
@@ -381,7 +381,7 @@ export async function applyTaucRender(): Promise<void> {
     if (resultEl) {
       if (fit && isFinite(fit.Eg)) {
         resultEl.innerHTML = `📐 Bandgap (Eg) = <strong>${fit.Eg.toFixed(3)} eV</strong> (R² = ${fit.r2?.toFixed(3) ?? 'N/A'})`;
-        resultEl.style.color = '#0D9488';
+        resultEl.style.color = '#0EA5E9';
       } else {
         resultEl.textContent = '⚠️ Không tìm được vùng tuyến tính. Thử đổi n.';
         resultEl.style.color = '#EF4444';

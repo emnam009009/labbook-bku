@@ -305,7 +305,7 @@ function liveApply(): void {
 }
 
 /**
- * Convert "rgb(13, 148, 136)" or "#xxx" -> "#xxxxxx"
+ * Convert "rgb(14, 165, 233)" or "#xxx" -> "#xxxxxx"
  */
 function rgbToHex(input: string): string {
   if (!input) return '#000000';

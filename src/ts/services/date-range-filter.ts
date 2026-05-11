@@ -284,7 +284,7 @@
     [fromInp, toInp].forEach(inp => {
       inp.addEventListener('focus', () => {
         wrap.style.borderColor = 'var(--teal)';
-        wrap.style.boxShadow = '0 0 0 3px rgba(13, 148, 136, 0.1)';
+        wrap.style.boxShadow = '0 0 0 3px rgba(14, 165, 233, 0.1)';
       });
       inp.addEventListener('blur', () => {
         wrap.style.borderColor = 'var(--border)';

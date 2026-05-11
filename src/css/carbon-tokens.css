@@ -1,0 +1,256 @@
+/**
+ * Carbon Design Tokens Layer — LabBook BKU
+ *
+ * Foundation design tokens aligned with IBM Carbon Design System v11.
+ * Provides --cds-* CSS variables consumed by main.css and tailwind.config.js.
+ *
+ * Theme variants:
+ *   Light (default, "white"): inspired by Carbon White theme, Slate-tinted
+ *   Dark ("g100"): inspired by Carbon G100, Slate-based, deeper than IBM G100
+ *
+ * Primary brand: Electric Cyan #0EA5E9 (Slate + Stripe-vibe enterprise)
+ * Sidebar: Slate 900 #0F172A
+ *
+ * R158b Phase 1 — May 11 2026
+ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   LIGHT THEME — Carbon White-aligned, Slate-tinted
+   ═══════════════════════════════════════════════════════════════════ */
+:root,
+:root[data-theme="white"],
+html:not(.dark) {
+  /* ── Background layers ────────────────────────────────── */
+  --cds-background: #ffffff;
+  --cds-background-hover: #f1f5f9;        /* slate-100 */
+  --cds-background-active: #e2e8f0;       /* slate-200 */
+  --cds-background-selected: #f8fafc;     /* slate-50 */
+
+  --cds-layer-01: #f8fafc;                /* slate-50 — page bg */
+  --cds-layer-02: #ffffff;                /* white — card bg */
+  --cds-layer-03: #f1f5f9;                /* slate-100 — nested cards */
+  --cds-layer-selected-01: #e2e8f0;
+
+  /* ── Text tokens (Slate scale) ────────────────────────── */
+  --cds-text-primary: #0F172A;            /* slate-900 */
+  --cds-text-secondary: #475569;          /* slate-600 */
+  --cds-text-helper: #94A3B8;             /* slate-400 */
+  --cds-text-on-color: #ffffff;
+  --cds-text-error: #DA1E28;
+  --cds-text-placeholder: #94A3B8;
+  --cds-text-disabled: #CBD5E1;           /* slate-300 */
+
+  /* ── Field tokens (inputs) ────────────────────────────── */
+  --cds-field-01: #f8fafc;
+  --cds-field-02: #ffffff;
+  --cds-field-hover-01: #f1f5f9;
+
+  /* ── Border tokens ────────────────────────────────────── */
+  --cds-border-subtle-01: #E2E8F0;        /* slate-200 */
+  --cds-border-subtle-02: #CBD5E1;        /* slate-300 */
+  --cds-border-strong-01: #94A3B8;        /* slate-400 */
+  --cds-border-interactive: #0EA5E9;
+  --cds-border-disabled: #E2E8F0;
+
+  /* ── Button tokens — Electric Cyan primary ────────────── */
+  --cds-button-primary: #0EA5E9;          /* sky-500 */
+  --cds-button-primary-hover: #0284C7;    /* sky-600 */
+  --cds-button-primary-active: #0369A1;   /* sky-700 */
+  --cds-button-secondary: #1E293B;        /* slate-800 */
+  --cds-button-secondary-hover: #0F172A;
+  --cds-button-tertiary: transparent;
+  --cds-button-tertiary-hover: #f1f5f9;
+  --cds-button-danger: #DA1E28;
+  --cds-button-danger-hover: #B81921;
+  --cds-button-disabled: #CBD5E1;
+
+  /* ── Link tokens ──────────────────────────────────────── */
+  --cds-link-primary: #0EA5E9;
+  --cds-link-primary-hover: #0284C7;
+  --cds-link-visited: #6929C4;
+
+  /* ── Support tokens (status colors) ───────────────────── */
+  --cds-support-error: #DA1E28;
+  --cds-support-error-bg: #FEF2F2;
+  --cds-support-error-border: #FECACA;
+  --cds-support-success: #10B981;
+  --cds-support-success-bg: #F0FDF4;
+  --cds-support-success-border: #A7F3D0;
+  --cds-support-warning: #F59E0B;
+  --cds-support-warning-bg: #FFFBEB;
+  --cds-support-warning-border: #FDE68A;
+  --cds-support-info: #0EA5E9;
+  --cds-support-info-bg: #EFF6FF;
+  --cds-support-info-border: #BFDBFE;
+
+  /* ── Sidebar tokens (LabBook custom) ──────────────────── */
+  --cds-sidebar-bg: #0F172A;              /* slate-900 */
+  --cds-sidebar-bg-2: #020617;            /* slate-950 — deepest */
+  --cds-sidebar-bg-3: #1E293B;            /* slate-800 — hover */
+  --cds-sidebar-text: #F8FAFC;
+  --cds-sidebar-text-secondary: #94A3B8;
+  --cds-sidebar-border: #1E293B;
+  --cds-sidebar-active-bg: #0EA5E9;
+  --cds-sidebar-active-text: #FFFFFF;
+
+  /* ── Focus ring ───────────────────────────────────────── */
+  --cds-focus: #0EA5E9;
+  --cds-focus-inset: #ffffff;
+
+  /* ═══════════════════════════════════════════════════════════════
+     TYPOGRAPHY — Inter (LabBook), aligned with Carbon IBM Plex scale
+     ═══════════════════════════════════════════════════════════════ */
+  --cds-type-caption-01: 12px;
+  --cds-type-label-01: 12px;
+  --cds-type-helper-01: 12px;
+  --cds-type-body-01: 14px;
+  --cds-type-body-02: 16px;
+  --cds-type-heading-01: 14px;
+  --cds-type-heading-02: 16px;
+  --cds-type-heading-03: 20px;
+  --cds-type-heading-04: 28px;
+  --cds-type-heading-05: 32px;
+  --cds-type-heading-06: 42px;
+  --cds-type-heading-07: 54px;
+
+  --cds-type-weight-light: 300;
+  --cds-type-weight-regular: 400;
+  --cds-type-weight-medium: 500;
+  --cds-type-weight-semibold: 600;
+  --cds-type-weight-bold: 700;
+
+  /* ═══════════════════════════════════════════════════════════════
+     SPACING — Carbon scale (4px base)
+     ═══════════════════════════════════════════════════════════════ */
+  --cds-spacing-01: 2px;
+  --cds-spacing-02: 4px;
+  --cds-spacing-03: 8px;
+  --cds-spacing-04: 12px;
+  --cds-spacing-05: 16px;
+  --cds-spacing-06: 24px;
+  --cds-spacing-07: 32px;
+  --cds-spacing-08: 40px;
+  --cds-spacing-09: 48px;
+  --cds-spacing-10: 64px;
+  --cds-spacing-11: 80px;
+  --cds-spacing-12: 96px;
+  --cds-spacing-13: 160px;
+
+  /* ═══════════════════════════════════════════════════════════════
+     BORDER RADIUS
+     ═══════════════════════════════════════════════════════════════ */
+  --cds-radius-sm: 4px;
+  --cds-radius-md: 8px;
+  --cds-radius-lg: 12px;
+  --cds-radius-xl: 16px;
+  --cds-radius-full: 9999px;
+
+  /* ═══════════════════════════════════════════════════════════════
+     ELEVATION / SHADOW
+     ═══════════════════════════════════════════════════════════════ */
+  --cds-shadow-01: 0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
+  --cds-shadow-02: 0 4px 12px rgba(15,23,42,0.08);
+  --cds-shadow-03: 0 8px 24px rgba(15,23,42,0.12);
+  --cds-shadow-04: 0 20px 60px rgba(15,23,42,0.15);
+
+  /* ═══════════════════════════════════════════════════════════════
+     MOTION
+     ═══════════════════════════════════════════════════════════════ */
+  --cds-motion-fast-01: 70ms;
+  --cds-motion-fast-02: 110ms;
+  --cds-motion-moderate-01: 150ms;
+  --cds-motion-moderate-02: 240ms;
+  --cds-motion-slow-01: 400ms;
+  --cds-motion-slow-02: 700ms;
+  --cds-motion-ease-productive: cubic-bezier(0.2, 0, 0.38, 0.9);
+  --cds-motion-ease-expressive: cubic-bezier(0.4, 0.14, 0.3, 1);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   DARK THEME — G100-aligned, Slate-based
+   ═══════════════════════════════════════════════════════════════════ */
+:root[data-theme="g100"],
+html.dark {
+  /* ── Background layers ────────────────────────────────── */
+  --cds-background: #020617;              /* slate-950 — deepest */
+  --cds-background-hover: #0F172A;
+  --cds-background-active: #1E293B;
+  --cds-background-selected: #0F172A;
+
+  --cds-layer-01: #0F172A;                /* slate-900 — page bg */
+  --cds-layer-02: #1E293B;                /* slate-800 — card bg */
+  --cds-layer-03: #334155;                /* slate-700 — nested cards */
+  --cds-layer-selected-01: #334155;
+
+  /* ── Text tokens ──────────────────────────────────────── */
+  --cds-text-primary: #F8FAFC;            /* slate-50 */
+  --cds-text-secondary: #CBD5E1;          /* slate-300 */
+  --cds-text-helper: #94A3B8;             /* slate-400 */
+  --cds-text-on-color: #0F172A;
+  --cds-text-error: #F87171;
+  --cds-text-placeholder: #64748B;        /* slate-500 */
+  --cds-text-disabled: #475569;           /* slate-600 */
+
+  /* ── Field tokens ─────────────────────────────────────── */
+  --cds-field-01: #1E293B;
+  --cds-field-02: #334155;
+  --cds-field-hover-01: #334155;
+
+  /* ── Border tokens ────────────────────────────────────── */
+  --cds-border-subtle-01: #334155;        /* slate-700 */
+  --cds-border-subtle-02: #475569;        /* slate-600 */
+  --cds-border-strong-01: #94A3B8;
+  --cds-border-interactive: #38BDF8;      /* sky-400 — brighter for dark bg */
+  --cds-border-disabled: #334155;
+
+  /* ── Button tokens — Cyan adjusted for dark bg ────────── */
+  --cds-button-primary: #38BDF8;          /* sky-400 — lighter for contrast */
+  --cds-button-primary-hover: #0EA5E9;
+  --cds-button-primary-active: #0284C7;
+  --cds-button-secondary: #334155;
+  --cds-button-secondary-hover: #475569;
+  --cds-button-tertiary: transparent;
+  --cds-button-tertiary-hover: #1E293B;
+  --cds-button-danger: #F87171;
+  --cds-button-danger-hover: #EF4444;
+  --cds-button-disabled: #475569;
+
+  /* ── Link tokens ──────────────────────────────────────── */
+  --cds-link-primary: #38BDF8;
+  --cds-link-primary-hover: #7DD3FC;      /* sky-300 */
+  --cds-link-visited: #A78BFA;
+
+  /* ── Support tokens (status colors, adjusted for dark) ─ */
+  --cds-support-error: #F87171;
+  --cds-support-error-bg: rgba(248,113,113,0.15);
+  --cds-support-error-border: rgba(248,113,113,0.3);
+  --cds-support-success: #34D399;
+  --cds-support-success-bg: rgba(52,211,153,0.15);
+  --cds-support-success-border: rgba(52,211,153,0.3);
+  --cds-support-warning: #FBBF24;
+  --cds-support-warning-bg: rgba(251,191,36,0.15);
+  --cds-support-warning-border: rgba(251,191,36,0.3);
+  --cds-support-info: #38BDF8;
+  --cds-support-info-bg: rgba(56,189,248,0.15);
+  --cds-support-info-border: rgba(56,189,248,0.3);
+
+  /* ── Sidebar tokens (dark mode keeps same shade) ──────── */
+  --cds-sidebar-bg: #0F172A;
+  --cds-sidebar-bg-2: #020617;
+  --cds-sidebar-bg-3: #1E293B;
+  --cds-sidebar-text: #F8FAFC;
+  --cds-sidebar-text-secondary: #94A3B8;
+  --cds-sidebar-border: #1E293B;
+  --cds-sidebar-active-bg: #38BDF8;
+  --cds-sidebar-active-text: #0F172A;
+
+  /* ── Focus ring ───────────────────────────────────────── */
+  --cds-focus: #38BDF8;
+  --cds-focus-inset: #0F172A;
+
+  /* ── Shadow stronger for dark bg ──────────────────────── */
+  --cds-shadow-01: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
+  --cds-shadow-02: 0 4px 12px rgba(0,0,0,0.5);
+  --cds-shadow-03: 0 8px 24px rgba(0,0,0,0.6);
+  --cds-shadow-04: 0 20px 60px rgba(0,0,0,0.7);
+}

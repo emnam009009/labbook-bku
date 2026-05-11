@@ -18,7 +18,7 @@ const TYPE_LABELS: Record<LineageNodeType, string> = {
 
 const TYPE_COLORS: Record<LineageNodeType, string> = {
   'material': '#7C3AED',
-  'sample': '#0D9488',
+  'sample': '#0EA5E9',
   'experiment': '#F59E0B',
   'dataasset': '#3B82F6',
 };
@@ -89,7 +89,7 @@ function refreshGraph(): void {
   statusEl.textContent = isFiltered
     ? `Hiển thị ${shownCount}/${totalCount} node, ${filtered.edges.length} liên kết.`
     : `${totalCount} node, ${filtered.edges.length} liên kết. Kéo node, scroll để zoom, click để xem chi tiết.`;
-  statusEl.style.color = '#0D9488';
+  statusEl.style.color = '#0EA5E9';
   renderLineageGraph(container, filtered);
 }
 

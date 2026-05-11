@@ -367,7 +367,7 @@ function buildDocDefinition(data, sections, orientation, isAdmin) {
   // Divider line teal
   content.push({
     canvas: [
-      { type: 'line', x1: 0, y1: 4, x2: orientation === 'portrait' ? 515 : 770, y2: 4, lineWidth: 2, lineColor: '#0d9488' },
+      { type: 'line', x1: 0, y1: 4, x2: orientation === 'portrait' ? 515 : 770, y2: 4, lineWidth: 2, lineColor: '#0EA5E9' },
     ],
     margin: [0, 8, 0, 16],
   })
@@ -501,14 +501,14 @@ function buildDocDefinition(data, sections, orientation, isAdmin) {
 // ─── Build Overview cards (2 rows × 4 cards) ─────────────────────
 function buildOverviewTable(stats) {
   const cards = [
-    { label: 'TỔNG ĐĂNG KÝ', value: String(stats.total), color: '#0d9488', bg: '#f0fdfa' },
+    { label: 'TỔNG ĐĂNG KÝ', value: String(stats.total), color: '#0EA5E9', bg: '#F0F9FF' },
     { label: 'HOÀN THÀNH', value: String(stats.completed), color: '#047857', bg: '#ecfdf5' },
     { label: 'ĐÃ DUYỆT', value: String(stats.approved), color: '#1e40af', bg: '#eff6ff' },
     { label: 'CHỜ DUYỆT', value: String(stats.pending), color: '#b45309', bg: '#fffbeb' },
     { label: 'ĐANG DÙNG', value: String(stats.inUse), color: '#0891b2', bg: '#ecfeff' },
     { label: 'BỊ TỪ CHỐI', value: String(stats.rejected), color: '#b91c1c', bg: '#fef2f2' },
     { label: 'ĐÃ HỦY', value: String(stats.cancelled), color: '#6366f1', bg: '#eef2ff' },
-    { label: 'TỔNG GIỜ DÙNG', value: stats.totalHours.toFixed(1) + 'h', color: '#0d9488', bg: '#f0fdfa' },
+    { label: 'TỔNG GIỜ DÙNG', value: stats.totalHours.toFixed(1) + 'h', color: '#0EA5E9', bg: '#F0F9FF' },
   ]
 
   const makeCard = (c) => ({
@@ -552,7 +552,7 @@ function buildTopEquipmentTable(items) {
           { text: 'Tổng giờ', style: 'tableHeader', alignment: 'right' },
         ],
         ...items.map((e, i) => [
-          { text: `#${i + 1}`, style: 'tableCell', color: '#0d9488', bold: true },
+          { text: `#${i + 1}`, style: 'tableCell', color: '#0EA5E9', bold: true },
           { text: e.name || '', style: 'tableCell' },
           { text: String(e.count), style: 'tableCell', alignment: 'right', bold: true },
           { text: e.hours.toFixed(1) + 'h', style: 'tableCell', alignment: 'right', color: '#475569' },
@@ -576,7 +576,7 @@ function buildTopMembersTable(items) {
           { text: 'Tổng giờ', style: 'tableHeader', alignment: 'right' },
         ],
         ...items.map((m, i) => [
-          { text: `#${i + 1}`, style: 'tableCell', color: '#0d9488', bold: true },
+          { text: `#${i + 1}`, style: 'tableCell', color: '#0EA5E9', bold: true },
           { text: m.name || '', style: 'tableCell' },
           { text: String(m.count), style: 'tableCell', alignment: 'right', bold: true },
           { text: m.hours.toFixed(1) + 'h', style: 'tableCell', alignment: 'right', color: '#475569' },

@@ -41,64 +41,79 @@ export default {
         mono: ['JetBrains Mono', 'Courier New', 'monospace'],
       },
       colors: {
-        // Sidebar
-        navy: {
-          DEFAULT: '#1a2332',
-          2: '#151c28',
-          3: '#0f1520',
+        // ── Primary brand — Electric Cyan ─────────────────────
+        primary: {
+          DEFAULT: 'var(--primary)',
+          hover: 'var(--primary-hover)',
+          active: 'var(--primary-active)',
+          light: 'var(--primary-light)',
+          bg: 'var(--primary-bg)',
         },
-        // Primary teal/mint
-        teal: {
-          DEFAULT: '#0d9488',
-          2: '#14b8a6',
-          3: '#2dd4bf',
-          4: '#99f6e4',
-          light: '#f0fdfa',
-          'bg': '#ccfbf1',
+        // ── Sidebar — Slate 900 ───────────────────────────────
+        sidebar: {
+          DEFAULT: 'var(--sidebar)',
+          2: 'var(--sidebar-2)',
+          3: 'var(--sidebar-3)',
         },
-        // Surface
+        // ── Surface ───────────────────────────────────────────
         surface: {
-          DEFAULT: '#ffffff',
-          2: '#f8fafc',
-          3: '#f1f5f9',
+          DEFAULT: 'var(--surface)',
+          2: 'var(--surface-2)',
+          3: 'var(--surface-3)',
         },
-        // Border
+        // ── Border ────────────────────────────────────────────
         border: {
-          DEFAULT: '#e2e8f0',
-          2: '#cbd5e1',
+          DEFAULT: 'var(--border)',
+          2: 'var(--border-2)',
         },
-        // Text
+        // ── Text ──────────────────────────────────────────────
         'lab-text': {
-          DEFAULT: '#0f172a',
-          2: '#475569',
-          3: '#94a3b8',
+          DEFAULT: 'var(--text)',
+          2: 'var(--text-2)',
+          3: 'var(--text-3)',
         },
-        // Gold
-        gold: {
-          DEFAULT: '#f59e0b',
-          2: '#fbbf24',
-          bg: '#fffbeb',
-        },
-        // Status
+        // ── Status ────────────────────────────────────────────
         success: {
-          DEFAULT: '#10b981',
-          bg: '#f0fdf4',
-          border: '#a7f3d0',
+          DEFAULT: 'var(--success)',
+          bg: 'var(--cds-support-success-bg)',
+          border: 'var(--cds-support-success-border)',
         },
         warn: {
-          DEFAULT: '#f59e0b',
-          bg: '#fffbeb',
-          border: '#fde68a',
+          DEFAULT: 'var(--warn)',
+          bg: 'var(--cds-support-warning-bg)',
+          border: 'var(--cds-support-warning-border)',
         },
         danger: {
-          DEFAULT: '#ef4444',
-          bg: '#fef2f2',
-          border: '#fecaca',
+          DEFAULT: 'var(--danger)',
+          bg: 'var(--cds-support-error-bg)',
+          border: 'var(--cds-support-error-border)',
         },
         info: {
-          DEFAULT: '#3b82f6',
-          bg: '#eff6ff',
-          border: '#bfdbfe',
+          DEFAULT: 'var(--info)',
+          bg: 'var(--cds-support-info-bg)',
+          border: 'var(--cds-support-info-border)',
+        },
+        // ── Gold (kept for backward-compat, used in toolkit/workbench) ─
+        gold: {
+          DEFAULT: 'var(--warn)',
+          2: '#fbbf24',
+          bg: 'var(--cds-support-warning-bg)',
+        },
+        // ═══════════════════════════════════════════════════════
+        // DEPRECATED ALIASES — backward-compat (remove R158b-p6)
+        // ═══════════════════════════════════════════════════════
+        teal: {
+          DEFAULT: 'var(--primary)',
+          2: 'var(--primary-hover)',
+          3: '#38BDF8',
+          4: '#7DD3FC',
+          light: 'var(--primary-light)',
+          'bg': 'var(--primary-bg)',
+        },
+        navy: {
+          DEFAULT: 'var(--sidebar)',
+          2: 'var(--sidebar-2)',
+          3: 'var(--sidebar-3)',
         },
       },
       borderRadius: {

@@ -216,7 +216,7 @@ function applySlot(slot: { date: string; startTime: string; endTime: string }): 
     setTimeout(() => {
       dateInput.scrollIntoView({ behavior: 'smooth', block: 'center' })
       dateInput.style.transition = 'box-shadow 0.3s'
-      dateInput.style.boxShadow = '0 0 0 3px rgba(13,148,136,0.3)'
+      dateInput.style.boxShadow = '0 0 0 3px rgba(14,165,233,0.3)'
       setTimeout(() => { dateInput.style.boxShadow = '' }, 1500)
     }, 100)
   }
