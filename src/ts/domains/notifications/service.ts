@@ -256,7 +256,7 @@ function renderNotifications() {
     const info = ICONS[n.type] || { icon: '🔔', color: '#475569', bg: 'rgba(100,116,139,0.12)' };
     const time = formatRelativeTime(n.createdAt);
 
-    return `<div class="notif-row" data-notif-action="click" data-notif-key="${n._key}" style="padding:12px 16px;border-bottom:1px solid #f8fafc;cursor:pointer;display:flex;gap:10px;background:${isUnread ? 'rgba(13,148,136,0.04)' : 'transparent'}">
+    return `<div class="notif-row" data-notif-action="click" data-notif-key="${n._key}" style="padding:12px 16px;border-bottom:1px solid #f8fafc;cursor:pointer;display:flex;gap:10px;background:${isUnread ? 'rgba(14,165,233,0.04)' : 'transparent'}">
       <div style="width:32px;height:32px;border-radius:50%;background:${info.bg};color:${info.color};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex-shrink:0">${info.icon}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:${isUnread ? '600' : '500'};color:var(--text);margin-bottom:2px">${escapeHtmlSimple(n.title || '')}</div>

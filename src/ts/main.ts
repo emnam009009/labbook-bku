@@ -7,6 +7,8 @@
 
 
 // ── Import CSS ───────────────────────────────────────────
+import '../css/carbon-tokens.css'  // R158b-p1: Carbon design tokens layer
+import '../css/carbon-shell.css'   // R158c-p1: Carbon UI Shell layout  // R158b-p1: Carbon design tokens layer
 import '../css/main.css'
 import '../css/components.css'
 import '../css/mobile-ux.css'
@@ -1507,7 +1509,7 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
 let _overviewPagePromise: Promise<any> | null = null;
 function _loadOverviewPage(): Promise<any> {
   if (!_overviewPagePromise) {
-    _overviewPagePromise = import('@/domains/dashboard/overview');
+    _overviewPagePromise = import('@/domains/data-assets/overview-page');
   }
   return _overviewPagePromise;
 }

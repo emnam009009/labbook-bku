@@ -43,7 +43,7 @@ import { vals, escapeHtml, formatChemical } from '@/utils/format.js'
     }
     /* Member row hover */
     .dash-member-row:hover {
-      background: rgba(13,148,136,0.06);
+      background: rgba(14,165,233,0.06);
     }
     .dash-member-row:hover [style*="border-radius:50%"][style*="linear-gradient"] {
       transform: scale(1.05);
@@ -125,8 +125,8 @@ function cssVar(name) {
 
 // Avatar gradient từ tên (theme-aware: pair đầu tiên dùng teal hiện tại)
 function avatarColors(name) {
-  const teal = cssVar('--teal') || '#0d9488';
-  const teal3 = cssVar('--teal-3') || '#2dd4bf';
+  const teal = cssVar('--teal') || '#0EA5E9';
+  const teal3 = cssVar('--teal-3') || '#38BDF8';
   const colors = [
     [teal, teal3],
     ['#6366f1', '#8b5cf6'],
@@ -323,8 +323,8 @@ function renderBookingWeek(bookings, members) {
 
   const dayNames = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 
-  const teal = cssVar('--teal') || '#0d9488';
-  const tealLight = cssVar('--teal-light') || '#f0fdfa';
+  const teal = cssVar('--teal') || '#0EA5E9';
+  const tealLight = cssVar('--teal-light') || '#F0F9FF';
 
   const dayStripHTML = days.map(d => {
     const isSelected = d.getTime() === selected.getTime();
@@ -529,7 +529,7 @@ function renderChemStatus(chemicals) {
   const card = document.getElementById('dash-chem-status');
   if (!card) return;
 
-  const themeTeal = cssVar('--teal') || '#0d9488';
+  const themeTeal = cssVar('--teal') || '#0EA5E9';
 
   // Phân loại theo ratio = stock / alert
   const classify = (c) => {
@@ -625,7 +625,7 @@ async function renderMonthlyChart(h, e, ec) {
   if (!card) return;
 
   const Chart = await loadChartJs();
-  const teal = cssVar('--teal') || '#0d9488';
+  const teal = cssVar('--teal') || '#0EA5E9';
   const colors = { hydro: teal, electrode: '#6366f1', electrochem: '#f97316' };
 
   const N = _chartDays;
@@ -860,7 +860,7 @@ async function renderDistributionPie(h, e, ec, ink) {
   if (!card) return;
 
   const Chart = await loadChartJs();
-  const teal = cssVar('--teal') || '#0d9488';
+  const teal = cssVar('--teal') || '#0EA5E9';
 
   const segments = [
     { label: 'Thủy nhiệt', value: h.length, color: teal },
@@ -1022,7 +1022,7 @@ function renderTopMembers(h, e, ec) {
   const monthLabel = `Tháng ${now.getMonth() + 1}`;
   const medals = ['🥇', '🥈', '🥉'];
 
-  const teal = cssVar('--teal') || '#0d9488';
+  const teal = cssVar('--teal') || '#0EA5E9';
 
   const rowsHTML = ranked.length ? ranked.map(([name, count], idx) => {
     const medal = idx < 3 ? medals[idx] : '';

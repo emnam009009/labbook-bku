@@ -477,7 +477,7 @@ window.switchBookingView = function(view) {
     if (!btn) return;
     btn.classList.toggle('active', isActive);
     btn.style.background = isActive ? 'linear-gradient(135deg,var(--teal),var(--teal-2))' : 'transparent';
-    btn.style.boxShadow = isActive ? '0 2px 6px rgba(13,148,136,0.3)' : 'none';
+    btn.style.boxShadow = isActive ? '0 2px 6px rgba(14,165,233,0.3)' : 'none';
     btn.style.color = isActive ? 'white' : 'var(--text-2)';
   };
   
@@ -1630,7 +1630,7 @@ window.dayStartResize = function(e, key, edge) {
     originalTop: parseInt(blockEl.style.top, 10) || 0,
   };
   
-  blockEl.style.boxShadow = '0 0 0 2px var(--teal), 0 4px 16px rgba(13,148,136,0.3)';
+  blockEl.style.boxShadow = '0 0 0 2px var(--teal), 0 4px 16px rgba(14,165,233,0.3)';
   blockEl.style.transition = 'none';
   blockEl.style.opacity = '0.92';
   document.body.style.cursor = 'ns-resize';

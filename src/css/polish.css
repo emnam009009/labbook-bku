@@ -6,6 +6,8 @@
    Hoàn toàn CSS-only — không động vào JS, không đụng HTML structure.
    ═══════════════════════════════════════════════════════════════ */
 
+/* R158b_p1_fix2: teal hex → cyan (2026-05-11) */
+
 /* ═══════════════════════════════════════════════════════════════
    [1] SKELETON LOADERS — thay spinner ở 1 số nơi
    ═══════════════════════════════════════════════════════════════ */
@@ -110,7 +112,7 @@ html.dark .sk-rect {
 
 /* Primary button — subtle lift on hover */
 .btn-primary:hover:not(:disabled) {
-  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
 }
 
 /* Loading state cho button (manual: thêm class .is-loading) */
@@ -186,7 +188,7 @@ nav.site-sidebar .sidebar-item.active::before {
   height: 24px;
   background: var(--teal);
   border-radius: 0 3px 3px 0;
-  box-shadow: 0 0 12px rgba(13, 148, 136, 0.6);
+  box-shadow: 0 0 12px rgba(14, 165, 233, 0.6);
   animation: sidebar-active-slide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -400,13 +402,13 @@ html.dark .empty-state-step-text strong {
   color: var(--text) !important;
 }
 html.dark .empty-state-step-num {
-  background: rgba(13, 148, 136, 0.15) !important;
+  background: rgba(14, 165, 233, 0.15) !important;
   color: var(--teal) !important;
 }
 html.dark .empty-state-icon-wrap::before {
   background: radial-gradient(
     circle,
-    rgba(13, 148, 136, 0.18) 0%,
+    rgba(14, 165, 233, 0.18) 0%,
     transparent 70%
   ) !important;
 }

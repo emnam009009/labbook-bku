@@ -135,7 +135,7 @@ function renderChatMessages(data) {
     const shouldScroll = wasAtBottom || myNewMessage;
     el.innerHTML = html || `
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:48px 24px;text-align:center;color:#94a3b8">
-        <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--teal-light,#f0fdfa),#e0f2fe);display:flex;align-items:center;justify-content:center;margin-bottom:6px">
+        <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--teal-light,#F0F9FF),#e0f2fe);display:flex;align-items:center;justify-content:center;margin-bottom:6px">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
           </svg>

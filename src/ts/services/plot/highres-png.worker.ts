@@ -31,9 +31,9 @@ function buildChartConfig({ x, y, xLabel, yLabel, title, spec, bandgapFit, categ
     parsing: false,
     showLine: true,
     pointRadius: 0,
-    borderColor: '#0d9488',
+    borderColor: '#0EA5E9',
     borderWidth: 1.5,
-    backgroundColor: 'rgba(13, 148, 136, 0.06)',
+    backgroundColor: 'rgba(14, 165, 233, 0.06)',
     tension: 0,
   }];
 

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#0d9488">
+  <meta name="theme-color" content="#0EA5E9">
   <meta name="description" content="LabBook — Hệ thống quản lý phòng thí nghiệm Vật liệu, Đại học Bách Khoa TP.HCM. Quản lý thí nghiệm thủy nhiệt, điện cực, đo điện hóa, hóa chất, thiết bị và đăng ký sử dụng.">
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -44,7 +44,7 @@
     <div style="width:min(396px,90vw);position:fixed;top:120px;left:50%;transform:translateX(-50%);z-index:1;text-align:center">
       <div style="text-align:center;margin-bottom:0">
         <div style="margin-bottom:16px">
-          <img src="/icons/icon.svg" alt="LabBook logo" width="112" height="112" style="border-radius:26px;box-shadow:0 12px 36px rgba(13,148,136,0.3);display:block;margin:0 auto">
+          <img src="/icons/icon.svg" alt="LabBook logo" width="112" height="112" style="border-radius:26px;box-shadow:0 12px 36px rgba(14,165,233,0.3);display:block;margin:0 auto">
         </div>
         <div style="font-family:'Inter',sans-serif;font-size:34px;font-weight:700;color:#0f172a;letter-spacing:-0.5px;line-height:1">LabBook</div>
         <div style="color:#64748b;font-size:13px;margin-top:6px">Lab Vật liệu — ĐH Bách Khoa HCM</div>
@@ -225,9 +225,10 @@
           <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         <span data-label>Dashboard</span></div>
 
-        <div style="width:32px;height:1px;background:rgba(255,255,255,0.08);margin:6px auto"></div>
+        <div class="sidebar-divider-line"></div>
 
-        <!-- Thí nghiệm -->
+        <!-- R158b-cleanup-1: legacy pages hidden (Thủy nhiệt, Điện cực, Điện hóa)
+             Code + modals + Firebase data preserved. Full delete in Phase E.
         <div class="sidebar-item superadmin-only" data-action="show-page" data-page="hydrothermal" data-tip="Thủy nhiệt (legacy — chỉ superadmin)" role="button" tabindex="0" aria-label="Thủy nhiệt">
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2v6l-5 9a3 3 0 003 3h10a3 3 0 003-3l-5-9V2"></path></svg>
         <span data-label>Thủy nhiệt</span></div>
@@ -237,8 +238,9 @@
         <div class="sidebar-item superadmin-only" data-action="show-page" data-page="electrochemistry" data-tip="Đo điện hóa (legacy)" role="button" tabindex="0" aria-label="Đo điện hóa">
           <svg aria-hidden="true" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         <span data-label>Điện hóa</span></div>
+        -->
         <!-- Round 77c: Overview images page -->
-<div style="width:32px;height:1px;background:rgba(255,255,255,0.08);margin:6px auto"></div>
+<div class="sidebar-divider-line"></div>
 
         <!-- Quản lý -->
         <div class="sidebar-item" data-action="show-page" data-page="booking" data-tip="Đăng ký sử dụng thiết bị" role="button" tabindex="0" aria-label="Đăng ký sử dụng thiết bị">
@@ -278,7 +280,7 @@
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
         <span data-label>Thành viên</span></div>
 
-        <div style="width:32px;height:1px;background:rgba(255,255,255,0.08);margin:6px auto"></div>
+        <div class="sidebar-divider-line"></div>
 
         <!-- Admin only -->
         <div class="sidebar-item admin-only" data-action="show-page" data-page="users" data-tip="Quản lý tài khoản" style="display:none" role="button" tabindex="0" aria-label="Quản lý tài khoản">
@@ -303,7 +305,7 @@
       <!-- Round 16: Avatar at bottom of sidebar -->
       
       <!-- Settings Button (visual style picker) -->
-      <div style="width:32px;height:1px;background:rgba(255,255,255,0.08);margin:6px auto"></div>
+      <div class="sidebar-divider-line"></div>
       <div class="sidebar-item" data-action="show-page" data-page="settings" data-tip="Cài đặt" role="button" tabindex="0" aria-label="Cài đặt">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="3"/>
@@ -350,7 +352,7 @@
             <!-- Theme picker swatches -->
             <div style="display:flex;align-items:center;gap:8px;padding:7px 8px">
               <span style="font-size:12px;color:#64748b;flex:1">Màu giao diện</span>
-              <button class="theme-swatch" data-theme="teal" style="background:#0d9488" data-action="apply-theme" data-theme="teal" title="Xanh teal"></button>
+              <button class="theme-swatch" data-theme="teal" style="background:#0EA5E9" data-action="apply-theme" data-theme="teal" title="Xanh teal"></button>
               <button class="theme-swatch" data-theme="cyan" style="background:#0891b2" data-action="apply-theme" data-theme="cyan" title="Xanh cyan"></button>
               <button class="theme-swatch" data-theme="purple" style="background:#7c3aed" data-action="apply-theme" data-theme="purple" title="Tím"></button>
               <button class="theme-swatch" data-theme="orange" style="background:#ea580c" data-action="apply-theme" data-theme="orange" title="Cam"></button>
@@ -500,7 +502,8 @@
 <!-- /DASHBOARD v4 -->
 <!-- /DASHBOARD v3 -->
 
-      <div class="page" id="page-hydrothermal">
+      <!-- R158b-cleanup-1: page-hydrothermal hidden
+<div class="page" id="page-hydrothermal">
         <div class="lb-deprec-banner">⚠️ <strong>Page này đã ngừng cập nhật.</strong> Vui lòng dùng "TN mới" + "Phổ DL" cho thí nghiệm và dữ liệu mới. Page legacy chỉ giữ lại để xem data cũ.</div>
         <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
           <div>
@@ -551,9 +554,11 @@
           <div id="hydro-pagination" class="pagination-bar" style="margin-top:12px"></div>
         </div>
       </div>
+-->
 
       <!-- ELECTRODE -->
-      <div class="page" id="page-electrode">
+      <!-- R158b-cleanup-1: page-electrode hidden
+<div class="page" id="page-electrode">
         <div class="lb-deprec-banner">⚠️ <strong>Page này đã ngừng cập nhật.</strong> Vui lòng dùng "TN mới" + "Phổ DL" cho thí nghiệm và dữ liệu mới. Page legacy chỉ giữ lại để xem data cũ.</div>
         <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
           <div>
@@ -634,13 +639,15 @@
           </div>
         </div>
       </div>
+-->
 
       <!-- ELECTROCHEMISTRY -->
       <div class="page" id="page-overview">
         <div class="lb-deprec-banner">⚠️ <strong>Page này đã ngừng cập nhật.</strong> Vui lòng dùng "TN mới" + "Phổ DL" cho thí nghiệm và dữ liệu mới. Page legacy chỉ giữ lại để xem data cũ.</div>
         <!-- Round 77c: rendered by pages/overview.ts on showPage('overview') -->
       </div>
-      <div class="page" id="page-electrochemistry">
+      <!-- R158b-cleanup-1: page-electrochemistry hidden
+<div class="page" id="page-electrochemistry">
         <div class="lb-deprec-banner">⚠️ <strong>Page này đã ngừng cập nhật.</strong> Vui lòng dùng "TN mới" + "Phổ DL" cho thí nghiệm và dữ liệu mới. Page legacy chỉ giữ lại để xem data cũ.</div>
         <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
           <div>
@@ -690,6 +697,7 @@
           <div id="electrochem-pagination" class="pagination-bar" style="margin-top:12px"></div>
         </div>
       </div>
+-->
 
       <!-- CHEMICALS -->
       <!-- R150d-1 + R150d-2: Materials browser + CRUD (Phase B.5) -->
@@ -858,7 +866,7 @@
             <div class="lb-lineage-legend">
               <span><span class="lb-lineage-dot" style="background:#F59E0B;border:2px solid #92400E"></span>Thí nghiệm (đang xem)</span>
               <span><span class="lb-lineage-dot" style="background:#7C3AED"></span>Vật liệu</span>
-              <span><span class="lb-lineage-dot" style="background:#0D9488"></span>Mẫu</span>
+              <span><span class="lb-lineage-dot" style="background:#0EA5E9"></span>Mẫu</span>
               <span><span class="lb-lineage-dot" style="background:#3B82F6"></span>Tệp đính kèm</span>
             </div>
             <div id="lineage-graph-container" class="lb-lineage-container"></div>
@@ -1289,7 +1297,7 @@
       <!-- View toggle (List / Calendar) -->
       <div style="display:flex;gap:8px;margin-top:36px;margin-bottom:12px;align-items:center;flex-wrap:wrap">
         <div class="bk-tabs" style="display:inline-flex;background:var(--surface-2);border-radius:10px;padding:3px;gap:2px">
-          <button id="bk-tab-list" class="bk-tab active" data-action="switch-booking-view" data-view="list" style="padding:7px 14px;border:none;background:linear-gradient(135deg,var(--teal),var(--teal-2));border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:white;box-shadow:0 2px 6px rgba(13,148,136,0.3);display:inline-flex;align-items:center;gap:6px"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Danh sách</button>
+          <button id="bk-tab-list" class="bk-tab active" data-action="switch-booking-view" data-view="list" style="padding:7px 14px;border:none;background:linear-gradient(135deg,var(--teal),var(--teal-2));border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:white;box-shadow:0 2px 6px rgba(14,165,233,0.3);display:inline-flex;align-items:center;gap:6px"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Danh sách</button>
           <button id="bk-tab-cal" class="bk-tab" data-action="switch-booking-view" data-view="calendar" style="padding:7px 14px;border:none;background:transparent;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text-2);display:inline-flex;align-items:center;gap:6px"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Lịch</button>
         </div>
         <input  aria-label="Tìm theo thiết bị, người đặt, mục đích" type="text" id="booking-search" placeholder="Tìm theo thiết bị, người đặt, mục đích..." class="search-input" style="flex:1;min-width:240px">

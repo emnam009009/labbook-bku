@@ -299,7 +299,7 @@ import { printBulkLabels } from './qr-labels.js'
       background:linear-gradient(135deg,var(--teal),var(--teal-2));
       color:white;padding:10px 24px;
       display:none;align-items:center;gap:12px;
-      box-shadow:0 4px 12px rgba(13,148,136,0.3);
+      box-shadow:0 4px 12px rgba(14,165,233,0.3);
       transform:translateY(-100%);
       transition:transform 0.25s ease;
     `;

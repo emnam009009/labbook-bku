@@ -22,7 +22,7 @@ import type { LineageGraph } from '@/domains/lineage/service';
 // Color per node type
 const NODE_COLORS: Record<string, string> = {
   'material':  '#7C3AED',  // purple
-  'sample':    '#0D9488',  // teal
+  'sample':    '#0EA5E9',  // teal
   'experiment':'#F59E0B',  // amber (center)
   'dataasset': '#3B82F6',  // blue
 };
@@ -38,7 +38,7 @@ const NODE_RADIUS: Record<string, number> = {
 const EDGE_STYLES: Record<string, { color: string; dash?: string; label?: string }> = {
   'composed_of': { color: '#A78BFA', label: 'composed of' },
   'parent':      { color: '#9CA3AF', dash: '4,3', label: 'parent' },
-  'input':       { color: '#0D9488', label: 'input' },
+  'input':       { color: '#0EA5E9', label: 'input' },
   'output':      { color: '#16A34A', label: 'output' },
   'attached':    { color: '#3B82F6', dash: '3,3', label: 'attached' },
 };

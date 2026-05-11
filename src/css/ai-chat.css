@@ -1,6 +1,6 @@
 /**
  * AI Chat Sidetab — Round 108
- * Theme: Cyan (#06B6D4) — phân biệt thị giác với app teal (#0d9488)
+ * Theme: Cyan (var(--primary)) — phân biệt thị giác với app teal (#0EA5E9)
  *
  * Components:
  * - .ai-fab: Floating action button (góc dưới phải)
@@ -14,16 +14,18 @@
  * NOT to be confused with .cw-* (existing user-to-user chat widget)
  */
 
+/* R158b_p1_fix2: teal hex → cyan (2026-05-11) */
+
 /* ──────────────────────────────────────────────────────────
  * Tokens (cyan AI theme)
  * ────────────────────────────────────────────────────────── */
 :root {
-  --ai-cyan: #06B6D4;
-  --ai-cyan-2: #0891B2;
-  --ai-cyan-3: #0E7490;
-  --ai-cyan-rgb: 6, 182, 212;
-  --ai-cyan-soft: rgba(6, 182, 212, 0.08);
-  --ai-cyan-glow: rgba(6, 182, 212, 0.25);
+  --ai-cyan: var(--primary);  /* R158c-p1: unified với app primary */
+  --ai-cyan-2: var(--primary-hover);
+  --ai-cyan-3: var(--primary-active);
+  --ai-cyan-rgb: var(--primary-rgb);
+  --ai-cyan-soft: rgba(var(--primary-rgb), 0.08);
+  --ai-cyan-glow: rgba(var(--primary-rgb), 0.25);
 
   --ai-bg: #ffffff;
   --ai-bg-soft: #f8fafc;
@@ -1111,12 +1113,12 @@ pre:hover .ai-code-copy {
   background: transparent;
   border-radius: 50%;
   cursor: pointer;
-  color: #06B6D4;
+  color: var(--primary);
   flex-shrink: 0;
   transition: background 0.15s, color 0.15s;
 }
 .ai-mic-btn:hover:not(:disabled) {
-  background: rgba(6, 182, 212, 0.1);
+  background: rgba(var(--primary-rgb), 0.1);
 }
 .ai-mic-btn:disabled {
   opacity: 0.4;
@@ -1141,7 +1143,7 @@ pre:hover .ai-code-copy {
 
 /* Speaker button trong message actions */
 .ai-msg__action[data-speaking="true"] {
-  color: #06B6D4;
+  color: var(--primary);
 }
 .ai-msg__action[data-speaking="true"] svg {
   animation: ai-speaker-pulse 1s infinite;
@@ -1156,9 +1158,9 @@ pre:hover .ai-code-copy {
  * Round 115b: Confirmation Card (inline action UI)
  * ────────────────────────────────────────────── */
 .ai-confirm-card {
-  border: 1px solid #06B6D4;
+  border: 1px solid var(--primary);
   border-radius: 12px;
-  background: rgba(6, 182, 212, 0.05);
+  background: rgba(var(--primary-rgb), 0.05);
   padding: 14px 16px;
   margin: 12px 0;
   font-size: 14px;
@@ -1181,7 +1183,7 @@ pre:hover .ai-code-copy {
   gap: 8px;
   margin-bottom: 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid rgba(6, 182, 212, 0.2);
+  border-bottom: 1px solid rgba(var(--primary-rgb), 0.2);
   font-weight: 600;
   color: #0f172a;
 }
@@ -1219,7 +1221,7 @@ pre:hover .ai-code-copy {
   gap: 8px;
   align-items: center;
   padding: 6px 8px;
-  background: rgba(6, 182, 212, 0.04);
+  background: rgba(var(--primary-rgb), 0.04);
   border-radius: 6px;
   font-size: 13px;
 }
@@ -1254,8 +1256,8 @@ pre:hover .ai-code-copy {
   justify-content: center;
 }
 .ai-confirm-card__old { color: #94a3b8; text-decoration: line-through; }
-.ai-confirm-card__arrow { font-size: 20px; color: #06B6D4; }
-.ai-confirm-card__new { color: #06B6D4; font-weight: 700; }
+.ai-confirm-card__arrow { font-size: 20px; color: var(--primary); }
+.ai-confirm-card__new { color: var(--primary); font-weight: 700; }
 .ai-confirm-card__delta { color: #64748b; font-size: 13px; }
 .ai-confirm-card__reason {
   margin-top: 8px;
@@ -1269,7 +1271,7 @@ pre:hover .ai-code-copy {
   gap: 8px;
   justify-content: flex-end;
   padding-top: 8px;
-  border-top: 1px solid rgba(6, 182, 212, 0.15);
+  border-top: 1px solid rgba(var(--primary-rgb), 0.15);
 }
 .ai-confirm-card__btn {
   padding: 8px 16px;
@@ -1292,7 +1294,7 @@ pre:hover .ai-code-copy {
   border-color: #94a3b8;
 }
 .ai-confirm-card__btn--confirm {
-  background: #06B6D4;
+  background: var(--primary);
   color: white;
 }
 .ai-confirm-card__btn--confirm:hover:not(:disabled) {
@@ -1339,7 +1341,7 @@ pre:hover .ai-code-copy {
   opacity: 0.5;
 }
 .ai-sidetab__resizer:hover {
-  background: rgba(6, 182, 212, 0.06);
+  background: rgba(var(--primary-rgb), 0.06);
 }
 .ai-sidetab__resizer:hover::after,
 .ai-sidetab__resizer.is-resizing::after {
@@ -1407,7 +1409,7 @@ body.ai-sidetab-resizing .ai-sidetab {
 .ai-tools-sidetab__resizer:hover,
 .ai-tools-sidetab__resizer:focus-visible,
 body.ai-tools-sidetab-resizing .ai-tools-sidetab__resizer {
-  background: var(--ai-cyan, #06B6D4);
+  background: var(--ai-cyan, var(--primary));
   outline: none;
 }
 @media (max-width: 480px) { .ai-tools-sidetab__resizer { display: none; } }
@@ -1439,11 +1441,11 @@ body.ai-tools-sidetab-resizing .ai-tools-sidetab__resizer {
   position: relative;
 }
 .ai-tools-tab svg { width: 20px; height: 20px; }
-.ai-tools-tab:hover { background: var(--ai-cyan-soft, rgba(6, 182, 212, 0.08)); color: var(--ai-cyan-3, #0E7490); }
+.ai-tools-tab:hover { background: var(--ai-cyan-soft, rgba(var(--primary-rgb), 0.08)); color: var(--ai-cyan-3, var(--primary-active)); }
 .ai-tools-tab.is-active {
-  background: var(--ai-cyan, #06B6D4);
+  background: var(--ai-cyan, var(--primary));
   color: white;
-  box-shadow: 0 2px 6px var(--ai-cyan-glow, rgba(6, 182, 212, 0.25));
+  box-shadow: 0 2px 6px var(--ai-cyan-glow, rgba(var(--primary-rgb), 0.25));
 }
 
 /* Main content area (right) */
@@ -1543,12 +1545,12 @@ body.ai-tools-sidetab-resizing .ai-tools-sidetab__resizer {
  * ══════════════════════════════════════════════════════════ */
 
 .ai-paper-dropzone {
-  border: 2px dashed var(--ai-cyan, #06B6D4);
+  border: 2px dashed var(--ai-cyan, var(--primary));
   border-radius: 10px;
   padding: 24px 16px;
   text-align: center;
   cursor: pointer;
-  background: var(--ai-cyan-soft, rgba(6, 182, 212, 0.08));
+  background: var(--ai-cyan-soft, rgba(var(--primary-rgb), 0.08));
   transition: background 0.15s ease, border-color 0.15s ease;
   display: flex;
   flex-direction: column;
@@ -1558,13 +1560,13 @@ body.ai-tools-sidetab-resizing .ai-tools-sidetab__resizer {
 }
 .ai-paper-dropzone:hover,
 .ai-paper-dropzone.is-dragover {
-  background: rgba(6, 182, 212, 0.16);
-  border-color: var(--ai-cyan-3, #0E7490);
+  background: rgba(var(--primary-rgb), 0.16);
+  border-color: var(--ai-cyan-3, var(--primary-active));
 }
 .ai-paper-dropzone__icon {
   width: 40px;
   height: 40px;
-  color: var(--ai-cyan, #06B6D4);
+  color: var(--ai-cyan, var(--primary));
 }
 .ai-paper-dropzone__icon svg { width: 100%; height: 100%; }
 .ai-paper-dropzone__text {
@@ -1602,7 +1604,7 @@ body.ai-tools-sidetab-resizing .ai-tools-sidetab__resizer {
 }
 .ai-paper-progress__fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--ai-cyan, #06B6D4), var(--ai-cyan-2, #0891B2));
+  background: linear-gradient(90deg, var(--ai-cyan, var(--primary)), var(--ai-cyan-2, var(--primary-hover)));
   width: 0%;
   transition: width 0.2s ease;
 }
@@ -1641,7 +1643,7 @@ body.ai-tools-sidetab-resizing .ai-tools-sidetab__resizer {
   padding: 8px 6px;
   border-bottom: 1px solid #f1f5f9;
 }
-.ai-paper-list tbody tr:hover { background: var(--ai-cyan-soft, rgba(6, 182, 212, 0.04)); }
+.ai-paper-list tbody tr:hover { background: var(--ai-cyan-soft, rgba(var(--primary-rgb), 0.04)); }
 .ai-paper-row__title {
   display: flex;
   align-items: center;
@@ -1695,7 +1697,7 @@ body.ai-tools-sidetab-resizing .ai-tools-sidetab__resizer {
   white-space: nowrap;
 }
 .ai-paper-badge.is-pending  { background: #f1f5f9; color: #64748b; }
-.ai-paper-badge.is-running  { background: rgba(6, 182, 212, 0.12); color: #0891B2; }
+.ai-paper-badge.is-running  { background: rgba(var(--primary-rgb), 0.12); color: var(--primary-hover); }
 .ai-paper-badge.is-success  { background: rgba(34, 197, 94, 0.12); color: #16a34a; }
 .ai-paper-badge.is-ready    { background: rgba(99, 102, 241, 0.12); color: #6366f1; }
 .ai-paper-badge.is-error    { background: rgba(239, 68, 68, 0.12); color: #dc2626; }
@@ -1748,8 +1750,8 @@ body.ai-tools-sidetab-resizing .ai-tools-sidetab__resizer {
   transition: border-color 0.15s ease;
 }
 .ai-paper-search-input:focus {
-  border-color: var(--ai-cyan, #06B6D4);
-  box-shadow: 0 0 0 3px var(--ai-cyan-soft, rgba(6, 182, 212, 0.08));
+  border-color: var(--ai-cyan, var(--primary));
+  box-shadow: 0 0 0 3px var(--ai-cyan-soft, rgba(var(--primary-rgb), 0.08));
 }
 .ai-paper-search-btn {
   width: 36px;
@@ -1758,13 +1760,13 @@ body.ai-tools-sidetab-resizing .ai-tools-sidetab__resizer {
   background: white;
   border-radius: 8px;
   cursor: pointer;
-  color: var(--ai-cyan, #06B6D4);
+  color: var(--ai-cyan, var(--primary));
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background 0.15s ease;
 }
-.ai-paper-search-btn:hover { background: var(--ai-cyan-soft, rgba(6, 182, 212, 0.08)); }
+.ai-paper-search-btn:hover { background: var(--ai-cyan-soft, rgba(var(--primary-rgb), 0.08)); }
 .ai-paper-search-btn--clear { color: #64748b; }
 .ai-paper-search-meta {
   font-size: 12px;
@@ -1783,7 +1785,7 @@ body.ai-tools-sidetab-resizing .ai-tools-sidetab__resizer {
   padding: 10px 12px;
   transition: border-color 0.15s ease;
 }
-.ai-search-result:hover { border-color: var(--ai-cyan, #06B6D4); }
+.ai-search-result:hover { border-color: var(--ai-cyan, var(--primary)); }
 .ai-search-result__header {
   display: flex;
   align-items: center;
@@ -1823,8 +1825,8 @@ body.ai-tools-sidetab-resizing .ai-tools-sidetab__resizer {
   position: relative;
 }
 .ai-search-result__text mark {
-  background: rgba(6, 182, 212, 0.18);
-  color: var(--ai-cyan-3, #0E7490);
+  background: rgba(var(--primary-rgb), 0.18);
+  color: var(--ai-cyan-3, var(--primary-active));
   font-weight: 500;
   padding: 0 2px;
   border-radius: 2px;
@@ -1848,21 +1850,21 @@ body.ai-tools-sidetab-resizing .ai-tools-sidetab__resizer {
   display: inline-block;
   padding: 0 6px;
   margin: 0 1px;
-  background: rgba(6, 182, 212, 0.15);
+  background: rgba(var(--primary-rgb), 0.15);
   color: #0891b2;
   font-size: 11px;
   font-weight: 600;
   border-radius: 8px;
   cursor: pointer;
-  border: 1px solid rgba(6, 182, 212, 0.3);
+  border: 1px solid rgba(var(--primary-rgb), 0.3);
   vertical-align: 1px;
   line-height: 18px;
   transition: background 0.15s, transform 0.1s;
   user-select: none;
 }
 .citation-chip:hover {
-  background: rgba(6, 182, 212, 0.28);
-  border-color: rgba(6, 182, 212, 0.6);
+  background: rgba(var(--primary-rgb), 0.28);
+  border-color: rgba(var(--primary-rgb), 0.6);
   transform: translateY(-1px);
 }
 .citation-chip:active {
@@ -1917,7 +1919,7 @@ body.ai-tools-sidetab-resizing .ai-tools-sidetab__resizer {
   font-size: 12px;
   font-weight: 700;
   color: #0891b2;
-  background: rgba(6, 182, 212, 0.15);
+  background: rgba(var(--primary-rgb), 0.15);
   padding: 2px 8px;
   border-radius: 6px;
   height: fit-content;

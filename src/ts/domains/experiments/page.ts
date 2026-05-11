@@ -1048,7 +1048,7 @@ export async function openLineageGraphModal(experimentId: string): Promise<void>
       return;
     }
     statusEl.textContent = `${graph.nodes.length} node, ${graph.edges.length} liên kết. Kéo để di chuyển, scroll để zoom.`;
-    statusEl.style.color = '#0D9488';
+    statusEl.style.color = '#0EA5E9';
     renderLineageGraph(container, graph);
   } catch (err: any) {
     console.error('[lineage] render failed', err);

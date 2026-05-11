@@ -31,8 +31,8 @@ function buildChartConfig({ x, y, xLabel, yLabel, title, spec, bandgapFit, categ
   const datasets = [{
     label: title || yLabel,
     data: points,
-    borderColor: '#0d9488',
-    backgroundColor: 'rgba(13, 148, 136, 0.08)',
+    borderColor: '#0EA5E9',
+    backgroundColor: 'rgba(14, 165, 233, 0.08)',
     borderWidth: 1.5,
     pointRadius: 0,
     pointHoverRadius: 3,

@@ -1,0 +1,9 @@
+{
+  "date": "2026-05-11",
+  "version": "R151",
+  "searchChemicals": { "p50": 93, "p95": 304, "p99": 304, "mean": 110 },
+  "searchPapers": { "p50": 1080, "p95": 1308, "p99": 1308, "mean": 1086 },
+  "tokenizer": { "opsPerSec": 1488465, "p99_us": 1.5 },
+  "coldStart": { "searchChemicals": 3163, "searchPapers": 10512 },
+  "notes": "Warm instance. Cold start measured separately."
+}
