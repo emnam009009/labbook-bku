@@ -1,5 +1,39 @@
 # CHANGELOG
 
+## R154-3 — Lineage page filter + search (Phase B.5) (2026-05-10)
+
+### Added
+- Type filter chips in page-lineage header:
+  - 4 chips: Vật liệu / Mẫu / Thí nghiệm / Tệp đính kèm
+  - Color-coded dot per type
+  - Count per type
+  - Click toggle visibility (cannot disable all — keeps at least 1 active)
+  - Disabled chip if count = 0
+- Search bar in header:
+  - Debounced 250ms
+  - Case-insensitive match on label OR sublabel
+  - Clear button (×)
+- Combined filter: nodes shown if type active AND matches search
+- Edges auto-hidden when source or target node hidden
+- Status updates: "Hiển thị N/M node" when filtered
+
+### Implementation
+- Filter state in pages/lineage.ts (Set<NodeType> + string query)
+- Graph cached after first fetch (_graphCache); re-filter without re-fetch
+- Apply filter → re-render graph with subset
+- Search debounced to avoid render-spam during typing
+
+### Files
+- index.html: filter UI in page-lineage header
+- src/ts/pages/lineage.ts: filter state + handlers + re-render logic
+- src/ts/services/global-delegation.ts: chip + input + clear handlers
+- src/css/labbook-extras.css: chip + search styles
+
+### Out of scope
+- Focus mode (click node → show only neighbors)
+- Save filter presets
+- Server-side filter for very large graphs (>1000 nodes)
+
 ## R154-2a — Cross-experiment lineage page (Phase B.5) (2026-05-10)
 
 ### Added

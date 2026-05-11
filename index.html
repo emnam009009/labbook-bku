@@ -804,7 +804,7 @@
         <div class="lb-da-filter-chips" id="da-filter-chips"></div>
         <div class="lb-da-gallery" id="da-gallery"></div>
       </div>
-      <!-- R154-2a: Lineage tổng page -->
+      <!-- R154-2a + R154-3: Lineage tổng page (with filter) -->
       <div class="page" id="page-lineage">
         <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
           <div>
@@ -812,11 +812,13 @@
             <p class="page-subtitle">Quan hệ giữa tất cả vật liệu, mẫu, thí nghiệm và tệp đính kèm trong lab.</p>
           </div>
         </div>
-        <div class="lb-lineage-legend">
-          <span><span class="lb-lineage-dot" style="background:#7C3AED"></span>Vật liệu</span>
-          <span><span class="lb-lineage-dot" style="background:#0D9488"></span>Mẫu</span>
-          <span><span class="lb-lineage-dot" style="background:#F59E0B"></span>Thí nghiệm</span>
-          <span><span class="lb-lineage-dot" style="background:#3B82F6"></span>Tệp đính kèm</span>
+        <div class="lb-lineage-controls">
+          <div class="lb-lineage-chips" id="lineage-filter-chips"></div>
+          <div class="lb-lineage-search-wrap">
+            <input type="text" id="lineage-search" class="lb-lineage-search"
+              placeholder="Tìm theo tên..." autocomplete="off" data-input-action="lineage-search">
+            <button type="button" class="lb-lineage-search-clear" data-action="lineage-search-clear" title="Xóa">×</button>
+          </div>
         </div>
         <div id="lineage-page-container" class="lb-lineage-page-container"></div>
         <div id="lineage-page-status" class="lb-hint" style="text-align:center;margin-top:8px"></div>

@@ -910,3 +910,38 @@ export function attachGlobalDelegation() {
     }
   });
 })();
+
+
+// ═══════════════════════════════════════════════════════════
+// R154-3 — Lineage page filter + search delegation
+// ═══════════════════════════════════════════════════════════
+
+(function attachLineageFilterDelegation() {
+  const flag = '__lineageFilterDelegationAttached';
+  if ((document.body as any)[flag]) return;
+  (document.body as any)[flag] = true;
+
+  document.body.addEventListener('click', (e: Event) => {
+    const target = (e.target as HTMLElement)?.closest('[data-action]') as HTMLElement | null;
+    if (!target) return;
+    const action = target.dataset.action;
+    if (action === 'lineage-toggle-type') {
+      const type = target.dataset.type;
+      if (type && typeof (window as any).toggleLineageType === 'function') {
+        (window as any).toggleLineageType(type);
+      }
+    } else if (action === 'lineage-search-clear') {
+      if (typeof (window as any).clearLineageSearch === 'function') {
+        (window as any).clearLineageSearch();
+      }
+    }
+  });
+
+  document.body.addEventListener('input', (e: Event) => {
+    const target = e.target as HTMLInputElement | null;
+    if (!target || !target.matches?.('[data-input-action="lineage-search"]')) return;
+    if (typeof (window as any).setLineageSearch === 'function') {
+      (window as any).setLineageSearch(target.value || '');
+    }
+  });
+})();

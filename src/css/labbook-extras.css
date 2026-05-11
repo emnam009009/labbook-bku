@@ -692,3 +692,120 @@
   height: 100%;
   display: block;
 }
+
+
+/* R154-3 — Lineage filter UI */
+.lb-lineage-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.lb-lineage-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+  min-width: 280px;
+}
+
+.lb-lineage-chip {
+  cursor: pointer;
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 12px;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s;
+}
+
+.lb-lineage-chip:hover:not(:disabled) {
+  border-color: #0D9488;
+  color: #0F172A;
+}
+
+.lb-lineage-chip--active {
+  background: #F0FDFA;
+  border-color: #0D9488;
+  color: #0F172A;
+}
+
+.lb-lineage-chip--empty {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.lb-lineage-chip:not(.lb-lineage-chip--active):not(.lb-lineage-chip--empty) {
+  opacity: 0.55;
+}
+
+.lb-lineage-chip-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.lb-lineage-chip-count {
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  padding: 1px 7px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.lb-lineage-chip--active .lb-lineage-chip-count {
+  background: rgba(13, 148, 136, 0.18);
+}
+
+.lb-lineage-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 220px;
+}
+
+.lb-lineage-search {
+  width: 100%;
+  padding: 6px 28px 6px 12px;
+  font-size: 13px;
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  color: #0F172A;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.lb-lineage-search:focus {
+  border-color: #0D9488;
+}
+
+.lb-lineage-search-clear {
+  position: absolute;
+  right: 6px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  color: #94A3B8;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  padding: 0;
+}
+
+.lb-lineage-search-clear:hover {
+  background: #F1F5F9;
+  color: #0F172A;
+}
