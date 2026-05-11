@@ -10,7 +10,7 @@ import {
   createMaterial,
   updateMaterial,
 } from "../services/materials.js";
-import type { Material, MaterialCategory } from "../types/research.js";
+import type { Material, MaterialCategory } from "@/shared/domain";
 import { escapeHtml } from "../utils/format.js";
 import { openModal, closeModal } from "../ui/modal.js";
 import { auth } from "../firebase.js";

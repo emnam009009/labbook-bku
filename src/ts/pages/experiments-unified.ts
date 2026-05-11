@@ -12,7 +12,7 @@
 // @ts-nocheck — Legacy DOM page — will be replaced in Next.js + Carbon port (Phase E). Don't fix here.
 
 import { listExperiments } from "../services/experiments.js";
-import type { Experiment, ExperimentType, ExperimentStatus } from "../types/research.js";
+import type { Experiment, ExperimentType, ExperimentStatus } from "@/shared/domain";
 import { escapeHtml } from "../utils/format.js";
 import { openModal, closeModal } from "../ui/modal.js";
 
@@ -25,7 +25,7 @@ import {
 // R154-1: Lineage graph
 import { buildLineageGraph } from "../services/lineage-service.js";
 import { renderLineageGraph } from "../ui/lineage-graph.js";
-import type { DataAsset, DataAssetType } from "../types/research.js";
+import type { DataAsset, DataAssetType } from "@/shared/domain";
 
 const TYPE_LABELS: Record<ExperimentType, string> = {
   synthesis: "Synthesis",

@@ -25,6 +25,10 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/ts/*"]
+    },
     "outDir": "./dist-types",
     "types": [
       "vite/client"

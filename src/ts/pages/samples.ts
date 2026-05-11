@@ -18,7 +18,7 @@ import {
   createSample,
   updateSample,
 } from "../services/samples.js";
-import type { Sample, SampleStatus } from "../types/research.js";
+import type { Sample, SampleStatus } from "@/shared/domain";
 import { escapeHtml } from "../utils/format.js";
 import { openModal, closeModal } from "../ui/modal.js";
 import { auth } from "../firebase.js";

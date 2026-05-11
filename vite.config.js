@@ -4,6 +4,14 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   // Thư mục gốc chứa index.html
   root: '.',
+  resolve: {
+    alias: {
+      '@': '/src/ts',
+      '@/shared': '/src/ts/shared',
+      '@/domains': '/src/ts/domains',
+    },
+  },
+
 
   plugins: [
     VitePWA({

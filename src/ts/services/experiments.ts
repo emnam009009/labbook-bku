@@ -39,7 +39,7 @@ import type {
   ExperimentType,
   ExperimentStatus,
   ExperimentConditions,
-} from "../types/research";
+} from "@/shared/domain";
 
 const COLLECTION = "experiments";
 const DEFAULT_TENANT = "default";

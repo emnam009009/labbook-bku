@@ -14,7 +14,7 @@ import {
 } from "firebase/firestore";
 import { fdb } from "../firebase.js";
 import { listByExperiment } from "./data-assets.js";
-import type { Experiment, Sample, Material, DataAsset } from "../types/research.js";
+import type { Experiment, Sample, Material, DataAsset } from "@/shared/domain";
 
 export type LineageNodeType = 'material' | 'sample' | 'experiment' | 'dataasset';
 export type LineageEdgeType = 'composed_of' | 'parent' | 'input' | 'output' | 'attached';

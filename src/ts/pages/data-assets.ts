@@ -7,7 +7,7 @@ import { fdb } from "../firebase.js";
 import {
   getDataAssetURL, formatFileSize, tsToDate,
 } from "../services/data-assets.js";
-import type { DataAsset, DataAssetType } from "../types/research.js";
+import type { DataAsset, DataAssetType } from "@/shared/domain";
 import { escapeHtml } from "../utils/format.js";
 import { openModal } from "../ui/modal.js";
 // R156e: plot preview reuse

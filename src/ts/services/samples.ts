@@ -25,7 +25,7 @@ import {
   fsLimit,
   fsServerTimestamp,
 } from "../firebase";
-import type { Sample, SampleStatus, SampleAmount, SynthesisMethod } from "../types/research";
+import type { Sample, SampleStatus, SampleAmount, SynthesisMethod } from "@/shared/domain";
 
 const COLLECTION = "samples";
 const DEFAULT_TENANT = "default";

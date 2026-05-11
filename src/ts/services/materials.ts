@@ -29,7 +29,7 @@ import {
   fsLimit,
   fsServerTimestamp,
 } from "../firebase";
-import type { Material, MaterialCategory } from "../types/research";
+import type { Material, MaterialCategory } from "@/shared/domain";
 
 const COLLECTION = "materials";
 const DEFAULT_TENANT = "default";

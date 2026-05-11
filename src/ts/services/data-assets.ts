@@ -19,7 +19,7 @@ import {
 import { fdb, storage, auth } from '../firebase.js';
 import type {
   DataAsset, CreateDataAssetInput, UpdateDataAssetInput, DataAssetType,
-} from '../types/research.js';
+} from "@/shared/domain";
 
 const COLLECTION = 'dataAssets';
 const TENANT_ID = 'default';  // Lab BKU; commercial fork will read from claim
