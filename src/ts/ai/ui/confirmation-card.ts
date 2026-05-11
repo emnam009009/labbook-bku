@@ -11,7 +11,7 @@
  *   4. After bubble mount, hydrateConfirmationCards() upgrades placeholders với full UI
  *   5. User clicks "Xác nhận" → POST /confirmAction → update card state
  */
-// @ts-nocheck
+// @ts-nocheck — AI module — partial typing (R105+ skeleton). Cleanup after RAG/streaming stabilization.
 
 interface DraftPreview {
   code?: string;

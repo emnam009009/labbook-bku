@@ -172,7 +172,42 @@ Unplanned audit work trước khi commercialize. Phase B paused, resume từ Rou
 
 **Phase B verdict**: RAG pipeline production-ready. Extract → Chunk → Embed → **Index** → Search (vector/bm25/hybrid) → Rerank. ~3575 chunks indexed, 20 papers, ~$0.20 cost.
 
-#### Phase B.5 — Unified Research Schema (R150-R155) 📋 PLANNED
+#### Phase B.5 — Unified Research Schema (R150-R156g) ✅ DONE (May 11, 2026)
+
+Sub-rounds completed:
+- R150a-d: Material entity (types, service, Firestore rules + indexes, UI page)
+- R151a-d: Sample entity (lineage chain, composite handling)
+- R152a-c: Experiment entity (12 type union, conditions schema)
+- R152c-2: Form modal create with type-specific fields
+- R152d-1: Bulk migration Cloud Function (legacy RTDB → Firestore)
+- R152d-2: Migration UI card in Settings (superadmin only)
+- R153a: DataAsset foundation (types, service, Firestore rules, Storage rules,
+  indexes)
+- R153b: DataAsset UI panel in experiment detail (upload + list + download +
+  delete)
+- R153c: DataAssets gallery page (sidebar item, filter chips, card grid,
+  preview modal)
+- R153d: Content-aware classifier (JCAMP-DX parser + filename heuristics +
+  value range matching for XRD/Raman/FTIR/UV-Vis/electrochem)
+- R154-1: Per-experiment lineage modal (D3 force, click-to-navigate)
+- R154-2a: Cross-experiment lineage page (4 parallel queries, render all
+  entities)
+- R154-3: Filter chips + search bar for lineage page
+- R155: Audit + deprecate legacy pages (sidebar hide, banner, DEPRECATED
+  comments)
+
+Side rounds (tech debt + UI polish):
+- R156a: services/experiments.ts @ts-nocheck removed
+- R156b-1: global-delegation.ts ev→e bug fix
+- R156d: Tag 50 files with categorized @ts-nocheck reasons
+- R156e: Inline Chart.js plot preview in DataAsset modal
+- R156e-fix1: Sidebar 'Phổ DL' item (silent anchor fail in R153c)
+- R156e-fix2: Firestore index tenantId+uploadedAt DESC
+- R156f: Phổ DL icon (4 rects → spectrum zigzag) + remove legacy overview sidebar
+- R156g: Tauc plot toggle for UV-Vis types in preview modal
+- R156g-fix1: Delete DataAsset button — read experimentId from button directly
+
+#### Phase B.5 — Unified Research Schema (R150-R155) ✅ ARCHIVED LISTING
 
 > See `docs/research-schema.md` for full design + `docs/long-term-roadmap.md` for strategic context.
 >
@@ -192,6 +227,52 @@ Unplanned audit work trước khi commercialize. Phase B paused, resume từ Rou
 **Pre-requisite**: Resolve 7 open design questions in `docs/research-schema.md` Section 12 before starting R150.
 
 #### Phase B.6+ — Future work (TBD)
+
+##### R157a — PDF export integration (NEXT, 1 round est. 200 LOC)
+Adapt existing `services/pdf-report.ts` (R30+ era, 743 LOC) for new
+experiments + DataAssets:
+- Button "Xuất PDF" in experiment detail modal (R152c-1)
+- Reuse generatePdfReport(); adapt input from legacy RTDB shape to
+  Firestore experiment + DataAssets list
+- Include: experiment metadata + conditions + DataAssets thumbnails (image)
+  + bandgap result if uv-vis-drs has Tauc data
+- Out of scope: plot inline trong PDF (defer R157b), lineage graph image
+
+##### R157b+ — Lightweight JS analysis quick-wins (defer)
+- Peak detection overlay (XRD/Raman) — local maxima finder
+- Plot inline trong PDF (canvas snapshot)
+- Export plot PNG/SVG button trong DataAsset modal
+
+##### R200+ — Python Cloud Run analysis service (Phase B.6 major)
+Defer until lab volume justifies infrastructure cost:
+- Docker container Python (pymatgen, numpy, scipy, pybaselines)
+- Cloud Run service deploy (asia-southeast1)
+- IAM service-to-service auth (Firebase Auth token verify)
+- HTTP API contract: TS client → Cloud Run → JSON result
+- Initial analyzers:
+  * XRD: pymatgen JCPDS card matching, Scherrer, lattice refinement
+  * Raman: peak deconvolution, baseline (asymmetric LS)
+  * Electrochem: Tafel slope, Mott-Schottky linear fit
+  * XPS: peak fitting CasaXPS-like
+- Existing skeleton: `src/ts/ai/analyzers/structural/xrd/index.ts` etc.
+  (Round 105 stubs, TODO Round 131-133)
+- Estimate: 15-20 sub-rounds (infra + per-analyzer)
+
+##### Phase E — Next.js + Carbon Design rewrite (long-term, 6-12+ months)
+- Migrate pages/UI to React + IBM Carbon Design System
+- Keep services + types layer (port 1:1)
+- Drop legacy attachments code entirely (deferred from R153f-aggressive)
+- Drop @ts-nocheck files for pages (auto-removed via rewrite)
+- Bundle reorganization, possible Plotly.js for charts
+
+##### Tech debt remaining (post-Phase-B.5)
+Tagged in R156d but not yet fixed (defer to Phase E unless blocking):
+- services/global-delegation.ts: 41 type errors (DOM event handlers)
+- main.ts: 183 errors mostly unused imports
+- 50 @ts-nocheck files documented with reasons
+- modal-material-detail same bug as R153b-fix2 (inline display:none
+  + wrong wrapper) — fix in audit round when touched
+
 
 | Phase | Scope | Source |
 |---|---|---|

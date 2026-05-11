@@ -14,7 +14,7 @@
  *  Phần 4 này CHỈ tách render functions (đọc cache → vẽ DOM, không có side-effect).
  *  Save/edit/image handlers vẫn ở main.js, sẽ tách ở Phần sau.
  */
-// @ts-nocheck
+// @ts-nocheck — Legacy DOM page — will be replaced in Next.js + Carbon port (Phase E). Don't fix here.
 
 
 import { escapeHtml, escapeJs, vals, fuzzy, formatChemical } from '../utils/format.js'

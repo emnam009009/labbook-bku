@@ -8,7 +8,7 @@
  * <!--AI_CITATIONS:base64--> markers embedded by gemini-client during
  * searchPapers tool execution.
  */
-// @ts-nocheck
+// @ts-nocheck — AI module — partial typing (R105+ skeleton). Cleanup after RAG/streaming stabilization.
 
 export interface Citation {
   position: number;

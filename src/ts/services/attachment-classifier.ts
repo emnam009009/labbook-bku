@@ -4,6 +4,9 @@
 //   - src/ts/ui/overview-modal.ts (per-experiment modal)
 //   - src/ts/pages/overview.ts (cross-experiment page)
 
+// ⚠️ DEPRECATED (R155 — Phase B.5): scheduled for removal in Phase E
+// (Next.js + Carbon rewrite). New data uses DataAssets service
+// (src/ts/services/data-assets.ts). Don't add features here.
 import { ATTACHMENT_CATEGORIES } from './attachments.js';
 import { escapeHtml } from '../utils/format.js';
 

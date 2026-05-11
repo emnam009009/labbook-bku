@@ -16,7 +16,7 @@
  *  - Empty group "Chưa phân nhóm" gom các chemicals chưa gán group
  *  - sessionStorage 'chemGroups' lưu trạng thái collapse
  */
-// @ts-nocheck
+// @ts-nocheck — Legacy DOM page — will be replaced in Next.js + Carbon port (Phase E). Don't fix here.
 
 
 import { vals, fuzzy, formatChemical, escapeHtml, escapeJs } from '../utils/format.js'

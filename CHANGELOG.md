@@ -1,5 +1,1427 @@
 # CHANGELOG
 
+## R156g — Tauc plot toggle for UV-Vis DataAsset preview (Phase B.5+) (2026-05-10)
+
+### Added
+- Tauc plot controls in DataAsset preview modal (only for uv-vis / uv-vis-drs):
+  - Checkbox "Hiển thị Tauc plot"
+  - Select n with 4 TAUC_PRESETS:
+    * n=1/2 — Direct allowed
+    * n=3/2 — Direct forbidden
+    * n=2 — Indirect allowed
+    * n=3 — Indirect forbidden
+- Auto bandgap fit: when Tauc on, autoFitBandgap → linear regression
+  on knee region → display "Bandgap (Eg) = X.XXX eV (R² = ...)"
+- Mode auto: uv-vis-drs → reflectance (Kubelka-Munk), uv-vis → absorbance
+- Toggle re-renders canvas without re-parsing file
+
+### Architecture (reuse)
+- transformToTauc + autoFitBandgap from existing services/plot/tauc.ts
+  and services/plot/bandgap-fit.ts (R30+ era code)
+- Module-level state: _currentParsedData + _currentAsset + _taucOn + _taucN
+
+### Files
+- src/ts/pages/data-assets.ts:
+  - Imported transformToTauc + TAUC_PRESETS + autoFitBandgap
+  - State + renderTaucControls() + applyTaucRender() + setTaucOn/N()
+  - Modal body innerHTML adds tauc-controls container
+- src/ts/services/global-delegation.ts: tauc toggle + n select handlers
+- src/css/labbook-extras.css: .lb-da-tauc-* styles
+
+### Out of scope
+- Manual region selection for bandgap fit (currently auto-fit only)
+- Save Tauc result back to DataAsset.metadata.bandgap
+- Export Tauc plot PNG
+
+## R155 — Audit + deprecate legacy pages (Phase B.5 closing) (2026-05-10)
+
+### Soft deprecation strategy
+Legacy attachments + per-method experiment pages (hydro/electrode/
+electrochem) kept functional for backward compat but marked deprecated.
+Aggressive delete (R153f) skipped — legacy code doesn't block new
+features and will be removed during Phase E (Next.js rewrite).
+
+### Changes
+- Sidebar items hidden from non-superadmin:
+  - hydrothermal (Thủy nhiệt)
+  - electrode (Chuẩn bị điện cực)
+  - electrochemistry (Đo điện hóa)
+  - Via CSS class `.superadmin-only` + `body.superadmin-mode` toggle
+- Deprecation banner at top of 4 legacy pages:
+  - page-hydrothermal, page-electrode, page-electrochemistry, page-overview
+  - Amber warning style
+  - Text: "⚠️ Page này đã ngừng cập nhật. Vui lòng dùng 'TN mới' + 'Phổ DL'..."
+- Top-of-file deprecation comment in 5 .ts files:
+  - services/attachments.ts
+  - services/attachment-classifier.ts
+  - ui/attachments-panel.ts
+  - ui/overview-modal.ts
+  - pages/overview.ts
+
+### Files
+- index.html: 3 sidebar class additions + 4 banner blocks
+- src/css/labbook-extras.css: .superadmin-only + .lb-deprec-banner
+- 5 .ts files: top deprecation comment
+
+### Migration path
+Existing lab user with legacy data: still can view + edit via superadmin
+account (sidebar items visible). New experiments: TN mới + Phổ DL only.
+Phase E (Next.js): full cleanup, legacy code removed entirely.
+
+## Phase B.5 — DONE
+This closes Phase B.5 (research schema migration). Summary:
+- R150: Materials entity (types + service + UI)
+- R151: Samples entity
+- R152: Experiments entity + form (a/b/c/c-2) + migration UI (d-1/d-2)
+- R153a: DataAsset foundation (types + service + rules + indexes)
+- R153b: DataAsset UI panel in experiment detail
+- R153c: DataAssets gallery page
+- R153d: Content-aware classifier (JCAMP-DX + heuristics)
+- R154-1: Per-experiment lineage graph modal (D3 force)
+- R154-2a: Cross-experiment lineage page
+- R154-3: Filter chips + search bar
+- R155: Audit + deprecate legacy (this round)
+
+Side rounds:
+- R156a-f: Tech debt cleanup + plot preview + UI polish
+
+Next phases:
+- Phase B.6+ (optional): Python Cloud Run for advanced analysis
+- Phase E: Next.js + Carbon Design System rewrite
+
+## R154-3 — Lineage page filter + search (Phase B.5) (2026-05-10)
+
+### Added
+- Type filter chips in page-lineage header:
+  - 4 chips: Vật liệu / Mẫu / Thí nghiệm / Tệp đính kèm
+  - Color-coded dot per type
+  - Count per type
+  - Click toggle visibility (cannot disable all — keeps at least 1 active)
+  - Disabled chip if count = 0
+- Search bar in header:
+  - Debounced 250ms
+  - Case-insensitive match on label OR sublabel
+  - Clear button (×)
+- Combined filter: nodes shown if type active AND matches search
+- Edges auto-hidden when source or target node hidden
+- Status updates: "Hiển thị N/M node" when filtered
+
+### Implementation
+- Filter state in pages/lineage.ts (Set<NodeType> + string query)
+- Graph cached after first fetch (_graphCache); re-filter without re-fetch
+- Apply filter → re-render graph with subset
+- Search debounced to avoid render-spam during typing
+
+### Files
+- index.html: filter UI in page-lineage header
+- src/ts/pages/lineage.ts: filter state + handlers + re-render logic
+- src/ts/services/global-delegation.ts: chip + input + clear handlers
+- src/css/labbook-extras.css: chip + search styles
+
+### Out of scope
+- Focus mode (click node → show only neighbors)
+- Save filter presets
+- Server-side filter for very large graphs (>1000 nodes)
+
+## R154-2a — Cross-experiment lineage page (Phase B.5) (2026-05-10)
+
+### Added
+- New sidebar item "Lineage" (route: `lineage`) after "Phổ DL"
+- New page section `page-lineage` with full-height D3 force graph
+- Service `buildFullLineageGraph()`:
+  - 4 parallel queries (materials, samples, experiments, dataAssets)
+  - Build complete graph: nodes per entity + edges from FK references
+  - Edges: composed_of (mat→smp), parent (smp→smp), input/output
+    (smp↔exp), attached (exp→da)
+- Page `lineage.ts`:
+  - Auto-render on pageChange event
+  - Counts per type displayed in status
+  - Reuses renderLineageGraph from R154-1 (no duplication)
+- Legend showing 4 entity types color-coded
+
+### Performance
+- 4 parallel Firestore queries (1 per collection)
+- Client-side graph build (~10ms for ~50 entities)
+- D3 force layout handles <500 nodes smoothly
+
+### Files
+- src/ts/services/lineage-service.ts: appended buildFullLineageGraph (~80 LOC)
+- src/ts/pages/lineage.ts (new ~45 LOC)
+- src/ts/main.ts: import lineage.js
+- index.html: sidebar item + page section
+- src/css/labbook-extras.css: .lb-lineage-page-container
+
+### Out of scope (R154-2b/R154-3)
+- Filter UI (by material/type) — defer until lab data grows >100 entities
+- Search bar
+- Layout switcher (force/hierarchical/radial)
+- Export PNG/SVG
+
+## R154-1 — Per-experiment lineage graph modal (Phase B.5) (2026-05-10)
+
+### Added
+- Button "🔗 Xem lineage" in experiment detail modal (R152c-1)
+- New modal `modal-lineage-graph` with D3 force-directed graph
+- Service `lineage-service.ts`: buildLineageGraph(experiment) — fetches:
+  - Center: the experiment itself (highlighted gold)
+  - Input samples + their materials + 1-hop parent samples
+  - Output samples (synthesisExperimentRef pointing back)
+  - DataAssets attached
+- UI `lineage-graph.ts`: D3 rendering (modular d3-selection/force/zoom/drag)
+  - Node colors per type: material=purple, sample=teal, experiment=amber, dataasset=blue
+  - Edge styles per relationship: input/output/composed_of/parent/attached
+  - Arrow markers for directionality
+  - Drag to rearrange, scroll/pinch to zoom, click node to navigate
+- Click navigation: node click → close lineage modal → open detail of clicked entity
+
+### Library
+- d3-selection, d3-force, d3-zoom, d3-drag installed (modular, ~50KB total)
+- Tree-shakeable: only imports needed sub-modules
+
+### Files
+- src/ts/services/lineage-service.ts (new ~200 LOC)
+- src/ts/ui/lineage-graph.ts (new ~220 LOC)
+- src/ts/pages/experiments-unified.ts: imports + button + modal handler
+- src/ts/services/global-delegation.ts: open-lineage-graph click handler
+- index.html: modal-lineage-graph section
+- src/css/labbook-extras.css: graph + legend styles
+- package.json: + d3 modules
+
+### Install
+- `npm install d3-selection d3-force d3-zoom d3-drag @types/d3-selection @types/d3-force @types/d3-zoom @types/d3-drag --save`
+
+### Out of scope (R154-2+)
+- Page tổng all entities (cross-experiment view)
+- Filter + search in graph
+- Custom layouts (hierarchical, radial)
+- Export graph as PNG/SVG
+
+## R156e — Inline plot preview for DataAssets (Phase B.5+) (2026-05-10)
+
+### Added
+- Inline Chart.js plot in DataAsset preview modal (R153c gallery card click)
+- Plottable types: xrd, raman, ftir, uv-vis, uv-vis-drs, pl, xps, eds, electrochem-csv
+- Triggered when mimeType is text/* or known data extension (.csv/.tsv/.txt/.xy/.dat/.emsa/.spc/.cor)
+
+### Architecture (reuse existing toolkit)
+- Parser: `services/parsers/index.ts::parseDataFile(file, category)` — handles JCAMP-DX, CSV, Excel, CorrWare
+- Plot: `services/plot/plot-preview.ts::renderPreview(canvas, parsed)` — Chart.js 4.5
+- Mapping DataAssetType → parser category in PARSER_CATEGORY_MAP
+
+### Flow
+1. User clicks DataAsset card in gallery → preview modal opens
+2. If plottable: canvas placeholder rendered with "Đang tải..." status
+3. Async: fetch file from Storage URL → new File() → parseDataFile → renderPreview
+4. Status updates: tải → phân tích → vẽ → "N điểm dữ liệu"
+5. Errors caught + shown inline (red text)
+
+### Files
+- src/ts/pages/data-assets.ts: added imports, PARSER_CATEGORY_MAP, renderInlinePlot fn, isPlottable check
+- src/css/labbook-extras.css: .lb-da-plot-container style
+
+### Out of scope
+- R156f: Tauc plot toggle in preview (UV-Vis DRS)
+- R156g: Peak detection overlay
+- R156h: Export plot PNG/SVG
+- R157+: Python Cloud Run for advanced analysis (JCPDS, Scherrer)
+
+## R153d — Content-aware classifier for DataAsset uploads (Phase B.5) (2026-05-10)
+
+### Added
+- Content-aware file classifier (replacing R153b filename-only heuristic):
+  - Reads first 10KB of file via FileReader.text()
+  - Parses CSV/TSV/space-separated header + 5-10 data rows
+  - Auto-detects delimiter (comma, tab, semicolon, space)
+  - Heuristic match per DataAssetType:
+    * XRD: 2θ 5-90°, header `theta`/`position`/`angle`
+    * Raman: 100-4000 cm⁻¹, header `wavenumber`/`shift`
+    * FTIR: 400-4000 cm⁻¹, header `absorbance`/`transmittance`
+    * UV-Vis: 200-1100 nm, header `wavelength`
+    * PL: filename `pl`/`photolum` + emission/intensity columns
+    * XPS: header `binding energy`/`BE`
+    * EDS: header `element`/`weight%`/`atomic%`
+    * Electrochem: header `potential`/`current`/`voltage` or CV/LSV/EIS keywords
+  - Returns {type, confidence 0-1, reason}
+- Image classification: SEM/TEM/EDS keyword in filename
+- Office files (xlsx/docx): → document
+
+### UX
+- Confidence ≥ 0.8: auto-select dropdown silently
+- 0.5 ≤ confidence < 0.8: pre-select + green hint "🔍 Đã phát hiện: X (Y%)"
+- < 0.5: fallback to R153b filename heuristic
+
+### Files
+- src/ts/services/data-assets.ts: added classifyDataAssetFile() export
+  + helpers (readFileHead, parseCSVHead, isColumnInRange, classifyTextContent)
+- src/ts/pages/experiments-unified.ts: handleDataAssetFilePick now async-classify
+  before setting dropdown
+- src/css/labbook-extras.css: .lb-da-classify-hint style
+
+### Out of scope
+- Binary file content sniff (.xy, .spc, .vms) — kept extension-based
+- Auto-detect SEM/TEM from image dimensions/scale bar (needs OCR)
+- R153e: PDF export integration
+- R153f: Cleanup legacy attachments code
+
+## R153c — DataAssets gallery page (Phase B.5) (2026-05-10)
+
+### Added
+- New sidebar item "Phổ dữ liệu" (route: `dataassets`) after TN mới
+- Page section `page-dataassets`:
+  - Filter chips per type (counts), 'Tất cả' chip
+  - Card grid (220px min), responsive
+  - Image thumbnails lazy-loaded
+  - Non-image types show emoji icon
+  - Empty state with hint to upload via TN detail
+- Preview modal (modal-dataasset-preview):
+  - Image: inline preview
+  - PDF: iframe embed
+  - Other: download link
+  - Link to parent experiment
+
+### Files
+- index.html: sidebar + page + preview modal
+- src/ts/pages/data-assets.ts (new ~260 LOC)
+- src/ts/main.ts: import data-assets.js
+- src/ts/services/global-delegation.ts: da-filter + da-card-click handlers
+- src/css/labbook-extras.css: gallery + chip styles (~140 lines)
+- CHANGELOG.md
+
+### Out of scope
+- R153d: Classifier integration
+- R153e: PDF export integration
+- R153f: Cleanup legacy attachments
+
+## R156d — Tag remaining @ts-nocheck with reasons (Tech Debt cleanup)
+
+### Approach (E+F combo from R156 plan)
+Instead of fixing 50 files of mixed quality (some 0 errors, some 183),
+tag each @ts-nocheck with categorized reason comment. Future
+developers + Phase E (Next.js port) reviewers know why each file is
+unchecked and when to remove the directive.
+
+### Reasons by category
+- AI module (~25 files): partial typing (R105+ skeleton). Cleanup
+  after RAG/streaming stabilization.
+- Pages (~10 files): Legacy DOM page — will be replaced in Next.js +
+  Carbon port (Phase E). Don't fix here.
+- Services (~12 files): DOM event handlers + legacy patterns. Defer
+  typing until UI rewrite.
+- UI components (~3 files): DOM manipulation, deferred until Next.js.
+- main.ts: 183 errors mostly unused imports.
+- labbook-extensions.ts: pre-refactor, scheduled for removal.
+
+### Already cleaned (separate rounds)
+- R156a: src/ts/services/experiments.ts — @ts-nocheck removed (0 errors)
+- R156b-1: src/ts/services/global-delegation.ts — TS2304 runtime bug
+  fixed (ev → e); type cleanup of remaining 41 errors deferred
+
+### Files
+- 50 .ts files: appended categorized reason to `// @ts-nocheck` line
+- CHANGELOG.md (this entry)
+
+### Out of scope
+- R156b-2: full type cleanup of global-delegation.ts (41 mechanical errors)
+- R156c: main.ts unused imports cleanup (183 errors)
+- Per-file deep cleanup — defer to Phase E (Next.js rewrite)
+
+## R156a — Remove @ts-nocheck from services/experiments.ts (Phase B.5 Tech Debt)
+
+### Technical debt cleanup (E+F approach)
+- Verified file compiles clean (0 errors) without @ts-nocheck
+- Comment was legacy from earlier migration, no longer needed
+- File now has proper TypeScript type checking
+
+### Files
+- src/ts/services/experiments.ts: removed `// @ts-nocheck`
+- CHANGELOG.md
+
+## R153b — DataAssets UI in experiment detail (Phase B.5) (2026-05-10)
+
+### Added
+- "Tệp đính kèm" section in experiment detail modal:
+  - Lists existing DataAssets after async fetch (listByExperiment)
+  - Each item shows: type badge (color-coded), filename, size, upload
+    date, download button, delete button
+  - Type auto-detect from extension as default suggestion when user
+    picks a file (CSV → electrochem-csv/xrd/raman based on filename
+    keywords; PDF → document; image/* → image)
+  - User can override auto-detect via dropdown before file pick
+  - Upload progress bar (Storage upload progress events)
+  - Toast notifications on success/error
+
+### Files
+- src/ts/pages/experiments-unified.ts:
+  - Imported data-assets service + types
+  - Modified openExperimentDetail body to insert new section
+  - Added renderDataAssetsSection async fn
+  - Added handleDataAssetFilePick / Download / Delete fns
+  - Exposed all 4 fns to window for delegation calls
+- src/ts/services/global-delegation.ts:
+  - Appended attachDataAssetDelegation IIFE (idempotent flag)
+  - Click handlers: da-download, da-delete
+  - Change handler: da-file-pick, type-select user-picked tracking
+- src/css/labbook-extras.css:
+  - Added .lb-da-* utility classes (~110 lines):
+    section/list/item layouts, color-coded type badges per
+    DataAssetType, upload zone, progress bar
+- CHANGELOG.md (this entry)
+
+### UX flow
+1. User opens experiment detail modal → async fetch DataAssets
+2. List shows under "Tệp đính kèm" header
+3. Below list: dropdown (type) + file input + progress bar (hidden)
+4. User picks file → auto-detect type → upload to Storage with progress
+5. On success: toast + re-render list
+6. Delete: confirm dialog → delete Firestore doc + Storage file → toast
+
+### Out of scope (R153c+)
+- Drag-drop upload zone
+- Type batch upload (multiple files at once)
+- DataAssets gallery page (cross-experiment view)
+- Classifier integration with PCA/peak detection
+- PDF export of DataAssets
+
+
+## R153a — DataAsset entity foundation (Phase B.5) (2026-05-10)
+
+### Added
+
+#### Types (`src/ts/types/research.ts`)
+- `DataAssetType`: 14-value union (xrd, sem, tem, raman, ftir, uv-vis,
+  uv-vis-drs, pl, eds, xps, electrochem-csv, image, document, other)
+- `DataAssetAnalysisStatus`: none/pending/analyzed/failed
+- `DataAsset`: full interface (40+ fields) — id, tenantId, experimentId,
+  sampleId?, type, subType, fileName, fileSize, mimeType, storagePath,
+  notes, tags, analysisStatus, metadata, uploadedAt/By, createdAt/By,
+  updatedAt/By
+- `CreateDataAssetInput` / `UpdateDataAssetInput`
+
+#### Service (`src/ts/services/data-assets.ts` — new ~280 LOC)
+- `uploadDataAsset(file, input, onProgress?)`: upload to Storage +
+  create Firestore doc (with timestamp prefix to avoid collisions)
+- `getDataAssetURL(asset)`: resolve Firebase Storage download URL
+- `listByExperiment(experimentId)`: query by exp + tenant, ordered desc
+- `listByType(type)`: gallery query
+- `getDataAsset(id)`: single fetch
+- `updateDataAsset(id, patch)`: metadata only (file immutable)
+- `deleteDataAsset(id)`: best-effort (Firestore first, then Storage)
+- Helpers: `formatFileSize`, `tsToDate`
+- Mime allowlist per type (defensive client-side check)
+- Path: `dataAssets/{tenantId}/{experimentId}/{timestamp}-{filename}`
+
+#### Firestore rules (`firestore.rules`)
+- `dataAssets/{assetId}` match block:
+  - read: any authed user with matching tenantId
+  - create: member/admin/superadmin + uploadedBy=auth.uid + tenant match
+  - update: uploader OR admin/superadmin (10+ immutable fields incl
+    experimentId, storagePath, fileName, fileSize, audit fields)
+  - delete: uploader OR admin/superadmin
+
+#### Firestore indexes (`firestore.indexes.json`)
+- `tenantId + experimentId + uploadedAt DESC` (list by experiment)
+- `tenantId + type + uploadedAt DESC` (gallery by type)
+
+#### Storage rules (`storage.rules`)
+- `dataAssets/{tenantId}/{experimentId}/{fileName}`:
+  - read: any authed user
+  - create: member+ role, ≤25MB
+  - update: never (file immutable)
+  - delete: uploader (metadata.uid) OR admin/superadmin
+
+### Out of scope (subsequent sub-rounds)
+- R153b: UI panel attach DataAsset in experiment detail
+- R153c: DataAssets gallery page (replace overview attachments)
+- R153d: Classifier integration (auto-detect type from filename/content)
+- R153e: PDF export integration
+- R153f: Cleanup remove old attachments code
+
+### Storage paths
+- Legacy: `attachments/{refType}/{refId}/{fileName}` (kept untouched)
+- New:    `dataAssets/{tenantId}/{experimentId}/{ts}-{fileName}` (R153a+)
+
+### Deploy required
+- Firestore rules: `firebase deploy --only firestore:rules`
+- Firestore indexes: `firebase deploy --only firestore:indexes`
+- Storage rules: `firebase deploy --only storage`
+
+## R152d-2 — Migration UI card in settings (Phase B.5) (2026-05-10)
+
+### Added
+- `src/ts/services/migration.ts` (new): wraps fetch to
+  `migrateLegacyExperiments` function with Bearer token.
+  Exports `callMigration(mode, collection)` + `isSuperadmin()`.
+- `src/ts/pages/settings.ts`: appended migration card render +
+  3 click handlers (dryrun, confirm, reset).
+- `index.html`: new card section in page-settings (hidden by default,
+  shown only for superadmin via JS).
+
+### Workflow
+1. Settings page → card visible only for superadmin
+2. "Tổng quan" → dry-run mode all → show per-collection breakdown
+3. If willMigrate > 0: "Bắt đầu migrate" button → confirm mode all
+4. Result inline: migrated counts + backup ID + duration
+5. Toast notification on success/error
+
+### Out of scope (future)
+- R152d-3: Reverse migration / restore from backup
+- R152e: Adapter UI showing legacy + new merged in same list
+
+### Files
+- src/ts/services/migration.ts (new, ~85 LOC)
+- src/ts/pages/settings.ts (~150 LOC appended)
+- index.html (1 card section added)
+- CHANGELOG.md (this entry)
+
+## R152d-1 — Bulk migration Cloud Function (Phase B.5) (2026-05-10)
+
+### Added
+- `functions/src/triggers/migrate-legacy-experiments.ts` (new):
+  Gen2 HTTP function `migrateLegacyExperiments` (asia-southeast1, Node 24,
+  timeout 540s, memory 512MiB).
+
+  - Auth: requires `role=superadmin` custom claim
+  - Body: `{ mode: "dry-run"|"confirm", legacyCollection: "hydro"|"electrode"|"electrochem"|"all", batchLimit?: number }`
+  - Reads RTDB legacy collections, synthesizes `Experiment` shape with
+    `legacyRef={collection, id}`, writes to Firestore `experiments/`.
+  - Idempotent: skips entries already migrated (queries by
+    `legacyRef.collection + legacyRef.id`).
+  - Backup-first (in confirm mode): dumps legacy JSON to
+    `migrationBackups/{R152d-{timestamp}}` Firestore subcollection BEFORE
+    any writes. Recovery point if needed.
+  - Batched writes: 500 docs/batch (Firestore limit).
+  - Returns: per-collection results + totals + backupId + durationMs.
+
+- `functions/src/index.ts`: export `migrateLegacyExperiments`.
+
+### Adapter mapping (best-effort)
+Per spec §6.1, legacy → Experiment fields:
+- `type` derived from collection: hydro→hydrothermal, electrode→electrode-prep,
+  electrochem→electrochemistry
+- `code` from data.code or legacyId
+- `operatorId` from data.uid or data.person (fallback "")
+- `performedAt` from data.date or data.createdAt (fallback serverTimestamp)
+- `status` from data.locked ? "completed" : (data.status || "completed")
+- `inputSamples`/`outputSamples`/`conditions`/`tags` empty (no equivalents
+  in legacy; lab user can edit experiments later via R152c-2 form)
+- `legacyRef` immutable per Firestore rules R152b
+
+### Production deploy + invocation
+```bash
+cd functions && npm run build && cd ..
+firebase deploy --only functions:migrateLegacyExperiments
+
+# Get superadmin ID token (browser console signed in as nvhn.7202@gmail.com):
+#   firebase.auth().currentUser.getIdToken().then(t => console.log(t))
+
+# Test dry-run hydro:
+curl -X POST https://asia-southeast1-lab-manager-268a6.cloudfunctions.net/migrateLegacyExperiments \
+  -H "Authorization: Bearer ${ID_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{"mode":"dry-run","legacyCollection":"hydro"}'
+
+# Or use Firebase Console > Functions > migrateLegacyExperiments > Test panel
+```
+
+### Recovery (if migration goes wrong)
+- Backup at `experiments` DB > migrationBackups/{R152d-timestamp}
+- Manual restore via admin SDK script (not implemented yet — R152d-3 if needed)
+- Worst case: delete migrated docs by `legacyRef != null`, RTDB legacy is
+  read-only forever (untouched by migration)
+
+### Out of scope (future)
+- R152d-2: UI button in admin page to invoke this function
+- R152d-3: Reverse migration / restore from backup
+- R152e: Adapter UI showing legacy + new merged in same list
+
+### Files
+- functions/src/triggers/migrate-legacy-experiments.ts (new)
+- functions/src/index.ts (export added)
+- CHANGELOG.md (this entry)
+
+## R152c-2 — Experiments form with type-specific schema (Approach C) (2026-05-10)
+
+### Added
+- `ExperimentType` enum: 2 new values
+  - `photocatalysis` (prefix PC)
+  - `photoelectrochemistry` (prefix PEC)
+- Form modal `#modal-experiment-form` (create only — edit deferred)
+  with type-driven UI:
+  - Common fields (code, type, status, performedAt)
+  - Type changes → conditions section re-renders with type-specific fields
+  - Input samples + output samples picker (typeahead like R151d-2,
+    color-coded badges: red=input, green=output)
+  - Trailing fields (conclusion, tags, notes)
+- 6 type schemas (literature-derived for hydrothermal,
+  electrode-prep, electrochemistry, ink-formulation, photocatalysis,
+  photoelectrochemistry). Other 8 types: empty schema, fall back to
+  notes-only.
+- `TYPE_CONDITIONS_SCHEMA` defines each schema with `ConditionField`
+  (key/label/type/units/options/required/hint).
+- Form helpers: `renderConditionsSection`, `collectConditions`,
+  `validateRequiredConditions`, type change preserves matching keys.
+- Sample picker reuses lazy load + cache pattern.
+
+### global-delegation.ts
+- 6 new click cases: open-experiment-form, submit-experiment-form,
+  exp-add-input-sample, exp-add-output-sample,
+  exp-remove-input-sample, exp-remove-output-sample
+- 1 new change listener: experiment-form-type-change
+- 2 new input listeners: search-exp-input-samples,
+  search-exp-output-samples
+
+### Out of scope (future)
+- Edit existing experiment (only create now; can add R152c-3)
+- Bulk migration legacy → Firestore (R152d)
+- Schema for remaining 8 types (synthesis, sol-gel, CVD, annealing,
+  measurement, characterization, compute, other) — extend incrementally
+
+### Files
+- src/ts/types/research.ts (extend ExperimentType enum)
+- src/ts/services/experiments.ts (extend prefix map for PC/PEC)
+- src/ts/pages/experiments-unified.ts (schema + form helpers + handlers)
+- index.html (page header Add button + form modal)
+- src/ts/services/global-delegation.ts (6 cases + 3 listeners)
+- CHANGELOG.md (this entry)
+
+### Verify
+```bash
+npm run typecheck && npm run build
+```
+
+Browser test:
+1. Click "Thêm thí nghiệm" → form opens with hydrothermal default
+2. Change type → conditions section re-renders with type-specific fields
+3. Required fields with red asterisk, validation on submit
+4. Sample pickers (input/output) typeahead
+5. Submit hydrothermal example → expect success toast + card appears
+
+## R152c-1 — Unified Experiments page list view (2026-05-10)
+
+### Added
+- `src/ts/pages/experiments-unified.ts` (new): renderExperimentsUnified
+  reads from Firestore, groups by type. Detail modal shows code, type,
+  status, conditions (formatted with units), input/output samples
+  (clickable → navigate to sample detail), derived metrics,
+  conclusion, tags, notes, legacyRef badge.
+- `index.html`:
+  - Sidebar item "TN mới" after "Mẫu", flask SVG.
+  - Page section with type filter dropdown.
+  - Detail modal #modal-experiment-detail.
+- `src/ts/main.ts`: experiments-unified entry in _pageLoaders.
+- `src/ts/services/global-delegation.ts`: open-experiment-detail case +
+  filter type change listener (uses data-change-action pattern).
+
+### Coexistence with legacy pages
+Legacy pages (Thủy nhiệt / Chuẩn bị điện cực / Đo điện hóa) remain
+in sidebar, still active. New page shows ONLY Firestore experiments
+(empty until R152c-2 form created or R152d bulk migration runs).
+Empty state explains this.
+
+### Out of scope
+- R152c-2: CRUD form with type-specific conditions UI
+- R152d: Bulk migration script (admin Cloud Function)
+- R152e: Adapter UI showing legacy + new merged in same list
+
+### Files
+- src/ts/pages/experiments-unified.ts (new)
+- index.html (sidebar + page section + detail modal)
+- src/ts/main.ts (lazy loader)
+- src/ts/services/global-delegation.ts (1 case + 1 change listener)
+- CHANGELOG.md (this entry)
+
+## R152b — Experiments service + adapter + tests + rules (2026-05-10)
+
+### Added
+- `src/ts/services/experiments.ts` (new):
+  - `getExperiment`, `listExperiments`, `listExperimentsBySample`
+    (handles input+output sample queries, dedupes)
+  - `getExperimentMerged` — adapter pattern (§6.1): tries Firestore
+    first, falls back to RTDB hydro/electrode/electrochem with
+    `adaptLegacyExperiment` synthesizer
+  - `createExperiment` with auto-code (HT/E/EC/INK/SYN/SG/CVD/...)
+  - `updateExperiment`, `setExperimentStatus`
+  - `deleteExperiment` intentionally NOT exported (use status="abandoned")
+- `tests/services/experiments.test.ts` (new): ~15 cases covering
+  Firestore branch (legacy adapter not tested — defensive code).
+  Mocks fbGet to always return null.
+
+### Changed
+- `firestore.rules`: append `/experiments/{id}` block.
+  - Same pattern as samples
+  - **legacyRef is immutable** to preserve audit trail integrity
+- `vitest.config.js`: extend coverage with experiments.ts.
+
+### Backward compat strategy (spec §6.3)
+- Legacy RTDB collections stay read-only forever
+- All NEW writes go to Firestore experiments collection
+- `getExperimentMerged` lazy-reads both — caller doesn't care about source
+- Existing experiments.ts page (1500+ LOC) NOT modified — still writes
+  to legacy RTDB. R152c will introduce unified UI page that uses new
+  Firestore writes.
+
+### Production deploy procedure
+```bash
+npm run typecheck && npm test
+firebase deploy --only firestore:rules
+```
+
+### Out of scope (R152c+)
+- Unified Experiments UI page → R152c
+- Bulk migration script (admin Cloud Function) → R152d
+- Modify legacy experiments.ts to dual-write → defer indefinitely
+  (not needed since legacy stays read-only)
+
+### Files
+- src/ts/services/experiments.ts (new)
+- tests/services/experiments.test.ts (new)
+- firestore.rules (append /experiments block)
+- vitest.config.js (coverage)
+- CHANGELOG.md (this entry)
+
+## R152a — Experiment entity types (2026-05-10)
+
+### Context
+Third sub-round of Phase B.5 (R3 in spec, opens after Material/Sample).
+Parallel R150a/R151a strategy: types only, no runtime, no service.
+
+### Added
+Appended to `src/ts/types/research.ts`:
+- `ExperimentType` — 12-value union covering synthesis, hydrothermal,
+  electrochemistry, characterization, compute, etc.
+- `ExperimentStatus` — planned / in-progress / completed / failed /
+  abandoned
+- `ExperimentConditionValue<U>` — value + unit pair
+- `ExperimentConditions` — temperature/duration/pressure/pH/atmosphere
+  enumerated common fields + index signature for type-specific extras
+- `ExperimentLegacyRef` — backward-compat pointer to legacy RTDB
+  hydro/electrode/electrochem
+- `ExperimentDerivedMetrics` — loose object (full structured metrics
+  → DataAsset in R153)
+- `Experiment` interface matching spec §3.3 with full lineage
+  (inputSamples/outputSamples/parentExperiment), legacy bridge, audit.
+
+### Out of scope (deferred)
+- R152b: Firestore service (adapter pattern reading both legacy +
+  new) + tests + rules
+- R152c: Unified Experiments UI page
+- R152d/e: Bulk migration script + admin Cloud Function (§6.2)
+
+### Verify
+```bash
+npm run typecheck   # expect 0 errors
+npm test            # expect 197/197 (no test changes)
+```
+
+### Files touched
+- src/ts/types/research.ts (appended Experiment types)
+- CHANGELOG.md (this entry)
+
+## R151d-2 — Sample lineage picker + auto-compute (2026-05-10)
+
+### Added
+- Sample form lineage block:
+  - Typeahead input "Gõ tên/composition mẫu cha..."
+  - Suggestions dropdown (filters cache by name/composition/shortCode,
+    excludes already selected + sample being edited)
+  - Click suggestion → adds badge with X button to remove
+- Auto-compute on submit:
+  - `rootMaterials` = union of parents' rootMaterials ∪ ([materialRef]
+    if specified)
+  - `generation` = max(parent.generation) + 1, hoặc 0 if no parents
+  - `isComposite` = parents.length >= 2
+- Detail modal: parent IDs become clickable badges → navigates to that
+  sample's detail (uses existing open-sample-detail handler)
+
+### samples.ts new exports
+- `addParentBadge(id)` / `removeParentBadge(id)` — manage selection
+- `searchParentsHandler(query)` — typeahead suggestions
+
+### global-delegation.ts
+- 2 new click cases: add-parent-badge, remove-parent-badge
+- 1 new input listener for #smp-parent-search
+
+### Out of scope (future)
+- MaterialRef dropdown picker (still text input)
+- Lineage tree visual graph (R154)
+- Cycle detection (sample picking ancestor as parent — Firestore won't
+  prevent, app-level check could be added but rare in practice)
+
+### Files
+- src/ts/pages/samples.ts (extended)
+- index.html (lineage block in form modal)
+- src/ts/services/global-delegation.ts (2 cases + 1 listener)
+- CHANGELOG.md (this entry)
+
+## R151d-1 — Sample CRUD form (no lineage) (2026-05-10)
+
+### Added
+- "Thêm mẫu" button in samples page header.
+- Search input with 250ms debounce (name, shortCode, composition, tags).
+- Form modal `#modal-sample-form` (create + edit). Fields: name (auto-gen
+  if empty), shortCode, composition (required), materialRef (text input
+  for now), status, amount (value+unit), storageLocation, tags, notes.
+- Edit button in detail modal footer.
+- samples.ts: openSampleForm, submitSampleForm, searchSamplesHandler,
+  openSampleFormFromDetail bridge.
+- global-delegation.ts: 3 click cases + 1 input listener.
+
+### Out of scope (R151d-2)
+- Lineage parents picker (multi-select samples)
+- Auto-compute rootMaterials + generation from parents
+- MaterialRef dropdown picker (currently text input — admin pastes ID)
+
+### Files touched
+- src/ts/pages/samples.ts (rewritten with form handlers)
+- index.html (page header, detail footer, form modal)
+- src/ts/services/global-delegation.ts (3 cases + input listener)
+- CHANGELOG.md (this entry)
+
+## R151c — Samples browser (list view) (2026-05-10)
+
+### Added
+- `src/ts/pages/samples.ts` (new): renderSamples groups by status
+  (available / in-use / consumed / archived / discarded with color
+  dots), card click opens detail modal showing all fields including
+  parents lineage list and rootMaterials.
+- `index.html`:
+  - Sidebar item "Mẫu" after "Vật liệu", flask SVG icon.
+  - Page section + detail modal.
+- `src/ts/main.ts`: `samples` entry in `_pageLoaders`.
+- `src/ts/services/global-delegation.ts`: open-sample-detail handler.
+
+### Out of scope (R151d/e)
+- CRUD form (R151d)
+- Lineage tree visual graph (R151d or R154)
+- Click parent sampleId in detail → navigate to that sample (R151d)
+- Material ↔ Sample bidirectional link UI (R151e)
+
+### Files touched
+- src/ts/pages/samples.ts (new)
+- index.html (sidebar + section + detail modal)
+- src/ts/main.ts (lazy loader entry)
+- src/ts/services/global-delegation.ts (1 case)
+- CHANGELOG.md (this entry)
+
+## R151b — Samples CRUD service + tests + rules (2026-05-10)
+
+### Added
+- `src/ts/services/samples.ts` (new): CRUD service parallel materials.ts
+  - `getSample`, `listSamples`, `listSamplesByRootMaterial`,
+    `searchSamples`, `createSample`, `updateSample`, `setSampleStatus`
+  - `deleteSample` intentionally NOT exported (use status="discarded")
+  - Lineage-aware: `listSamplesByRootMaterial` uses `array-contains`
+    on denormalized `rootMaterials` field for fast queries
+  - Auto-generates sample name "{composition}-batch-{date}-{counter}"
+    when not provided
+  - Skips undefined optional fields (R150b-fix2 lesson learned)
+- `tests/services/samples.test.ts` (new): ~17 cases covering all read
+  paths (getSample tenant isolation, listSamples filters, lineage
+  queries, search), all writes (createSample auto-name + explicit,
+  validation, updateSample, setSampleStatus).
+
+### Changed
+- `firestore.rules`: append `/samples/{id}` block.
+  - read: authed + tenant
+  - create: role in [member, admin, superadmin] + createdBy=auth.uid
+  - update: creator OR admin/superadmin (with immutable fields)
+  - delete: admin/superadmin only
+  Preserves materials (R150c) + aiChunks (R134a) blocks.
+- `vitest.config.js`: extend coverage.include with samples.ts.
+
+### Production deploy procedure (manual after green tests)
+```bash
+npm run typecheck
+npm test
+cd functions && npm run build && cd ..   # safety
+firebase deploy --only firestore:rules
+```
+
+### Out of scope (R151c+)
+- Sample browser UI list → R151c
+- Sample CRUD form + lineage display → R151d
+- Material ↔ Sample bidirectional link → R151e
+
+### Files touched
+- src/ts/services/samples.ts (new)
+- tests/services/samples.test.ts (new)
+- firestore.rules (append /samples block)
+- vitest.config.js (coverage)
+- CHANGELOG.md (this entry)
+
+## R151a — Sample entity types (2026-05-10)
+
+### Context
+First sub-round of R151 (Phase B.5 R2). Parallel R150a strategy: types
+only, no runtime code, no service, no UI, no deploy.
+
+### Added
+Appended to `src/ts/types/research.ts`:
+- `SampleStatus` — lifecycle enum (available, in-use, consumed,
+  archived, discarded)
+- `SynthesisMethod` — common methods (hydrothermal, sol-gel, CVD, ...)
+  with string fallback
+- `SampleAmount` — value + unit
+- `Sample` interface matching spec §3.2 with lineage (parents,
+  rootMaterials denormalized, generation), origin
+  (synthesisExperimentRef, synthesisMethod, synthesisDate), lifecycle
+  (status, amount, location), annotations (notes, tags), audit.
+
+### Out of scope (deferred to R151b/c/d/e)
+- R151b: Firestore service (CRUD) + tests + rules deploy
+- R151c: Sample browser UI list
+- R151d: Sample CRUD form + lineage display
+- R151e: Sample ↔ Material link
+
+### Verify
+```bash
+npm run typecheck   # expect 0 errors
+npm test            # expect 180/180 (no test changes)
+```
+
+### Files touched
+- src/ts/types/research.ts (appended Sample types)
+- CHANGELOG.md (this entry)
+
+## R150c-followup — Role claim migration + auto-sync (2026-05-10)
+
+### Context
+R150c set `tenantId` claim but NOT `role` claim. Firestore rules for
+materials require `role=admin|superadmin` → all UI writes failing with
+PERMISSION_DENIED until role claim is migrated.
+
+### Added
+- `scripts/migrate-role-claims-r150c-fu.mjs` (new): bulk migration that
+  reads RTDB `users/{uid}/role` and sets as Firebase Auth custom claim.
+  Preserves tenantId from R150c. Idempotent. --dry-run / --confirm flags.
+
+- `functions/src/triggers/sync-role-claim.ts` (new): RTDB v2
+  `onValueWritten` trigger on `/users/{uid}/role`. Auto-updates role
+  claim whenever admin changes role in RTDB. Gen2, Node 24, no GCIP.
+
+- `functions/src/index.ts` (modified): export `syncRoleClaim`.
+
+### Production deploy procedure (3 steps)
+```bash
+# Step 1: Bulk migrate role claim for existing users
+node scripts/migrate-role-claims-r150c-fu.mjs --dry-run
+# Review output: ~8 users with their roles
+node scripts/migrate-role-claims-r150c-fu.mjs --confirm
+# Users must sign out + back in for new claim to take effect
+
+# Step 2: Build + deploy trigger
+cd functions && npm run build && cd ..
+firebase deploy --only functions:syncRoleClaim
+
+# Step 3: Verify in browser
+# - Admin user signs out + back in
+# - Open Materials page → click "Thêm vật liệu"
+# - Submit valid material → expect SUCCESS (not PERMISSION_DENIED)
+```
+
+### Rollback
+```bash
+# Clear role claim (rerun migration with empty role) — manual edit script needed
+# OR re-run R150c migration (which doesn't touch role)
+firebase functions:delete syncRoleClaim --region asia-southeast1
+```
+
+### Future: commercial fork
+When upgrading to GCIP, the v2 `beforeUserCreated` trigger (deferred in
+R150c) can also set initial role on signup based on invite code. For now
+new signups get role from existing RTDB workflow (admin approval flow).
+
+### Files
+- scripts/migrate-role-claims-r150c-fu.mjs (new)
+- functions/src/triggers/sync-role-claim.ts (new)
+- functions/src/index.ts (modified)
+- CHANGELOG.md (this entry)
+
+## R150e — Connect chemicals → materials (one-way) (2026-05-10)
+
+### Added
+Materials detail modal now includes "Hóa chất trong kho" section listing
+all chemicals (from `window.cache.chemicals`) whose formula matches the
+material's formula (case-insensitive). Each entry shows name, vendor,
+purity, stock + unit. Click → navigates to chemicals page.
+
+If no matches: shows "Không có chai hóa chất nào trùng công thức..."
+message.
+
+### Design notes
+- One-way link only (Materials → Chemicals lookup). Chemicals page NOT
+  modified — too large, too risky to touch this round.
+- Uses formula matching, NOT a stored `materialRef` field on chemicals.
+  Trade-off: simple + automatic, but matches all chemicals with same
+  formula even if user didn't intend the link. Acceptable since formula
+  is canonical identifier.
+- Click chemical → just opens chemicals page (no auto-filter to specific
+  chemical). Filter can be added in follow-up if needed.
+
+### Files
+- src/ts/pages/materials.ts: added `renderLinkedChemicals()` helper,
+  invoked inside `openMaterialDetail`.
+- CHANGELOG.md (this entry).
+
+### Verify
+```bash
+npm run typecheck && npm run build
+```
+
+Browser test:
+- Open Material detail → expect "Hóa chất trong kho" section
+- If material formula matches a chemical's formula → see chemical entry
+- Click chemical → chemicals page opens
+
+## R150d-2 — Materials CRUD UI + search (2026-05-10)
+
+### Added
+- "Thêm vật liệu" button (admin-only) in page header.
+- Form modal `#modal-material-form` (create + edit modes).
+- Edit button in detail modal footer (admin-only).
+- Search input with 250ms debounced filter.
+- materials.ts: openMaterialForm, submitMaterialForm,
+  searchMaterialsHandler, openMaterialFormFromDetail bridge.
+- global-delegation.ts: 4 new click cases + 1 input listener.
+
+### Known limitation
+Firestore rules require role admin/superadmin claim, but role claim NOT
+migrated yet (R150c only set tenantId). createMaterial/updateMaterial
+will fail with PERMISSION_DENIED until role claim migration round.
+UI shows error toast with explanation.
+
+### Files
+- src/ts/pages/materials.ts (rewritten)
+- index.html (page header, detail modal footer, form modal)
+- src/ts/services/global-delegation.ts (4 cases + input listener)
+- CHANGELOG.md (this entry)
+
+## R150d-1 — Materials browser (list view) (2026-05-10)
+
+### Context
+First user-visible page of Phase B.5. Renders materials list grouped by
+category, click card to view detail modal. Empty state when no data
+(create UI deferred to R150d-2).
+
+### Added
+- `src/ts/pages/materials.ts` (new file): renderMaterials() loads from
+  service via Firestore listMaterials, groups by category in fixed order
+  (TMD → oxide → perovskite → MOF → carbon → alloy → polymer → salt →
+  composite → other), renders responsive grid of cards. Card click
+  opens detail modal showing formula, name, aliases, knownProperties,
+  references count, ID, tenantId.
+- `index.html`:
+  - Sidebar item "Vật liệu" before "Hóa chất" entry, atom-like SVG icon.
+  - Page section `<div id="page-materials">` with content placeholder.
+  - Detail modal `#modal-material-detail`.
+- `src/ts/main.ts`: `materials` entry in `_pageLoaders` map for lazy
+  load. Wires `window.renderMaterials` + `window.openMaterialDetail`.
+
+### Out of scope (R150d-2+)
+- Create/edit material form
+- Search/filter UI
+- Connect to chemicals page (link by formula)
+- Edit on cards
+- Pagination (current limit 500 in service)
+- Delegation handler for `data-action="open-material-detail"` — needs to
+  be added to `services/global-delegation.js` to call window.openMaterialDetail.
+  **Page works visually but card click won't open modal until R150d-1-fix1
+  or R150d-2 wires the delegation.**
+
+### Verify
+```bash
+npm run typecheck
+npm run build
+npm run dev
+# Open browser, click "Vật liệu" in sidebar, expect:
+# - Empty state message ("Chưa có vật liệu nào. CRUD UI sẽ thêm ở R150d-2.")
+# - No console errors
+```
+
+### Files touched
+- src/ts/pages/materials.ts (new)
+- index.html (sidebar + section + modal)
+- src/ts/main.ts (lazy loader entry)
+- CHANGELOG.md (this entry)
+
+## R150c-fix3 — Trigger deferred until GCIP (2026-05-10)
+
+### Issue
+`beforeUserCreated` blocking trigger requires Google Cloud Identity Platform
+(GCIP), a paid upgrade of Firebase Auth. Project currently uses standard
+Firebase Auth → deploy fails with `OPERATION_NOT_ALLOWED: Blocking Functions
+may only be configured for GCIP projects`.
+
+v1 `auth.user().onCreate()` (non-blocking, GCIP not required) cannot run on
+Node 24 (Gen1 limit) — also fails.
+
+### Fix
+Removed trigger export from `functions/src/index.ts`. Trigger source code
+moved to `functions/src/triggers/on-auth-create.ts.deferred-until-gcip`
+(kept as reference, not compiled).
+
+### New user signup workflow (until GCIP)
+Manual: run migration script when new users register.
+```bash
+node scripts/migrate-tenant-claims-r150c.mjs --dry-run
+node scripts/migrate-tenant-claims-r150c.mjs --confirm
+```
+Lab BKU has ~8 users, signups infrequent → manual is acceptable.
+
+### Restore at Phase E (commercial launch)
+1. Upgrade Firebase Auth → GCIP in Firebase Console
+2. Rename `.deferred-until-gcip` back to `.ts`
+3. Re-add export in `functions/src/index.ts`
+4. `firebase deploy --only functions:setTenantOnCreate`
+
+GCIP cost: free 50 MAU, $0.0055/user/month after. Negligible at lab scale.
+
+
+## R150c-fix2 — DB name + Node 24 trigger fix (2026-05-10)
+
+Issue 1: `firestore.rules` deployed to DB `labbook` (correct per
+`firebase.json`). But R150a/b service code used `getFirestore(app)` =
+default DB. Mismatch — frontend writes would go to wrong DB.
+
+Fix: `src/ts/firebase.ts` now `getFirestore(app, "labbook")`.
+
+This corrects R150a/b CHANGELOG claim that Phase B shipped against
+default DB — wrong, Phase B used named DB `labbook` since R134.
+
+Issue 2: v1 `auth.user().onCreate()` runs Gen1 which doesn't support
+Node 24 (project default). Deploy failed.
+
+Fix: switched to v2 `beforeUserCreated` blocking trigger. Sets claim via
+return value, runs on Node 24.
+
+### Verify
+```bash
+npm run typecheck
+cd functions && npm run build && cd ..
+firebase deploy --only functions:setTenantOnCreate
+```
+
+## R150c — Firestore rules + tenant claim migration (2026-05-10)
+
+### Phase 1: Files only (no deploy)
+This patch creates files but does NOT deploy. Production deploy is
+4-step manual process documented below.
+
+### Added
+- `scripts/migrate-tenant-claims-r150c.mjs` — bulk-set
+  `tenantId="default"` custom claim for all existing Firebase Auth
+  users. Idempotent, supports --dry-run preview.
+- `scripts/test-firestore-rules-r150c.mjs` — emulator-based rules
+  test covering aiChunks (R134a preserved) + materials (new) for read,
+  create, update, delete with tenant isolation.
+- `functions/src/triggers/on-auth-create.ts` — Cloud Function trigger
+  auto-setting tenantId claim for all future user signups. Region
+  asia-southeast1.
+
+### Changed
+- `firestore.rules` — added /materials/{id} block:
+  - read: authed + matching tenantId
+  - create: admin/superadmin claim + matching tenantId + createdBy=auth.uid
+  - update: admin/superadmin + immutable fields (tenantId, formula,
+    createdBy, createdAt)
+  - delete: always denied (mark deprecated instead per design)
+  Preserves R134a aiChunks block unchanged.
+- `functions/src/index.ts` — exports new `setTenantOnCreate` trigger.
+
+### Production deploy procedure (4 steps, manual)
+```bash
+# Step 1: Install rules-testing dep (one-time)
+npm i -D @firebase/rules-unit-testing
+
+# Step 2: Test rules on emulator
+firebase emulators:start --only firestore &
+node scripts/test-firestore-rules-r150c.mjs
+# Expect: all tests pass. Stop emulator (Ctrl+C).
+
+# Step 3: Bulk migration (production Auth)
+node scripts/migrate-tenant-claims-r150c.mjs --dry-run
+# Review output: ~50 users will receive tenantId="default"
+node scripts/migrate-tenant-claims-r150c.mjs --confirm
+# Users must sign out + sign back in for claims to refresh in tokens
+
+# Step 4: Deploy rules + Cloud Function trigger
+cd functions && npm run build && cd ..
+firebase deploy --only firestore:rules,functions:setTenantOnCreate
+# Verify: lab user can still read aiChunks (existing).
+# Verify: admin can create test material via Console / app.
+```
+
+### Rollback procedure
+If rules cause issues:
+```bash
+git checkout HEAD~1 firestore.rules
+firebase deploy --only firestore:rules
+```
+If migration causes issues:
+```bash
+# Clear tenantId claims (rerun script with --confirm after editing
+# TARGET_TENANT to null, OR write a custom clear script)
+```
+
+### Out of scope (deferred)
+- R150d: Materials browser UI (next round)
+- Role check via custom claim — currently rules check `request.auth.token.role`
+  but custom claim only has `tenantId`. Admin role check effectively
+  always returns false, meaning create/update on materials is BLOCKED
+  until role claims are also migrated. **Important: until R150c-followup
+  adds role claims, materials writes work only via admin SDK / Cloud
+  Functions.** This is acceptable for Phase B.5 since UI for create
+  comes in R150d and can route through Cloud Function if needed.
+
+### Files touched
+- firestore.rules (modified)
+- scripts/migrate-tenant-claims-r150c.mjs (new)
+- scripts/test-firestore-rules-r150c.mjs (new)
+- functions/src/triggers/on-auth-create.ts (new)
+- functions/src/index.ts (modified — append export)
+- CHANGELOG.md (this entry)
+
+## R150b — Firestore client + Materials CRUD service (2026-05-10)
+
+### Context
+Second micro-round of R150 (Phase B.5 R1). Bootstraps Firestore client
+SDK in the frontend (first time — Phase B used firebase-admin only on
+backend). Implements Materials CRUD service per spec §3.1.
+
+### Added
+- `src/ts/firebase.ts`: Firestore client init + emulator wiring +
+  re-exports of primitives (collection, doc, getDoc, getDocs, setDoc,
+  updateDoc, query/where/orderBy/limit, serverTimestamp, Timestamp).
+- `src/ts/services/materials.ts` (new file):
+  - `getMaterial(id, tenantId)` — single doc read with tenant check
+  - `listMaterials({tenantId, category, limit})` — paginated list
+  - `searchMaterials(q, {tenantId, limit})` — substring match across
+    formula/name/aliases (in-memory filter, acceptable up to ~1000 docs)
+  - `createMaterial(input, uid, tenantId)` — admin-only write (rules R150c)
+  - `updateMaterial(id, patch, uid)` — partial update with updatedAt refresh
+  - `checkFormulaExists(formula, tenantId)` — uniqueness pre-check
+  - `deleteMaterial` INTENTIONALLY OMITTED per design (mark deprecated only)
+- `tests/services/materials.test.ts` (new file): ~16 test cases across
+  getMaterial, listMaterials, searchMaterials, createMaterial,
+  updateMaterial, checkFormulaExists.
+
+### Mock strategy
+`vi.mock("firebase/firestore")` at module level + `vi.mock("../../src/ts/firebase")`
+to short-circuit the wrapper's initializeApp side effects. Both test
+file and service resolve `firebase/firestore` from root node_modules
+→ same resolution path → mock works (unlike R145b case where
+functions/node_modules caused bypass).
+
+In-memory store (`mockDocs[]`) reset in `beforeEach`. Filters from
+where/orderBy/limit are attached to query and applied in mocked
+getDocs implementation.
+
+### Changed
+- `vitest.config.js`: extend `coverage.include` with materials.ts.
+
+### Out of scope (deferred)
+- R150c: tenant claim migration + Firestore rules update + production
+  deploy (the riskier round)
+- R150d: Materials browser UI page
+- R150e: Connect chemicals → materials via formula match
+- R150f: Documentation sync (research-schema.md `labbook` named DB → default DB)
+
+### Verify
+```bash
+npm run typecheck   # expect 0 errors
+npm test            # expect 175+ pass (161 + ~16 new)
+```
+
+### Files touched
+- src/ts/firebase.ts (modified — Firestore additions)
+- src/ts/services/materials.ts (new)
+- tests/services/materials.test.ts (new)
+- vitest.config.js (modified — coverage)
+- CHANGELOG.md (this entry)
+
+## R150a — Material entity types (2026-05-10)
+
+### Context
+First sub-round of R150 (Phase B.5 R1). Phase B.5 implements the unified
+research schema (Materials, Samples, Experiments, DataAssets, Instruments)
+per `docs/research-schema.md`. R150 is divided into micro-rounds:
+
+  - R150a: Material types ← this round
+  - R150b: Firestore client bootstrap + Materials CRUD service
+  - R150c: tenant-claim migration + Firestore rules update + deploy
+  - R150d: Materials browser UI
+  - R150e: Connect chemicals → materials
+  - R150f: Documentation sync (reconcile spec with reality)
+
+### Scope (intentionally narrow)
+Only TypeScript interface definitions. No runtime code, no service, no
+test, no deploy. Risk floor for opening Phase B.5.
+
+### Added
+- `src/ts/types/research.ts` (new file):
+  - `ResearchTimestamp` — union shim avoiding `firebase/firestore` import
+    at the type level. Concrete services pick canonical form in R150b.
+  - `Material`, `MaterialCategory`, `MaterialKnownProperties`,
+    `MaterialExternalIds` interfaces matching spec §3.1.
+
+### Design decisions locked (assumed from memory; please verify)
+1. **Storage**: Firestore default DB, NOT the named DB `labbook`
+   mentioned in spec §2. Phase B (R130-R143) shipped against the default
+   DB; spec is outdated. R150f will reconcile.
+2. **Material formula uniqueness**: per tenant (not global). Spec §12
+   listed this as open; memory records resolution as per-tenant.
+3. **Permission model**: lab-wide read (any authenticated user with
+   matching tenantId) + role-based write (admin/superadmin only).
+   Spec §12 listed this as open; memory records this resolution.
+4. **Delete policy**: never. Mark deprecated via field or subcategory.
+
+### Out of scope (deferred)
+- Sample, Experiment, DataAsset, Instrument types → R151-R154
+- Firestore client SDK in `src/ts/firebase.ts` → R150b
+- Materials CRUD service + tests → R150b
+- Tenant claim migration → R150c (production deploy round)
+- Firestore rules update for `/materials/{id}` → R150c
+- Materials browser page → R150d
+- Chemicals integration → R150e
+
+### Verify
+```bash
+npm run typecheck   # expect 0 errors
+npm test            # expect 161/161 still pass (no test changes)
+```
+
+### Files touched
+- src/ts/types/research.ts (new)
+- CHANGELOG.md (this entry)
+
+## R145a — BM25 backend test coverage + CJS interop (2026-05-10)
+
+### Context
+R144 covered pure-logic modules of BM25 (chemistry-patterns, RRF). R145a
+extends coverage to the remaining backend BM25 files: stemmer (Porter v2
+via `natural` CJS), stopwords (`stopwords-iso` CJS + VI hardcoded list +
+chemistry whitelist), tokenizer (the orchestrator), and types (constants).
+
+The BM25 module is now ~80% covered. Remaining gaps: corpus-stats,
+bm25-engine, hybrid-engine — all need Firestore mocks (R146+).
+
+### Strategy: Option Y — CJS interop via Vitest server.deps.inline
+Two npm packages used by the BM25 backend are CommonJS-only:
+  - `natural` (Porter v2 stemmer)
+  - `stopwords-iso` (179 English stopwords)
+
+Root project is ESM (`"type": "module"`), so Vitest crashes on transitive
+CJS imports without configuration. Three options were considered:
+  - X: Mock both packages → fast but tests fake behavior, drift risk
+  - Y: Configure CJS interop → tests real behavior, one-time setup cost
+  - Z: Skip EN-specific tests → low coverage, deferred debt
+
+Chose Y for long-term value: the same CJS/ESM problem will recur when
+testing Firebase Admin SDK (R145b), Firestore SDK (Phase B.5), and any
+backend lib added later. Solving it once = template for future rounds.
+
+If interop fails on a given environment, EN-specific tests (Porter stems
+"running" → "run") fail with clear errors. Plan B: fall back to Option Z
+for affected tests, document follow-up.
+
+### Added
+- `tests/bm25/types.test.ts` — 3 cases. Locks TOKENIZER_VERSION=2,
+  DEFAULT_K1=1.5, DEFAULT_B=0.75, Firestore path constants.
+- `tests/bm25/stemmer.test.ts` — 12 cases. Chemistry bypass, Porter stem
+  for EN -ing/-ed/-s, VI no-stem lowercase, mixed/empty edge cases.
+- `tests/bm25/stopwords.test.ts` — 25 cases. VI hardcoded list,
+  chemistry whitelist (V/A/M/T/K/eV/mV/pH...), EN via stopwords-iso,
+  mixed language fallthrough, detectLanguage heuristic (4% diacritic
+  threshold + 15% English ratio for mixed).
+- `tests/bm25/tokenizer.test.ts` — 25 cases including 5 integration:
+  realistic EN materials science abstract, VI abstract, mixed VI+EN,
+  determinism check, re-export wiring.
+
+### Changed
+- `vitest.config.js`:
+  - `coverage.include` extended to track the 4 new BM25 source files.
+  - Added `server.deps.inline: [/^natural/, /^stopwords-iso/]` to enable
+    CJS interop. This is the canonical Vite/Vitest pattern for letting
+    ESM test code import CJS-only packages.
+
+### Known limitations
+- `mixed` language test (`tokenize` integration) accepts either "mixed"
+  or "vi" because detectLanguage thresholds are sensitive to exact
+  character ratios. Not strict because behavior is heuristic, not API.
+- If `natural` package version changes Porter stemmer output (rare),
+  tests like `running` → `run` may need updating.
+
+### Out of scope (deferred)
+- Action tools tests (createExperimentDraft, updateChemicalStock,
+  createBooking) — need Firebase Admin SDK mocks → R145b.
+- BM25 engines (bm25-engine, hybrid-engine, engine) — need corpus +
+  Firestore mocks → R146.
+- Frontend `src/ts/ai/rag/retrieval/bm25.ts` — separate code path,
+  may have own logic divergent from backend → R147 if needed.
+
+### Verify
+```bash
+npm test            # expect 168+ tests pass (108 existing + ~60 new)
+npm run typecheck   # expect 0 errors
+```
+
+### Files touched
+- tests/bm25/types.test.ts (new)
+- tests/bm25/stemmer.test.ts (new)
+- tests/bm25/stopwords.test.ts (new)
+- tests/bm25/tokenizer.test.ts (new)
+- vitest.config.js (modified — coverage + server.deps.inline)
+- CHANGELOG.md (this entry)
+
+## R144 — BM25 pure logic test coverage (2026-05-10)
+
+### Context
+Phase B (R105-R143) closed. Phase B.5 (R150-R155) Research Schema overhaul
+will touch search/RAG via R152 (Experiments unified collection) and Phase
+B.6 AI integration. BM25 + RRF have been production code since R137a/b but
+had zero unit test coverage — silent regression risk before schema-touching
+rounds. R144 adds targeted tests for the pure-logic modules (no Firebase,
+no CJS deps) that are most likely to break invisibly under refactor.
+
+### Added
+- `tests/bm25/chemistry-patterns.test.ts` — 15+ test cases covering
+  `isChemistryToken`, `isPureNumber`, `isShortUnitToken`. Verifies that
+  domain tokens (MoS2, WO3, LiFePO4, Cu2+, 25°C, XRD, EIS, α/Ω, DOIs) are
+  preserved as-is and plain English words / pure numbers are rejected.
+- `tests/search/rrf.test.ts` — 10+ test cases covering `rrfMerge`. Verifies
+  the canonical RRF formula `1 / (k + rank)`, multi-list fusion, k
+  sensitivity, topK truncation, ties, edge cases (empty lists, topK=0,
+  metadata preservation).
+
+### Changed
+- `vitest.config.js` — extended `coverage.include` to track
+  `functions/src/bm25/chemistry-patterns.ts` and
+  `functions/src/search/rrf.ts`.
+
+### Out of scope (deferred)
+- `functions/src/bm25/tokenizer.ts` — transitively imports `natural` (CJS)
+  via `stemmer.ts`. Needs Vitest CJS shim or separate `functions/`-scoped
+  test runner. Defer to R145+.
+- `functions/src/bm25/stopwords.ts` — uses `require("stopwords-iso")`
+  inside lazy loader. Same CJS issue. Defer.
+- `functions/src/bm25/stemmer.ts` — direct CJS dep on `natural`. Defer.
+- BM25 / search engines (`bm25-engine.ts`, `hybrid-engine.ts`,
+  `engine.ts`) — need corpus + Firestore mocks. Defer to R146+.
+- Action tools (`createExperimentDraft`, `updateChemicalStock`,
+  `createBooking`) — need RTDB + auth mocks. Defer to R147+.
+
+### Verify
+```bash
+npm test            # expect 87+ passing (62 existing + 25 new)
+npm run typecheck   # expect 0 errors
+```
+
+### Files touched
+- tests/bm25/chemistry-patterns.test.ts (new)
+- tests/search/rrf.test.ts (new)
+- vitest.config.js (modified)
+- CHANGELOG.md (this entry)
+
 Concise version history. For full git log: `git log --oneline`.
 
 ## [Round 143 — Roadmap sync + long-term reference] - 2026-05-10

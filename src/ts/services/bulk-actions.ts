@@ -8,7 +8,7 @@
  *  - Trigger loop khi mouseenter/mouseleave sidebar
  *  - Loop dừng sau 500ms (đủ cho mọi sidebar animation)
  */
-// @ts-nocheck
+// @ts-nocheck — Service layer — DOM event handlers + legacy patterns. Defer typing until UI rewrite.
 
 
 import { db, ref, update, remove } from '../firebase.js'

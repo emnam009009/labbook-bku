@@ -18,7 +18,7 @@
  *  - Drag & drop ảnh vào ô ảnh để upload (gọi window.dropImageToCell)
  *  - Edit chỉ admin (clickable-row + click cell ảnh)
  */
-// @ts-nocheck
+// @ts-nocheck — Legacy DOM page — will be replaced in Next.js + Carbon port (Phase E). Don't fix here.
 
 
 import { vals, fuzzy, escapeHtml, escapeJs } from '../utils/format.js'

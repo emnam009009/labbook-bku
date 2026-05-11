@@ -10,7 +10,7 @@
  *   - Thêm vào index.html: <script type="module" src="/src/ts/labbook-extensions.ts"></script>
  *   - Hoặc import vào main.js: import './labbook-extensions.ts'
  */
-// @ts-nocheck
+// @ts-nocheck — Legacy extensions file — pre-refactor, scheduled for removal in audit round.
 
 
 

@@ -12,7 +12,7 @@
  * 5. Write RTDB metadata
  * 6. Toast success
  */
-// @ts-nocheck
+// @ts-nocheck — AI module — partial typing (R105+ skeleton). Cleanup after RAG/streaming stabilization.
 
 import { storage, db } from "../../firebase";
 import { ref as stRef, uploadBytesResumable } from "firebase/storage";

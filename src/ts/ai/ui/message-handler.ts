@@ -9,7 +9,7 @@
  * Round 113a2: streaming stuck fix (latestAccumulated tracker).
  * Round 113b: stop button, regenerate, auto-rename, better error toast.
  */
-// @ts-nocheck
+// @ts-nocheck — AI module — partial typing (R105+ skeleton). Cleanup after RAG/streaming stabilization.
 
 import {
   appendMessage,

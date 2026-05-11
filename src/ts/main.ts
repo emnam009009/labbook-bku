@@ -3,7 +3,7 @@
  * Entry point — import CSS, Firebase, và chạy toàn bộ ứng dụng
  * Vite sẽ bundle file này cùng tất cả imports thành 1 file tối ưu
  */
-// @ts-nocheck
+// @ts-nocheck — Entry bootstrap — 183 errors mostly unused imports. Cleanup deferred.
 
 
 // ── Import CSS ───────────────────────────────────────────
@@ -46,6 +46,8 @@ import { showPage, toggleSidebarSection, toggleHistory, switchElectrodeTab } fro
 import { startListeners, stopListeners, updateChatFabBadge } from './services/listeners.js'
 import { renderAll } from './services/render-dispatcher.js'
 import { renderDash } from './pages/dashboard.js'
+import './pages/data-assets.js';
+import './pages/lineage.js';
 
 // ── Theme picker ──────────────────────────────────────────
 import { initTheme } from './services/theme.js'
@@ -1328,6 +1330,28 @@ const _pageLoaders = {
     window.renderChemicals = m.renderChemicals;
     window.toggleChemGroup = m.toggleChemGroup;
     if (typeof window.renderChemicals === 'function') window.renderChemicals();
+  },
+  // R150d-1: Materials browser (Phase B.5)
+  materials: async () => {
+    const m = await import('./pages/materials.js');
+    window.renderMaterials = m.renderMaterials;
+    window.openMaterialDetail = m.openMaterialDetail;
+    if (typeof window.renderMaterials === 'function') window.renderMaterials();
+  },
+  // R151c: Samples browser (Phase B.5)
+  samples: async () => {
+    const m = await import('./pages/samples.js');
+    window.renderSamples = m.renderSamples;
+    window.openSampleDetail = m.openSampleDetail;
+    if (typeof window.renderSamples === 'function') window.renderSamples();
+  },
+  // R152c-1: Unified experiments (Phase B.5)
+  'experiments-unified': async () => {
+    const m = await import('./pages/experiments-unified.js');
+    window.renderExperimentsUnified = m.renderExperimentsUnified;
+    window.openExperimentDetail = m.openExperimentDetail;
+    window.filterExperimentsByType = m.filterExperimentsByType;
+    if (typeof window.renderExperimentsUnified === 'function') window.renderExperimentsUnified();
   },
   booking: async () => {
     const m = await import('./pages/booking.js');

@@ -14,7 +14,7 @@
  *  - cache.bookings, cache.equipment, cache.chemicals qua window.cache
  *  - showToast qua window.showToast
  */
-// @ts-nocheck
+// @ts-nocheck — Service layer — DOM event handlers + legacy patterns. Defer typing until UI rewrite.
 
 
 import { vals } from '../utils/format.js'

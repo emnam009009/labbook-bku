@@ -28,7 +28,7 @@
  * 2 paste listeners (chemical, equipment) là document-level + filter theo modal đang mở.
  * 3 paste listeners còn lại (ink, electrode, hydro) là on-demand (gắn khi mở modal, gỡ khi đóng).
  */
-// @ts-nocheck
+// @ts-nocheck — Service layer — DOM event handlers + legacy patterns. Defer typing until UI rewrite.
 
 
 import { db, ref, update } from '../firebase.js'

@@ -22,7 +22,7 @@
  *   - _filterMode, _filterFrom, _filterTo: range filter
  *   - _typeChartInstance, _chemChartInstance: Chart.js refs
  */
-// @ts-nocheck
+// @ts-nocheck — Legacy DOM page — will be replaced in Next.js + Carbon port (Phase E). Don't fix here.
 
 
 import { vals, escapeHtml } from '../utils/format.js'

@@ -7,6 +7,6 @@
  *
  * Frontend just calls executeToolRemote() from tool-client.ts.
  */
-// @ts-nocheck
+// @ts-nocheck — AI module — partial typing (R105+ skeleton). Cleanup after RAG/streaming stabilization.
 export { executeToolRemote } from "./tool-client";
 export { TOOL_METADATA, getToolDisplayName } from "./tool-definitions";

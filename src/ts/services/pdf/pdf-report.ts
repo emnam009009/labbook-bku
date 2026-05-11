@@ -1,5 +1,5 @@
 // src/ts/services/pdf/pdf-report.ts
-// @ts-nocheck
+// @ts-nocheck — Service layer — DOM event handlers + legacy patterns. Defer typing until UI rewrite.
 // Generate PDF report cho thí nghiệm hydro/electrode.
 //
 // Layout (multi-page):

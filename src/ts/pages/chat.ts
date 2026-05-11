@@ -29,7 +29,7 @@
  * Init: tất cả document-level event listeners được attach 1 lần qua attachChatListeners()
  *  vì module được import 1 lần khi main.js load.
  */
-// @ts-nocheck
+// @ts-nocheck — Legacy DOM page — will be replaced in Next.js + Carbon port (Phase E). Don't fix here.
 
 
 import { escapeHtml, escapeJs } from '../utils/format.js'

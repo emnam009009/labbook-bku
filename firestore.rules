@@ -1,16 +1,179 @@
 rules_version = '2';
-// LabBook BKU — Firestore rules (Round 134a)
+// LabBook BKU — Firestore rules
+// R134a: aiChunks (Phase B RAG)
+// R150c: materials collection (Phase B.5) + tenant isolation
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // aiChunks: text chunks từ papers cho RAG
-    // - Read: bất kỳ user authenticated
-    // - Write: chỉ Cloud Functions (admin SDK bypass rules)
+
+    // ── Helpers ────────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function userTenant() {
+      // tenantId from custom claim (set by Cloud Function onAuthCreate +
+      // bulk migration migrate-tenant-claims-r150c.mjs)
+      return request.auth.token.tenantId;
+    }
+
+    function isAdmin() {
+      // Note: role lookup hits RTDB-style users/{uid} doc in Firestore.
+      // Currently users/ lives in RTDB only — this rule will fail-closed
+      // until users/ Firestore mirror exists (deferred to commercial fork).
+      // For Phase B.5 lab BKU, admin check is done at app layer; rules
+      // enforce only auth + tenant.
+      return isSignedIn() && (
+        request.auth.token.role == "admin" ||
+        request.auth.token.role == "superadmin"
+      );
+    }
+
+    function tenantMatch(data) {
+      return userTenant() != null && data.tenantId == userTenant();
+    }
+
+    // ── aiChunks (R134a — preserved) ──────────────────────
+    // Text chunks từ papers cho RAG.
+    // Read: bất kỳ user authenticated.
+    // Write: chỉ Cloud Functions (admin SDK bypass rules).
     match /aiChunks/{chunkId} {
-      allow read: if request.auth != null;
+      allow read: if isSignedIn();
       allow write: if false;
     }
 
-    // Default deny
+    // ── materials (R150c — Phase B.5) ─────────────────────
+    // Read: any authenticated user with matching tenantId.
+    // Create/update: admin or superadmin (via custom claim role).
+    // Delete: NEVER (mark deprecated instead).
+    match /materials/{materialId} {
+      allow read: if isSignedIn() && tenantMatch(resource.data);
+
+      allow create: if isAdmin()
+        && tenantMatch(request.resource.data)
+        && request.resource.data.createdBy == request.auth.uid;
+
+      allow update: if isAdmin()
+        && tenantMatch(resource.data)
+        && tenantMatch(request.resource.data)
+        // Immutable fields
+        && request.resource.data.tenantId == resource.data.tenantId
+        && request.resource.data.formula == resource.data.formula
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt;
+
+      allow delete: if false;
+    }
+
+    // ── samples (R151b — Phase B.5) ───────────────────────
+    // Read: any authed user with matching tenantId.
+    // Create: member/admin/superadmin role + createdBy=auth.uid + tenant match.
+    // Update: creator OR admin/superadmin.
+    // Delete: admin/superadmin only (rare; prefer status="discarded").
+    match /samples/{sampleId} {
+      allow read: if isSignedIn() && tenantMatch(resource.data);
+
+      allow create: if isSignedIn()
+        && request.auth.token.role in ["member", "admin", "superadmin"]
+        && tenantMatch(request.resource.data)
+        && request.resource.data.createdBy == request.auth.uid;
+
+      allow update: if isSignedIn()
+        && tenantMatch(resource.data)
+        && tenantMatch(request.resource.data)
+        // Immutable fields
+        && request.resource.data.tenantId == resource.data.tenantId
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        // Authorized = creator OR admin/superadmin
+        && (
+          resource.data.createdBy == request.auth.uid
+          || request.auth.token.role in ["admin", "superadmin"]
+        );
+
+      allow delete: if isSignedIn()
+        && tenantMatch(resource.data)
+        && request.auth.token.role in ["admin", "superadmin"];
+    }
+
+    // ── experiments (R152b — Phase B.5) ───────────────────
+    // Same pattern as samples. legacyRef field is immutable to prevent
+    // tampering with audit trail.
+    match /experiments/{expId} {
+      allow read: if isSignedIn() && tenantMatch(resource.data);
+
+      allow create: if isSignedIn()
+        && request.auth.token.role in ["member", "admin", "superadmin"]
+        && tenantMatch(request.resource.data)
+        && request.resource.data.createdBy == request.auth.uid;
+
+      allow update: if isSignedIn()
+        && tenantMatch(resource.data)
+        && tenantMatch(request.resource.data)
+        // Immutable fields (incl. legacyRef for audit trail)
+        && request.resource.data.tenantId == resource.data.tenantId
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && (
+          (resource.data.legacyRef == null && request.resource.data.legacyRef == null)
+          || (resource.data.legacyRef != null && request.resource.data.legacyRef == resource.data.legacyRef)
+        )
+        // Authorized = creator OR admin/superadmin
+        && (
+          resource.data.createdBy == request.auth.uid
+          || request.auth.token.role in ["admin", "superadmin"]
+        );
+
+      allow delete: if isSignedIn()
+        && tenantMatch(resource.data)
+        && request.auth.token.role in ["admin", "superadmin"];
+    }
+
+    // ── dataAssets (R153a — Phase B.5) ────────────────────
+    // File attachments for experiments. Tenant-scoped.
+    // experimentId immutable (file always belongs to original experiment).
+    // storagePath immutable (file is immutable; metadata can be updated).
+    // uploader OR admin/superadmin can update/delete.
+    match /dataAssets/{assetId} {
+      allow read: if isSignedIn() && tenantMatch(resource.data);
+
+      allow create: if isSignedIn()
+        && request.auth.token.role in ["member", "admin", "superadmin"]
+        && tenantMatch(request.resource.data)
+        && request.resource.data.uploadedBy == request.auth.uid
+        && request.resource.data.createdBy == request.auth.uid;
+
+      allow update: if isSignedIn()
+        && tenantMatch(resource.data)
+        && tenantMatch(request.resource.data)
+        // Immutable fields
+        && request.resource.data.tenantId == resource.data.tenantId
+        && request.resource.data.experimentId == resource.data.experimentId
+        && request.resource.data.storagePath == resource.data.storagePath
+        && request.resource.data.fileName == resource.data.fileName
+        && request.resource.data.fileSize == resource.data.fileSize
+        && request.resource.data.uploadedBy == resource.data.uploadedBy
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        // Authorized = uploader OR admin/superadmin
+        && (
+          resource.data.uploadedBy == request.auth.uid
+          || request.auth.token.role in ["admin", "superadmin"]
+        );
+
+      allow delete: if isSignedIn()
+        && tenantMatch(resource.data)
+        && (
+          resource.data.uploadedBy == request.auth.uid
+          || request.auth.token.role in ["admin", "superadmin"]
+        );
+    }
+
+    // ── Default deny ──────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;
     }

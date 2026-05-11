@@ -13,7 +13,7 @@
  *
  * @see /AI_ARCHITECTURE.md Section 9 (Episodic Memory)
  */
-// @ts-nocheck
+// @ts-nocheck — AI module — partial typing (R105+ skeleton). Cleanup after RAG/streaming stabilization.
 
 import { fbSet, fbPush, fbDel, fbGet, fbListen } from "../../firebase";
 

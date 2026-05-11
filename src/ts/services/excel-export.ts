@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck — Service layer — DOM event handlers + legacy patterns. Defer typing until UI rewrite.
 // services/excel-export.ts — Export data ra Excel với style
 // Dùng SheetJS (lazy import từ npm — tránh render-blocking ~270KB)
 //

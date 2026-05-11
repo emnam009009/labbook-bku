@@ -39,7 +39,7 @@ LabBook BKU là **web app quản lý phòng thí nghiệm hoá**. Stack:
 | Phase B.5 Research Schema design | [docs/research-schema.md](./docs/research-schema.md) |
 | Recent changes | [CHANGELOG.md](./CHANGELOG.md) |
 
-## Current state (as of Round 142, May 10 2026)
+## Current state (as of Round 156g, May 11 2026 — Phase B.5 DONE)
 
 ### Pre-AI (Round 1-104)
 - ✅ **Tests**: 62/62 pass (Vitest)
@@ -83,6 +83,72 @@ LabBook BKU là **web app quản lý phòng thí nghiệm hoá**. Stack:
 - Stale cleanup: `cleanupStaleLocks` admin-only, throttle 5min, drops `tmp_*` >60s và slots cho bookings không còn
 
 ### AI Module Phase B done (Round 130-142, May 9-10 2026)
+
+### Phase B.5 — Unified Research Schema (R150-R156g) ✅ DONE (May 11, 2026)
+
+Major architecture migration: legacy RTDB collections (hydro/electrode/
+electrochem) → Firestore unified schema with Materials → Samples →
+Experiments → DataAssets entities.
+
+**Entities shipped:**
+- **R150**: Material (formula, shortName, groupKey, casNumber) — 1 entity in lab
+- **R151**: Sample (composition, isComposite, parents[], rootMaterials[],
+  generation, synthesisExperimentRef) — 2 entities
+- **R152**: Experiment (type union 12 values, conditions{}, inputSamples[],
+  outputSamples[], derivedMetrics, legacyRef for migrated docs) — 6 entities,
+  4 migrated from legacy via Cloud Function `migrateLegacyExperiments`
+- **R153**: DataAsset (14 types: xrd/sem/tem/raman/ftir/uv-vis/uv-vis-drs/
+  pl/eds/xps/electrochem-csv/image/document/other) — 4 uploads test
+- **R154**: Lineage graph (D3 force-directed, modular d3-selection/force/
+  zoom/drag ~50KB tree-shaken)
+
+**Key features:**
+- Form modal create experiments with type-specific schema (R152c-2)
+- Bulk migration UI in Settings (superadmin only): dry-run → confirm flow
+- DataAsset upload from experiment detail with content-aware classifier
+  (JCAMP-DX parser + filename heuristics + value range matching)
+- DataAssets gallery page with filter chips by type
+- Per-experiment lineage modal (button in experiment detail)
+- Cross-experiment lineage page with filter chips + search bar
+- Inline plot preview (Chart.js, reuses existing parsers/plot services)
+- Tauc plot toggle for UV-Vis (uv-vis-drs → reflectance / uv-vis → absorbance)
+  with autoFitBandgap result display
+- Legacy pages (hydro/electrode/electrochem) soft-deprecated: sidebar
+  hidden from non-superadmin + deprecation banner + DEPRECATED comments
+
+**Files added (Phase B.5):**
+- `src/ts/types/research.ts` — Material, Sample, Experiment, DataAsset interfaces
+- `src/ts/services/{materials,samples,experiments,data-assets,lineage-service,migration}.ts`
+- `src/ts/pages/{materials,samples,experiments-unified,data-assets,lineage}.ts`
+- `src/ts/ui/lineage-graph.ts`
+- `functions/src/triggers/migrate-legacy-experiments.ts`
+- Storage path: `dataAssets/{tenantId}/{experimentId}/{ts}-{fileName}` (25MB limit)
+- 6 composite Firestore indexes (materials/samples/experiments/dataAssets)
+
+**Tech debt status (R156a-f):**
+- R156a: `services/experiments.ts` @ts-nocheck removed (0 errors)
+- R156b-1: `services/global-delegation.ts` TS2304 ev→e runtime bug fix
+  (keeps @ts-nocheck for remaining 41 mechanical errors)
+- R156d: 50 files tagged with categorized reason comments
+  (AI module/Pages/Services/UI/main.ts/labbook-extensions.ts)
+- main.ts: 183 errors mostly unused imports — DEFERRED to Phase E rewrite
+
+**Critical know-how (Phase B.5):**
+- Modal pattern: USE `<div class="modal-overlay" id="...">` wrapping
+  `<div class="modal">`. NOT inline `style="display:none"` on `.modal`
+  (broken pattern — page shows on all pages). See R153b-fix2.
+- Firestore index for gallery: `tenantId + uploadedAt DESC` (separate from
+  per-experiment / per-type indexes). See R156e-fix2.
+- D3 force layout pin center node (`d.fx = width/2; d.fy = height/2`) to
+  prevent it drifting. Drag releases except center.
+- Plot preview reuse: `services/parsers/index.ts::parseDataFile(file, category)`
+  + `services/plot/plot-preview.ts::renderPreview(canvas, parsed)`. Both
+  handle JCAMP-DX, CSV, Excel, CorrWare natively.
+- Tauc reuse: `services/plot/tauc.ts::transformToTauc(data, n, mode)` +
+  `services/plot/bandgap-fit.ts::autoFitBandgap(x, y)`. Mode auto from
+  DataAssetType.
+
+
 - ✅ **B.1** (R130-R136): Paper pipeline (upload → Chandra OCR → chunk → embed Voyage 3-large → Firestore vector)
 - ✅ **B.2** (R137a-c2): Hybrid retrieval (vector + BM25 + RRF), Voyage rerank-2.5, eval framework
 - ✅ **B.3** (R138 a/b1/b2): Claude proxy infrastructure, searchPapers tool, NotebookLM-style citation chips

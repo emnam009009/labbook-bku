@@ -20,12 +20,88 @@
  *  - data-action="open-modal" da bi remove khoi experiments.js tbody listener
  *    de tranh double-call
  */
-// @ts-nocheck
+// @ts-nocheck — Service layer — DOM event handlers + legacy patterns. Defer typing until UI rewrite.
 
 
 export function attachGlobalDelegation() {
   if (document.body._globalDelegated) return;
   document.body._globalDelegated = true;
+
+  // R150d-2: Input handler for search-materials (debounced)
+  let _matSearchTimer: any = null;
+  document.body.addEventListener('input', function(e) {
+    const t = (e.target as HTMLElement);
+    if (!t || !(t as any).dataset || (t as any).dataset.inputAction !== 'search-materials') return;
+    clearTimeout(_matSearchTimer);
+    const val = (t as HTMLInputElement).value || '';
+    _matSearchTimer = setTimeout(() => {
+      if (typeof (window as any).searchMaterialsHandler === 'function') {
+        (window as any).searchMaterialsHandler(val);
+      }
+    }, 250);
+  });
+
+  // R151d-1: Input handler for search-samples (debounced)
+  let _smpSearchTimer: any = null;
+  document.body.addEventListener('input', function(e) {
+    const t = (e.target as HTMLElement);
+    if (!t || !(t as any).dataset || (t as any).dataset.inputAction !== 'search-samples') return;
+    clearTimeout(_smpSearchTimer);
+    const val = (t as HTMLInputElement).value || '';
+    _smpSearchTimer = setTimeout(() => {
+      if (typeof (window as any).searchSamplesHandler === 'function') {
+        (window as any).searchSamplesHandler(val);
+      }
+    }, 250);
+  });
+
+  // R151d-2: Parent search typeahead (real-time, no debounce — small list)
+  document.body.addEventListener('input', function(e) {
+    const t = (e.target as HTMLElement);
+    if (!t || (t as HTMLInputElement).id !== 'smp-parent-search') return;
+    const val = (t as HTMLInputElement).value || '';
+    if (typeof (window as any).searchParentsHandler === 'function') {
+      (window as any).searchParentsHandler(val);
+    }
+  });
+
+  // R152c-1: Experiments type filter change
+  document.body.addEventListener('change', function(e) {
+    const t = (e.target as HTMLElement);
+    if (!t || !(t as any).dataset || (t as any).dataset.changeAction !== 'filter-experiments-type') return;
+    const val = (t as HTMLSelectElement).value || '';
+    if (typeof (window as any).filterExperimentsByType === 'function') {
+      (window as any).filterExperimentsByType(val);
+    }
+  });
+
+  // R152c-2: Experiment form type change → re-render conditions
+  document.body.addEventListener('change', function(e) {
+    const t = (e.target as HTMLElement);
+    if (!t || !(t as any).dataset || (t as any).dataset.changeAction !== 'experiment-form-type-change') return;
+    const val = (t as HTMLSelectElement).value || '';
+    if (typeof (window as any).changeExperimentFormType === 'function') {
+      (window as any).changeExperimentFormType(val);
+    }
+  });
+
+  // R152c-2: Sample picker search inputs (input + output)
+  document.body.addEventListener('input', function(e) {
+    const t = (e.target as HTMLElement);
+    if (!t || !(t as any).dataset) return;
+    const action = (t as any).dataset.inputAction;
+    if (action === 'search-exp-input-samples') {
+      const val = (t as HTMLInputElement).value || '';
+      if (typeof (window as any).searchExpInputSamplesHandler === 'function') {
+        (window as any).searchExpInputSamplesHandler(val);
+      }
+    } else if (action === 'search-exp-output-samples') {
+      const val = (t as HTMLInputElement).value || '';
+      if (typeof (window as any).searchExpOutputSamplesHandler === 'function') {
+        (window as any).searchExpOutputSamplesHandler(val);
+      }
+    }
+  });
 
   document.body.addEventListener('click', function(e) {
     const target = e.target.closest('[data-action]');
@@ -66,6 +142,87 @@ export function attachGlobalDelegation() {
       case 'save-equipment':   if (typeof window.saveEquipment === 'function') window.saveEquipment(); break;
       case 'save-booking':     if (typeof window.saveBooking === 'function') window.saveBooking(); break;
       case 'save-member':      if (typeof window.saveMember === 'function') window.saveMember(); break;
+
+      // R150d-2: Materials CRUD
+      case 'open-material-detail': {
+        const id = target.dataset.id;
+        if (id && typeof window.openMaterialDetail === 'function') window.openMaterialDetail(id);
+        break;
+      }
+      case 'open-material-form':
+        if (typeof window.openMaterialForm === 'function') window.openMaterialForm(null);
+        break;
+      case 'edit-material':
+        if (typeof window.closeModal === 'function') window.closeModal('modal-material-detail');
+        if (typeof window.openMaterialFormFromDetail === 'function') window.openMaterialFormFromDetail();
+        break;
+      case 'submit-material-form':
+        if (typeof window.submitMaterialForm === 'function') window.submitMaterialForm();
+        break;
+
+      // R151c: Samples
+      case 'open-sample-detail': {
+        const id = target.dataset.id;
+        if (id && typeof window.openSampleDetail === 'function') window.openSampleDetail(id);
+        break;
+      }
+      // R151d-1: Sample CRUD
+      case 'open-sample-form':
+        if (typeof window.openSampleForm === 'function') window.openSampleForm(null);
+        break;
+      case 'edit-sample':
+        if (typeof window.closeModal === 'function') window.closeModal('modal-sample-detail');
+        if (typeof window.openSampleFormFromDetail === 'function') window.openSampleFormFromDetail();
+        break;
+      case 'submit-sample-form':
+        if (typeof window.submitSampleForm === 'function') window.submitSampleForm();
+        break;
+
+      // R151d-2: Lineage picker
+      case 'add-parent-badge': {
+        const pid = target.dataset.id;
+        if (pid && typeof window.addParentBadge === 'function') window.addParentBadge(pid);
+        break;
+      }
+      case 'remove-parent-badge': {
+        const pid = target.dataset.id;
+        if (pid && typeof window.removeParentBadge === 'function') window.removeParentBadge(pid);
+        break;
+      }
+
+      // R152c-1: Experiments unified
+      case 'open-experiment-detail': {
+        const id = target.dataset.id;
+        if (id && typeof window.openExperimentDetail === 'function') window.openExperimentDetail(id);
+        break;
+      }
+      // R152c-2: Experiments form
+      case 'open-experiment-form':
+        if (typeof window.openExperimentForm === 'function') window.openExperimentForm();
+        break;
+      case 'submit-experiment-form':
+        if (typeof window.submitExperimentForm === 'function') window.submitExperimentForm();
+        break;
+      case 'exp-add-input-sample': {
+        const id = target.dataset.id;
+        if (id && typeof window.addExpInputSample === 'function') window.addExpInputSample(id);
+        break;
+      }
+      case 'exp-add-output-sample': {
+        const id = target.dataset.id;
+        if (id && typeof window.addExpOutputSample === 'function') window.addExpOutputSample(id);
+        break;
+      }
+      case 'exp-remove-input-sample': {
+        const id = target.dataset.id;
+        if (id && typeof window.removeExpInputSample === 'function') window.removeExpInputSample(id);
+        break;
+      }
+      case 'exp-remove-output-sample': {
+        const id = target.dataset.id;
+        if (id && typeof window.removeExpOutputSample === 'function') window.removeExpOutputSample(id);
+        break;
+      }
 
       // Auth
       case 'do-login':                if (typeof window.doLogin === 'function') window.doLogin(); break;
@@ -192,7 +349,7 @@ export function attachGlobalDelegation() {
         if (typeof window.onAiToolsTabSwitch === 'function') window.onAiToolsTabSwitch(target);
         break;
       case 'ai-tools-resize-start':
-        if (typeof window.onAiToolsResizeStart === 'function' && ev) window.onAiToolsResizeStart(target, ev);
+        if (typeof window.onAiToolsResizeStart === 'function' && e) window.onAiToolsResizeStart(target, e);
         break;
       // ════════ Paper Library (Round 132b) ════════
       case 'ai-paper-pick':
@@ -212,7 +369,7 @@ export function attachGlobalDelegation() {
         if (typeof window.onPaperSearchSubmit === 'function') window.onPaperSearchSubmit();
         break;
       case 'ai-paper-search-keydown':
-        if (typeof window.onPaperSearchKeydown === 'function' && ev) window.onPaperSearchKeydown(target, ev);
+        if (typeof window.onPaperSearchKeydown === 'function' && e) window.onPaperSearchKeydown(target, e);
         break;
       case 'ai-paper-search-clear':
         if (typeof window.onPaperSearchClear === 'function') window.onPaperSearchClear();
@@ -658,3 +815,161 @@ export function attachGlobalDelegation() {
     }
   });
 }
+
+
+// ═══════════════════════════════════════════════════════════
+// R153b — DataAsset action handlers (delegation extension)
+// ═══════════════════════════════════════════════════════════
+
+(function attachDataAssetDelegation() {
+  const flag = '__dataAssetDelegationAttached';
+  if ((document.body as any)[flag]) return;
+  (document.body as any)[flag] = true;
+
+  // Click delegation: download, delete, type-select user-picked tracking
+  document.body.addEventListener('click', async (e: Event) => {
+    const target = (e.target as HTMLElement)?.closest('[data-action]') as HTMLElement | null;
+    if (!target) return;
+    const action = target.dataset.action;
+    if (action === 'da-download') {
+      const id = target.dataset.assetId;
+      if (id && typeof (window as any).handleDataAssetDownload === 'function') {
+        await (window as any).handleDataAssetDownload(id);
+      }
+    } else if (action === 'da-delete') {
+      const id = target.dataset.assetId;
+      const name = target.dataset.assetName || '(unknown)';
+      // R156g-fix1: read experimentId directly from button (not via closest — sibling issue)
+      const expId = target.dataset.experimentId
+        || (target.closest('[data-experiment-id]') as HTMLElement | null)?.dataset.experimentId;
+      if (id && expId && typeof (window as any).handleDataAssetDelete === 'function') {
+        await (window as any).handleDataAssetDelete(id, name, expId);
+      }
+    }
+  });
+
+  // Change delegation: file pick triggers upload; mark type-select as user-picked
+  document.body.addEventListener('change', async (e: Event) => {
+    const target = e.target as HTMLElement | null;
+    if (!target) return;
+    if (target.matches?.('[data-input-action="da-file-pick"]')) {
+      const expId = (target as HTMLInputElement).dataset.experimentId;
+      if (expId && typeof (window as any).handleDataAssetFilePick === 'function') {
+        await (window as any).handleDataAssetFilePick(expId);
+      }
+    } else if (target.matches?.('.lb-da-type-select')) {
+      // Mark as user-picked so auto-detect doesn't override
+      (target as HTMLSelectElement).dataset.userPicked = '1';
+    }
+  });
+})();
+
+
+// ═══════════════════════════════════════════════════════════
+// R153c — DataAssets gallery page action handlers
+// ═══════════════════════════════════════════════════════════
+
+(function attachDataAssetsGalleryDelegation() {
+  const flag = '__dataAssetsGalleryDelegationAttached';
+  if ((document.body as any)[flag]) return;
+  (document.body as any)[flag] = true;
+
+  document.body.addEventListener('click', (e: Event) => {
+    const target = (e.target as HTMLElement)?.closest('[data-action]') as HTMLElement | null;
+    if (!target) return;
+    const action = target.dataset.action;
+    if (action === 'da-filter') {
+      const type = target.dataset.type || '';
+      if (typeof (window as any).filterDataAssetsByType === 'function') {
+        (window as any).filterDataAssetsByType(type);
+      }
+    } else if (action === 'da-card-click') {
+      const id = target.dataset.assetId;
+      if (id && typeof (window as any).openDataAssetPreview === 'function') {
+        void (window as any).openDataAssetPreview(id);
+      }
+    }
+  });
+})();
+
+
+// ═══════════════════════════════════════════════════════════
+// R154-1 — Lineage graph button delegation
+// ═══════════════════════════════════════════════════════════
+
+(function attachLineageGraphDelegation() {
+  const flag = '__lineageGraphDelegationAttached';
+  if ((document.body as any)[flag]) return;
+  (document.body as any)[flag] = true;
+
+  document.body.addEventListener('click', (e: Event) => {
+    const target = (e.target as HTMLElement)?.closest('[data-action="open-lineage-graph"]') as HTMLElement | null;
+    if (!target) return;
+    const expId = target.dataset.experimentId;
+    if (expId && typeof (window as any).openLineageGraphModal === 'function') {
+      void (window as any).openLineageGraphModal(expId);
+    }
+  });
+})();
+
+
+// ═══════════════════════════════════════════════════════════
+// R154-3 — Lineage page filter + search delegation
+// ═══════════════════════════════════════════════════════════
+
+(function attachLineageFilterDelegation() {
+  const flag = '__lineageFilterDelegationAttached';
+  if ((document.body as any)[flag]) return;
+  (document.body as any)[flag] = true;
+
+  document.body.addEventListener('click', (e: Event) => {
+    const target = (e.target as HTMLElement)?.closest('[data-action]') as HTMLElement | null;
+    if (!target) return;
+    const action = target.dataset.action;
+    if (action === 'lineage-toggle-type') {
+      const type = target.dataset.type;
+      if (type && typeof (window as any).toggleLineageType === 'function') {
+        (window as any).toggleLineageType(type);
+      }
+    } else if (action === 'lineage-search-clear') {
+      if (typeof (window as any).clearLineageSearch === 'function') {
+        (window as any).clearLineageSearch();
+      }
+    }
+  });
+
+  document.body.addEventListener('input', (e: Event) => {
+    const target = e.target as HTMLInputElement | null;
+    if (!target || !target.matches?.('[data-input-action="lineage-search"]')) return;
+    if (typeof (window as any).setLineageSearch === 'function') {
+      (window as any).setLineageSearch(target.value || '');
+    }
+  });
+})();
+
+
+// ═══════════════════════════════════════════════════════════
+// R156g — Tauc plot toggle delegation
+// ═══════════════════════════════════════════════════════════
+
+(function attachTaucDelegation() {
+  const flag = '__taucDelegationAttached';
+  if ((document.body as any)[flag]) return;
+  (document.body as any)[flag] = true;
+
+  document.body.addEventListener('change', (e: Event) => {
+    const target = e.target as HTMLElement | null;
+    if (!target) return;
+    if (target.matches?.('[data-input-action="da-tauc-toggle"]')) {
+      const checked = (target as HTMLInputElement).checked;
+      if (typeof (window as any).setTaucOn === 'function') {
+        (window as any).setTaucOn(checked);
+      }
+    } else if (target.matches?.('[data-change-action="da-tauc-n"]')) {
+      const val = parseFloat((target as HTMLSelectElement).value);
+      if (!isNaN(val) && typeof (window as any).setTaucN === 'function') {
+        (window as any).setTaucN(val);
+      }
+    }
+  });
+})();

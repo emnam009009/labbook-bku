@@ -1,0 +1,26 @@
+/**
+ * R150c — Auto-set tenantId claim on user creation
+ *
+ * v2 blocking trigger beforeUserCreated. Runs on Node 24 (Gen2).
+ * Sets claim via return value, not admin.auth() call.
+ */
+import { beforeUserCreated } from "firebase-functions/v2/identity";
+import { logger } from "../utils/logger";
+
+const DEFAULT_TENANT = "default";
+
+export const setTenantOnCreate = beforeUserCreated(
+  { region: "asia-southeast1" },
+  (event) => {
+    const uid = event.data?.uid;
+    const email = event.data?.email;
+    logger.info(
+      `[setTenantOnCreate] uid=${uid} email=${email} tenantId="${DEFAULT_TENANT}"`,
+    );
+    return {
+      customClaims: {
+        tenantId: DEFAULT_TENANT,
+      },
+    };
+  },
+);

@@ -116,3 +116,9 @@ python-service/build/
 # TypeScript build info
 *.tsbuildinfo
 dist-types/
+
+# Patch script idempotency markers
+.R*_APPLIED
+
+# Firebase CLI debug logs
+*-debug.log

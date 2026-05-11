@@ -16,7 +16,7 @@
  *
  * Bell hiển thị cho mọi role authenticated (admin, superadmin, member, viewer).
  */
-// @ts-nocheck
+// @ts-nocheck — Service layer — DOM event handlers + legacy patterns. Defer typing until UI rewrite.
 
 
 import { db, ref, update, remove, fbPush, fbGet } from '../firebase.js'

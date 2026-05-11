@@ -10,7 +10,7 @@
  * Permission: Visual sidebar item gated by .superadmin-only (CSS).
  * Runtime check: canAccessAiTools() — chỉ superadmin.
  */
-// @ts-nocheck
+// @ts-nocheck — AI module — partial typing (R105+ skeleton). Cleanup after RAG/streaming stabilization.
 
 const SIDETAB_ID = "ai-tools-sidetab";
 const STORAGE_KEY = "ai-tools-sidetab-width";

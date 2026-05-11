@@ -1,8 +1,11 @@
 // src/ts/ui/attachments-panel.ts
-// @ts-nocheck
+// @ts-nocheck — UI component — DOM manipulation, deferred typing until Next.js port.
 // Renders attachments management UI for one experiment.
 // Designed to be embedded inside hydro/electrode edit modal.
 
+// ⚠️ DEPRECATED (R155 — Phase B.5): scheduled for removal in Phase E
+// (Next.js + Carbon rewrite). New data uses DataAssets service
+// (src/ts/services/data-assets.ts). Don't add features here.
 import {
   ATTACHMENT_CATEGORIES,
   MAX_FILE_BYTES,
