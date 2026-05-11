@@ -2,6 +2,9 @@
 // Core service for experiment attachments (PR #1).
 // Handles upload to Firebase Storage + metadata to RTDB.
 
+// ⚠️ DEPRECATED (R155 — Phase B.5): scheduled for removal in Phase E
+// (Next.js + Carbon rewrite). New data uses DataAssets service
+// (src/ts/services/data-assets.ts). Don't add features here.
 import { storage, fbSet, fbGet, fbDel, ref, push, db } from '../firebase.js';
 import {
   ref as stRef,

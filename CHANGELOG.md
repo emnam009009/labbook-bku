@@ -1,5 +1,61 @@
 # CHANGELOG
 
+## R155 — Audit + deprecate legacy pages (Phase B.5 closing) (2026-05-10)
+
+### Soft deprecation strategy
+Legacy attachments + per-method experiment pages (hydro/electrode/
+electrochem) kept functional for backward compat but marked deprecated.
+Aggressive delete (R153f) skipped — legacy code doesn't block new
+features and will be removed during Phase E (Next.js rewrite).
+
+### Changes
+- Sidebar items hidden from non-superadmin:
+  - hydrothermal (Thủy nhiệt)
+  - electrode (Chuẩn bị điện cực)
+  - electrochemistry (Đo điện hóa)
+  - Via CSS class `.superadmin-only` + `body.superadmin-mode` toggle
+- Deprecation banner at top of 4 legacy pages:
+  - page-hydrothermal, page-electrode, page-electrochemistry, page-overview
+  - Amber warning style
+  - Text: "⚠️ Page này đã ngừng cập nhật. Vui lòng dùng 'TN mới' + 'Phổ DL'..."
+- Top-of-file deprecation comment in 5 .ts files:
+  - services/attachments.ts
+  - services/attachment-classifier.ts
+  - ui/attachments-panel.ts
+  - ui/overview-modal.ts
+  - pages/overview.ts
+
+### Files
+- index.html: 3 sidebar class additions + 4 banner blocks
+- src/css/labbook-extras.css: .superadmin-only + .lb-deprec-banner
+- 5 .ts files: top deprecation comment
+
+### Migration path
+Existing lab user with legacy data: still can view + edit via superadmin
+account (sidebar items visible). New experiments: TN mới + Phổ DL only.
+Phase E (Next.js): full cleanup, legacy code removed entirely.
+
+## Phase B.5 — DONE
+This closes Phase B.5 (research schema migration). Summary:
+- R150: Materials entity (types + service + UI)
+- R151: Samples entity
+- R152: Experiments entity + form (a/b/c/c-2) + migration UI (d-1/d-2)
+- R153a: DataAsset foundation (types + service + rules + indexes)
+- R153b: DataAsset UI panel in experiment detail
+- R153c: DataAssets gallery page
+- R153d: Content-aware classifier (JCAMP-DX + heuristics)
+- R154-1: Per-experiment lineage graph modal (D3 force)
+- R154-2a: Cross-experiment lineage page
+- R154-3: Filter chips + search bar
+- R155: Audit + deprecate legacy (this round)
+
+Side rounds:
+- R156a-f: Tech debt cleanup + plot preview + UI polish
+
+Next phases:
+- Phase B.6+ (optional): Python Cloud Run for advanced analysis
+- Phase E: Next.js + Carbon Design System rewrite
+
 ## R154-3 — Lineage page filter + search (Phase B.5) (2026-05-10)
 
 ### Added

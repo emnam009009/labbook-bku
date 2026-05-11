@@ -2,6 +2,9 @@
 // Round 77b + Round 78 refactor: per-experiment overview modal.
 // Render the same 6 analysis groups using shared classifier utility.
 
+// ⚠️ DEPRECATED (R155 — Phase B.5): scheduled for removal in Phase E
+// (Next.js + Carbon rewrite). New data uses DataAssets service
+// (src/ts/services/data-assets.ts). Don't add features here.
 import { listAttachments } from '../services/attachments.js';
 import { escapeHtml } from '../utils/format.js';
 import {

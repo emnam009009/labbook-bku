@@ -809,3 +809,29 @@
   background: #F1F5F9;
   color: #0F172A;
 }
+
+
+/* R155 — superadmin-only sidebar items + deprecation banner */
+.superadmin-only {
+  display: none !important;
+}
+
+body.superadmin-mode .superadmin-only {
+  display: flex !important;
+}
+
+.lb-deprec-banner {
+  background: #FEF3C7;
+  border: 1px solid #FCD34D;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #78350F;
+  line-height: 1.4;
+}
+
+.lb-deprec-banner strong {
+  color: #451A03;
+  font-weight: 600;
+}

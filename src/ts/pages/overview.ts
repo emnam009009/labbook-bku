@@ -3,6 +3,9 @@
 // Lists ALL image + saved plots from ALL hydro/electrode experiments,
 // classified into 6 analysis groups via shared classifier.
 
+// ⚠️ DEPRECATED (R155 — Phase B.5): scheduled for removal in Phase E
+// (Next.js + Carbon rewrite). New data uses DataAssets service
+// (src/ts/services/data-assets.ts). Don't add features here.
 import { fbGet } from '../firebase.js';
 import { escapeHtml } from '../utils/format.js';
 import {

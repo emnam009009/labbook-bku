@@ -228,13 +228,13 @@
         <div style="width:32px;height:1px;background:rgba(255,255,255,0.08);margin:6px auto"></div>
 
         <!-- Thí nghiệm -->
-        <div class="sidebar-item" data-action="show-page" data-page="hydrothermal" data-tip="Thủy nhiệt" role="button" tabindex="0" aria-label="Thủy nhiệt">
+        <div class="sidebar-item superadmin-only" data-action="show-page" data-page="hydrothermal" data-tip="Thủy nhiệt (legacy — chỉ superadmin)" role="button" tabindex="0" aria-label="Thủy nhiệt">
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2v6l-5 9a3 3 0 003 3h10a3 3 0 003-3l-5-9V2"></path></svg>
         <span data-label>Thủy nhiệt</span></div>
-        <div class="sidebar-item" data-action="show-page" data-page="electrode" data-tip="Chuẩn bị điện cực" role="button" tabindex="0" aria-label="Chuẩn bị điện cực">
+        <div class="sidebar-item superadmin-only" data-action="show-page" data-page="electrode" data-tip="Chuẩn bị điện cực (legacy)" role="button" tabindex="0" aria-label="Chuẩn bị điện cực">
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 3v18M3 12h18"></path></svg>
         <span data-label>Điện cực</span></div>
-        <div class="sidebar-item" data-action="show-page" data-page="electrochemistry" data-tip="Đo điện hóa" role="button" tabindex="0" aria-label="Đo điện hóa">
+        <div class="sidebar-item superadmin-only" data-action="show-page" data-page="electrochemistry" data-tip="Đo điện hóa (legacy)" role="button" tabindex="0" aria-label="Đo điện hóa">
           <svg aria-hidden="true" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         <span data-label>Điện hóa</span></div>
         <!-- Round 77c: Overview images page -->
@@ -497,6 +497,7 @@
 <!-- /DASHBOARD v3 -->
 
       <div class="page" id="page-hydrothermal">
+        <div class="lb-deprec-banner">⚠️ <strong>Page này đã ngừng cập nhật.</strong> Vui lòng dùng "TN mới" + "Phổ DL" cho thí nghiệm và dữ liệu mới. Page legacy chỉ giữ lại để xem data cũ.</div>
         <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
           <div>
             <h1 class="page-title" style="color:#0F172A !important">Thí nghiệm thủy nhiệt</h1>
@@ -549,6 +550,7 @@
 
       <!-- ELECTRODE -->
       <div class="page" id="page-electrode">
+        <div class="lb-deprec-banner">⚠️ <strong>Page này đã ngừng cập nhật.</strong> Vui lòng dùng "TN mới" + "Phổ DL" cho thí nghiệm và dữ liệu mới. Page legacy chỉ giữ lại để xem data cũ.</div>
         <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
           <div>
             <h1 class="page-title" style="color:#0F172A !important">Chuẩn bị điện cực</h1>
@@ -630,8 +632,12 @@
       </div>
 
       <!-- ELECTROCHEMISTRY -->
-      <div class="page" id="page-overview"><!-- Round 77c: rendered by pages/overview.ts on showPage('overview') --></div>
+      <div class="page" id="page-overview">
+        <div class="lb-deprec-banner">⚠️ <strong>Page này đã ngừng cập nhật.</strong> Vui lòng dùng "TN mới" + "Phổ DL" cho thí nghiệm và dữ liệu mới. Page legacy chỉ giữ lại để xem data cũ.</div>
+        <!-- Round 77c: rendered by pages/overview.ts on showPage('overview') -->
+      </div>
       <div class="page" id="page-electrochemistry">
+        <div class="lb-deprec-banner">⚠️ <strong>Page này đã ngừng cập nhật.</strong> Vui lòng dùng "TN mới" + "Phổ DL" cho thí nghiệm và dữ liệu mới. Page legacy chỉ giữ lại để xem data cũ.</div>
         <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
           <div>
             <h1 class="page-title" style="color:#0F172A !important">Đo điện hóa</h1>
