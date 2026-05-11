@@ -8,7 +8,7 @@ LabBook BKU là **web app quản lý phòng thí nghiệm hoá**. Stack:
 - **Vite 8 + Tailwind 3 + Firebase RTDB + TypeScript ESM**
 - Deploy: **Firebase Hosting + Cloud Functions (Blaze plan)** → `https://lab-manager-268a6.web.app`
 - Working dir (WSL Ubuntu): `~/LAB-MANAGER/labbook-vite-tailwind/labbook`
-- Repo: `github.com/emnam009/labbook-bku` (branch `ai-assistant`)
+- Repo: `github.com/emnam009009/labbook-bku` (workflow v3: `phase-XX/RXXX-slug` branches → PR → main)
 
 **Owner**: bạn Nam — communication 100% **tiếng Việt**.
 
@@ -39,128 +39,36 @@ LabBook BKU là **web app quản lý phòng thí nghiệm hoá**. Stack:
 | Phase B.5 Research Schema design | [docs/research-schema.md](./docs/research-schema.md) |
 | Recent changes | [CHANGELOG.md](./CHANGELOG.md) |
 
-## Current state (as of Round 156g, May 11 2026 — Phase B.5 DONE)
+## Current state (as of Round 157b, May 11 2026)
 
-### Pre-AI (Round 1-104)
-- ✅ **Tests**: 62/62 pass (Vitest)
-- ✅ **Lighthouse Mobile**: Performance 93, Accessibility 95, Best Practices 100, SEO 100
-- ✅ **CSP**: Mozilla Observatory 125/100 Grade A+ (Round 55-58e)
-- ✅ **Origin Lab integration**: Working end-to-end (Round 95-102)
-- ✅ **Bundle optimized**: -600KB initial load (Round 103a-b)
+### Strategic target
+**Platform** (không phải full Research OS) — per `Labbook_Bku_Long_Term_Platform_Roadmap_Report.pdf` (May 10 2026).
+Multi-lab Platform với unified schema + AI copilot. Skip plugin runtime ecosystem (P5) và public REST API (P4).
 
-### AI Module Phase A done (Round 105-115)
-- ✅ **Chat sidetab UI** với streaming, markdown, KaTeX, highlight.js (R108-110)
-- ✅ **Real Gemini Flash** via geminiProxy Cloud Function (R111)
-- ✅ **6 read tools** (chemicals, equipment, experiments, bookings, members, date) (R112)
-- ✅ **UI polish**: Stop, Regenerate, Auto-rename, error toasts (R113)
-- ✅ **Voice STT/TTS**: Cloud Speech v2 Chirp 2 vi-VN + browser TTS (R114)
-- ✅ **3 action tools** với confirm UI: createExperiment (hydro+electrochem), updateChemicalStock, createBooking (R115)
+### Done
+- ✅ **Pre-AI (R1-R104)**: Tests 62/62, Lighthouse 93/95/100/100, CSP A+ (R55-58e), Origin integration (R95-102), bundle -600KB
+- ✅ **Phase A AI Foundation (R105-R115 + R129)**: Chat sidetab, Gemini Flash, 10 tools (6 read + 4 action), voice STT/TTS
+- ✅ **Pre-Commercial Audit (R116-R126)**: 14 bugs + 3 features fixed
+- ✅ **Phase B RAG (R130-R142)**: Chandra OCR → Voyage embed → Firestore vector + BM25 → hybrid retrieval → rerank-2.5 → searchPapers tool → NotebookLM citation chips
+- ✅ **Phase B.5 Research Schema (R143-R156g)**: Materials/Samples/Experiments/DataAssets Firestore, multi-tenant rules, lineage graphs (D3), Chart.js + Tauc bandgap fit, JCAMP-DX classifier
+- ✅ **R157 Workflow v3 migration**: GitHub Flow, CI/CD, branch protection, docs/onboarding.md
+- ✅ **R157a**: AI Workbench sidebar entry + empty page shell
+- ✅ **R157b**: Docs alignment với target Platform
 
-### Pre-Commercial Audit (Round 116-126) ✅ DONE — May 8 2026
-**14 bugs + 3 features** fixed across security/correctness/UX before commercialization. Phase B paused.
+### Next: R158 Carbon Foundation series (pre-Phase C-1)
+- **R158a**: Domain restructure `src/ts/{pages,services,utils}/` → `src/ts/domains/{materials,samples,experiments,analyzers,inventory,ai,lineage}/`
+- **R158b**: Adopt `@carbon/styles` tokens (replace custom CSS vars)
+- **R158c**: Carbon UI Shell pattern — sidebar restructure (left primary + right side panel)
+- **R158d**: Install `@carbon/web-components` v2 + migrate Button/Tag/Modal
 
-- ✅ **R116-R120**: Security & race conditions (listener leak, presence stuck, XSS, orphan storage, stock race, image bloat, booking race x2 — saveBooking + drag/resize)
-- ✅ **R121-R122**: UI/UX + notification security overhaul (search stuck, bulk select, member card, **bell empty FIXED via nested schema migration with one-shot script**, lock cleanup)
-- ✅ **R123-R126**: Polish (members KPI scroll, admin-only import/export, file picker, VN diacritics, console cleanup, **resizable AI sidetab**)
+### Then: Phase C-1 Optical & Structural Analyzers (R159-R171)
+XRD parser + pymatgen analyze, Raman + lmfit Voigt, UV-Vis (reuse jcamp-jasco + tauc), PL + trion fitting, FTIR + functional groups, LSV/HER + Tafel, Microscopy via Claude Vision.
 
-**See `AUDIT_LOG.md` for full bug list + root causes.**
+### Then: Phase C-2 Electrochemistry (R172-R186)
+CV, EIS impedance, GCD, OCP. Python service expand với impedance.py.
 
-### Cloud Functions deployed (asia-southeast1)
-- `geminiProxy` — SSE streaming Gemini 2.5 Flash với tool calling
-- `toolExecutor` — dispatch 9 tools (6 read + 3 action)
-- `speechProxy` — Cloud Speech v2 Chirp 2 STT
-- `confirmAction` — commit action drafts to RTDB + audit log
-
-### Notification schema (R122 — nested per-user)
-- Path: `notifications/{uid}/{notifId}` (was flat `notifications/{notifId}` before R122)
-- Broadcast admin: fan-out write per recipient (1 entry/admin) hoặc fallback `notifications/_admin/{notifId}`
-- Listener: per-user listen of `notifications/{myUid}` + admin-only listen on `_admin` bucket
-- Migration script: `scripts/migrate-notifications-r122.mjs` (firebase-admin SDK, idempotent, with backup)
-
-### Booking lock schema (R119-R120, R122 cleanup)
-- Path: `booking_locks/{equipmentKey}_{date}` với `slots: [{start, end, bookingKey, status}]`
-- Atomic via `runTransaction` — `tryReserveSlot` (new) / `tryReserveSlotForUpdate` (drag/resize, with self-exclusion)
-- Stale cleanup: `cleanupStaleLocks` admin-only, throttle 5min, drops `tmp_*` >60s và slots cho bookings không còn
-
-### AI Module Phase B done (Round 130-142, May 9-10 2026)
-
-### Phase B.5 — Unified Research Schema (R150-R156g) ✅ DONE (May 11, 2026)
-
-Major architecture migration: legacy RTDB collections (hydro/electrode/
-electrochem) → Firestore unified schema with Materials → Samples →
-Experiments → DataAssets entities.
-
-**Entities shipped:**
-- **R150**: Material (formula, shortName, groupKey, casNumber) — 1 entity in lab
-- **R151**: Sample (composition, isComposite, parents[], rootMaterials[],
-  generation, synthesisExperimentRef) — 2 entities
-- **R152**: Experiment (type union 12 values, conditions{}, inputSamples[],
-  outputSamples[], derivedMetrics, legacyRef for migrated docs) — 6 entities,
-  4 migrated from legacy via Cloud Function `migrateLegacyExperiments`
-- **R153**: DataAsset (14 types: xrd/sem/tem/raman/ftir/uv-vis/uv-vis-drs/
-  pl/eds/xps/electrochem-csv/image/document/other) — 4 uploads test
-- **R154**: Lineage graph (D3 force-directed, modular d3-selection/force/
-  zoom/drag ~50KB tree-shaken)
-
-**Key features:**
-- Form modal create experiments with type-specific schema (R152c-2)
-- Bulk migration UI in Settings (superadmin only): dry-run → confirm flow
-- DataAsset upload from experiment detail with content-aware classifier
-  (JCAMP-DX parser + filename heuristics + value range matching)
-- DataAssets gallery page with filter chips by type
-- Per-experiment lineage modal (button in experiment detail)
-- Cross-experiment lineage page with filter chips + search bar
-- Inline plot preview (Chart.js, reuses existing parsers/plot services)
-- Tauc plot toggle for UV-Vis (uv-vis-drs → reflectance / uv-vis → absorbance)
-  with autoFitBandgap result display
-- Legacy pages (hydro/electrode/electrochem) soft-deprecated: sidebar
-  hidden from non-superadmin + deprecation banner + DEPRECATED comments
-
-**Files added (Phase B.5):**
-- `src/ts/types/research.ts` — Material, Sample, Experiment, DataAsset interfaces
-- `src/ts/services/{materials,samples,experiments,data-assets,lineage-service,migration}.ts`
-- `src/ts/pages/{materials,samples,experiments-unified,data-assets,lineage}.ts`
-- `src/ts/ui/lineage-graph.ts`
-- `functions/src/triggers/migrate-legacy-experiments.ts`
-- Storage path: `dataAssets/{tenantId}/{experimentId}/{ts}-{fileName}` (25MB limit)
-- 6 composite Firestore indexes (materials/samples/experiments/dataAssets)
-
-**Tech debt status (R156a-f):**
-- R156a: `services/experiments.ts` @ts-nocheck removed (0 errors)
-- R156b-1: `services/global-delegation.ts` TS2304 ev→e runtime bug fix
-  (keeps @ts-nocheck for remaining 41 mechanical errors)
-- R156d: 50 files tagged with categorized reason comments
-  (AI module/Pages/Services/UI/main.ts/labbook-extensions.ts)
-- main.ts: 183 errors mostly unused imports — DEFERRED to Phase E rewrite
-
-**Critical know-how (Phase B.5):**
-- Modal pattern: USE `<div class="modal-overlay" id="...">` wrapping
-  `<div class="modal">`. NOT inline `style="display:none"` on `.modal`
-  (broken pattern — page shows on all pages). See R153b-fix2.
-- Firestore index for gallery: `tenantId + uploadedAt DESC` (separate from
-  per-experiment / per-type indexes). See R156e-fix2.
-- D3 force layout pin center node (`d.fx = width/2; d.fy = height/2`) to
-  prevent it drifting. Drag releases except center.
-- Plot preview reuse: `services/parsers/index.ts::parseDataFile(file, category)`
-  + `services/plot/plot-preview.ts::renderPreview(canvas, parsed)`. Both
-  handle JCAMP-DX, CSV, Excel, CorrWare natively.
-- Tauc reuse: `services/plot/tauc.ts::transformToTauc(data, n, mode)` +
-  `services/plot/bandgap-fit.ts::autoFitBandgap(x, y)`. Mode auto from
-  DataAssetType.
-
-
-- ✅ **B.1** (R130-R136): Paper pipeline (upload → Chandra OCR → chunk → embed Voyage 3-large → Firestore vector)
-- ✅ **B.2** (R137a-c2): Hybrid retrieval (vector + BM25 + RRF), Voyage rerank-2.5, eval framework
-- ✅ **B.3** (R138 a/b1/b2): Claude proxy infrastructure, searchPapers tool, NotebookLM-style citation chips
-- ✅ **B.4** (R140-R142): Stress-test A2 doc, Chandra trim newline fix, BM25 indexPaper implementation
-- 11 Cloud Functions deployed, 10 tools (6 read + 4 action) + searchPapers RAG tool
-- Stress-test verified: 20 papers, ~3575 chunks, ~$0.20 cost, 3 search modes working
-
-### Next
-- 📋 **Phase B closure** (R143-R149): docs sync (this round), test BM25 module, eval expansion, Chandra resilience
-- 📋 **Phase B.5** (R150-R155): Unified Research Schema — see `docs/research-schema.md`
-- 📋 Hoặc commercial roadmap (parallel): multi-tenant, rate limiting, email verify, billing
-
+### Long-term: Phase C-3 → D → E
+Photoelectrochem (PEC, Mott-Schottky, XPS, EDS, BET) → Materials DB + DFT + AI Writer → Lab Mode + Knowledge Graph + Next.js migration.
 ## Round numbering
 
 Round = 1 patch session = 1+ atomic Python scripts hoặc git apply patches = 1+ git commits.

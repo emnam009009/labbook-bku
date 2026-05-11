@@ -87,20 +87,39 @@ Report identify 4 limits:
 
 ### 2.3 Phase 3 — Scientific Platform (5-10 năm) — chưa start
 
-**Goal**: Multi-lab network, shared datasets, ontology layer, AI-native research workflows.
+**Goal**: Multi-lab platform with shared schema, federated data, AI-assisted workflows.
 
-**Aspirations** (từ report, chưa break down rounds):
+**Target scope** (May 11 2026 decision based on `Labbook_Bku_Long_Term_Platform_Roadmap_Report.pdf` received May 10):
+
+LabBook BKU target = **Platform**, không phải full Research OS với plugin ecosystem.
+
+Lý do scope Platform thay vì OS đầy đủ:
+- Solo dev → team nhỏ trong commercial phase đầu, không đủ resource cho plugin runtime
+- Target user = materials/electrochemistry labs cụ thể, không generic research
+- Tránh "feature explosion" và "generic hóa quá sớm" (sai lầm 7A, 7D trong báo cáo)
+
+**Components IN SCOPE cho Platform target:**
+- ✅ Multi-tenant data isolation (đã có infrastructure ở Phase B.5)
+- ✅ Federated search across labs (Phase 3+)
+- ✅ Ontology layer cho 2D materials, TMDs, heterostructures (Phase D)
+- ✅ AI copilot với provenance-aware reasoning (Phase D + E)
+- ✅ Reproducibility engine: version everything (experiments, fitting, AI model versions)
+- ✅ Recommendation engine: suggest next synthesis, detect outlier (Phase D)
+- ✅ Knowledge graph multi-lab (Phase E)
+
+**Components NOT in scope (skipping cho Platform target):**
+- ❌ Plugin runtime ecosystem (P5 trong báo cáo) — quá phức tạp, làm internal abstraction là đủ qua domain restructure (R158a) + analyzer registry pattern
+- ❌ Strict REST API public layer (P4) — chỉ làm khi có nhu cầu mobile/external automation thật
+- ❌ Marketplace cho parsers/analyzers — không cần cho closed Platform
+
+**Aspirations** (từ báo cáo, refined cho Platform target):
+
 - Multi-lab network: tenant isolation, shared catalog, federated search
 - Materials knowledge graph: ontology layer cho 2D materials, TMDs (MoS₂, WS₂, WO₃), heterostructures
 - Recommendation engine: suggest next synthesis, detect outlier, compare across labs
-- Reproducibility engine: provenance-aware AI, version everything (experiments, fitting, AI model versions)
+- Reproducibility engine: provenance-aware AI, version everything
 - AI research copilot: provenance-aware reasoning, lineage-following queries, scientific retrieval beyond chat
 
-**Plugin ecosystem** (P5 trong report):
-- Parser plugins (CorrWare, Gamry, Metrohm, CHI, Raman exports)
-- Analysis plugins (Tauc fitting, peak fitting, impedance fitting, ML prediction)
-- Export plugins (publication report, thesis report, ACS format, supplementary data)
-- Instrument connectors (auto ingest, scheduled sync, metadata extraction)
 
 ---
 

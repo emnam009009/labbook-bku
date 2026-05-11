@@ -1424,6 +1424,72 @@ npm run typecheck   # expect 0 errors
 
 Concise version history. For full git log: `git log --oneline`.
 
+## Round 157b — Platform target alignment + docs sync (May 11 2026)
+
+**Type**: docs
+**Phase**: pre-C1 foundation
+**Branch**: `docs/R157b-platform-target-alignment`
+
+### Changes
+- `docs/long-term-roadmap.md`: Phase 3 target scope = **Platform** (skip full Research OS abstractions)
+- `ROADMAP.md`: add R158 Carbon foundation series block + Phase C-1/C-2/C-3/D/E preview
+- `CLAUDE.md`: update Current state section (R157 + R157a + R158 plan), fix branch reference (github username typo + workflow v3 model)
+- `CHANGELOG.md`: this entry
+
+### Rationale
+Strategic decision từ `Labbook_Bku_Long_Term_Platform_Roadmap_Report.pdf` (received May 10 2026):
+- Solo dev → team nhỏ, không đủ resource cho plugin runtime ecosystem (P5 trong báo cáo)
+- Target user cụ thể (materials/electrochem labs), không generic — không cần generic platform
+- Plugin architecture (P5) và public REST API (P4) defer hoặc skip cho Platform target
+
+Components in scope cho Platform target:
+- ✅ Multi-tenant data isolation (đã có B.5)
+- ✅ Federated search across labs (Phase 3+)
+- ✅ Ontology layer cho 2D materials, TMDs (Phase D)
+- ✅ AI copilot với provenance-aware reasoning (Phase D + E)
+
+Components NOT in scope:
+- ❌ Plugin runtime ecosystem — làm internal abstraction là đủ
+- ❌ Strict REST API public layer — chỉ khi mobile/external automation cần
+- ❌ Marketplace cho parsers/analyzers
+
+### What's next
+**R158 Carbon Foundation series** (4 sub-rounds) trước khi vào Phase C-1 analyzers.
+
+---
+
+## Round 157a — AI Workbench sidebar + empty page shell (May 11 2026)
+
+**Type**: feat
+**Phase**: C-1 prep
+**Branch**: `phase-c1/R157a-workbench-shell`
+**Files**: `index.html`
+
+### Changes
+- Sidebar item "Workbench" (class `superadmin-only`, vị trí sau Lineage)
+- Empty page container `page-workbench` với placeholder text
+- Icon: flask + sparkle (lab + AI vibe)
+- Position: nhóm research tools (Materials → Samples → Experiments → DataAssets → Lineage → **Workbench**)
+
+### TS fixes kèm theo (R157a-fix1)
+- `lineage-service.ts`: `m.shortName` → `m.formula` (Material type không có shortName, từ R154-2a)
+- `data-assets.ts`: remove unused `canAutoPlot` import
+- `lineage-graph.ts`: remove unused `LineageNode`, `LineageEdge` type imports
+
+Các fix này tồn tại từ R154-2a (Phase B.5) nhưng @ts-nocheck pre-v3 workflow che mất.
+Sau khi setup CI typecheck strict trên main (R157), lỗi xuất hiện → fix trong R157a-fix1.
+
+### Verification
+- npm run typecheck: 0 errors
+- npm test: 219+ tests pass
+- npm run build: PWA build success, 72 precached entries
+- Browser test: superadmin thấy Workbench, admin/member không thấy (role gate works)
+
+### What's next
+**R157b**: Docs alignment (this round).
+
+---
+
 ## [Round 143 — Roadmap sync + long-term reference] - 2026-05-10
 
 ### Added

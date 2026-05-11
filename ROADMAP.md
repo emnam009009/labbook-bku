@@ -4,6 +4,72 @@ Pending features và improvements đã thảo luận. Owner Nam quyết định 
 
 > **Long-term strategic context**: see `docs/long-term-roadmap.md` (R143, May 10 2026) — maps strategic vision report to rounds, 3-phase 5-10 year vision (Scientific SaaS → Research OS → Scientific Platform).
 
+## Active rounds (May 11 2026+)
+
+### R157 — Workflow v3 migration ✅ DONE
+GitHub Flow + branch protection + CI/CD + docs/onboarding.md. See workflow-v2-archived.md for legacy reference.
+
+### R157a — AI Workbench sidebar entry ✅ DONE
+Sidebar item "Workbench" (superadmin-only) + empty page shell. Phase C-1 prep.
+
+### R157b — Platform target alignment ✅ DONE
+Docs sync: target = Platform (skip full Research OS), reflect R157a state.
+
+### R158 — Carbon Foundation series (pre-Phase C-1)
+
+Adopt Carbon Design System + domain restructure trước khi vào Phase C-1 analyzer development.
+
+| Sub-round | Scope | Estimated effort |
+|---|---|---|
+| **R158a** | Domain restructure: `src/ts/{pages,services,utils}/` → `src/ts/domains/{materials,samples,experiments,analyzers,inventory,ai,lineage}/` + `src/ts/shared/` | 4-6h, ~40-60 files moved |
+| **R158b** | Adopt `@carbon/styles` tokens — replace custom CSS vars trong main.css với Carbon tokens (color, type scale, spacing, motion) | 2-3h |
+| **R158c** | Carbon UI Shell pattern — sidebar restructure (left primary nav + right side panel cho AI Chat + research tools) | 3-4h |
+| **R158d** | Install `@carbon/web-components` v2 — migrate first components (Button, Tag, Modal, Tab) | 2-3h |
+
+Rationale:
+- Báo cáo strategic (May 10) đề xuất "domain hóa dần" — R158a giải quyết
+- Carbon = "design system" trong báo cáo P5 — vanilla web components + tokens phù hợp với LabBook stack
+- Adopt sớm = sau này Phase C-1 analyzers + Phase E Next.js migration đỡ đau
+- `@carbon/web-components` v2 chosen vì: official Carbon Core team maintained, Custom Elements standard, framework-agnostic, CDN available, migrate sang Carbon React (Phase E) có wrapper sẵn
+
+## Phase C-1 — Optical & Structural Analyzers (R159-R171)
+
+Sau R158 foundation. Theo long-term-roadmap.md section "Phase 2 Research OS" mapping rounds.
+
+| Round range | Scope |
+|---|---|
+| R159 | File upload UI + spectrum-tools.ts wrapper (reuse existing parsers/) |
+| R160-R161 | XRD parser + Python `/xrd/analyze` (pymatgen) |
+| R162 | XRD Scherrer + lattice + JCPDS matching (Materials Project API) |
+| R163-R164 | Raman parser + lmfit Voigt fitting |
+| R165 | Raman MoS₂/WS₂ layer counting heuristic |
+| R166-R167 | UV-Vis (reuse jcamp-jasco + tauc — KHÔNG tạo lại) |
+| R168-R169 | PL parser + trion fitting |
+| R170-R171 | FTIR + functional group identification, LSV/HER + Tafel, Microscopy via Claude Vision |
+
+Pre-existing reusable services (KHÔNG tạo lại):
+- `src/ts/services/parsers/` (sẽ chuyển → `src/ts/shared/parsers/` ở R158a)
+- `src/ts/services/plot/tauc.ts` + `bandgap-fit.ts` (sẽ chuyển → `src/ts/shared/plot/`)
+
+## Phase C-2 — Electrochemistry (R172-R186)
+
+CV, EIS, GCD, OCP. Python service expand với impedance.py + scipy.
+
+## Phase C-3 — Photoelectrochemistry (R187-R201)
+
+PEC, Mott-Schottky, IPCE, XPS, EDS, BET. Materials informatics ecosystem (pymatgen, ASE).
+
+## Phase D — Materials DB + DFT + AI Writer (R202-R216)
+
+Materials knowledge graph foundation, DFT input generation via ASE, AI Writer (provenance-aware).
+
+## Phase E — Advanced Features (R217+)
+
+Lab Mode (F key fullscreen, voice-driven), Knowledge Graph multi-lab, Spectrum Compare, UI redesign với Carbon React (Next.js migration).
+
+---
+
+
 ## Deferred bugs (don't fix unless asked)
 
 ### ~~Bug #11: Notifications schema flat vs rule-nested~~ ✅ RESOLVED in R122
