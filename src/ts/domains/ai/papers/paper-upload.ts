@@ -14,11 +14,11 @@
  */
 // @ts-nocheck — AI module — partial typing (R105+ skeleton). Cleanup after RAG/streaming stabilization.
 
-import { storage, db } from "../../firebase";
+import { storage, db } from "@/firebase";
 import { ref as stRef, uploadBytesResumable } from "firebase/storage";
 import { ref as dbRef, push, set, query, orderByChild, equalTo, get } from "firebase/database";
-import { currentAuth } from "../../auth";
-import { showToast } from "../../ui/toast";
+import { currentAuth } from "@/auth";
+import { showToast } from "@/ui/toast";
 import { MAX_FILE_SIZE, ACCEPTED_MIME, type Paper } from "../papers/types";
 
 const SHARED_PATH = "aiPapers/_shared";

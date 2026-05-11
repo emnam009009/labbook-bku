@@ -6,10 +6,10 @@
  */
 // @ts-nocheck — AI module — partial typing (R105+ skeleton). Cleanup after RAG/streaming stabilization.
 
-import { storage, db } from "../../firebase";
+import { storage, db } from "@/firebase";
 import { ref as dbRef, onValue, remove, off } from "firebase/database";
 import { ref as stRef, deleteObject } from "firebase/storage";
-import { showToast } from "../../ui/toast";
+import { showToast } from "@/ui/toast";
 import type { Paper } from "../papers/types";
 
 const SHARED_PATH = "aiPapers/_shared";

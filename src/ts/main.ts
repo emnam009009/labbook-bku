@@ -20,7 +20,7 @@ import '../css/attachments.css'
 import '../css/ai-chat.css'  // Round 108: AI chat sidetab
 
 // AI Chat Sidetab (Round 108)
-import { initAiChatSidetab, initAiToolsSidetab } from './ai/ui'  // Round 108, R131b
+import { initAiChatSidetab, initAiToolsSidetab } from '@/domains/ai/ui'  // Round 108, R131b
 
 // ── Import Firebase ───────────────────────────────────────
 import { db, ref, push, onValue, fbListen, fbPush, fbSet, fbGet, fbDel, update, updatePassword } from './firebase.js'

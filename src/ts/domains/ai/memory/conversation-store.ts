@@ -15,7 +15,7 @@
  */
 // @ts-nocheck — AI module — partial typing (R105+ skeleton). Cleanup after RAG/streaming stabilization.
 
-import { fbSet, fbPush, fbDel, fbGet, fbListen } from "../../firebase";
+import { fbSet, fbPush, fbDel, fbGet, fbListen } from "@/firebase";
 
 // ════════════════════════════════════════════════════════════
 // Types

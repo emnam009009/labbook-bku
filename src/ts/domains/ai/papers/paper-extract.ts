@@ -7,8 +7,8 @@
  */
 // @ts-nocheck — AI module — partial typing (R105+ skeleton). Cleanup after RAG/streaming stabilization.
 
-import { auth } from "../../firebase";
-import { showToast } from "../../ui/toast";
+import { auth } from "@/firebase";
+import { showToast } from "@/ui/toast";
 
 const CHANDRA_PROXY_URL =
   "https://asia-southeast1-lab-manager-268a6.cloudfunctions.net/chandraProxy";
