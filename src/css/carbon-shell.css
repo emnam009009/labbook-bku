@@ -155,3 +155,220 @@
   margin-right: 320px;
   transition: margin-right var(--cds-motion-moderate-02) var(--cds-motion-ease-productive);
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   CARBON SIDE-NAV — Sidebar redesign (R158c-p2)
+   ═══════════════════════════════════════════════════════════════════
+   Overrides existing .sidebar-item rules với Carbon spec:
+   - Active state: subtle bg + left border 3px solid var(--primary)
+   - Hover state: subtle bg, no transform/shadow
+   - Item compact: 36px height, padding 8px 12px
+   - Icons: 16px, stroke 2px
+   - No bouncy animations (Carbon = productive ease, không spring)
+
+   Specificity: nav.site-sidebar selector + extra class để win over
+   sidebar-smooth.css !important.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Item base ───────────────────────────────────────────── */
+nav.site-sidebar .sidebar-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  margin: 1px 6px;
+  border-radius: var(--cds-radius-sm);  /* 4px Carbon spec */
+  background: transparent;
+  border: none;
+  color: rgba(248, 250, 252, 0.78);  /* slate-50 alpha — slightly muted */
+  font-size: 13px;
+  font-weight: var(--cds-type-weight-regular);
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  min-height: 36px;
+  box-shadow: none !important;
+  transition:
+    background-color var(--cds-motion-fast-02) var(--cds-motion-ease-productive),
+    color var(--cds-motion-fast-02) var(--cds-motion-ease-productive) !important;
+}
+
+/* ── Item icon ───────────────────────────────────────────── */
+nav.site-sidebar .sidebar-item svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+  flex-shrink: 0;
+  transition: none !important;  /* No bouncy icon scale */
+  transform: none !important;
+}
+
+/* ── Hover state — subtle bg, no transform ──────────────── */
+nav.site-sidebar .sidebar-item:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: var(--cds-sidebar-text) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+nav.site-sidebar .sidebar-item:hover svg {
+  transform: none !important;
+  color: var(--cds-sidebar-text);
+}
+
+/* ── Active state — subtle bg + left border 3px Carbon ─── */
+nav.site-sidebar .sidebar-item.active {
+  background: rgba(255, 255, 255, 0.08) !important;  /* Carbon $background-selected — neutral */
+  color: var(--cds-sidebar-text) !important;
+  border: none !important;
+  box-shadow: none !important;
+  font-weight: var(--cds-type-weight-medium);
+}
+
+/* Left border 3px solid — Carbon side-nav active indicator */
+nav.site-sidebar .sidebar-item.active::before {
+  content: '';
+  position: absolute;
+  left: -6px;  /* extend to sidebar edge, offsetting margin: 0 6px */
+  top: 4px;
+  bottom: 4px;
+  width: 4px;
+  background: var(--primary);
+  border-radius: 0 2px 2px 0;
+}
+
+nav.site-sidebar .sidebar-item.active:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+nav.site-sidebar .sidebar-item.active svg {
+  color: var(--primary);
+}
+
+/* ── Active state — Carbon vs solid (override solid mode) ─ */
+nav.site-sidebar .sidebar-item.active,
+nav.site-sidebar .sidebar-item.active button {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ── Focus ring (Carbon spec) ────────────────────────────── */
+nav.site-sidebar .sidebar-item:focus-visible {
+  outline: 2px solid var(--cds-focus);
+  outline-offset: -2px;
+}
+
+/* ── Divider — clean 1px line, not block bg ─────────────── */
+.sidebar-divider-line {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 8px 14px;
+}
+
+/* ── Brand area ──────────────────────────────────────────── */
+nav.site-sidebar .sidebar-brand {
+  padding: 16px 14px 12px;
+}
+
+nav.site-sidebar .brand-title {
+  font-size: 15px;
+  font-weight: var(--cds-type-weight-semibold);
+  letter-spacing: -0.02em;
+  color: var(--cds-sidebar-text);
+}
+
+nav.site-sidebar .brand-subtitle {
+  font-size: 11px;
+  color: rgba(148, 163, 184, 0.85);  /* slate-400 alpha */
+  letter-spacing: 0.02em;
+  text-transform: none;
+  margin-top: 2px;
+}
+
+/* ── Section label (collapsed sidebar groups) ──────────── */
+nav.site-sidebar .sidebar-label-text {
+  font-size: 11px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(148, 163, 184, 0.6) !important;
+  font-weight: var(--cds-type-weight-medium);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   DARK MODE OVERRIDES — keep Carbon style
+   ═══════════════════════════════════════════════════════════════════ */
+
+html.dark nav.site-sidebar .sidebar-item {
+  background: transparent !important;
+  border-color: transparent !important;
+  color: rgba(248, 250, 252, 0.78) !important;
+}
+
+html.dark nav.site-sidebar .sidebar-item:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: var(--cds-sidebar-text) !important;
+}
+
+html.dark nav.site-sidebar .sidebar-item.active {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: var(--cds-sidebar-text) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   R158c-p2-fix: Logo + Avatar background cleanup
+   ═══════════════════════════════════════════════════════════════════
+   Issues: solid cyan square on logo + avatar (AI-cliché pattern).
+   Fix: transparent bg, let icon/avatar stand on its own.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Logo: remove solid cyan square ───────────────────── */
+nav.site-sidebar .sidebar-brand-icon,
+body nav.site-sidebar.sidebar .sidebar-brand-icon {
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  padding: 0 !important;
+}
+
+/* Logo image direct sizing */
+nav.site-sidebar .sidebar-brand-icon img {
+  width: 32px !important;
+  height: 32px !important;
+  display: block;
+}
+
+/* ── Avatar: subtle background instead of solid cyan ──── */
+nav.site-sidebar .sidebar-footer #avatar-btn {
+  background: var(--cds-layer-03) !important;  /* slate-100 subtle */
+  color: var(--cds-text-primary) !important;
+  border: 1px solid var(--cds-border-subtle-01) !important;
+  border-radius: 50% !important;
+  box-shadow: none !important;
+  font-weight: var(--cds-type-weight-semibold);
+}
+
+nav.site-sidebar .sidebar-footer #avatar-btn:hover {
+  background: var(--cds-background-hover) !important;
+  border-color: var(--cds-border-subtle-02) !important;
+}
+
+/* Avatar pulse/status dot — keep small accent */
+nav.site-sidebar .sidebar-footer .avatar-status-dot,
+nav.site-sidebar .sidebar-footer .status-online {
+  background: var(--cds-support-success) !important;  /* emerald */
+}
+
+/* ── Active border 3px — fix visibility trong collapsed mode ── */
+nav.site-sidebar .sidebar-item.active::before {
+  left: 0 !important;  /* stay flush với item edge, không offset margin */
+  border-radius: 0 2px 2px 0;
+}
+
+/* When sidebar collapsed, items centered — border still left-aligned */
+nav.site-sidebar.collapsed .sidebar-item.active::before,
+body nav.site-sidebar.sidebar:not(:hover) .sidebar-item.active::before {
+  left: 0 !important;
+  width: 4px;
+}
