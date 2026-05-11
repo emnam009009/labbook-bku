@@ -11,7 +11,7 @@ import type { DataAsset, DataAssetType } from "../types/research.js";
 import { escapeHtml } from "../utils/format.js";
 import { openModal } from "../ui/modal.js";
 // R156e: plot preview reuse
-import { parseDataFile, canAutoPlot } from "../services/parsers/index.js";
+import { parseDataFile } from "../services/parsers/index.js";
 import { renderPreview } from "../services/plot/plot-preview.js";
 // R156g: Tauc plot
 import { transformToTauc, TAUC_PRESETS } from "../services/plot/tauc.js";
