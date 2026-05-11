@@ -1,5 +1,38 @@
 # CHANGELOG
 
+## R156g — Tauc plot toggle for UV-Vis DataAsset preview (Phase B.5+) (2026-05-10)
+
+### Added
+- Tauc plot controls in DataAsset preview modal (only for uv-vis / uv-vis-drs):
+  - Checkbox "Hiển thị Tauc plot"
+  - Select n with 4 TAUC_PRESETS:
+    * n=1/2 — Direct allowed
+    * n=3/2 — Direct forbidden
+    * n=2 — Indirect allowed
+    * n=3 — Indirect forbidden
+- Auto bandgap fit: when Tauc on, autoFitBandgap → linear regression
+  on knee region → display "Bandgap (Eg) = X.XXX eV (R² = ...)"
+- Mode auto: uv-vis-drs → reflectance (Kubelka-Munk), uv-vis → absorbance
+- Toggle re-renders canvas without re-parsing file
+
+### Architecture (reuse)
+- transformToTauc + autoFitBandgap from existing services/plot/tauc.ts
+  and services/plot/bandgap-fit.ts (R30+ era code)
+- Module-level state: _currentParsedData + _currentAsset + _taucOn + _taucN
+
+### Files
+- src/ts/pages/data-assets.ts:
+  - Imported transformToTauc + TAUC_PRESETS + autoFitBandgap
+  - State + renderTaucControls() + applyTaucRender() + setTaucOn/N()
+  - Modal body innerHTML adds tauc-controls container
+- src/ts/services/global-delegation.ts: tauc toggle + n select handlers
+- src/css/labbook-extras.css: .lb-da-tauc-* styles
+
+### Out of scope
+- Manual region selection for bandgap fit (currently auto-fit only)
+- Save Tauc result back to DataAsset.metadata.bandgap
+- Export Tauc plot PNG
+
 ## R155 — Audit + deprecate legacy pages (Phase B.5 closing) (2026-05-10)
 
 ### Soft deprecation strategy

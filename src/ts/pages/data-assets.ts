@@ -13,6 +13,9 @@ import { openModal } from "../ui/modal.js";
 // R156e: plot preview reuse
 import { parseDataFile, canAutoPlot } from "../services/parsers/index.js";
 import { renderPreview } from "../services/plot/plot-preview.js";
+// R156g: Tauc plot
+import { transformToTauc, TAUC_PRESETS } from "../services/plot/tauc.js";
+import { autoFitBandgap } from "../services/plot/bandgap-fit.js";
 
 const TENANT_ID = "default";
 
@@ -246,6 +249,7 @@ export async function openDataAssetPreview(assetId: string): Promise<void> {
       </div>
     ` : ''}
     <div style="margin-top:16px">${previewHtml}</div>
+    <div id="da-plot-tauc-controls" class="lb-da-tauc-controls" style="display:none"></div>
     <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
       <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
         Tải về / Mở tab mới
@@ -260,7 +264,12 @@ export async function openDataAssetPreview(assetId: string): Promise<void> {
   }
 }
 
-// R156e: fetch file from Storage URL → parse → render Chart.js
+// R156e+g: fetch file from Storage URL → parse → render Chart.js (+ Tauc toggle)
+let _currentParsedData: any = null;
+let _currentAsset: DataAsset | null = null;
+let _taucOn = false;
+let _taucN = 0.5;
+
 async function renderInlinePlot(asset: DataAsset, url: string, category: string): Promise<void> {
   const canvas = document.getElementById('da-plot-canvas') as HTMLCanvasElement | null;
   const statusEl = document.getElementById('da-plot-status');
@@ -283,6 +292,11 @@ async function renderInlinePlot(asset: DataAsset, url: string, category: string)
       return;
     }
 
+    _currentParsedData = parsed;
+    _currentAsset = asset;
+    _taucOn = false;
+    _taucN = 0.5;
+
     if (statusEl) statusEl.textContent = `Đang vẽ (${parsed.x.length} điểm)...`;
     await renderPreview(canvas, parsed, {
       title: `${asset.type.toUpperCase()} — ${asset.fileName}`,
@@ -291,6 +305,9 @@ async function renderInlinePlot(asset: DataAsset, url: string, category: string)
       statusEl.textContent = `${parsed.x.length} điểm dữ liệu`;
       statusEl.style.color = '#0D9488';
     }
+
+    // R156g: show Tauc controls for UV-Vis types
+    renderTaucControls(asset.type);
   } catch (err: any) {
     console.error('[da-plot] render failed', err);
     if (statusEl) {
@@ -299,6 +316,104 @@ async function renderInlinePlot(asset: DataAsset, url: string, category: string)
     }
   }
 }
+
+function renderTaucControls(daType: string): void {
+  const container = document.getElementById('da-plot-tauc-controls');
+  if (!container) return;
+  if (daType !== 'uv-vis' && daType !== 'uv-vis-drs') {
+    container.innerHTML = '';
+    container.style.display = 'none';
+    return;
+  }
+  container.style.display = '';
+  const presetOptions = TAUC_PRESETS.map(p =>
+    `<option value="${p.value}" ${p.value === _taucN ? 'selected' : ''}>${p.label}</option>`
+  ).join('');
+  container.innerHTML = `
+    <label class="lb-da-tauc-toggle">
+      <input type="checkbox" id="da-tauc-on" ${_taucOn ? 'checked' : ''}
+        data-input-action="da-tauc-toggle">
+      <span>Hiển thị Tauc plot</span>
+    </label>
+    <div class="lb-da-tauc-n ${_taucOn ? '' : 'lb-da-tauc-n--hidden'}">
+      <label for="da-tauc-n">n =</label>
+      <select id="da-tauc-n" data-change-action="da-tauc-n" class="cs-select">
+        ${presetOptions}
+      </select>
+    </div>
+    <div class="lb-da-tauc-result" id="da-tauc-result"></div>
+  `;
+}
+
+export async function applyTaucRender(): Promise<void> {
+  if (!_currentParsedData || !_currentAsset) return;
+  const canvas = document.getElementById('da-plot-canvas') as HTMLCanvasElement | null;
+  const resultEl = document.getElementById('da-tauc-result');
+  if (!canvas) return;
+
+  if (!_taucOn) {
+    // Re-render raw spectrum
+    await renderPreview(canvas, _currentParsedData, {
+      title: `${_currentAsset.type.toUpperCase()} — ${_currentAsset.fileName}`,
+    });
+    if (resultEl) resultEl.textContent = '';
+    return;
+  }
+
+  // Mode based on DataAsset type
+  const mode = _currentAsset.type === 'uv-vis-drs' ? 'reflectance' : 'absorbance';
+  try {
+    const tauc = transformToTauc(
+      { x: _currentParsedData.x, y: _currentParsedData.y },
+      _taucN,
+      mode,
+    );
+    const fit = autoFitBandgap(tauc.x, tauc.y);
+    await renderPreview(canvas, {
+      x: tauc.x,
+      y: tauc.y,
+      xLabel: tauc.xLabel,
+      yLabel: tauc.yLabel,
+    }, {
+      title: `Tauc plot (n=${_taucN}) — ${_currentAsset.fileName}`,
+      bandgapFit: fit,
+    });
+    if (resultEl) {
+      if (fit && isFinite(fit.Eg)) {
+        resultEl.innerHTML = `📐 Bandgap (Eg) = <strong>${fit.Eg.toFixed(3)} eV</strong> (R² = ${fit.r2?.toFixed(3) ?? 'N/A'})`;
+        resultEl.style.color = '#0D9488';
+      } else {
+        resultEl.textContent = '⚠️ Không tìm được vùng tuyến tính. Thử đổi n.';
+        resultEl.style.color = '#EF4444';
+      }
+    }
+  } catch (err: any) {
+    console.error('[tauc] failed', err);
+    if (resultEl) {
+      resultEl.textContent = `Lỗi Tauc: ${err?.message || String(err)}`;
+      resultEl.style.color = '#EF4444';
+    }
+  }
+}
+
+export function setTaucOn(on: boolean): void {
+  _taucOn = on;
+  // Toggle n select visibility
+  const nDiv = document.querySelector('.lb-da-tauc-n');
+  if (nDiv) {
+    if (on) nDiv.classList.remove('lb-da-tauc-n--hidden');
+    else nDiv.classList.add('lb-da-tauc-n--hidden');
+  }
+  void applyTaucRender();
+}
+
+export function setTaucN(n: number): void {
+  _taucN = n;
+  if (_taucOn) void applyTaucRender();
+}
+
+(window as any).setTaucOn = setTaucOn;
+(window as any).setTaucN = setTaucN;
 
 (window as any).renderDataAssetsPage = renderDataAssetsPage;
 (window as any).filterDataAssetsByType = filterDataAssetsByType;

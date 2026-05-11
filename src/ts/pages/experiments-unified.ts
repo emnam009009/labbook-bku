@@ -903,7 +903,7 @@ async function renderDataAssetsSection(experimentId: string): Promise<void> {
             <span>${escapeHtml(formatFileSize(da.fileSize))}</span>
             <span>${escapeHtml(fmtUploadDate(da))}</span>
             <button type="button" class="lb-da-btn lb-da-btn--download" data-action="da-download" data-asset-id="${escapeHtml(da.id)}" title="Tải về">⬇</button>
-            <button type="button" class="lb-da-btn lb-da-btn--delete" data-action="da-delete" data-asset-id="${escapeHtml(da.id)}" data-asset-name="${escapeHtml(da.fileName)}" title="Xóa">×</button>
+            <button type="button" class="lb-da-btn lb-da-btn--delete" data-action="da-delete" data-asset-id="${escapeHtml(da.id)}" data-asset-name="${escapeHtml(da.fileName)}" data-experiment-id="${escapeHtml(experimentId)}" title="Xóa">×</button>
           </div>
         </div>
       `).join('')}</div>`;

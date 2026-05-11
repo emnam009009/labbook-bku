@@ -835,3 +835,60 @@ body.superadmin-mode .superadmin-only {
   color: #451A03;
   font-weight: 600;
 }
+
+
+/* R156g — Tauc plot controls */
+.lb-da-tauc-controls {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #F0FDFA;
+  border: 1px solid #99F6E4;
+  border-radius: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+}
+
+.lb-da-tauc-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.lb-da-tauc-toggle input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.lb-da-tauc-n {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: opacity 0.15s;
+}
+
+.lb-da-tauc-n--hidden {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.lb-da-tauc-n .cs-select {
+  min-width: 200px;
+}
+
+.lb-da-tauc-result {
+  flex-basis: 100%;
+  font-size: 13px;
+  padding: 6px 0;
+  border-top: 1px solid #99F6E4;
+  margin-top: 4px;
+}
+
+.lb-da-tauc-result strong {
+  font-weight: 700;
+  font-size: 15px;
+}

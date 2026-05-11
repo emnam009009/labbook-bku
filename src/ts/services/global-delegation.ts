@@ -839,8 +839,9 @@ export function attachGlobalDelegation() {
     } else if (action === 'da-delete') {
       const id = target.dataset.assetId;
       const name = target.dataset.assetName || '(unknown)';
-      const expWrap = target.closest('[data-experiment-id]') as HTMLElement | null;
-      const expId = expWrap?.dataset.experimentId;
+      // R156g-fix1: read experimentId directly from button (not via closest — sibling issue)
+      const expId = target.dataset.experimentId
+        || (target.closest('[data-experiment-id]') as HTMLElement | null)?.dataset.experimentId;
       if (id && expId && typeof (window as any).handleDataAssetDelete === 'function') {
         await (window as any).handleDataAssetDelete(id, name, expId);
       }
@@ -942,6 +943,33 @@ export function attachGlobalDelegation() {
     if (!target || !target.matches?.('[data-input-action="lineage-search"]')) return;
     if (typeof (window as any).setLineageSearch === 'function') {
       (window as any).setLineageSearch(target.value || '');
+    }
+  });
+})();
+
+
+// ═══════════════════════════════════════════════════════════
+// R156g — Tauc plot toggle delegation
+// ═══════════════════════════════════════════════════════════
+
+(function attachTaucDelegation() {
+  const flag = '__taucDelegationAttached';
+  if ((document.body as any)[flag]) return;
+  (document.body as any)[flag] = true;
+
+  document.body.addEventListener('change', (e: Event) => {
+    const target = e.target as HTMLElement | null;
+    if (!target) return;
+    if (target.matches?.('[data-input-action="da-tauc-toggle"]')) {
+      const checked = (target as HTMLInputElement).checked;
+      if (typeof (window as any).setTaucOn === 'function') {
+        (window as any).setTaucOn(checked);
+      }
+    } else if (target.matches?.('[data-change-action="da-tauc-n"]')) {
+      const val = parseFloat((target as HTMLSelectElement).value);
+      if (!isNaN(val) && typeof (window as any).setTaucN === 'function') {
+        (window as any).setTaucN(val);
+      }
     }
   });
 })();
