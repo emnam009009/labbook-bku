@@ -18,7 +18,6 @@
  *   - delete: admin/superadmin (rare; prefer status="abandoned")
  */
 
-// @ts-nocheck
 
 import {
   fdb,

@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## R156a — Remove @ts-nocheck from services/experiments.ts (Phase B.5 Tech Debt)
+
+### Technical debt cleanup (E+F approach)
+- Verified file compiles clean (0 errors) without @ts-nocheck
+- Comment was legacy from earlier migration, no longer needed
+- File now has proper TypeScript type checking
+
+### Files
+- src/ts/services/experiments.ts: removed `// @ts-nocheck`
+- CHANGELOG.md
+
 ## R153b — DataAssets UI in experiment detail (Phase B.5) (2026-05-10)
 
 ### Added
