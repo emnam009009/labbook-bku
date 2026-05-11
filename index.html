@@ -227,7 +227,8 @@
 
         <div class="sidebar-divider-line"></div>
 
-        <!-- Thí nghiệm -->
+        <!-- R158b-cleanup-1: legacy pages hidden (Thủy nhiệt, Điện cực, Điện hóa)
+             Code + modals + Firebase data preserved. Full delete in Phase E.
         <div class="sidebar-item superadmin-only" data-action="show-page" data-page="hydrothermal" data-tip="Thủy nhiệt (legacy — chỉ superadmin)" role="button" tabindex="0" aria-label="Thủy nhiệt">
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2v6l-5 9a3 3 0 003 3h10a3 3 0 003-3l-5-9V2"></path></svg>
         <span data-label>Thủy nhiệt</span></div>
@@ -237,6 +238,7 @@
         <div class="sidebar-item superadmin-only" data-action="show-page" data-page="electrochemistry" data-tip="Đo điện hóa (legacy)" role="button" tabindex="0" aria-label="Đo điện hóa">
           <svg aria-hidden="true" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         <span data-label>Điện hóa</span></div>
+        -->
         <!-- Round 77c: Overview images page -->
 <div class="sidebar-divider-line"></div>
 
@@ -500,7 +502,8 @@
 <!-- /DASHBOARD v4 -->
 <!-- /DASHBOARD v3 -->
 
-      <div class="page" id="page-hydrothermal">
+      <!-- R158b-cleanup-1: page-hydrothermal hidden
+<div class="page" id="page-hydrothermal">
         <div class="lb-deprec-banner">⚠️ <strong>Page này đã ngừng cập nhật.</strong> Vui lòng dùng "TN mới" + "Phổ DL" cho thí nghiệm và dữ liệu mới. Page legacy chỉ giữ lại để xem data cũ.</div>
         <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
           <div>
@@ -551,9 +554,11 @@
           <div id="hydro-pagination" class="pagination-bar" style="margin-top:12px"></div>
         </div>
       </div>
+-->
 
       <!-- ELECTRODE -->
-      <div class="page" id="page-electrode">
+      <!-- R158b-cleanup-1: page-electrode hidden
+<div class="page" id="page-electrode">
         <div class="lb-deprec-banner">⚠️ <strong>Page này đã ngừng cập nhật.</strong> Vui lòng dùng "TN mới" + "Phổ DL" cho thí nghiệm và dữ liệu mới. Page legacy chỉ giữ lại để xem data cũ.</div>
         <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
           <div>
@@ -634,13 +639,15 @@
           </div>
         </div>
       </div>
+-->
 
       <!-- ELECTROCHEMISTRY -->
       <div class="page" id="page-overview">
         <div class="lb-deprec-banner">⚠️ <strong>Page này đã ngừng cập nhật.</strong> Vui lòng dùng "TN mới" + "Phổ DL" cho thí nghiệm và dữ liệu mới. Page legacy chỉ giữ lại để xem data cũ.</div>
         <!-- Round 77c: rendered by pages/overview.ts on showPage('overview') -->
       </div>
-      <div class="page" id="page-electrochemistry">
+      <!-- R158b-cleanup-1: page-electrochemistry hidden
+<div class="page" id="page-electrochemistry">
         <div class="lb-deprec-banner">⚠️ <strong>Page này đã ngừng cập nhật.</strong> Vui lòng dùng "TN mới" + "Phổ DL" cho thí nghiệm và dữ liệu mới. Page legacy chỉ giữ lại để xem data cũ.</div>
         <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
           <div>
@@ -690,6 +697,7 @@
           <div id="electrochem-pagination" class="pagination-bar" style="margin-top:12px"></div>
         </div>
       </div>
+-->
 
       <!-- CHEMICALS -->
       <!-- R150d-1 + R150d-2: Materials browser + CRUD (Phase B.5) -->
