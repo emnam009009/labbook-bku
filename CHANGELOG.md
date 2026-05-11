@@ -1,5 +1,38 @@
 # CHANGELOG
 
+## R156d — Tag remaining @ts-nocheck with reasons (Tech Debt cleanup)
+
+### Approach (E+F combo from R156 plan)
+Instead of fixing 50 files of mixed quality (some 0 errors, some 183),
+tag each @ts-nocheck with categorized reason comment. Future
+developers + Phase E (Next.js port) reviewers know why each file is
+unchecked and when to remove the directive.
+
+### Reasons by category
+- AI module (~25 files): partial typing (R105+ skeleton). Cleanup
+  after RAG/streaming stabilization.
+- Pages (~10 files): Legacy DOM page — will be replaced in Next.js +
+  Carbon port (Phase E). Don't fix here.
+- Services (~12 files): DOM event handlers + legacy patterns. Defer
+  typing until UI rewrite.
+- UI components (~3 files): DOM manipulation, deferred until Next.js.
+- main.ts: 183 errors mostly unused imports.
+- labbook-extensions.ts: pre-refactor, scheduled for removal.
+
+### Already cleaned (separate rounds)
+- R156a: src/ts/services/experiments.ts — @ts-nocheck removed (0 errors)
+- R156b-1: src/ts/services/global-delegation.ts — TS2304 runtime bug
+  fixed (ev → e); type cleanup of remaining 41 errors deferred
+
+### Files
+- 50 .ts files: appended categorized reason to `// @ts-nocheck` line
+- CHANGELOG.md (this entry)
+
+### Out of scope
+- R156b-2: full type cleanup of global-delegation.ts (41 mechanical errors)
+- R156c: main.ts unused imports cleanup (183 errors)
+- Per-file deep cleanup — defer to Phase E (Next.js rewrite)
+
 ## R156a — Remove @ts-nocheck from services/experiments.ts (Phase B.5 Tech Debt)
 
 ### Technical debt cleanup (E+F approach)

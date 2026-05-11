@@ -3,7 +3,7 @@
  * Entry point — import CSS, Firebase, và chạy toàn bộ ứng dụng
  * Vite sẽ bundle file này cùng tất cả imports thành 1 file tối ưu
  */
-// @ts-nocheck
+// @ts-nocheck — Entry bootstrap — 183 errors mostly unused imports. Cleanup deferred.
 
 
 // ── Import CSS ───────────────────────────────────────────

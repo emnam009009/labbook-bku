@@ -24,7 +24,7 @@
  *  - 3 click outside listeners + 1 input listener attach 1 lần khi module được import
  *  - initCustomFilters phải được caller gọi từ DOMContentLoaded của main.js
  */
-// @ts-nocheck
+// @ts-nocheck — UI component — DOM manipulation, deferred typing until Next.js port.
 
 
 import { vals } from '../utils/format.js'

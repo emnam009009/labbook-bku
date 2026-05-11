@@ -9,7 +9,7 @@
  * Future R152d/e: bulk migration UI to populate this page from legacy.
  */
 
-// @ts-nocheck
+// @ts-nocheck — Legacy DOM page — will be replaced in Next.js + Carbon port (Phase E). Don't fix here.
 
 import { listExperiments } from "../services/experiments.js";
 import type { Experiment, ExperimentType, ExperimentStatus } from "../types/research.js";

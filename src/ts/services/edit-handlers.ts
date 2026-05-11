@@ -20,7 +20,7 @@
  *  - editSubtitle/editLabTitle dùng inline contenteditable pattern (no modal)
  *  - editChemical gọi syncUnit() để đồng bộ unit dropdown ↔ unit input
  */
-// @ts-nocheck
+// @ts-nocheck — Service layer — DOM event handlers + legacy patterns. Defer typing until UI rewrite.
 
 
 import { canEdit } from '../utils/auth-helpers.js'

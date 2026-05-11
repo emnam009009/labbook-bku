@@ -3,7 +3,7 @@
  *
  * Used by gemini-client.ts in function calling loop.
  */
-// @ts-nocheck
+// @ts-nocheck — AI module — partial typing (R105+ skeleton). Cleanup after RAG/streaming stabilization.
 
 const TOOL_EXECUTOR_URL =
   "https://asia-southeast1-lab-manager-268a6.cloudfunctions.net/toolExecutor";

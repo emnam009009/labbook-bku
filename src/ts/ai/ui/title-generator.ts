@@ -10,7 +10,7 @@
  * - Update RTDB title (realtime listener tự refresh UI)
  * - Background, không block streaming
  */
-// @ts-nocheck
+// @ts-nocheck — AI module — partial typing (R105+ skeleton). Cleanup after RAG/streaming stabilization.
 
 import { LlmMessage } from "../llm/types";
 import { geminiClient } from "../llm/gemini-client";

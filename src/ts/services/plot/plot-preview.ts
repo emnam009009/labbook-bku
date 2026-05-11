@@ -1,5 +1,5 @@
 // src/ts/services/plot/plot-preview.ts
-// @ts-nocheck
+// @ts-nocheck — Service layer — DOM event handlers + legacy patterns. Defer typing until UI rewrite.
 // Render data preview chart using Chart.js. Designed for both:
 //   - on-screen preview (small canvas)
 //   - export PNG @ 300 DPI (offscreen high-res canvas)

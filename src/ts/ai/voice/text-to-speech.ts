@@ -7,7 +7,7 @@
  * Singleton pattern — only one TTS playing at a time.
  */
 
-// @ts-nocheck
+// @ts-nocheck — AI module — partial typing (R105+ skeleton). Cleanup after RAG/streaming stabilization.
 
 import { TtsState, TtsOptions } from "./types";
 

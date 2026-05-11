@@ -1,5 +1,5 @@
 // src/ts/ui/pdf-export-modal.ts
-// @ts-nocheck
+// @ts-nocheck — UI component — DOM manipulation, deferred typing until Next.js port.
 // Modal "Xuất dữ liệu" — chọn ảnh + page size + orientation → preview → download
 
 import { listAttachments, ATTACHMENT_CATEGORIES } from '../services/attachments.js';

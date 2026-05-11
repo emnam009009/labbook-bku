@@ -4,7 +4,7 @@
  * Authoritative source is backend (functions/src/tools/registry.ts).
  * This is just a mirror for type safety + UI rendering.
  */
-// @ts-nocheck
+// @ts-nocheck — AI module — partial typing (R105+ skeleton). Cleanup after RAG/streaming stabilization.
 
 export interface ToolMetadata {
   name: string;

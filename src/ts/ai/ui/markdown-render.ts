@@ -6,7 +6,7 @@
  *
  * @see /AI_ARCHITECTURE.md Section 5
  */
-// @ts-nocheck
+// @ts-nocheck — AI module — partial typing (R105+ skeleton). Cleanup after RAG/streaming stabilization.
 
 let _markedInstance: any = null;
 let _purify: any = null;

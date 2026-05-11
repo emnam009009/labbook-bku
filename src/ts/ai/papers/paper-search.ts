@@ -12,7 +12,7 @@
  * No advanced controls exposed — defaults (mode=hybrid, rerank=true) apply
  * for all users.
  */
-// @ts-nocheck
+// @ts-nocheck — AI module — partial typing (R105+ skeleton). Cleanup after RAG/streaming stabilization.
 
 import { auth } from "../../firebase";
 import { showToast } from "../../ui/toast";

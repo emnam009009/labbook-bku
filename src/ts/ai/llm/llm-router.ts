@@ -9,7 +9,7 @@
  *
  * @see /AI_ARCHITECTURE.md Section 4 (LLM Tiering)
  */
-// @ts-nocheck
+// @ts-nocheck — AI module — partial typing (R105+ skeleton). Cleanup after RAG/streaming stabilization.
 
 import { LlmClient, LlmRequest, StreamingCallbacks, Tier } from "./types";
 import { geminiClient } from "./gemini-client";

@@ -10,7 +10,7 @@
  *  - min-height: 38px khớp với .cs-modal-trigger / search-input
  *  - Padding: 6px 12px (giống select khác)
  */
-// @ts-nocheck
+// @ts-nocheck — Service layer — DOM event handlers + legacy patterns. Defer typing until UI rewrite.
 
 
 (function setupDateRangeFilter() {

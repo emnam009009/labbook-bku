@@ -20,7 +20,7 @@
  *  - data-action="open-modal" da bi remove khoi experiments.js tbody listener
  *    de tranh double-call
  */
-// @ts-nocheck
+// @ts-nocheck — Service layer — DOM event handlers + legacy patterns. Defer typing until UI rewrite.
 
 
 export function attachGlobalDelegation() {

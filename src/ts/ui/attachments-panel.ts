@@ -1,5 +1,5 @@
 // src/ts/ui/attachments-panel.ts
-// @ts-nocheck
+// @ts-nocheck — UI component — DOM manipulation, deferred typing until Next.js port.
 // Renders attachments management UI for one experiment.
 // Designed to be embedded inside hydro/electrode edit modal.
 

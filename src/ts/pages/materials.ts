@@ -2,7 +2,7 @@
  * pages/materials.ts — Materials browser + CRUD (R150d-1 + R150d-2)
  */
 
-// @ts-nocheck
+// @ts-nocheck — Legacy DOM page — will be replaced in Next.js + Carbon port (Phase E). Don't fix here.
 
 import {
   listMaterials,

@@ -10,7 +10,7 @@
  *   - MaterialRef dropdown picker (using text input for now)
  */
 
-// @ts-nocheck
+// @ts-nocheck — Legacy DOM page — will be replaced in Next.js + Carbon port (Phase E). Don't fix here.
 
 import {
   listSamples,

@@ -9,7 +9,7 @@
 //   { ok: true, blob }   tren success
 //   { ok: false, error } tren that bai
 
-// @ts-nocheck
+// @ts-nocheck — Service layer — DOM event handlers + legacy patterns. Defer typing until UI rewrite.
 import { Chart, registerables } from 'chart.js/auto';
 Chart.register(...registerables);
 

@@ -5,7 +5,7 @@
  * Auto-trigger sau upload xong (paper-upload.ts).
  * Cũng có thể manual re-trigger từ row action.
  */
-// @ts-nocheck
+// @ts-nocheck — AI module — partial typing (R105+ skeleton). Cleanup after RAG/streaming stabilization.
 
 import { auth } from "../../firebase";
 import { showToast } from "../../ui/toast";

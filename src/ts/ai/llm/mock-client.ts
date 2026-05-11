@@ -5,7 +5,7 @@
  *
  * @see streaming-mock.ts (legacy from R110, kept for backward compat)
  */
-// @ts-nocheck
+// @ts-nocheck — AI module — partial typing (R105+ skeleton). Cleanup after RAG/streaming stabilization.
 
 import { LlmClient, LlmRequest, StreamingCallbacks } from "./types";
 import { mockStream as legacyMockStream } from "../ui/streaming-mock";

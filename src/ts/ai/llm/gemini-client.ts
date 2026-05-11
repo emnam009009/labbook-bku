@@ -4,7 +4,7 @@
  * Round 111: Initial SSE wiring.
  * Round 112: Function calling loop — multi-turn with tools.
  */
-// @ts-nocheck
+// @ts-nocheck — AI module — partial typing (R105+ skeleton). Cleanup after RAG/streaming stabilization.
 
 import { LlmClient, LlmRequest, StreamingCallbacks } from "./types";
 import { executeToolRemote } from "../tools/tool-client";

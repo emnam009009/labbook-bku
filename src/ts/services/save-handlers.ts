@@ -17,7 +17,7 @@
  *
  * Helper internal: isCodeDuplicate (kiểm tra mã trùng trong collection, bỏ qua editKey)
  */
-// @ts-nocheck
+// @ts-nocheck — Service layer — DOM event handlers + legacy patterns. Defer typing until UI rewrite.
 
 
 import { db, ref, update, fbPush, fbGet, incrementStock } from '../firebase.js'

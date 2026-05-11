@@ -4,7 +4,7 @@
  * Subscribe RTDB `aiPapers/_shared` → render table real-time.
  * Delete action (superadmin only).
  */
-// @ts-nocheck
+// @ts-nocheck — AI module — partial typing (R105+ skeleton). Cleanup after RAG/streaming stabilization.
 
 import { storage, db } from "../../firebase";
 import { ref as dbRef, onValue, remove, off } from "firebase/database";

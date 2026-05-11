@@ -11,7 +11,7 @@
  * Auto-stops after maxDurationMs to prevent runaway recording.
  */
 
-// @ts-nocheck
+// @ts-nocheck — AI module — partial typing (R105+ skeleton). Cleanup after RAG/streaming stabilization.
 
 import {
   RecorderState,

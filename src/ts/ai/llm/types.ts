@@ -1,7 +1,7 @@
 /**
  * LLM types — shared across providers.
  */
-// @ts-nocheck
+// @ts-nocheck — AI module — partial typing (R105+ skeleton). Cleanup after RAG/streaming stabilization.
 
 export type Role = "user" | "assistant" | "system" | "model";
 
