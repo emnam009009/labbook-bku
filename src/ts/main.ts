@@ -46,6 +46,7 @@ import { showPage, toggleSidebarSection, toggleHistory, switchElectrodeTab } fro
 import { startListeners, stopListeners, updateChatFabBadge } from './services/listeners.js'
 import { renderAll } from './services/render-dispatcher.js'
 import { renderDash } from './pages/dashboard.js'
+import './pages/data-assets.js';
 
 // ── Theme picker ──────────────────────────────────────────
 import { initTheme } from './services/theme.js'

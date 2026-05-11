@@ -428,3 +428,153 @@
   color: #475569;
   font-family: 'JetBrains Mono', monospace;
 }
+
+
+/* R153c — DataAssets gallery page */
+
+.lb-da-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.lb-da-chip {
+  cursor: pointer;
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s;
+}
+
+.lb-da-chip:hover {
+  border-color: #0D9488;
+  color: #0D9488;
+}
+
+.lb-da-chip--active {
+  background: #0D9488;
+  border-color: #0D9488;
+  color: white;
+}
+
+.lb-da-chip-count {
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  padding: 1px 7px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.lb-da-chip--active .lb-da-chip-count {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.lb-da-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.lb-da-card {
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all 0.15s;
+  width: 100%;
+  font-family: inherit;
+}
+
+.lb-da-card:hover {
+  border-color: #0D9488;
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.15);
+  transform: translateY(-1px);
+}
+
+.lb-da-thumb {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  background: #F8FAFC;
+  display: block;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.lb-da-thumb--loading {
+  background: linear-gradient(90deg, #F8FAFC 0%, #E2E8F0 50%, #F8FAFC 100%);
+  background-size: 200% 100%;
+  animation: lb-da-shimmer 1.5s ease-in-out infinite;
+}
+
+.lb-da-thumb--icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F8FAFC;
+}
+
+.lb-da-thumb-emoji {
+  font-size: 48px;
+}
+
+@keyframes lb-da-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.lb-da-card-body {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lb-da-card-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: #0F172A;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lb-da-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #6B7280;
+}
+
+.lb-da-empty {
+  grid-column: 1 / -1;
+  background: white;
+  border: 1px dashed #E2E8F0;
+  border-radius: 8px;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.lb-da-empty-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0F172A;
+  margin-bottom: 6px;
+}
+
+.lb-da-empty-sub {
+  font-size: 13px;
+  color: #6B7280;
+}

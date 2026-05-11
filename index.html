@@ -789,6 +789,30 @@
         </div>
         <div data-experiments-content></div>
       </div>
+      <!-- R153c: DataAssets gallery page (Phase B.5) -->
+      <div class="page" id="page-dataassets">
+        <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
+          <div>
+            <h1 class="page-title" style="color:#0F172A !important">Phổ dữ liệu (DataAssets)</h1>
+            <p class="page-subtitle">Tệp đính kèm tất cả thí nghiệm — XRD, SEM, Raman, UV-Vis, FTIR, v.v.</p>
+          </div>
+        </div>
+        <div class="lb-da-filter-chips" id="da-filter-chips"></div>
+        <div class="lb-da-gallery" id="da-gallery"></div>
+      </div>
+      <!-- R153c: DataAsset preview modal -->
+      <div class="modal-overlay" id="modal-dataasset-preview" role="dialog" aria-modal="true">
+        <div class="modal lb-modal-w-760 lb-modal-scroll">
+          <div class="modal-header">
+            <h2>Chi tiết tệp</h2>
+            <button class="modal-close" type="button" data-action="close-modal" data-modal="modal-dataasset-preview" aria-label="Đóng">×</button>
+          </div>
+          <div class="modal-body lb-modal-scroll-body" id="modal-dataasset-preview-body"></div>
+          <div class="modal-footer">
+            <button class="btn" type="button" data-action="close-modal" data-modal="modal-dataasset-preview">Đóng</button>
+          </div>
+        </div>
+      </div>
 
       <!-- R152c-1: Experiment detail modal -->
       <div class="modal-overlay" id="modal-experiment-detail" role="dialog" aria-modal="true">

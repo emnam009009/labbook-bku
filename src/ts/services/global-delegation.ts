@@ -862,3 +862,31 @@ export function attachGlobalDelegation() {
     }
   });
 })();
+
+
+// ═══════════════════════════════════════════════════════════
+// R153c — DataAssets gallery page action handlers
+// ═══════════════════════════════════════════════════════════
+
+(function attachDataAssetsGalleryDelegation() {
+  const flag = '__dataAssetsGalleryDelegationAttached';
+  if ((document.body as any)[flag]) return;
+  (document.body as any)[flag] = true;
+
+  document.body.addEventListener('click', (e: Event) => {
+    const target = (e.target as HTMLElement)?.closest('[data-action]') as HTMLElement | null;
+    if (!target) return;
+    const action = target.dataset.action;
+    if (action === 'da-filter') {
+      const type = target.dataset.type || '';
+      if (typeof (window as any).filterDataAssetsByType === 'function') {
+        (window as any).filterDataAssetsByType(type);
+      }
+    } else if (action === 'da-card-click') {
+      const id = target.dataset.assetId;
+      if (id && typeof (window as any).openDataAssetPreview === 'function') {
+        void (window as any).openDataAssetPreview(id);
+      }
+    }
+  });
+})();

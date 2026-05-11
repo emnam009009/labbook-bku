@@ -1,5 +1,34 @@
 # CHANGELOG
 
+## R153c — DataAssets gallery page (Phase B.5) (2026-05-10)
+
+### Added
+- New sidebar item "Phổ dữ liệu" (route: `dataassets`) after TN mới
+- Page section `page-dataassets`:
+  - Filter chips per type (counts), 'Tất cả' chip
+  - Card grid (220px min), responsive
+  - Image thumbnails lazy-loaded
+  - Non-image types show emoji icon
+  - Empty state with hint to upload via TN detail
+- Preview modal (modal-dataasset-preview):
+  - Image: inline preview
+  - PDF: iframe embed
+  - Other: download link
+  - Link to parent experiment
+
+### Files
+- index.html: sidebar + page + preview modal
+- src/ts/pages/data-assets.ts (new ~260 LOC)
+- src/ts/main.ts: import data-assets.js
+- src/ts/services/global-delegation.ts: da-filter + da-card-click handlers
+- src/css/labbook-extras.css: gallery + chip styles (~140 lines)
+- CHANGELOG.md
+
+### Out of scope
+- R153d: Classifier integration
+- R153e: PDF export integration
+- R153f: Cleanup legacy attachments
+
 ## R156d — Tag remaining @ts-nocheck with reasons (Tech Debt cleanup)
 
 ### Approach (E+F combo from R156 plan)
