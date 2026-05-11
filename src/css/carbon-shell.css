@@ -372,3 +372,103 @@ body nav.site-sidebar.sidebar:not(:hover) .sidebar-item.active::before {
   left: 0 !important;
   width: 4px;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   R158c-p3: AI Sidetab → Carbon Side Panel spec
+   ═══════════════════════════════════════════════════════════════════
+   Container .ai-sidetab keeps existing DOM/IDs (no TS change).
+   Refactor styling theo Carbon Side Panel:
+   - Shadow lighter, motion productive ease
+   - Header 48px min-height, Carbon border subtle
+   - Logo: no gradient, primary stroke icon
+   - Close: Carbon icon button
+   - Backdrop: Carbon scrim 32% slate-900 alpha, no blur
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Container ───────────────────────────────────────────── */
+body .ai-sidetab {
+  background: var(--cds-layer-02) !important;
+  border-left: 1px solid var(--cds-border-subtle-01) !important;
+  box-shadow: var(--cds-shadow-03) !important;
+  transition: transform var(--cds-motion-moderate-02) var(--cds-motion-ease-productive) !important;
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+body .ai-sidetab__header {
+  min-height: 48px !important;
+  padding: 0 var(--cds-spacing-05) !important;
+  border-bottom: 1px solid var(--cds-border-subtle-01) !important;
+  background: var(--cds-layer-02) !important;
+}
+
+/* ── Title typography ────────────────────────────────────── */
+body .ai-sidetab__title {
+  font-size: var(--cds-type-heading-02) !important;
+  font-weight: var(--cds-type-weight-semibold) !important;
+  color: var(--cds-text-primary) !important;
+  letter-spacing: -0.01em;
+}
+
+/* ── Logo: remove cyan gradient square → minimalist icon ── */
+body .ai-sidetab__logo {
+  background: transparent !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 0 !important;
+  color: var(--primary) !important;
+}
+
+body .ai-sidetab__logo svg {
+  width: 20px !important;
+  height: 20px !important;
+  stroke: currentColor !important;
+  stroke-width: 2 !important;
+}
+
+/* ── Close button: Carbon icon button ────────────────────── */
+body .ai-sidetab__close {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: var(--cds-radius-sm) !important;
+  background: transparent !important;
+  color: var(--cds-text-secondary) !important;
+  font-family: inherit !important;  /* remove dead JetBrains Mono */
+  transition: background var(--cds-motion-fast-02) var(--cds-motion-ease-productive) !important;
+}
+
+body .ai-sidetab__close:hover {
+  background: var(--cds-background-hover) !important;
+  color: var(--cds-text-primary) !important;
+}
+
+body .ai-sidetab__close svg {
+  width: 16px !important;
+  height: 16px !important;
+  font-family: inherit !important;
+  margin-left: 0 !important;
+}
+
+body .ai-sidetab__close:focus-visible {
+  outline: 2px solid var(--cds-focus);
+  outline-offset: -2px;
+}
+
+/* ── Backdrop scrim — Carbon spec ────────────────────────── */
+body .ai-sidetab-backdrop {
+  background: rgba(15, 23, 42, 0.32) !important;  /* Carbon spec: 32% slate-900 */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition: opacity var(--cds-motion-moderate-01) var(--cds-motion-ease-productive) !important;
+}
+
+/* ── Body padding aligned với Carbon ─────────────────────── */
+body .ai-sidetab__body {
+  padding: var(--cds-spacing-05) !important;
+}
+
+/* ── Mobile responsive (Carbon spec: full width) ─────────── */
+@media (max-width: 768px) {
+  body .ai-sidetab {
+    width: 100vw !important;
+  }
+}
