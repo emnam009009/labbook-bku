@@ -1508,7 +1508,7 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
 let _overviewPagePromise: Promise<any> | null = null;
 function _loadOverviewPage(): Promise<any> {
   if (!_overviewPagePromise) {
-    _overviewPagePromise = import('@/domains/dashboard/overview');
+    _overviewPagePromise = import('@/domains/data-assets/overview-page');
   }
   return _overviewPagePromise;
 }
