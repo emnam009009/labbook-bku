@@ -814,6 +814,28 @@
         </div>
       </div>
 
+      <!-- R154-1: Lineage graph modal -->
+      <div class="modal-overlay" id="modal-lineage-graph" role="dialog" aria-modal="true">
+        <div class="modal lb-modal-w-900 lb-modal-scroll">
+          <div class="modal-header">
+            <h2>Lineage</h2>
+            <button class="modal-close" type="button" data-action="close-modal" data-modal="modal-lineage-graph" aria-label="Đóng">×</button>
+          </div>
+          <div class="modal-body lb-modal-scroll-body">
+            <div class="lb-lineage-legend">
+              <span><span class="lb-lineage-dot" style="background:#F59E0B;border:2px solid #92400E"></span>Thí nghiệm (đang xem)</span>
+              <span><span class="lb-lineage-dot" style="background:#7C3AED"></span>Vật liệu</span>
+              <span><span class="lb-lineage-dot" style="background:#0D9488"></span>Mẫu</span>
+              <span><span class="lb-lineage-dot" style="background:#3B82F6"></span>Tệp đính kèm</span>
+            </div>
+            <div id="lineage-graph-container" class="lb-lineage-container"></div>
+            <div id="lineage-graph-status" class="lb-hint" style="text-align:center;margin-top:8px"></div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn" type="button" data-action="close-modal" data-modal="modal-lineage-graph">Đóng</button>
+          </div>
+        </div>
+      </div>
       <!-- R152c-1: Experiment detail modal -->
       <div class="modal-overlay" id="modal-experiment-detail" role="dialog" aria-modal="true">
         <div class="modal lb-modal-w-680">

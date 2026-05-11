@@ -22,6 +22,9 @@ import {
   deleteDataAsset, formatFileSize, tsToDate,
   classifyDataAssetFile,
 } from "../services/data-assets.js";
+// R154-1: Lineage graph
+import { buildLineageGraph } from "../services/lineage-service.js";
+import { renderLineageGraph } from "../ui/lineage-graph.js";
 import type { DataAsset, DataAssetType } from "../types/research.js";
 
 const TYPE_LABELS: Record<ExperimentType, string> = {
@@ -274,6 +277,11 @@ export function openExperimentDetail(id: string): void {
         <div id="exp-detail-dataassets" class="lb-da-section">
           <div class="lb-hint">Đang tải...</div>
         </div>
+      </div>
+      <div class="mt-4 pt-3 border-t flex justify-end">
+        <button type="button" class="btn" data-action="open-lineage-graph" data-experiment-id="${escapeHtml(e.id)}">
+          🔗 Xem lineage
+        </button>
       </div>
       ${legacyHtml}
       <div class="text-xs text-gray-400 mt-4 pt-3 border-t">
@@ -1012,3 +1020,66 @@ export async function handleDataAssetDelete(assetId: string, assetName: string, 
 }
 
 (window as any).handleDataAssetDelete = handleDataAssetDelete;
+
+
+// ═══════════════════════════════════════════════════════════
+// R154-1 — Lineage graph modal handler
+// ═══════════════════════════════════════════════════════════
+
+export async function openLineageGraphModal(experimentId: string): Promise<void> {
+  if (!_cache) return;
+  const exp = _cache.find(x => x.id === experimentId);
+  if (!exp) return;
+
+  const container = document.getElementById('lineage-graph-container');
+  const statusEl = document.getElementById('lineage-graph-status');
+  if (!container || !statusEl) return;
+
+  container.innerHTML = '';
+  statusEl.textContent = 'Đang tải dữ liệu lineage...';
+  statusEl.style.color = '#475569';
+  openModal('modal-lineage-graph');
+
+  try {
+    const graph = await buildLineageGraph(exp);
+    if (graph.nodes.length === 0) {
+      statusEl.textContent = 'Không có dữ liệu lineage cho thí nghiệm này.';
+      statusEl.style.color = '#EF4444';
+      return;
+    }
+    statusEl.textContent = `${graph.nodes.length} node, ${graph.edges.length} liên kết. Kéo để di chuyển, scroll để zoom.`;
+    statusEl.style.color = '#0D9488';
+    renderLineageGraph(container, graph);
+  } catch (err: any) {
+    console.error('[lineage] render failed', err);
+    statusEl.textContent = `Lỗi: ${err?.message || String(err)}`;
+    statusEl.style.color = '#EF4444';
+  }
+}
+
+(window as any).openLineageGraphModal = openLineageGraphModal;
+
+// Handler for node click (close lineage modal, navigate to entity detail)
+(window as any).onLineageNodeClick = (type: string, refId: string) => {
+  closeModal('modal-lineage-graph');
+  // Small delay to let modal close animation finish
+  setTimeout(() => {
+    if (type === 'experiment') {
+      if (typeof (window as any).openExperimentDetail === 'function') {
+        (window as any).openExperimentDetail(refId);
+      }
+    } else if (type === 'sample') {
+      if (typeof (window as any).openSampleDetail === 'function') {
+        (window as any).openSampleDetail(refId);
+      }
+    } else if (type === 'material') {
+      if (typeof (window as any).openMaterialDetail === 'function') {
+        (window as any).openMaterialDetail(refId);
+      }
+    } else if (type === 'dataasset') {
+      if (typeof (window as any).openDataAssetPreview === 'function') {
+        (window as any).openDataAssetPreview(refId);
+      }
+    }
+  }, 150);
+};

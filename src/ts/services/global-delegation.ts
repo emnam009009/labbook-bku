@@ -890,3 +890,23 @@ export function attachGlobalDelegation() {
     }
   });
 })();
+
+
+// ═══════════════════════════════════════════════════════════
+// R154-1 — Lineage graph button delegation
+// ═══════════════════════════════════════════════════════════
+
+(function attachLineageGraphDelegation() {
+  const flag = '__lineageGraphDelegationAttached';
+  if ((document.body as any)[flag]) return;
+  (document.body as any)[flag] = true;
+
+  document.body.addEventListener('click', (e: Event) => {
+    const target = (e.target as HTMLElement)?.closest('[data-action="open-lineage-graph"]') as HTMLElement | null;
+    if (!target) return;
+    const expId = target.dataset.experimentId;
+    if (expId && typeof (window as any).openLineageGraphModal === 'function') {
+      void (window as any).openLineageGraphModal(expId);
+    }
+  });
+})();

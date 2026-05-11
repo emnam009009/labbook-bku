@@ -1,5 +1,44 @@
 # CHANGELOG
 
+## R154-1 — Per-experiment lineage graph modal (Phase B.5) (2026-05-10)
+
+### Added
+- Button "🔗 Xem lineage" in experiment detail modal (R152c-1)
+- New modal `modal-lineage-graph` with D3 force-directed graph
+- Service `lineage-service.ts`: buildLineageGraph(experiment) — fetches:
+  - Center: the experiment itself (highlighted gold)
+  - Input samples + their materials + 1-hop parent samples
+  - Output samples (synthesisExperimentRef pointing back)
+  - DataAssets attached
+- UI `lineage-graph.ts`: D3 rendering (modular d3-selection/force/zoom/drag)
+  - Node colors per type: material=purple, sample=teal, experiment=amber, dataasset=blue
+  - Edge styles per relationship: input/output/composed_of/parent/attached
+  - Arrow markers for directionality
+  - Drag to rearrange, scroll/pinch to zoom, click node to navigate
+- Click navigation: node click → close lineage modal → open detail of clicked entity
+
+### Library
+- d3-selection, d3-force, d3-zoom, d3-drag installed (modular, ~50KB total)
+- Tree-shakeable: only imports needed sub-modules
+
+### Files
+- src/ts/services/lineage-service.ts (new ~200 LOC)
+- src/ts/ui/lineage-graph.ts (new ~220 LOC)
+- src/ts/pages/experiments-unified.ts: imports + button + modal handler
+- src/ts/services/global-delegation.ts: open-lineage-graph click handler
+- index.html: modal-lineage-graph section
+- src/css/labbook-extras.css: graph + legend styles
+- package.json: + d3 modules
+
+### Install
+- `npm install d3-selection d3-force d3-zoom d3-drag @types/d3-selection @types/d3-force @types/d3-zoom @types/d3-drag --save`
+
+### Out of scope (R154-2+)
+- Page tổng all entities (cross-experiment view)
+- Filter + search in graph
+- Custom layouts (hierarchical, radial)
+- Export graph as PNG/SVG
+
 ## R156e — Inline plot preview for DataAssets (Phase B.5+) (2026-05-10)
 
 ### Added
